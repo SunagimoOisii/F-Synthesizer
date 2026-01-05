@@ -1,5 +1,6 @@
 #pragma once
 
+//位相で定義できる周期波形
 enum class WaveType
 {
     Sine,

@@ -11,13 +11,7 @@
 - Writer: SaveCsvFileがファイルオープン失敗でもtrueを返す
 
 ## 読みにくいコードの部分
-- Sequencer: tick整列の優先順位計算が式の中に埋まり、可読性が低い
-- Sequencer: MidiEventTick -> MidiEventの代入が重複し、差分が見えにくい
-- MidiParser: ステータス判定のif連鎖が長く、流れが把握しづらい
 ## 読みにくいコードの部分の可読性を向上させる案
-- Sequencer: 優先順位をenum化し比較関数内で名前で表現する（式の意味が見え、ロジックは同一）
-- Sequencer: MidiEvent生成をMakeNoteEvent/MakeControlChangeEventに分離する（共通代入が消え差分が明確になる）
-- MidiParser: ParseMetaEvent/ParseChannelEventに分割する（責務が分かれ流れが追いやすい。挙動は不変）
 
 ## 各プログラムのクラス化によるメリット/デメリット
 - SynthEngine: 音声生成の状態(voices/CC/イベント位置)をクラスに閉じ込められ、処理の流れが明確になる; 一方でAPIが増え、初見の追跡ポイントが増える
@@ -26,4 +20,15 @@
 - Oscillator: 波形生成は純関数に近く、クラス化の効果は小さい; 逆に抽象化し過ぎると読みづらくなる
 - Envelope: ADSRは状態を持つが現状でも十分明確で、クラス化の効果は限定的; ただし将来の拡張(複数EG等)を見据えるなら有効
 - AudioBuffer/Writer: 単純なデータ構造/入出力なので、クラス化しても冗長化しやすい; ただし責務分離や拡張フォーマット対応では利点がある
+## 各プログラムのクラス化によるメリット/デメリット（可読性改善後の追記）
+- SynthEngine: 関数分割で流れが明確になったため、可読性目的のクラス化メリットは相対的に減少; ただし状態の集約や拡張ポイント整理には依然有効
+- Sequencer: 優先順位の明示化とイベント生成分離で重複が減ったため、クラス化の主目的は状態管理/再利用に寄る
+- MidiParser: メタ/チャンネル分割で責務が明確になったため、クラス化は状態保持(ランニングステータス等)をまとめたい場合に有効
+## Noise分離の設計方針
+- WaveTypeは位相で定義できる周期波形のみとする（Noiseは除外）
+- NoiseTypeを新設し、Noiseは専用の生成系として扱う
+- 音源種別を明示するためSourceType（Waveform/Noise）を導入するか、WaveType/NoiseTypeをvariant的に表現する
+- SampleWavePhaseは位相波形専用に限定し、Noise用のSampleNoiseを追加する
+- ChannelConfig/VoiceはSourceTypeと対応する型を保持し、Noiseは位相更新を伴わない
+- SoundGenerate.cppのチャンネル設定は、NoiseチャンネルのみNoiseTypeを指定し、通常はWaveType指定で済むようAPIを工夫する
 
