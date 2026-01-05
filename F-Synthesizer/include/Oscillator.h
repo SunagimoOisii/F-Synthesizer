@@ -11,7 +11,10 @@ enum class WaveType
 
 enum class NoiseType
 {
-    White
+    White,
+    Pink,
+    Brown,
+    Blue
 };
 
 double SampleWavePhase(WaveType type, double phase);

@@ -35,14 +35,39 @@ double SampleFmPhase(double carrierPhase, double modPhase, double modIndex)
 double SampleNoise(NoiseType type)
 {
     static thread_local std::mt19937 rng{ std::random_device{}() };
+    static thread_local std::uniform_real_distribution<double> dist(-1.0, 1.0);
+    static thread_local double pinkState = 0.0;
+    static thread_local double brownState = 0.0;
+    static thread_local double prevWhite = 0.0;
+
+    double white = dist(rng);
     switch (type)
     {
     case NoiseType::White:
+        return white;
+
+    case NoiseType::Pink:
+        // Simple 1/f approximation via leaky integrator
+        pinkState = 0.98 * pinkState + 0.02 * white;
+        return pinkState * 3.0;
+
+    case NoiseType::Brown:
+        // 1/f^2 approximation by integrating white noise
+        brownState += 0.02 * white;
+        if (brownState > 1.0) brownState = 1.0;
+        if (brownState < -1.0) brownState = -1.0;
+        return brownState;
+
+    case NoiseType::Blue:
+        // High-frequency emphasis via differentiator
+        {
+            double blue = white - prevWhite;
+            prevWhite = white;
+            return blue * 0.7;
+        }
+
     default:
-    {
-        static thread_local std::uniform_real_distribution<double> dist(-1.0, 1.0);
-        return dist(rng);
-    }
+        return white;
     }
 }
 

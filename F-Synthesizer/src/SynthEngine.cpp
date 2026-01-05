@@ -1,4 +1,4 @@
-#include "SynthEngine.h"
+﻿#include "SynthEngine.h"
 
 #include <algorithm>
 #include <array>
