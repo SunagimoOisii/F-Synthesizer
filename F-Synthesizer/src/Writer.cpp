@@ -60,27 +60,3 @@ bool SaveWavFile(const SoundData& sound, const char* filePath)
 
     return true;
 }
-
-bool SaveCsvFile(const SoundData& sound, const char* filePath)
-{
-    //出力ファイルを開く
-    std::ofstream fout;
-    fout.open(filePath, std::ios::out | std::ios::trunc);
-    if (!fout) return true;
-
-    //ヘッダ出力
-    fout << "標本化周波数," << sound.fs << std::endl;
-    fout << "量子化ビット数," << sound.bits << std::endl;
-    fout << "音の個数," << sound.length << std::endl << std::endl;
-    fout << "index,時間[sec],変位" << std::endl;
-    double w = 1.0 / sound.fs;
-    //サンプル出力
-    for (int i = 0; i < sound.length; i++)
-    {
-        fout << i << "," << (double)i * w << ","
-            << sound.data[i] << std::endl;
-    }
-    fout.close();
-
-    return true;
-}

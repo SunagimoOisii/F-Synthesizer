@@ -172,7 +172,7 @@ int main()
         << ", Length: " << sound.length << std::endl;
 
     //合成処理
-    RenderMidiEvents(sound, events, channelConfigs);
+    RenderMIDIEvents(sound, events, channelConfigs);
 
     //書き出し
     auto wavTitle = "test_notes.wav";

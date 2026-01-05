@@ -2,6 +2,52 @@
 
 #include "Sequencer.h"
 
+enum class TickPriority
+{
+    ControlChange = 0,
+    NoteOff       = 1,
+    NoteOn        = 2
+};
+
+int PriorityValue(const MIDIEventTick& e)
+{
+    if (e.type == MIDIEventType::ControlChange)
+    {
+        return static_cast<int>(TickPriority::ControlChange);
+    }
+    return static_cast<int>(e.isNoteOn ? TickPriority::NoteOn : TickPriority::NoteOff);
+}
+
+MIDIEvent MakeControlChangeEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+{
+    MIDIEvent e{};
+    e.type       = MIDIEventType::ControlChange;
+    e.typeWave   = defaultWave;
+    e.sample     = sample;
+    e.noteNumber = 0;
+    e.velocity   = 0;
+    e.channel    = t.channel;
+    e.controller = t.controller;
+    e.value      = t.value;
+    e.isNoteOn   = false;
+    return e;
+}
+
+MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+{
+    MIDIEvent e{};
+    e.type       = MIDIEventType::Note;
+    e.typeWave   = defaultWave;
+    e.sample     = sample;
+    e.noteNumber = t.noteNumber;
+    e.velocity   = t.velocity;
+    e.channel    = t.channel;
+    e.controller = 0;
+    e.value      = 0;
+    e.isNoteOn   = t.isNoteOn;
+    return e;
+}
+
 void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
     int ticksPerQuarter,
@@ -29,8 +75,8 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     std::sort(sortedTicks.begin(), sortedTicks.end(), [](const MIDIEventTick& a, const MIDIEventTick& b)
     {
         if (a.tick != b.tick) return a.tick < b.tick;
-        int aPri = (a.type == MIDIEventType::ControlChange) ? 0 : (a.isNoteOn ? 2 : 1);
-        int bPri = (b.type == MIDIEventType::ControlChange) ? 0 : (b.isNoteOn ? 2 : 1);
+        int aPri = PriorityValue(a);
+        int bPri = PriorityValue(b);
         if (aPri != bPri) return aPri < bPri;
         return a.order < b.order;
     });
@@ -69,33 +115,14 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     for (const auto& t : sortedTicks)
     {
         advanceToTick(t.tick);
+        int sample = (int)(currentSample);
         if (t.type == MIDIEventType::ControlChange)
         {
-            MIDIEvent e{};
-            e.type       = MIDIEventType::ControlChange;
-            e.typeWave   = defaultWave;
-            e.sample     = (int)(currentSample);
-            e.noteNumber = 0;
-            e.velocity   = 0;
-            e.channel    = t.channel;
-            e.controller = t.controller;
-            e.value      = t.value;
-            e.isNoteOn   = false;
-            outEvents.push_back(e);
+            outEvents.push_back(MakeControlChangeEvent(t, sample, defaultWave));
             continue;
         }
 
-        MIDIEvent e{};
-        e.type       = MIDIEventType::Note;
-        e.typeWave   = defaultWave;
-        e.sample     = (int)(currentSample);
-        e.noteNumber = t.noteNumber;
-        e.velocity   = t.velocity;
-        e.channel    = t.channel;
-        e.controller = 0;
-        e.value      = 0;
-        e.isNoteOn   = t.isNoteOn;
-        outEvents.push_back(e);
+        outEvents.push_back(MakeNoteEvent(t, sample, defaultWave));
     }
 
     //sample順で整列
@@ -104,4 +131,3 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
         return a.sample < b.sample;
     });
 }
-

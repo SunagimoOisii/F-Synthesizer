@@ -63,7 +63,7 @@ struct ChannelConfig
     double fmOutLevel;
 };
 
-void RenderMidiEvents(
+void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs);
