@@ -1,7 +1,7 @@
-﻿#include "SynthEngine.h"
-
+﻿#include <algorithm>
 #include <array>
 
+#include "SynthEngine.h"
 #include "Oscillator.h"
 
 void RenderMidiEvents(
@@ -21,6 +21,7 @@ void RenderMidiEvents(
     }
 
     //サンプルループ
+    const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
         double sum = 0.0;
@@ -131,6 +132,20 @@ void RenderMidiEvents(
             }
         }
         sound.data[i] = sum;
+
+        //Off状態のVoiceバッチ削除
+        if ((i % cleanupInterval) == 0 && !voices.empty())
+        {
+            voices.erase(
+                std::remove_if(voices.begin(), voices.end(), [](const Voice& v)
+                {
+                    return v.env.stage == ADSRStage::Off;
+                }),
+                voices.end());
+        }
     }
 }
+
+
+
 
