@@ -33,6 +33,7 @@ void RenderMIDIEvents(
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs)
 {
+    //Voice, CC初期化
     std::vector<Voice> voices;
     size_t eventIndex = 0;
     std::array<double, 16> channelCc7{};
@@ -43,6 +44,7 @@ void RenderMIDIEvents(
         channelCc11[i] = 1.0;
     }
 
+    //サンプルループ
     const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
@@ -69,6 +71,7 @@ void ProcessEventsAtSample(size_t& eventIndex,
     std::array<double, 16>& channelCc7,
     std::array<double, 16>& channelCc11)
 {
+    //イベント処理(ControlChange, Note)
     while (eventIndex < events.size() && events[eventIndex].sample <= sampleIndex)
     {
         const auto& e = events[eventIndex];
@@ -119,6 +122,7 @@ void ApplyControlChange(const MIDIEvent& e,
 Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
 {
     Voice v{};
+    //識別, 状態
     v.mode = cfg.mode;
     v.source = cfg.source;
     v.type = cfg.type;
@@ -128,6 +132,7 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
     v.channel = e.channel;
     v.released = false;
 
+    //レベル, エンベロープ
     v.amp = cfg.amp;
     v.attackSec = cfg.attackSec;
     v.decaySec = cfg.decaySec;
@@ -135,8 +140,10 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
     v.releaseSec = cfg.releaseSec;
     NoteOn(v.env);
 
+    //基本波形位相
     v.phase = 0.0;
 
+    //FM パラメータ
     v.fmCarrierPhase = 0.0;
     v.fmModPhase = 0.0;
     v.fmCarrierRatio = cfg.fmCarrierRatio;
@@ -164,6 +171,7 @@ double RenderVoices(std::vector<Voice>& voices,
     const std::array<double, 16>& channelCc7,
     const std::array<double, 16>& channelCc11)
 {
+    //Voice合成
     double sum = 0.0;
     for (auto& v : voices)
     {
@@ -213,3 +221,4 @@ int ClampChannel(int channel)
 {
     return (channel >= 0 && channel < 16) ? channel : 0;
 }
+
