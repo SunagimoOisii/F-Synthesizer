@@ -18,7 +18,7 @@ enum class NoiseType
 };
 
 double SampleWavePhase(WaveType type, double phase);
-double SampleFmPhase(double carrierPhase, double modPhase, double modIndex);
+double SampleFmPhase(WaveType carrierWave, double carrierPhase, double modPhase, double modIndex);
 double SampleNoise(NoiseType type);
 
 double NoteNumberToFreq(int noteNumber);

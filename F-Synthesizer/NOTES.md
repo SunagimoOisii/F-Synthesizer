@@ -15,10 +15,9 @@
 ## 読みにくいコードの部分の可読性を向上させる案
 
 ## 各プログラムのクラス化によるメリット/デメリット
-## Pink/Brown/Blueノイズ実装方針
-- NoiseTypeにPink/Brown/Blueを追加する
-- SampleNoiseでNoiseTypeに応じた生成を行う
-- Pink/Brownは1/f, 1/f^2特性になるよう一次/二次の積分フィルタ系を使う（実装が簡単で高速）
-- Blueは1/f特性の逆として高域寄りにする（差分フィルタで近似しやすい）
-- 生成後は振幅を正規化し、レベルが暴れないよう調整係数を入れる
+
+## FM波形選択の段階実装
+- Step1: FMキャリア波形のみ選択可能にする（fmCarrierWave追加、SampleFmPhaseを波形対応に変更）
+- Step2: FMモジュレータ波形も選択可能にする（fmModWave追加）
+- Step3: FM専用パラメータを構造体化し、SourceTypeにFMを追加するなど設計整理を行う
 

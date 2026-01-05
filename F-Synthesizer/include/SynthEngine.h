@@ -43,6 +43,7 @@ struct Voice
     double phase;
 
     //FM パラメータ
+    WaveType fmCarrierWave;
     double fmCarrierPhase;
     double fmModPhase;
     double fmCarrierRatio;
@@ -67,6 +68,7 @@ struct ChannelConfig
     double releaseSec;
 
     //FM パラメータ
+    WaveType fmCarrierWave;
     double fmCarrierRatio;
     double fmModRatio;
     double fmIndex;
