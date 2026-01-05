@@ -1,0 +1,95 @@
+############################################################
+# Visual Studio / C++ (MSVC)
+############################################################
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[xX]64/
+[xX]86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Ll]og/
+
+# Visual Studio cache
+.vs/
+
+.F-Synthesizer/Result/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+CMakeSettings.json
+
+# MSVC intermediate files
+*.ipch
+*.iobj
+*.ipdb
+*.pch
+*.pdb
+*.idb
+*.ilk
+*.exp
+*.lib
+*.obj
+*.exe
+*.dll
+*.rsp
+*.tlog
+*.lastbuildstate
+
+# Debug / Release folders
+Debug/
+Release/
+MinSizeRel/
+RelWithDebInfo/
+
+# Precompiled headers
+*.gch
+
+# Profiling / analysis
+*.pgc
+*.pgd
+*.vsp
+*.vspx
+*.sap
+
+# Clang / LLVM
+*.dSYM/
+compile_commands.json
+
+############################################################
+# Assets to exclude
+############################################################
+
+# Audio files
+*.wav
+*.mid
+
+############################################################
+# OS / Editor noise
+############################################################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS (in case of cross-use)
+.DS_Store
+
+# Backup / temp
+*~
+*.tmp
+*.bak
+*.old
