@@ -24,10 +24,11 @@
 - SynthEngine: 関数分割で流れが明確になったため、可読性目的のクラス化メリットは相対的に減少; ただし状態の集約や拡張ポイント整理には依然有効
 - Sequencer: 優先順位の明示化とイベント生成分離で重複が減ったため、クラス化の主目的は状態管理/再利用に寄る
 - MidiParser: メタ/チャンネル分割で責務が明確になったため、クラス化は状態保持(ランニングステータス等)をまとめたい場合に有効
+
 ## Noise分離の設計方針
 - WaveTypeは位相で定義できる周期波形のみとする（Noiseは除外）
 - NoiseTypeを新設し、Noiseは専用の生成系として扱う
-- 音源種別を明示するためSourceType（Waveform/Noise）を導入するか、WaveType/NoiseTypeをvariant的に表現する
+- 音源種別を明示するためWaveType/NoiseTypeをvariant的に表現する
 - SampleWavePhaseは位相波形専用に限定し、Noise用のSampleNoiseを追加する
 - ChannelConfig/VoiceはSourceTypeと対応する型を保持し、Noiseは位相更新を伴わない
 - SoundGenerate.cppのチャンネル設定は、NoiseチャンネルのみNoiseTypeを指定し、通常はWaveType指定で済むようAPIを工夫する

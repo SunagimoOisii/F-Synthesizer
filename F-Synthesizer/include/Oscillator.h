@@ -6,12 +6,17 @@ enum class WaveType
     Sine,
     Square,
     Saw,
-    Triangle,
-    Noise
+    Triangle
+};
+
+enum class NoiseType
+{
+    White
 };
 
 double SampleWavePhase(WaveType type, double phase);
 double SampleFmPhase(double carrierPhase, double modPhase, double modIndex);
+double SampleNoise(NoiseType type);
 
 double NoteNumberToFreq(int noteNumber);
 double VelocityToGain(int velocity);

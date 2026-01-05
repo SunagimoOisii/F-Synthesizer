@@ -13,17 +13,23 @@ enum class SynthMode
     FM
 };
 
+enum class SourceType
+{
+    Waveform,
+    Noise
+};
+
 struct Voice
 {
-    //識別, 状態
     SynthMode mode;
+    SourceType source;
     WaveType type;
+    NoiseType noiseType;
     int noteNumber;
     int velocity;
     int channel;
     bool released;
 
-    //レベル, エンベロープ
     double amp;
     double attackSec;
     double decaySec;
@@ -31,10 +37,8 @@ struct Voice
     double releaseSec;
     ADSRState env;
 
-    //基本波形位相
     double phase;
 
-    //FM パラメータ
     double fmCarrierPhase;
     double fmModPhase;
     double fmCarrierRatio;
@@ -45,18 +49,17 @@ struct Voice
 
 struct ChannelConfig
 {
-    //識別
     SynthMode mode;
-    WaveType  type;
+    SourceType source;
+    WaveType type;
+    NoiseType noiseType;
 
-    //レベル, エンベロープ
     double amp;
     double attackSec;
     double decaySec;
     double sustainLevel;
     double releaseSec;
 
-    //FM パラメータ
     double fmCarrierRatio;
     double fmModRatio;
     double fmIndex;
