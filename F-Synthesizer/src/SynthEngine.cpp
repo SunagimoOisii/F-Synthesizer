@@ -145,6 +145,7 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
 
     //FM パラメータ
     v.fmCarrierWave = cfg.fmCarrierWave;
+    v.fmModWave = cfg.fmModWave;
     v.fmCarrierPhase = 0.0;
     v.fmModPhase = 0.0;
     v.fmCarrierRatio = cfg.fmCarrierRatio;
@@ -198,7 +199,7 @@ double RenderVoices(std::vector<Voice>& voices,
         {
             double carrierFreq = freq * v.fmCarrierRatio;
             double modFreq = freq * v.fmModRatio;
-            w = SampleFmPhase(v.fmCarrierWave, v.fmCarrierPhase, v.fmModPhase, v.fmIndex);
+            w = SampleFmPhase(v.fmCarrierWave, v.fmModWave, v.fmCarrierPhase, v.fmModPhase, v.fmIndex);
             sum += v.amp * v.fmOutLevel * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
 
             v.fmCarrierPhase += carrierFreq / sound.fs;
@@ -222,5 +223,6 @@ int ClampChannel(int channel)
 {
     return (channel >= 0 && channel < 16) ? channel : 0;
 }
+
 
 

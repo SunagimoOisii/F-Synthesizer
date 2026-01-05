@@ -110,78 +110,78 @@ int main()
     //Beginning
     /*
     std::array<ChannelConfig, 16> channelConfigs = {
-        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, cRatio, mRatio, mIndex, out
+        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
         //オルガン
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, 1.0,   1.015,  4.5,   1.0 }, // ch0
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, 1.0,   1.015,  4.5,   1.0 }, // ch1
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, 1.0,   1.015,  4.5,   1.0 }, // ch2
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch0
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch1
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch2
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
         //ベース
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch5
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch6
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch5
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch6
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
         //ノイズ
-        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
+        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
     };
     */
 
     //BloodyTears
     std::array<ChannelConfig, 16> channelConfigs = {
-        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, cRatio, mRatio, mIndex, out
+        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
         //主旋律：FM / 金属感・不安定さ（目立たせる）
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.35, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, 1.0,   1.015,  4.5,   1.0 }, // ch0
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.35, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Square, 1.0,   1.015,  4.5,   1.0 }, // ch0
         //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
-        ChannelConfig{ SynthMode::FM, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.35, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, 1.0,   1.02,   2.5,   1.0 }, // ch1
+        ChannelConfig{ SynthMode::FM, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.35, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, WaveType::Sine, 1.0,   1.02,   2.5,   1.0 }, // ch1
         //ベース：FM / 軽いジャギり・低域の汚れ
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.3,  0.01,  0.10, 0.60, 0.20, WaveType::Saw, 0.5,   1.02,  1.5,   1.0 }, // ch2
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
+        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.3,  0.01,  0.10, 0.60, 0.20, WaveType::Saw, WaveType::Sine, 0.5,   1.02,  1.5,   1.0 }, // ch2
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
         //ノイズ：PSG / リズム・不穏さの付与
-        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.25,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
+        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.25,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
+        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
     };
 
 //Solstice
     /*
  std::array<ChannelConfig, 16> channelConfigs = {
-    //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, cRatio, mRatio, mIndex, out
+    //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
     //主旋律：FM / 金属感・不安定さ（目立たせる）
-    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, 1.0,   1.015,  7.5,   1.0 }, // ch0
+    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  7.5,   1.0 }, // ch0
     //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.30, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, 1.0,   1.0,   0.0,   1.0 }, // ch1
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.30, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, WaveType::Sine, 1.0,   1.0,   0.0,   1.0 }, // ch1
     //ベース：FM / 軽いジャギり・低域の汚れ
-    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Triangle, 0.5,   1.0,  1.5,   1.0 }, // ch2
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
+    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Triangle, WaveType::Sine, 0.5,   1.0,  1.5,   1.0 }, // ch2
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
     //ノイズ：PSG / リズム・不穏さの付与
-    ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
+    ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
+    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
 };*/
      for (int i = 0;i < channelConfigs.size();i++)
      {
@@ -212,5 +212,7 @@ int main()
 
     return 0;
 }
+
+
 
 
