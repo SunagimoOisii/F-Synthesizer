@@ -15,36 +15,48 @@ enum class SynthMode
 
 struct Voice
 {
+    //識別, 状態
     SynthMode mode;
     WaveType type;
     int noteNumber;
     int velocity;
     int channel;
+    bool released;
+
+    //レベル, エンベロープ
     double amp;
     double attackSec;
     double decaySec;
     double sustainLevel;
     double releaseSec;
+    ADSRState env;
+
+    //基本波形位相
     double phase;
+
+    //FM パラメータ
     double fmCarrierPhase;
     double fmModPhase;
     double fmCarrierRatio;
     double fmModRatio;
     double fmIndex;
     double fmOutLevel;
-    ADSRState env;
-    bool released;
 };
 
 struct ChannelConfig
 {
+    //識別
     SynthMode mode;
-    WaveType type;
+    WaveType  type;
+
+    //レベル, エンベロープ
     double amp;
     double attackSec;
     double decaySec;
     double sustainLevel;
     double releaseSec;
+
+    //FM パラメータ
     double fmCarrierRatio;
     double fmModRatio;
     double fmIndex;
@@ -53,5 +65,5 @@ struct ChannelConfig
 
 void RenderMidiEvents(
     SoundData& sound,
-    const std::vector<MidiEvent>& events,
+    const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs);

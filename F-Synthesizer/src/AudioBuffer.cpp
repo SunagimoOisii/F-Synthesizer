@@ -1,6 +1,6 @@
-﻿#include "AudioBuffer.h"
+﻿#include <cmath> //std::acos
 
-#include <cmath>
+#include "AudioBuffer.h"
 
 const double kPi = std::acos(-1.0);
 

@@ -15,7 +15,7 @@ int main()
     SoundData sound(6 * 44100, 16, 44100);
 
     //MIDI入力設定
-    const std::string midiPath = "test.mid";
+    const std::string midiPath = "solstice_intro.mid";
     const int targetChannel = -1; // -1で全チャネル
     const WaveType defaultWave = WaveType::Saw;
 
@@ -96,7 +96,7 @@ int main()
     std::cout << "Unsupported Events: " << stats.unsupportedEvents << std::endl;
 
     //tick -> sample のイベント変換
-    std::vector<MidiEvent> events;
+    std::vector<MIDIEvent> events;
     BuildSampleEvents(ticks, tempoEvents, midiTPQ, sound.fs, defaultWave, events);
 
     if (events.empty())
@@ -106,18 +106,23 @@ int main()
     }
 
     //チャンネル別プリセット
+    //Solstice
      std::array<ChannelConfig, 16> channelConfigs = {
         //mode, type, amp, atk, dec, sus, rel, cRatio, mRatio, mIndex, out
-        ChannelConfig{ SynthMode::FM, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.0, 4.0, 1.0 },         // ch0
-        ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.4, 0.02, 0.2, 0.6, 0.3, 1.0, 1.5, 1.0, 1.0 },      // ch1
-        ChannelConfig{ SynthMode::Basic, WaveType::Saw, 0.45, 0.05, 0.15, 0.7, 0.25, 1.0, 1.0, 1.0, 1.0 }, // ch2
+        //主旋律：FM / 金属感・不安定さ（目立たせる）
+        ChannelConfig{ SynthMode::FM,    WaveType::Square, 0.45, 0.005, 0.08, 0.65, 0.15, 1.0,   1.015,  4.0,   1.0 }, // ch0
+        //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
+        ChannelConfig{ SynthMode::Basic, WaveType::Saw,    0.30, 0.015, 0.12, 0.50, 0.25, 1.0,   1.0,   0.0,   1.0 }, // ch1
+        //ベース：FM / 軽いジャギり・低域の汚れ
+        ChannelConfig{ SynthMode::FM,    WaveType::Saw,    0.4, 0.01,  0.10, 0.60, 0.20, 0.5,   1.01,   2.5,   1.0 }, // ch2
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch3
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch4
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.5, 1.0, 1.0 },       // ch5
         ChannelConfig{ SynthMode::Basic, WaveType::Square, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.5, 1.0, 1.0 },       // ch6
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch7
-        ChannelConfig{ SynthMode::FM, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.0, 4.0, 1.0 },       // ch8
-        ChannelConfig{ SynthMode::Basic, WaveType::Noise, 0.6, 0.001, 0.05, 0.2, 0.05, 1.0, 1.0, 0.0, 1.0 },    // ch9
+        ChannelConfig{ SynthMode::Basic, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.0, 4.0, 1.0 },       // ch8
+        //ノイズ：PSG / リズム・不穏さの付与
+        ChannelConfig{ SynthMode::Basic, WaveType::Noise,  0.4, 0.001, 0.03, 0.15, 0.05, 1.0,   1.0,   0.0,   1.0 }, // ch9
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch10
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch11
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch12
@@ -125,6 +130,32 @@ int main()
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch14
         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 }        // ch15
     };
+
+     /*
+     std::array<ChannelConfig, 16> channelConfigs = {
+         //mode, type, amp, atk, dec, sus, rel, cRatio, mRatio, mIndex, out
+         ChannelConfig{ SynthMode::FM, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.01, 4.0, 1.0 },         // ch0
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.4, 0.02, 0.2, 0.6, 0.3, 1.0, 1.5, 1.0, 1.0 },      // ch1
+         ChannelConfig{ SynthMode::Basic, WaveType::Saw, 0.45, 0.05, 0.15, 0.7, 0.25, 1.0, 1.0, 1.0, 1.0 }, // ch2
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch3
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch4
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.5, 1.0, 1.0 },       // ch5
+         ChannelConfig{ SynthMode::Basic, WaveType::Square, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.5, 1.0, 1.0 },       // ch6
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch7
+         ChannelConfig{ SynthMode::FM, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.0, 4.0, 1.0 },       // ch8
+         ChannelConfig{ SynthMode::Basic, WaveType::Noise, 0.6, 0.001, 0.05, 0.2, 0.05, 1.0, 1.0, 0.0, 1.0 },    // ch9
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch10
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch11
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch12
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch13
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 },       // ch14
+         ChannelConfig{ SynthMode::Basic, WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0 }        // ch15
+     };
+     */
+     for (int i = 0;i < channelConfigs.size();i++)
+     {
+         //if (i != 1) channelConfigs.at(i).amp = 0;
+     }
 
     //バッファ長の調整
     int lastSample = events.back().sample;
@@ -144,8 +175,9 @@ int main()
     RenderMidiEvents(sound, events, channelConfigs);
 
     //書き出し
-    SaveWavFile(sound, "test_notes.wav");
-    std::cout << "Saved SoundData" << std::endl;
+    auto wavTitle = "test_notes.wav";
+    SaveWavFile(sound, wavTitle);
+    std::cout << "Saved SoundData: " << wavTitle << std::endl;
 
     return 0;
 }

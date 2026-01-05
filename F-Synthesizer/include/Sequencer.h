@@ -5,20 +5,31 @@
 #include "MIDIParser.h"
 #include "Oscillator.h"
 
-struct MidiEvent
+struct MIDIEvent
 {
-    MIDIEventType type;
-    WaveType typeWave;
+    //時間
     int sample;
+
+    //イベント種別
+    MIDIEventType type;
+    bool isNoteOn;
+
+    //ノート
     int noteNumber;
     int velocity;
     int channel;
+
+    //コントロールチェンジ
     int controller;
     int value;
-    bool isNoteOn;
+
+    //音色
+    WaveType typeWave;
 };
 
 void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
-    int ticksPerQuarter, int sampleRate,
-    WaveType defaultWave, std::vector<MidiEvent>& outEvents);
+    int ticksPerQuarter,
+    int sampleRate,
+    WaveType defaultWave,
+    std::vector<MIDIEvent>& outEvents);

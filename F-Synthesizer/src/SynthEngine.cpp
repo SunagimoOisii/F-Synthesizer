@@ -6,7 +6,7 @@
 
 void RenderMidiEvents(
     SoundData& sound,
-    const std::vector<MidiEvent>& events,
+    const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs)
 {
     //Voice, CC初期化
@@ -51,26 +51,34 @@ void RenderMidiEvents(
             else if (e.isNoteOn)
             {
                 const ChannelConfig& cfg = channelConfigs[(e.channel >= 0 && e.channel < 16) ? e.channel : 0];
+
                 Voice v{};
-                v.mode = cfg.mode;
-                v.type = cfg.type;
+                //識別, 状態
+                v.mode       = cfg.mode;
+                v.type       = cfg.type;
                 v.noteNumber = e.noteNumber;
-                v.velocity = e.velocity;
-                v.channel = e.channel;
-                v.amp = cfg.amp;
-                v.attackSec = cfg.attackSec;
-                v.decaySec = cfg.decaySec;
+                v.velocity   = e.velocity;
+                v.channel    = e.channel;
+                v.released   = false;
+
+                //レベル, エンベロープ
+                v.amp          = cfg.amp;
+                v.attackSec    = cfg.attackSec;
+                v.decaySec     = cfg.decaySec;
                 v.sustainLevel = cfg.sustainLevel;
-                v.releaseSec = cfg.releaseSec;
-                v.phase = 0.0;
-                v.fmCarrierPhase = 0.0;
-                v.fmModPhase = 0.0;
-                v.fmCarrierRatio = cfg.fmCarrierRatio;
-                v.fmModRatio = cfg.fmModRatio;
-                v.fmIndex = cfg.fmIndex;
-                v.fmOutLevel = cfg.fmOutLevel;
-                v.released = false;
+                v.releaseSec   = cfg.releaseSec;
                 NoteOn(v.env);
+
+                //基本波形位相
+                v.phase = 0.0;
+
+                //FM パラメータ
+                v.fmCarrierPhase = 0.0;
+                v.fmModPhase     = 0.0;
+                v.fmCarrierRatio = cfg.fmCarrierRatio;
+                v.fmModRatio     = cfg.fmModRatio;
+                v.fmIndex        = cfg.fmIndex;
+                v.fmOutLevel     = cfg.fmOutLevel;
                 voices.push_back(v);
             }
             else //NoteOff

@@ -1,17 +1,15 @@
-﻿#include "Writer.h"
-
-#include <climits>
+﻿#include <climits>
 #include <cstdint>
 #include <fstream>
 #include <vector>
 #include <Windows.h>
 
-namespace {
+#include "Writer.h"
+
 struct Chunk
 {
     char id[4];
 };
-}
 
 bool SaveWavFile(const SoundData& sound, const char* filePath)
 {
@@ -32,22 +30,21 @@ bool SaveWavFile(const SoundData& sound, const char* filePath)
     }
 
     //WAVヘッダ構築
-    int32_t wsize = (int32_t)(sizeof(short) * sound.length);
-
-    Chunk riffChunk = { 'R', 'I', 'F', 'F' };
-    int32_t riffSize = 12 + (int32_t)sizeof(PCMWAVEFORMAT) + 8 + wsize;
-    Chunk waveChunk = { 'W', 'A', 'V', 'E' };
-    Chunk formatChunk = { 'f', 'm', 't', ' ' };
-    int32_t fsize = (int32_t)sizeof(PCMWAVEFORMAT);
+    int32_t wsize       = (int32_t)(sizeof(short) * sound.length);
+    Chunk   riffChunk   = { 'R', 'I', 'F', 'F' };
+    int32_t riffSize    = 12 + (int32_t)sizeof(PCMWAVEFORMAT) + 8 + wsize;
+    Chunk   waveChunk   = { 'W', 'A', 'V', 'E' };
+    Chunk   formatChunk = { 'f', 'm', 't', ' ' };
+    int32_t fsize       = (int32_t)sizeof(PCMWAVEFORMAT);
     PCMWAVEFORMAT wform{};
-    wform.wf.wFormatTag = 1; //非圧縮PCM指定
-    wform.wf.nChannels = 1; //モノラルのみ対応
-    wform.wf.nSamplesPerSec = (DWORD)sound.fs;
+    wform.wf.wFormatTag      = 1; //非圧縮PCM指定
+    wform.wf.nChannels       = 1; //モノラルのみ対応
+    wform.wf.nSamplesPerSec  = (DWORD)sound.fs;
     wform.wf.nAvgBytesPerSec = (DWORD)(sound.bits * sound.fs / 8);
-    wform.wf.nBlockAlign = (WORD)(sound.bits / 8);
-    wform.wBitsPerSample = sound.bits;
-    Chunk dataChunk = { 'd', 'a', 't', 'a' };
-    int32_t dsize = wsize;
+    wform.wf.nBlockAlign     = (WORD)(sound.bits / 8);
+    wform.wBitsPerSample     = sound.bits;
+    Chunk   dataChunk        = { 'd', 'a', 't', 'a' };
+    int32_t dsize            = wsize;
 
     //WAV書き出し
     fout.write((char*)&riffChunk, sizeof(Chunk));
