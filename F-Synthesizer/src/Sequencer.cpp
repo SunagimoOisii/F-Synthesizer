@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-void BuildSampleEvents(const std::vector<MidiEventTick>& ticks,
+void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
     int ticksPerQuarter,
     int sampleRate,
@@ -24,12 +24,12 @@ void BuildSampleEvents(const std::vector<MidiEventTick>& ticks,
     }
 
     //tickイベントの整列(同tick内の優先順位も調整)
-    std::vector<MidiEventTick> sortedTicks = ticks;
-    std::sort(sortedTicks.begin(), sortedTicks.end(), [](const MidiEventTick& a, const MidiEventTick& b)
+    std::vector<MIDIEventTick> sortedTicks = ticks;
+    std::sort(sortedTicks.begin(), sortedTicks.end(), [](const MIDIEventTick& a, const MIDIEventTick& b)
     {
         if (a.tick != b.tick) return a.tick < b.tick;
-        int aPri = (a.type == MidiEventType::ControlChange) ? 0 : (a.isNoteOn ? 2 : 1);
-        int bPri = (b.type == MidiEventType::ControlChange) ? 0 : (b.isNoteOn ? 2 : 1);
+        int aPri = (a.type == MIDIEventType::ControlChange) ? 0 : (a.isNoteOn ? 2 : 1);
+        int bPri = (b.type == MIDIEventType::ControlChange) ? 0 : (b.isNoteOn ? 2 : 1);
         if (aPri != bPri) return aPri < bPri;
         return a.order < b.order;
     });
@@ -65,11 +65,11 @@ void BuildSampleEvents(const std::vector<MidiEventTick>& ticks,
     for (const auto& t : sortedTicks)
     {
         advanceToTick(t.tick);
-        if (t.type == MidiEventType::ControlChange)
+        if (t.type == MIDIEventType::ControlChange)
         {
             MidiEvent e{};
             e.sample = (int)(currentSample);
-            e.type = MidiEventType::ControlChange;
+            e.type = MIDIEventType::ControlChange;
             e.isNoteOn = false;
             e.noteNumber = 0;
             e.velocity = 0;
@@ -83,7 +83,7 @@ void BuildSampleEvents(const std::vector<MidiEventTick>& ticks,
 
         MidiEvent e{};
         e.sample = (int)(currentSample);
-        e.type = MidiEventType::Note;
+        e.type = MIDIEventType::Note;
         e.isNoteOn = t.isNoteOn;
         e.noteNumber = t.noteNumber;
         e.velocity = t.velocity;

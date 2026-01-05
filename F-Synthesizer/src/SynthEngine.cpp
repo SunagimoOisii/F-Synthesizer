@@ -29,7 +29,7 @@ void RenderMidiEvents(
         while (eventIndex < events.size() && events[eventIndex].sample <= i)
         {
             const auto& e = events[eventIndex];
-            if (e.type == MidiEventType::ControlChange)
+            if (e.type == MIDIEventType::ControlChange)
             {
                 if (e.controller == 7 || e.controller == 11)
                 {

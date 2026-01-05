@@ -3,23 +3,23 @@
 #include <string>
 #include <vector>
 
-enum class MidiEventType
+enum class MIDIEventType
 {
     Note,
     ControlChange
 };
 
-struct MidiEventTick
+struct MIDIEventTick
 {
+    MIDIEventType type;
     int tick;
-    MidiEventType type;
-    bool isNoteOn;
     int noteNumber;
     int velocity;
     int channel;
     int controller;
     int value;
     int order;
+    bool isNoteOn;
 };
 
 struct TempoEvent
@@ -28,13 +28,13 @@ struct TempoEvent
     double bpm;
 };
 
-struct MidiParseStats
+struct MIDIParseStatus
 {
     int format;
     int numTracks;
     int unsupportedEvents;
 };
 
-bool LoadMidiBasic(const std::string& path, int targetChannel,
-    std::vector<MidiEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
-    int& ticksPerQuarter, MidiParseStats& outStats);
+bool LoadMIDIBasic(const std::string& path, int targetChannel,
+    std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
+    int& ticksPerQuarter, MIDIParseStatus& outStats);

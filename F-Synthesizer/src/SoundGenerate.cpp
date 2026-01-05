@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "AudioBuffer.h"
-#include "MidiParser.h"
+#include "MIDIParser.h"
 #include "Sequencer.h"
 #include "SynthEngine.h"
 #include "Writer.h"
@@ -20,11 +20,11 @@ int main()
     const WaveType defaultWave = WaveType::Saw;
 
     //MIDI読み込み
-    std::vector<MidiEventTick> ticks;
+    std::vector<MIDIEventTick> ticks;
     std::vector<TempoEvent> tempoEvents;
     int midiTPQ = 0;
-    MidiParseStats stats{};
-    if (!LoadMidiBasic(midiPath, targetChannel, ticks, tempoEvents, midiTPQ, stats))
+    MIDIParseStatus stats{};
+    if (!LoadMIDIBasic(midiPath, targetChannel, ticks, tempoEvents, midiTPQ, stats))
     {
         std::cout << "Failed to load MIDI: " << midiPath << std::endl;
         return 1;
@@ -48,12 +48,12 @@ int main()
     for (const auto& t : ticks)
     {
         int ch = (t.channel >= 0 && t.channel < 16) ? t.channel : 0;
-        if (t.type == MidiEventType::Note)
+        if (t.type == MIDIEventType::Note)
         {
             noteCount++;
             noteByChannel[ch]++;
         }
-        else if (t.type == MidiEventType::ControlChange)
+        else if (t.type == MIDIEventType::ControlChange)
         {
             ccCount++;
             ccByChannel[ch]++;
@@ -95,7 +95,7 @@ int main()
     std::cout << std::endl;
     std::cout << "Unsupported Events: " << stats.unsupportedEvents << std::endl;
 
-    // tick -> sample のイベント変換
+    //tick -> sample のイベント変換
     std::vector<MidiEvent> events;
     BuildSampleEvents(ticks, tempoEvents, midiTPQ, sound.fs, defaultWave, events);
 
@@ -105,7 +105,7 @@ int main()
         return 1;
     }
 
-    // チャンネル別プリセット
+    //チャンネル別プリセット
      std::array<ChannelConfig, 16> channelConfigs = {
         //mode, type, amp, atk, dec, sus, rel, cRatio, mRatio, mIndex, out
         ChannelConfig{ SynthMode::FM, WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2, 1.0, 1.0, 4.0, 1.0 },         // ch0

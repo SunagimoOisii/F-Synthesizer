@@ -21,7 +21,7 @@
     <ClCompile Include="src\\Envelope.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\MidiParser.cpp">
+    <ClCompile Include="src\MIDIParser.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\Oscillator.cpp">
@@ -47,7 +47,7 @@
     <ClInclude Include="include\\Envelope.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\MidiParser.h">
+    <ClInclude Include="include\MIDIParser.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\Oscillator.h">

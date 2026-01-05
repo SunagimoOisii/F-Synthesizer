@@ -1,4 +1,4 @@
-﻿#include "MidiParser.h"
+﻿#include "MIDIParser.h"
 
 #include <cstdint>
 #include <fstream>
@@ -29,11 +29,9 @@ uint32_t ReadVarLen(const std::vector<unsigned char>& data, size_t& idx)
     return value;
 }
 
-void ParseTrack(const std::vector<unsigned char>& data,
-    int targetChannel,
-    std::vector<MidiEventTick>& outEvents,
-    std::vector<TempoEvent>& tempoEvents,
-    MidiParseStats& stats)
+void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
+    std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
+    MIDIParseStatus& stats)
 {
     size_t idx = 0;
     uint32_t currentTick = 0;
@@ -102,9 +100,9 @@ void ParseTrack(const std::vector<unsigned char>& data,
             int vel = data[idx++];
             if (targetChannel < 0 || ch == targetChannel)
             {
-                MidiEventTick e{};
+                MIDIEventTick e{};
                 e.tick = (int)currentTick;
-                e.type = MidiEventType::Note;
+                e.type = MIDIEventType::Note;
                 if (type == 0x90 && vel > 0)
                 {
                     e.isNoteOn = true;
@@ -130,9 +128,9 @@ void ParseTrack(const std::vector<unsigned char>& data,
             int value = data[idx++];
             if (targetChannel < 0 || ch == targetChannel)
             {
-                MidiEventTick e{};
+                MIDIEventTick e{};
                 e.tick = (int)currentTick;
-                e.type = MidiEventType::ControlChange;
+                e.type = MIDIEventType::ControlChange;
                 e.isNoteOn = false;
                 e.noteNumber = 0;
                 e.velocity = 0;
@@ -155,12 +153,9 @@ void ParseTrack(const std::vector<unsigned char>& data,
     }
 }
 
-bool LoadMidiBasic(const std::string& path,
-    int targetChannel,
-    std::vector<MidiEventTick>& outEvents,
-    std::vector<TempoEvent>& tempoEvents,
-    int& ticksPerQuarter,
-    MidiParseStats& outStats)
+bool LoadMIDIBasic(const std::string& path, int targetChannel,
+    std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
+    int& ticksPerQuarter, MIDIParseStatus& outStats)
 {
     std::ifstream in(path, std::ios::binary);
     if (!in) return false;
