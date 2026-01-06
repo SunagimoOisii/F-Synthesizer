@@ -130,6 +130,7 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int samp
     v.noteNumber = e.noteNumber;
     v.velocity = e.velocity;
     v.channel = e.channel;
+    v.channelIndex = ClampChannel(e.channel);
     v.released = false;
 
     //レベル, エンベロープ
@@ -180,7 +181,7 @@ double RenderVoices(std::vector<Voice>& voices,
         double envGain = StepADSR(v.env, 1.0 / sound.fs, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
         double w = 0.0;
         double velGain = VelocityToGain(v.velocity);
-        int ch = ClampChannel(v.channel);
+        int ch = v.channelIndex;
 
         std::visit([&](const auto& src)
         {

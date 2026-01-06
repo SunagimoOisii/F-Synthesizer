@@ -4,6 +4,7 @@
 - Program Change対応: チャンネルプリセットを上書きする
 - FM拡張: アルゴリズム追加、feedback、複数オペ、LFO/EGでmodIndex制御
 - ChannelConfig で関係ないパラメータも入力する必要があるのが面倒(NoiseではWave関係はいらない)
+- Voice の channel, channelIndex を統合するか
 
 ## 修正すべき不具合
 - MidiParser: メタイベント/ SysEx後にランニングステータスをクリアしていないため、後続データが誤解釈される可能性

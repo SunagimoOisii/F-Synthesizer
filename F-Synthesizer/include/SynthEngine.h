@@ -37,6 +37,7 @@ struct Voice
     int noteNumber;
     int velocity;
     int channel;
+    int channelIndex;
     bool released;
 
     //レベル, エンベロープ
