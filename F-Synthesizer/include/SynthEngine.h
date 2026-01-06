@@ -1,31 +1,39 @@
 ﻿#pragma once
 
 #include <array>
+#include <variant>
 #include <vector>
 
 #include "AudioBuffer.h"
 #include "Envelope.h"
 #include "Sequencer.h"
 
-enum class SynthMode
+struct WaveformConfig
 {
-    Basic,
-    FM
+    WaveType wave;
 };
 
-enum class SourceType
+struct NoiseConfig
 {
-    Waveform,
-    Noise
+    NoiseType noise;
 };
+
+struct FmConfig
+{
+    WaveType carrierWave;
+    WaveType modWave;
+    double carrierRatio;
+    double modRatio;
+    double index;
+    double outLevel;
+};
+
+using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig>;
 
 struct Voice
 {
     //識別, 状態
-    SynthMode mode;
-    SourceType source;
-    WaveType type;
-    NoiseType noiseType;
+    SourceConfig source;
     int noteNumber;
     int velocity;
     int channel;
@@ -41,25 +49,17 @@ struct Voice
 
     //基本波形位相
     double phase;
+    double phaseInc;
 
     //FM パラメータ
-    WaveType fmCarrierWave;
-    WaveType fmModWave;
     double fmCarrierPhase;
     double fmModPhase;
-    double fmCarrierRatio;
-    double fmModRatio;
-    double fmIndex;
-    double fmOutLevel;
 };
 
 struct ChannelConfig
 {
-    //種類
-    SynthMode mode;
-    SourceType source;
-    WaveType type;
-    NoiseType noiseType;
+    //音源
+    SourceConfig source;
 
     //レベル, エンベロープ
     double amp;
@@ -67,14 +67,6 @@ struct ChannelConfig
     double decaySec;
     double sustainLevel;
     double releaseSec;
-
-    //FM パラメータ
-    WaveType fmCarrierWave;
-    WaveType fmModWave;
-    double fmCarrierRatio;
-    double fmModRatio;
-    double fmIndex;
-    double fmOutLevel;
 };
 
 void RenderMIDIEvents(

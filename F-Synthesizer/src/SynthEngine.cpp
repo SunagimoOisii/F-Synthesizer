@@ -2,12 +2,13 @@
 
 #include <algorithm>
 #include <array>
+#include <type_traits>
 
 #include "Oscillator.h"
 
 int ClampChannel(int channel);
 
-Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e);
+Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate);
 
 void ApplyControlChange(const MIDIEvent& e,
     std::array<double, 16>& channelCc7,
@@ -19,6 +20,7 @@ void ProcessEventsAtSample(size_t& eventIndex,
     const std::vector<MIDIEvent>& events,
     int sampleIndex,
     const std::array<ChannelConfig, 16>& channelConfigs,
+    int sampleRate,
     std::vector<Voice>& voices,
     std::array<double, 16>& channelCc7,
     std::array<double, 16>& channelCc11);
@@ -48,7 +50,7 @@ void RenderMIDIEvents(
     const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
-        ProcessEventsAtSample(eventIndex, events, i, channelConfigs, voices, channelCc7, channelCc11);
+        ProcessEventsAtSample(eventIndex, events, i, channelConfigs, sound.fs, voices, channelCc7, channelCc11);
         sound.data[i] = RenderVoices(voices, sound, channelCc7, channelCc11);
 
         if ((i % cleanupInterval) == 0 && !voices.empty())
@@ -67,6 +69,7 @@ void ProcessEventsAtSample(size_t& eventIndex,
     const std::vector<MIDIEvent>& events,
     int sampleIndex,
     const std::array<ChannelConfig, 16>& channelConfigs,
+    int sampleRate,
     std::vector<Voice>& voices,
     std::array<double, 16>& channelCc7,
     std::array<double, 16>& channelCc11)
@@ -85,7 +88,7 @@ void ProcessEventsAtSample(size_t& eventIndex,
         if (e.isNoteOn)
         {
             const ChannelConfig& cfg = channelConfigs[ClampChannel(e.channel)];
-            voices.push_back(MakeVoiceFromConfig(cfg, e));
+            voices.push_back(MakeVoiceFromConfig(cfg, e, sampleRate));
         }
         else
         {
@@ -119,14 +122,11 @@ void ApplyControlChange(const MIDIEvent& e,
     }
 }
 
-Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
+Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     Voice v{};
     //識別, 状態
-    v.mode = cfg.mode;
     v.source = cfg.source;
-    v.type = cfg.type;
-    v.noiseType = cfg.noiseType;
     v.noteNumber = e.noteNumber;
     v.velocity = e.velocity;
     v.channel = e.channel;
@@ -142,16 +142,11 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e)
 
     //基本波形位相
     v.phase = 0.0;
+    v.phaseInc = NoteNumberToFreq(v.noteNumber) / sampleRate;
 
     //FM パラメータ
-    v.fmCarrierWave = cfg.fmCarrierWave;
-    v.fmModWave = cfg.fmModWave;
     v.fmCarrierPhase = 0.0;
     v.fmModPhase = 0.0;
-    v.fmCarrierRatio = cfg.fmCarrierRatio;
-    v.fmModRatio = cfg.fmModRatio;
-    v.fmIndex = cfg.fmIndex;
-    v.fmOutLevel = cfg.fmOutLevel;
     return v;
 }
 
@@ -183,38 +178,37 @@ double RenderVoices(std::vector<Voice>& voices,
         }
 
         double envGain = StepADSR(v.env, 1.0 / sound.fs, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
-        double freq = NoteNumberToFreq(v.noteNumber);
         double w = 0.0;
         double velGain = VelocityToGain(v.velocity);
         int ch = ClampChannel(v.channel);
 
-        if (v.source == SourceType::Noise)
+        std::visit([&](const auto& src)
         {
-            w = SampleNoise(v.noiseType);
-            sum += v.amp * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
-            continue;
-        }
+            using T = std::decay_t<decltype(src)>;
+            if constexpr (std::is_same_v<T, WaveformConfig>)
+            {
+                w = SampleWavePhase(src.wave, v.phase);
+                sum += v.amp * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
 
-        if (v.mode == SynthMode::FM)
-        {
-            double carrierFreq = freq * v.fmCarrierRatio;
-            double modFreq = freq * v.fmModRatio;
-            w = SampleFmPhase(v.fmCarrierWave, v.fmModWave, v.fmCarrierPhase, v.fmModPhase, v.fmIndex);
-            sum += v.amp * v.fmOutLevel * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
+                v.phase += v.phaseInc;
+                if (v.phase >= 1.0) v.phase -= 1.0;
+            }
+            else if constexpr (std::is_same_v<T, NoiseConfig>)
+            {
+                w = SampleNoise(src.noise);
+                sum += v.amp * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
+            }
+            else if constexpr (std::is_same_v<T, FmConfig>)
+            {
+                w = SampleFmPhase(src.carrierWave, src.modWave, v.fmCarrierPhase, v.fmModPhase, src.index);
+                sum += v.amp * src.outLevel * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
 
-            v.fmCarrierPhase += carrierFreq / sound.fs;
-            if (v.fmCarrierPhase >= 1.0) v.fmCarrierPhase -= 1.0;
-            v.fmModPhase += modFreq / sound.fs;
-            if (v.fmModPhase >= 1.0) v.fmModPhase -= 1.0;
-        }
-        else
-        {
-            w = SampleWavePhase(v.type, v.phase);
-            sum += v.amp * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
-
-            v.phase += freq / sound.fs;
-            if (v.phase >= 1.0) v.phase -= 1.0;
-        }
+                v.fmCarrierPhase += v.phaseInc * src.carrierRatio;
+                if (v.fmCarrierPhase >= 1.0) v.fmCarrierPhase -= 1.0;
+                v.fmModPhase += v.phaseInc * src.modRatio;
+                if (v.fmModPhase >= 1.0) v.fmModPhase -= 1.0;
+            }
+        }, v.source);
     }
     return sum;
 }
@@ -223,6 +217,5 @@ int ClampChannel(int channel)
 {
     return (channel >= 0 && channel < 16) ? channel : 0;
 }
-
 
 

@@ -15,7 +15,7 @@ int main()
     SoundData sound(6 * 44100, 16, 44100);
 
     //MIDI入力設定
-    const std::string midiPath = "test3.mid";
+    const std::string midiPath = "test2.mid";
     const int targetChannel = -1; // -1で全チャネル
     const WaveType defaultWave = WaveType::Saw;
 
@@ -106,84 +106,129 @@ int main()
     }
 
     //チャンネル別プリセット
-    
+    auto makeWave = [](WaveType wave,
+        double amp, double atk, double dec, double sus, double rel)
+    {
+        return ChannelConfig{ WaveformConfig{ wave }, amp, atk, dec, sus, rel };
+    };
+    auto makeNoise = [](NoiseType noise,
+        double amp, double atk, double dec, double sus, double rel)
+    {
+        return ChannelConfig{ NoiseConfig{ noise }, amp, atk, dec, sus, rel };
+    };
+    auto makeFm = [](WaveType carrierWave, WaveType modWave,
+        double amp, double atk, double dec, double sus, double rel,
+        double carrierRatio, double modRatio, double index, double outLevel)
+    {
+        return ChannelConfig{ FmConfig{ carrierWave, modWave, carrierRatio, modRatio, index, outLevel },
+            amp, atk, dec, sus, rel };
+    };
+
     //Beginning
+    std::array<ChannelConfig, 16> channelConfigs = {
+        //オルガン
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.08, 0.65, 0.15, 1.0, 1.01, 4.0, 1.0), // ch0
+        makeFm(WaveType::Sine, WaveType::Sine, 0.45, 0.005, 0.08, 0.65, 0.15, 1.0, 1.005, 4.5, 1.0), // ch1
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.08, 0.65, 0.15, 1.0, 1.01, 4.0, 1.0), // ch2
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch3
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.08, 0.65, 0.15, 1.0, 1.02, 4.0, 1.0), // ch4
+        //ベース
+        makeFm(WaveType::Triangle, WaveType::Saw, 0.4, 0.01, 0.10, 0.60, 0.20, 0.5, 1.01, 3.0, 1.0), // ch5
+        makeFm(WaveType::Triangle, WaveType::Triangle, 0.4, 0.01, 0.10, 0.60, 0.20, 0.5, 1.01, 2.5, 1.0), // ch6
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch7
+        makeWave(WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2), // ch8
+        //ノイズ
+        makeNoise(NoiseType::Blue, 0.45, 0.001, 0.03, 0.15, 0.05), // ch9
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch10
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch11
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch12
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2)  // ch15
+    };
+
+    //乾坤の血族
     /*
     std::array<ChannelConfig, 16> channelConfigs = {
-        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
-        //オルガン
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch0
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch1
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Sine,   NoiseType::White, 0.4, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  4.5,   1.0 }, // ch2
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
+        //リード
+        makeFm(WaveType::Triangle, WaveType::Saw, 0.5, 0.005, 0.1, 0.7, 0.08, 1.0, 1.0, 2.5, 1.0), // ch0
+        //サブ
+        makeFm(WaveType::Triangle, WaveType::Triangle, 0.3, 0.0015, 0.2, 0.85, 0.3, 1.01, 0.9975, 7.0, 1.0), // ch1
         //ベース
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch5
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Sine, WaveType::Sine, 0.5,   1.03,  2.75,   1.0 },       // ch6
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
+        makeFm(WaveType::Triangle, WaveType::Sine, 0.55, 0.002, 0.12, 0.65, 0.06, 1.03, 1.0, 1.5, 1.0), // ch2
+        //ストリングス1,2
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.3, 0.06, 0.35, 0.78, 0.45, 1.0, 1.01, 1.75, 1.0), // ch3
+        makeFm(WaveType::Triangle, WaveType::Sine, 0.25, 0.03, 0.25, 0.65, 0.3, 1.0, 1.01, 1.75, 1.0), // ch4
+        //コードギター
+        makeFm(WaveType::Triangle, WaveType::Square, 0.32, 0.003, 0.22, 0.3, 0.1, 1.0, 3.0, 1.4, 1.0), // ch5
+        //歪みギター1,2,3
+        makeFm(WaveType::Triangle, WaveType::Triangle, 0.3, 0.001, 0.22, 0.35, 0.1, 1.0, 3.0, 1.6, 1.0), // ch6
+        makeFm(WaveType::Triangle, WaveType::Triangle, 0.38, 0.002, 0.1, 0.6, 0.08, 1.0, 2.0, 1.3, 1.0), // ch7
+        //サブ
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.1, 0.7, 0.08, 1.0, 1.0, 2.75, 1.0), // ch8
         //ノイズ
-        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
+        makeNoise(NoiseType::Blue, 0.5, 0.001, 0.045, 0.1, 0.01), // ch9
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.5, 0.06, 0.35, 0.78, 0.45, 1.0, 1.01, 1.5, 1.0), // ch10
+        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.01, 2.0, 1.0), // ch11
+        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.01, 2.5, 1.0), // ch12
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
+        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.025, 1.0, 1.0), // ch15
+    };*/
+
+    //BloodyTears
+    /*/
+    std::array<ChannelConfig, 16> channelConfigs = {
+        //主旋律：FM / 金属感・不安定さ（目立たせる）
+        makeFm(WaveType::Triangle, WaveType::Saw, 0.35, 0.005, 0.08, 0.65, 0.15, 1.0, 1.015, 4.5, 1.0), // ch0
+        //副旋律：FM / 安定した輪郭（主旋律を邪魔しない）
+        makeFm(WaveType::Sine, WaveType::Sine, 0.35, 0.015, 0.12, 0.50, 0.25, 1.0, 1.02, 2.5, 1.0), // ch1
+        //ベース：FM / 軽いジャギり・低域の汚れ
+        makeFm(WaveType::Saw, WaveType::Square, 0.3, 0.01, 0.10, 0.60, 0.20, 0.5, 1.02, 1.5, 1.0), // ch2
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch3
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch4
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch5
+        makeWave(WaveType::Square, 0.5, 0.05, 0.15, 0.7, 0.2), // ch6
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch7
+        makeWave(WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2), // ch8
+        //ノイズ：PSG / リズム・不穏さの付与
+        makeNoise(NoiseType::Blue, 0.25, 0.001, 0.03, 0.15, 0.05), // ch9
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch10
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch11
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch12
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2)  // ch15
     };
     */
 
-    //BloodyTears
-    std::array<ChannelConfig, 16> channelConfigs = {
-        //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
-        //主旋律：FM / 金属感・不安定さ（目立たせる）
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.35, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Square, 1.0,   1.015,  4.5,   1.0 }, // ch0
-        //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
-        ChannelConfig{ SynthMode::FM, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.35, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, WaveType::Sine, 1.0,   1.02,   2.5,   1.0 }, // ch1
-        //ベース：FM / 軽いジャギり・低域の汚れ
-        ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.3,  0.01,  0.10, 0.60, 0.20, WaveType::Saw, WaveType::Sine, 0.5,   1.02,  1.5,   1.0 }, // ch2
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
-        //ノイズ：PSG / リズム・不穏さの付与
-        ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.25,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-        ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
-    };
-
-//Solstice
+    //Solstice
     /*
- std::array<ChannelConfig, 16> channelConfigs = {
-    //mode, source, type, noise, amp, atk, dec, sus, rel, carrierWave, modWave, cRatio, mRatio, mIndex, out
-    //主旋律：FM / 金属感・不安定さ（目立たせる）
-    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.45, 0.005, 0.08, 0.65, 0.15, WaveType::Triangle, WaveType::Sine, 1.0,   1.015,  7.5,   1.0 }, // ch0
-    //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Saw,      NoiseType::White, 0.30, 0.015, 0.12, 0.50, 0.25, WaveType::Sine, WaveType::Sine, 1.0,   1.0,   0.0,   1.0 }, // ch1
-    //ベース：FM / 軽いジャギり・低域の汚れ
-    ChannelConfig{ SynthMode::FM,    SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.4,  0.01,  0.10, 0.60, 0.20, WaveType::Triangle, WaveType::Sine, 0.5,   1.0,  1.5,   1.0 }, // ch2
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch3
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch4
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch5
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.5,  1.0, 1.0 },       // ch6
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch7
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Square,   NoiseType::White, 0.5,  0.01, 0.1,  0.8,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  4.0, 1.0 },       // ch8
-    //ノイズ：PSG / リズム・不穏さの付与
-    ChannelConfig{ SynthMode::Basic, SourceType::Noise,    WaveType::Sine,     NoiseType::Blue, 0.45,  0.001, 0.03, 0.15, 0.05, WaveType::Sine, WaveType::Sine, 1.0,  1.0,  0.0, 1.0 }, // ch9
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch10
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch11
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch12
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch13
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 },       // ch14
-    ChannelConfig{ SynthMode::Basic, SourceType::Waveform, WaveType::Triangle, NoiseType::White, 0.5,  0.05, 0.15, 0.7,  0.2, WaveType::Sine, WaveType::Sine,  1.0, 1.0,  0.0, 1.0 }        // ch15
-};*/
-     for (int i = 0;i < channelConfigs.size();i++)
+    std::array<ChannelConfig, 16> channelConfigs = {
+        //主旋律：FM / 金属感・不安定さ（目立たせる）
+        makeFm(WaveType::Sine, WaveType::Triangle, 0.45, 0.005, 0.08, 0.65, 0.15, 1.0, 3.0, 1.5, 1.0), // ch0
+        //副旋律：PSG / 安定した輪郭（主旋律を邪魔しない）
+        makeFm(WaveType::Triangle, WaveType::Saw, 0.4, 0.01, 0.10, 0.60, 0.20, 0.5, 2.0, 0.8, 1.0), // ch1
+        //ベース：FM / 軽いジャギり・低域の汚れ
+        makeFm(WaveType::Sine, WaveType::Saw, 0.4, 0.01, 0.10, 0.60, 0.20, 0.5, 1.0, 0.5, 1.0), // ch2
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch3
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch4
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch5
+        makeWave(WaveType::Square, 0.5, 0.05, 0.15, 0.7, 0.2), // ch6
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch7
+        makeWave(WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2), // ch8
+        //ノイズ：PSG / リズム・不穏さの付与
+        //makeNoise(NoiseType::Blue, 0.45, 0.001, 0.03, 0.15, 0.05), // ch9
+        makeFm(WaveType::Saw, WaveType::Square, 0.35, 0.001, 0.03, 0.15, 0.05, 0.5, 1.0, 0.5, 1.0),
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch10
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch11
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch12
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
+        makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2)  // ch15
+    };*/
+    
+    for (int i = 0;i < channelConfigs.size();i++)
      {
          //if (i != 9) channelConfigs.at(i).amp = 0;
      }
@@ -212,6 +257,8 @@ int main()
 
     return 0;
 }
+
+
 
 
 
