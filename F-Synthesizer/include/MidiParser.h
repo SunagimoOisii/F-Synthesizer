@@ -6,7 +6,8 @@
 enum class MIDIEventType
 {
     Note,
-    ControlChange
+    ControlChange,
+    PitchBend
 };
 
 struct MIDIEventTick

@@ -71,6 +71,25 @@ void AppendControlChangeEvent(std::vector<MIDIEventTick>& outEvents,
     outEvents.push_back(e);
 }
 
+void AppendPitchBendEvent(std::vector<MIDIEventTick>& outEvents,
+    uint32_t currentTick,
+    int value,
+    unsigned char channel,
+    int& eventOrder)
+{
+    MIDIEventTick e{};
+    e.tick = (int)currentTick;
+    e.type = MIDIEventType::PitchBend;
+    e.isNoteOn = false;
+    e.noteNumber = 0;
+    e.velocity = 0;
+    e.channel = channel;
+    e.controller = 0;
+    e.value = value;
+    e.order = eventOrder++;
+    outEvents.push_back(e);
+}
+
 bool ParseMetaEvent(const std::vector<unsigned char>& data,
     size_t& idx,
     uint32_t currentTick,
@@ -153,6 +172,19 @@ bool ParseChannelEvent(unsigned char type,
         if (targetChannel < 0 || ch == targetChannel)
         {
             AppendControlChangeEvent(outEvents, currentTick, controller, value, ch, eventOrder);
+        }
+        return true;
+    }
+
+    if (type == 0xE0)
+    {
+        if (idx + 1 >= data.size()) return false;
+        int lsb = data[idx++];
+        int msb = data[idx++];
+        int value = (msb << 7) | lsb;
+        if (targetChannel < 0 || ch == targetChannel)
+        {
+            AppendPitchBendEvent(outEvents, currentTick, value, ch, eventOrder);
         }
         return true;
     }

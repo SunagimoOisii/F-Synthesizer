@@ -15,7 +15,7 @@ int main()
     SoundData sound(6 * 44100, 16, 44100);
 
     //MIDI入力設定
-    const std::string midiPath = "test2.mid";
+    const std::string midiPath = "test.mid";
     const int targetChannel = -1; // -1で全チャネル
     const WaveType defaultWave = WaveType::Saw;
 
@@ -125,6 +125,7 @@ int main()
     };
 
     //Beginning
+    /*
     std::array<ChannelConfig, 16> channelConfigs = {
         //オルガン
         makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.08, 0.65, 0.15, 1.0, 1.01, 4.0, 1.0), // ch0
@@ -145,10 +146,10 @@ int main()
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2)  // ch15
-    };
+    };*/
 
     //乾坤の血族
-    /*
+
     std::array<ChannelConfig, 16> channelConfigs = {
         //リード
         makeFm(WaveType::Triangle, WaveType::Saw, 0.5, 0.005, 0.1, 0.7, 0.08, 1.0, 1.0, 2.5, 1.0), // ch0
@@ -174,7 +175,7 @@ int main()
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
         makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.025, 1.0, 1.0), // ch15
-    };*/
+    };
 
     //BloodyTears
     /*/

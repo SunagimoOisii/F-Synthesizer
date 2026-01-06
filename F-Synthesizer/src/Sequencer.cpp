@@ -11,7 +11,7 @@ enum class TickPriority
 
 int PriorityValue(const MIDIEventTick& e)
 {
-    if (e.type == MIDIEventType::ControlChange)
+    if (e.type == MIDIEventType::ControlChange || e.type == MIDIEventType::PitchBend)
     {
         return static_cast<int>(TickPriority::ControlChange);
     }
@@ -45,6 +45,21 @@ MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample, WaveType defaultWave
     e.controller = 0;
     e.value      = 0;
     e.isNoteOn   = t.isNoteOn;
+    return e;
+}
+
+MIDIEvent MakePitchBendEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+{
+    MIDIEvent e{};
+    e.type       = MIDIEventType::PitchBend;
+    e.typeWave   = defaultWave;
+    e.sample     = sample;
+    e.noteNumber = 0;
+    e.velocity   = 0;
+    e.channel    = t.channel;
+    e.controller = 0;
+    e.value      = t.value;
+    e.isNoteOn   = false;
     return e;
 }
 
@@ -121,6 +136,12 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
         if (t.type == MIDIEventType::ControlChange)
         {
             outEvents.push_back(MakeControlChangeEvent(t, sample, defaultWave));
+            continue;
+        }
+
+        if (t.type == MIDIEventType::PitchBend)
+        {
+            outEvents.push_back(MakePitchBendEvent(t, sample, defaultWave));
             continue;
         }
 
