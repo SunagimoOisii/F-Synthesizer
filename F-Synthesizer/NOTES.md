@@ -6,15 +6,50 @@
 - ChannelConfig で関係ないパラメータも入力する必要があるのが面倒(NoiseではWave関係はいらない)
 - Voice の channel, channelIndex を統合するか
 
+## 優先順位(音質/表現力優先・大きめ変更OK)
+### 高
+- LFO/フィルタ/デチューン導入(ストリングス等の表現力底上げ)
+- MidiParser: メタイベント/ SysEx後のrunning statusクリア
+- SynthEngine: 同一ノート重なり時のNoteOffずれ
+### 中
+- FM拡張(アルゴリズム/複数オペ/feedback)
+- ChannelConfig記述量の削減(型別の最小記述など)
+### 低
+- Program Change対応(後回しでOK)
+- Voiceのchannel/channelIndex統合
+
+## LFO/フィルタ/デチューンの設計方針
+### LFO
+- 目的: ピッチ/アンプ/フィルタへの緩い周期変調で質感を付与
+- 設計: VoiceにLFO位相と速度を持ち、Sampleごとに更新
+- 適用先: pitchFactor/amp/filterCutoffへ倍率として反映
+- 拡張: 波形選択、Delay/Depth/RateをChannelConfigで指定
+### フィルタ
+- 目的: 倍音の整理と時間変化(attack時に明るく、sustainで落ち着く)
+- 設計: 1次 or 2次のローパスをVoice単位で保持
+- 適用先: RenderVoicesで生成した波形に対して通す
+- 拡張: カットオフ/レゾナンス/EGをChannelConfigに追加
+### デチューン
+- 目的: ユニゾン感と厚みを作る
+- 設計: Voice生成時に複製(2-4本)し、phaseIncに微小係数を掛ける
+- 適用先: 同一ノートの複数Voiceを合成
+- 拡張: Detune幅/本数をプリセットで指定
+## ドラム合成(メガドライブ風)の設計方針
+### 目的
+- ノイズ一択から脱却し、ドラムと認識できる質感を合成で出す
+### 設計
+- SourceConfigにDrumSynthを追加し、Kick/Snare/Hatを種別で切替
+- Kick: サイン波 + 短いピッチエンベロープ(100-150Hz→50Hz)
+- Snare: ノイズ + 低域トーンをミックス
+- Hat: ハイパスしたノイズ + 超短ADSR
+### 必要な拡張
+- パーカッション向けの極短ADSR
+- 簡易フィルタ(1次HP/LP)の導入
+
 ## 修正すべき不具合
 - MidiParser: メタイベント/ SysEx後にランニングステータスをクリアしていないため、後続データが誤解釈される可能性
 - SynthEngine: 同一ノートが重なった場合、NoteOffが最初に一致したVoiceに当たり、解放対象がずれる可能性
 - SaveWavFile: sound.bitsを16以外にするとヘッダと実データの不整合が起きる(実装は16bit固定)
-
-## 読みにくいコードの部分
-## 読みにくいコードの部分の可読性を向上させる案
-
-## 各プログラムのクラス化によるメリット/デメリット
 
 ## 現状の設計改善点
 - SourceConfigのvariant運用は安全だが、SoundGenerate側の記述量が増える

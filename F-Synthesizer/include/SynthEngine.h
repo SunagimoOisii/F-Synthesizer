@@ -28,7 +28,36 @@ struct FmConfig
     double outLevel;
 };
 
-using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig>;
+enum class DrumType
+{
+    None,
+    Kick,
+    Snare,
+    Hat
+};
+
+struct DrumConfig
+{
+    DrumType type = DrumType::None;
+    double gain = 1.0;
+    double baseFreq = 0.0;
+    double pitchDrop = 0.0;
+    double pitchDecaySec = 0.0;
+    double toneFreq = 0.0;
+    double toneLevel = 0.0;
+    double noiseLevel = 0.0;
+    double hpCut = 0.0;
+    double lpCut = 0.0;
+    int toneWave = -1;
+    int noiseType = -1;
+};
+
+struct DrumKitConfig
+{
+    std::array<DrumConfig, 128> map;
+};
+
+using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig>;
 
 struct Voice
 {
@@ -56,6 +85,17 @@ struct Voice
     //FM パラメータ
     double fmCarrierPhase;
     double fmModPhase;
+
+    //Drum パラメータ
+    double drumTime;
+    double drumBaseFreq;
+    double drumPitchDrop;
+    double drumPitchDecaySec;
+    double drumNoisePrev;
+    double drumHpPrev;
+    double drumHpAlpha;
+    double drumLpPrev;
+    double drumLpAlpha;
 };
 
 struct ChannelConfig

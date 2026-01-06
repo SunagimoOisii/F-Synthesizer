@@ -37,6 +37,117 @@ double RenderVoices(std::vector<Voice>& voices,
     const std::array<double, 16>& channelPitch,
     size_t& pendingRemoveCount);
 
+const double kPi = std::acos(-1.0);
+
+void InitDrumVoice(const DrumConfig& drum, Voice& v, int sampleRate)
+{
+    if (drum.type == DrumType::Kick)
+    {
+        v.drumBaseFreq = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
+        v.drumPitchDrop = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
+        v.drumPitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
+        v.phaseInc = v.drumBaseFreq / sampleRate;
+    }
+    else if (drum.type == DrumType::Snare)
+    {
+        v.drumBaseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
+        v.phaseInc = v.drumBaseFreq / sampleRate;
+        double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 1200.0;
+        v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 6000.0;
+        v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+    }
+    else if (drum.type == DrumType::Hat)
+    {
+        double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 6000.0;
+        v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12000.0;
+        v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        v.drumBaseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
+    }
+}
+
+double RenderDrumSample(const DrumConfig& src, Voice& v, double dt, int sampleRate)
+{
+    if (!v.released && v.drumTime >= (v.attackSec + v.decaySec))
+    {
+        NoteOff(v.env);
+        v.released = true;
+    }
+
+    double w = 0.0;
+    if (src.type == DrumType::Kick)
+    {
+        double pitchFactor = 1.0;
+        if (v.drumPitchDecaySec > 0.0)
+        {
+            pitchFactor += (v.drumPitchDrop - 1.0) * std::exp(-v.drumTime / v.drumPitchDecaySec);
+        }
+        double freq = v.drumBaseFreq * pitchFactor;
+        v.phase += (freq / sampleRate);
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        w = SampleWavePhase(WaveType::Sine, v.phase);
+    }
+    else if (src.type == DrumType::Snare)
+    {
+        double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.3;
+        double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 0.7;
+        double hpCut = (src.hpCut > 0.0) ? src.hpCut : 1200.0;
+        double lpCut = (src.lpCut > 0.0) ? src.lpCut : 6000.0;
+        WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Sine;
+        NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
+        if (v.drumHpAlpha <= 0.0)
+        {
+            v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        }
+        if (v.drumLpAlpha <= 0.0)
+        {
+            v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        }
+        v.phase += v.drumBaseFreq / sampleRate;
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        double tone = SampleWavePhase(toneWave, v.phase);
+        double noise = SampleNoise(noiseType);
+        double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
+        double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
+        v.drumNoisePrev = noise;
+        v.drumHpPrev = hp;
+        v.drumLpPrev = lp;
+        w = toneLevel * tone + noiseLevel * lp;
+    }
+    else if (src.type == DrumType::Hat)
+    {
+        double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 1.0;
+        double hpCut = (src.hpCut > 0.0) ? src.hpCut : 6000.0;
+        double lpCut = (src.lpCut > 0.0) ? src.lpCut : 12000.0;
+        double toneFreq = (src.toneFreq > 0.0) ? src.toneFreq : 8000.0;
+        double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.2;
+        WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Square;
+        NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
+        if (v.drumHpAlpha <= 0.0)
+        {
+            v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        }
+        if (v.drumLpAlpha <= 0.0)
+        {
+            v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        }
+        double noise = SampleNoise(noiseType);
+        double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
+        double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
+        v.drumNoisePrev = noise;
+        v.drumHpPrev = hp;
+        v.drumLpPrev = lp;
+        v.phase += toneFreq / sampleRate;
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        double tone = SampleWavePhase(toneWave, v.phase);
+        w = noiseLevel * lp + toneLevel * tone;
+    }
+
+    v.drumTime += dt;
+    return w;
+}
+
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
@@ -116,7 +227,23 @@ void ProcessEventsAtSample(size_t& eventIndex,
         if (e.isNoteOn)
         {
             const ChannelConfig& cfg = channelConfigs[ClampChannel(e.channel)];
-            voices.push_back(MakeVoiceFromConfig(cfg, e, sampleRate));
+            if (const auto* kit = std::get_if<DrumKitConfig>(&cfg.source))
+            {
+                int note = e.noteNumber;
+                if (note < 0) note = 0;
+                if (note > 127) note = 127;
+                const DrumConfig& drum = kit->map[note];
+                if (drum.type != DrumType::None)
+                {
+                    ChannelConfig drumCfg = cfg;
+                    drumCfg.source = drum;
+                    voices.push_back(MakeVoiceFromConfig(drumCfg, e, sampleRate));
+                }
+            }
+            else
+            {
+                voices.push_back(MakeVoiceFromConfig(cfg, e, sampleRate));
+            }
         }
         else
         {
@@ -189,6 +316,22 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int samp
     //FM パラメータ
     v.fmCarrierPhase = 0.0;
     v.fmModPhase = 0.0;
+
+    //Drum パラメータ
+    v.drumTime = 0.0;
+    v.drumBaseFreq = 0.0;
+    v.drumPitchDrop = 1.0;
+    v.drumPitchDecaySec = 0.0;
+    v.drumNoisePrev = 0.0;
+    v.drumHpPrev = 0.0;
+    v.drumHpAlpha = 0.0;
+    v.drumLpPrev = 0.0;
+    v.drumLpAlpha = 0.0;
+
+    if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
+    {
+        InitDrumVoice(*drum, v, sampleRate);
+    }
     return v;
 }
 
@@ -196,6 +339,10 @@ void HandleNoteOff(const MIDIEvent& e, std::vector<Voice>& voices)
 {
     for (auto& v : voices)
     {
+        if (std::holds_alternative<DrumConfig>(v.source))
+        {
+            continue;
+        }
         if (!v.released && v.noteNumber == e.noteNumber && v.channel == e.channel)
         {
             NoteOff(v.env);
@@ -221,7 +368,8 @@ double RenderVoices(std::vector<Voice>& voices,
             continue;
         }
 
-        double envGain = StepADSR(v.env, 1.0 / sound.fs, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
+        double dt = 1.0 / sound.fs;
+        double envGain = StepADSR(v.env, dt, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
         if (!v.pendingRemove && v.env.stage == ADSRStage::Off)
         {
             v.pendingRemove = true;
@@ -258,6 +406,12 @@ double RenderVoices(std::vector<Voice>& voices,
                 if (v.fmCarrierPhase >= 1.0) v.fmCarrierPhase -= 1.0;
                 v.fmModPhase += v.phaseInc * pitchFactor * src.modRatio;
                 if (v.fmModPhase >= 1.0) v.fmModPhase -= 1.0;
+            }
+            else if constexpr (std::is_same_v<T, DrumConfig>)
+            {
+                double drumGain = (src.gain > 0.0) ? src.gain : 1.0;
+                w = RenderDrumSample(src, v, dt, sound.fs);
+                sum += drumGain * v.amp * channelCc7[ch] * channelCc11[ch] * velGain * w * envGain;
             }
         }, v.source);
     }

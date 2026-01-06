@@ -123,6 +123,64 @@ int main()
         return ChannelConfig{ FmConfig{ carrierWave, modWave, carrierRatio, modRatio, index, outLevel },
             amp, atk, dec, sus, rel };
     };
+    auto makeDrum = [](DrumType type,
+        double amp, double atk, double dec, double sus, double rel)
+    {
+        return ChannelConfig{ DrumConfig{ type }, amp, atk, dec, sus, rel };
+    };
+    auto makeDrumDetail = [](const DrumConfig& drum,
+        double amp, double atk, double dec, double sus, double rel)
+    {
+        return ChannelConfig{ drum, amp, atk, dec, sus, rel };
+    };
+    auto makeDrumKitDetail = [](const DrumKitConfig& kit,
+        double amp, double atk, double dec, double sus, double rel)
+    {
+        return ChannelConfig{ kit, amp, atk, dec, sus, rel };
+    };
+    auto makeGmDrumKit = []()
+    {
+        DrumKitConfig kit{};
+        for (auto& d : kit.map)
+        {
+            d.type = DrumType::None;
+        }
+
+        DrumConfig kick{ DrumType::Kick };
+        kick.gain = 0.6;
+        kick.baseFreq = 60.0;
+        kick.pitchDrop = 3.0;
+        kick.pitchDecaySec = 0.06;
+
+        DrumConfig snare{ DrumType::Snare };
+        snare.toneFreq = 220.0;
+        snare.toneLevel = 0.55;
+        snare.noiseLevel = 0.35;
+        snare.hpCut = 700.0;
+        snare.lpCut = 6000.0;
+        snare.toneWave = (int)WaveType::Triangle;
+        snare.noiseType = (int)NoiseType::White;
+
+        DrumConfig hat{ DrumType::Hat };
+        hat.gain = 0.5;
+        hat.toneFreq = 8000.0;
+        hat.toneLevel = 0.2;
+        hat.noiseLevel = 0.2;
+        hat.hpCut = 4000.0;
+        hat.lpCut = 6000.0;
+        hat.toneWave = (int)WaveType::Square;
+        hat.noiseType = (int)NoiseType::Blue;
+
+        kit.map[36] = kick; // Bass Drum 1
+        kit.map[38] = snare; // Acoustic Snare
+        kit.map[40] = snare; // Electric Snare
+        kit.map[42] = hat; // Closed Hi-Hat
+        kit.map[44] = hat; // Pedal Hi-Hat
+        kit.map[46] = hat; // Open Hi-Hat
+        kit.map[49] = hat; // Crash Cymbal 1
+
+        return kit;
+    };
 
     //Beginning
     /*
@@ -139,17 +197,17 @@ int main()
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch7
         makeWave(WaveType::Square, 0.5, 0.01, 0.1, 0.8, 0.2), // ch8
         //ノイズ
-        makeNoise(NoiseType::Blue, 0.45, 0.001, 0.03, 0.15, 0.05), // ch9
+        makeDrumKitDetail(makeGmDrumKit(), 15.0, 0.001, 0.15, 0.1, 0.3), //ch9
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch10
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch11
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch12
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2)  // ch15
-    };*/
+    };
+    */
 
     //乾坤の血族
-
     std::array<ChannelConfig, 16> channelConfigs = {
         //リード
         makeFm(WaveType::Triangle, WaveType::Saw, 0.5, 0.005, 0.1, 0.7, 0.08, 1.0, 1.0, 2.5, 1.0), // ch0
@@ -167,18 +225,18 @@ int main()
         makeFm(WaveType::Triangle, WaveType::Triangle, 0.38, 0.002, 0.1, 0.6, 0.08, 1.0, 2.0, 1.3, 1.0), // ch7
         //サブ
         makeFm(WaveType::Sine, WaveType::Triangle, 0.4, 0.005, 0.1, 0.7, 0.08, 1.0, 1.0, 2.75, 1.0), // ch8
-        //ノイズ
-        makeNoise(NoiseType::Blue, 0.5, 0.001, 0.045, 0.1, 0.01), // ch9
-        makeFm(WaveType::Sine, WaveType::Triangle, 0.5, 0.06, 0.35, 0.78, 0.45, 1.0, 1.01, 1.5, 1.0), // ch10
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.01, 2.0, 1.0), // ch11
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.01, 2.5, 1.0), // ch12
+        //ドラム
+        makeDrumKitDetail(makeGmDrumKit(), 4.0, 0.001, 0.15, 0.1, 0.2), //ch9
+        makeFm(WaveType::Sine, WaveType::Sine, 0.5, 0.25, 0.35, 0.6, 0.8, 1.0, 1.0, 0.3, 1.0), // ch10
+        makeFm(WaveType::Sine, WaveType::Sine, 0.45, 0.25, 0.25, 0.6, 0.8, 1.0, 1.0, 0.3, 1.0), // ch11
+        makeFm(WaveType::Sine, WaveType::Sine, 0.45, 0.25, 0.25, 0.6, 0.8, 1.0, 1.0, 0.3, 1.0), // ch12
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch13
         makeWave(WaveType::Triangle, 0.5, 0.05, 0.15, 0.7, 0.2), // ch14
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.45, 0.03, 0.25, 0.65, 0.3, 1.0, 1.025, 1.0, 1.0), // ch15
+        makeFm(WaveType::Sine, WaveType::Sine, 0.45, 0.25, 0.25, 0.6, 0.8, 1.0, 1.025, 0.3, 1.0), // ch15
     };
 
     //BloodyTears
-    /*/
+    /*
     std::array<ChannelConfig, 16> channelConfigs = {
         //主旋律：FM / 金属感・不安定さ（目立たせる）
         makeFm(WaveType::Triangle, WaveType::Saw, 0.35, 0.005, 0.08, 0.65, 0.15, 1.0, 1.015, 4.5, 1.0), // ch0
@@ -258,9 +316,3 @@ int main()
 
     return 0;
 }
-
-
-
-
-
-
