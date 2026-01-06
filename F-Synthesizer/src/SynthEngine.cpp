@@ -28,7 +28,8 @@ void ProcessEventsAtSample(size_t& eventIndex,
 double RenderVoices(std::vector<Voice>& voices,
     const SoundData& sound,
     const std::array<double, 16>& channelCc7,
-    const std::array<double, 16>& channelCc11);
+    const std::array<double, 16>& channelCc11,
+    size_t& pendingRemoveCount);
 
 void RenderMIDIEvents(
     SoundData& sound,
@@ -38,6 +39,7 @@ void RenderMIDIEvents(
     //Voice, CC初期化
     std::vector<Voice> voices;
     size_t eventIndex = 0;
+    size_t pendingRemoveCount = 0;
     std::array<double, 16> channelCc7{};
     std::array<double, 16> channelCc11{};
     for (int i = 0; i < 16; i++)
@@ -51,16 +53,26 @@ void RenderMIDIEvents(
     for (int i = 0; i < sound.length; i++)
     {
         ProcessEventsAtSample(eventIndex, events, i, channelConfigs, sound.fs, voices, channelCc7, channelCc11);
-        sound.data[i] = RenderVoices(voices, sound, channelCc7, channelCc11);
+        sound.data[i] = RenderVoices(voices, sound, channelCc7, channelCc11, pendingRemoveCount);
 
-        if ((i % cleanupInterval) == 0 && !voices.empty())
+        if ((i % cleanupInterval) == 0 && !voices.empty() && pendingRemoveCount > 0)
         {
+            size_t removed = 0;
             voices.erase(
-                std::remove_if(voices.begin(), voices.end(), [](const Voice& v)
+                std::remove_if(voices.begin(), voices.end(), [&](const Voice& v)
                     {
-                        return v.env.stage == ADSRStage::Off;
+                        if (v.pendingRemove)
+                        {
+                            removed++;
+                            return true;
+                        }
+                        return false;
                     }),
                 voices.end());
+            if (removed > 0)
+            {
+                pendingRemoveCount = 0;
+            }
         }
     }
 }
@@ -132,6 +144,7 @@ Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int samp
     v.channel = e.channel;
     v.channelIndex = ClampChannel(e.channel);
     v.released = false;
+    v.pendingRemove = false;
 
     //レベル, エンベロープ
     v.amp = cfg.amp;
@@ -167,7 +180,8 @@ void HandleNoteOff(const MIDIEvent& e, std::vector<Voice>& voices)
 double RenderVoices(std::vector<Voice>& voices,
     const SoundData& sound,
     const std::array<double, 16>& channelCc7,
-    const std::array<double, 16>& channelCc11)
+    const std::array<double, 16>& channelCc11,
+    size_t& pendingRemoveCount)
 {
     //Voice合成
     double sum = 0.0;
@@ -179,6 +193,12 @@ double RenderVoices(std::vector<Voice>& voices,
         }
 
         double envGain = StepADSR(v.env, 1.0 / sound.fs, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
+        if (!v.pendingRemove && v.env.stage == ADSRStage::Off)
+        {
+            v.pendingRemove = true;
+            pendingRemoveCount++;
+            continue;
+        }
         double w = 0.0;
         double velGain = VelocityToGain(v.velocity);
         int ch = v.channelIndex;

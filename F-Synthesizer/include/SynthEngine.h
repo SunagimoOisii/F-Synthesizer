@@ -39,6 +39,7 @@ struct Voice
     int channel;
     int channelIndex;
     bool released;
+    bool pendingRemove;
 
     //レベル, エンベロープ
     double amp;
