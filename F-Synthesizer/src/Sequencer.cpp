@@ -98,16 +98,18 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
             int tempoTick  = sortedTempo[tempoIndex].tick;
             int deltaTicks = tempoTick - currentTick;
             double secPerQuarter = 60.0 / currentBPM;
+            double samplesPerTick = (secPerQuarter * sampleRate) / ticksPerQuarter;
 
-            currentSample += (deltaTicks / (double)ticksPerQuarter) * secPerQuarter * sampleRate;
+            currentSample += deltaTicks * samplesPerTick;
             currentTick    = tempoTick;
             currentBPM     = sortedTempo[tempoIndex].bpm;
             tempoIndex++;
         }
         int deltaTicks       = targetTick - currentTick;
         double secPerQuarter = 60.0 / currentBPM;
+        double samplesPerTick = (secPerQuarter * sampleRate) / ticksPerQuarter;
 
-        currentSample += (deltaTicks / (double)ticksPerQuarter) * secPerQuarter * sampleRate;
+        currentSample += deltaTicks * samplesPerTick;
         currentTick    = targetTick;
     };
 
