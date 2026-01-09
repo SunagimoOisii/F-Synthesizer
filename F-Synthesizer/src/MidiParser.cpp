@@ -30,6 +30,55 @@ uint32_t ReadVarLen(const std::vector<unsigned char>& data, size_t& idx)
     return value;
 }
 
+struct MIDIHeader
+{
+    uint16_t format = 0;
+    uint16_t numTracks = 0;
+    uint16_t division = 0;
+};
+
+bool ReadChunkId(std::ifstream& in, const char* expected)
+{
+    char chunkId[4]{};
+    in.read(chunkId, 4);
+    if (!in)
+    {
+        return false;
+    }
+    return std::string(chunkId, 4) == expected;
+}
+
+bool ReadHeader(std::ifstream& in, MIDIHeader& header, MIDIParseStatus& stats)
+{
+    if (!ReadChunkId(in, "MThd")) return false;
+
+    uint32_t headerSize = ReadBE32(in);
+    header.format = ReadBE16(in);
+    header.numTracks = ReadBE16(in);
+    header.division = ReadBE16(in);
+    if (headerSize > 6)
+    {
+        in.seekg(headerSize - 6, std::ios::cur);
+    }
+    if (header.format != 0 && header.format != 1) return false;
+    if (header.numTracks < 1) return false;
+    if (header.division & 0x8000) return false; //SMPTEには未対応
+
+    stats.format = header.format;
+    stats.numTracks = header.numTracks;
+    stats.unsupportedEvents = 0;
+    return true;
+}
+
+bool ReadTrackChunk(std::ifstream& in, std::vector<unsigned char>& data)
+{
+    if (!ReadChunkId(in, "MTrk")) return false;
+    uint32_t trackSize = ReadBE32(in);
+    data.resize(trackSize);
+    in.read(reinterpret_cast<char*>(data.data()), trackSize);
+    return static_cast<bool>(in);
+}
+
 void AppendNoteEvent(std::vector<MIDIEventTick>& outEvents,
     uint32_t currentTick,
     int note,
@@ -257,36 +306,15 @@ bool LoadMIDIBasic(const std::string& path, int targetChannel,
     if (!in) return false;
 
     //ヘッダー(MThd)
-    char chunkId[4]{};
-    in.read(chunkId, 4);
-    if (std::string(chunkId, 4) != "MThd") return false;
-
-    uint32_t headerSize = ReadBE32(in);
-    uint16_t format = ReadBE16(in);
-    uint16_t ntrks = ReadBE16(in);
-    uint16_t division = ReadBE16(in);
-    if (headerSize > 6)
-    {
-        in.seekg(headerSize - 6, std::ios::cur);
-    }
-    if (format != 0 && format != 1) return false;
-    if (ntrks < 1) return false;
-    if (division & 0x8000) return false; //SMPTEには未対応
-    ticksPerQuarter = division;
-    outStats.format = format;
-    outStats.numTracks = ntrks;
-    outStats.unsupportedEvents = 0;
+    MIDIHeader header{};
+    if (!ReadHeader(in, header, outStats)) return false;
+    ticksPerQuarter = header.division;
 
     //トラック(MTrk)
-    for (uint16_t t = 0; t < ntrks; t++)
+    for (uint16_t t = 0; t < header.numTracks; t++)
     {
-        in.read(chunkId, 4);
-        if (std::string(chunkId, 4) != "MTrk") return false;
-        uint32_t trackSize = ReadBE32(in);
-
-        std::vector<unsigned char> data(trackSize);
-        in.read(reinterpret_cast<char*>(data.data()), trackSize);
-        if (!in) return false;
+        std::vector<unsigned char> data;
+        if (!ReadTrackChunk(in, data)) return false;
 
         ParseTrack(data, targetChannel, outEvents, tempoEvents, outStats);
     }
