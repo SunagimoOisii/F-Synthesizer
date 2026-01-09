@@ -9,81 +9,99 @@ namespace
 {
     constexpr double kPi = 3.14159265358979323846;
 
-    double RenderDrumSample(const DrumConfig& src, Voice& v, double dt, int sampleRate)
+    void EnsureDrumFilters(Voice& v, double hpCut, double lpCut, int sampleRate)
+    {
+        if (v.drumHpAlpha <= 0.0)
+        {
+            v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        }
+        if (v.drumLpAlpha <= 0.0)
+        {
+            v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        }
+    }
+
+    void PrepareDrumRelease(Voice& v)
     {
         if (!v.released && v.drumTime >= (v.attackSec + v.decaySec))
         {
             NoteOff(v.env);
             v.released = true;
         }
+    }
+
+    double RenderKickSample(const DrumConfig& src, Voice& v, int sampleRate)
+    {
+        double pitchFactor = 1.0;
+        if (v.drumPitchDecaySec > 0.0)
+        {
+            pitchFactor += (v.drumPitchDrop - 1.0) * std::exp(-v.drumTime / v.drumPitchDecaySec);
+        }
+        double freq = v.drumBaseFreq * pitchFactor;
+        v.phase += (freq / sampleRate);
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        return SampleWavePhase(WaveType::Sine, v.phase);
+    }
+
+    double RenderSnareSample(const DrumConfig& src, Voice& v, int sampleRate)
+    {
+        double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.3;
+        double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 0.7;
+        double hpCut = (src.hpCut > 0.0) ? src.hpCut : 1200.0;
+        double lpCut = (src.lpCut > 0.0) ? src.lpCut : 6000.0;
+        WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Sine;
+        NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
+        EnsureDrumFilters(v, hpCut, lpCut, sampleRate);
+        v.phase += v.drumBaseFreq / sampleRate;
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        double tone = SampleWavePhase(toneWave, v.phase);
+        double noise = SampleNoise(noiseType);
+        double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
+        double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
+        v.drumNoisePrev = noise;
+        v.drumHpPrev = hp;
+        v.drumLpPrev = lp;
+        return toneLevel * tone + noiseLevel * lp;
+    }
+
+    double RenderHatSample(const DrumConfig& src, Voice& v, int sampleRate)
+    {
+        double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 1.0;
+        double hpCut = (src.hpCut > 0.0) ? src.hpCut : 6000.0;
+        double lpCut = (src.lpCut > 0.0) ? src.lpCut : 12000.0;
+        double toneFreq = (src.toneFreq > 0.0) ? src.toneFreq : 8000.0;
+        double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.2;
+        WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Square;
+        NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
+        EnsureDrumFilters(v, hpCut, lpCut, sampleRate);
+        double noise = SampleNoise(noiseType);
+        double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
+        double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
+        v.drumNoisePrev = noise;
+        v.drumHpPrev = hp;
+        v.drumLpPrev = lp;
+        v.phase += toneFreq / sampleRate;
+        if (v.phase >= 1.0) v.phase -= 1.0;
+        double tone = SampleWavePhase(toneWave, v.phase);
+        return noiseLevel * lp + toneLevel * tone;
+    }
+
+    double RenderDrumSample(const DrumConfig& src, Voice& v, double dt, int sampleRate)
+    {
+        PrepareDrumRelease(v);
 
         double w = 0.0;
         if (src.type == DrumType::Kick)
         {
-            double pitchFactor = 1.0;
-            if (v.drumPitchDecaySec > 0.0)
-            {
-                pitchFactor += (v.drumPitchDrop - 1.0) * std::exp(-v.drumTime / v.drumPitchDecaySec);
-            }
-            double freq = v.drumBaseFreq * pitchFactor;
-            v.phase += (freq / sampleRate);
-            if (v.phase >= 1.0) v.phase -= 1.0;
-            w = SampleWavePhase(WaveType::Sine, v.phase);
+            w = RenderKickSample(src, v, sampleRate);
         }
         else if (src.type == DrumType::Snare)
         {
-            double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.3;
-            double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 0.7;
-            double hpCut = (src.hpCut > 0.0) ? src.hpCut : 1200.0;
-            double lpCut = (src.lpCut > 0.0) ? src.lpCut : 6000.0;
-            WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Sine;
-            NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
-            if (v.drumHpAlpha <= 0.0)
-            {
-                v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-            }
-            if (v.drumLpAlpha <= 0.0)
-            {
-                v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
-            }
-            v.phase += v.drumBaseFreq / sampleRate;
-            if (v.phase >= 1.0) v.phase -= 1.0;
-            double tone = SampleWavePhase(toneWave, v.phase);
-            double noise = SampleNoise(noiseType);
-            double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
-            double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
-            v.drumNoisePrev = noise;
-            v.drumHpPrev = hp;
-            v.drumLpPrev = lp;
-            w = toneLevel * tone + noiseLevel * lp;
+            w = RenderSnareSample(src, v, sampleRate);
         }
         else if (src.type == DrumType::Hat)
         {
-            double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 1.0;
-            double hpCut = (src.hpCut > 0.0) ? src.hpCut : 6000.0;
-            double lpCut = (src.lpCut > 0.0) ? src.lpCut : 12000.0;
-            double toneFreq = (src.toneFreq > 0.0) ? src.toneFreq : 8000.0;
-            double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.2;
-            WaveType toneWave = (src.toneWave >= 0) ? static_cast<WaveType>(src.toneWave) : WaveType::Square;
-            NoiseType noiseType = (src.noiseType >= 0) ? static_cast<NoiseType>(src.noiseType) : NoiseType::White;
-            if (v.drumHpAlpha <= 0.0)
-            {
-                v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-            }
-            if (v.drumLpAlpha <= 0.0)
-            {
-                v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
-            }
-            double noise = SampleNoise(noiseType);
-            double hp = v.drumHpAlpha * (v.drumHpPrev + noise - v.drumNoisePrev);
-            double lp = (1.0 - v.drumLpAlpha) * hp + v.drumLpAlpha * v.drumLpPrev;
-            v.drumNoisePrev = noise;
-            v.drumHpPrev = hp;
-            v.drumLpPrev = lp;
-            v.phase += toneFreq / sampleRate;
-            if (v.phase >= 1.0) v.phase -= 1.0;
-            double tone = SampleWavePhase(toneWave, v.phase);
-            w = noiseLevel * lp + toneLevel * tone;
+            w = RenderHatSample(src, v, sampleRate);
         }
 
         v.drumTime += dt;
@@ -151,4 +169,3 @@ double RenderVoices(RenderState& state, const SoundData& sound)
     }
     return sum;
 }
-
