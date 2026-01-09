@@ -135,7 +135,10 @@
     <ClCompile Include="src\\Oscillator.cpp" />
     <ClCompile Include="src\\Sequencer.cpp" />
     <ClCompile Include="src\\SoundGenerate.cpp" />
-    <ClCompile Include="src\\SynthEngine.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Engine.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Events.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Renderer.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Voices.cpp" />
     <ClCompile Include="src\\Writer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -144,8 +147,9 @@
     <ClInclude Include="include\MIDIParser.h" />
     <ClInclude Include="include\\Oscillator.h" />
     <ClInclude Include="include\\Sequencer.h" />
-    <ClInclude Include="include\\SynthEngine.h" />
+    <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
     <ClInclude Include="include\\Writer.h" />
+    <ClInclude Include="src\\SynthEngine\\Internal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
