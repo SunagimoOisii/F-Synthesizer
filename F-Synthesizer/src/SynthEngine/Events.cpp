@@ -1,4 +1,4 @@
-﻿#include "Internal.h"
+#include "Internal.h"
 
 #include <cmath>
 
@@ -61,7 +61,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleRate,
     RenderState& state)
 {
-    //イベント処理(ControlChange, Note)
+    // Event processing (ControlChange, Note)
     while (state.eventIndex < events.size() && events[state.eventIndex].sample <= sampleIndex)
     {
         const auto& e = events[state.eventIndex];
@@ -107,4 +107,3 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
         state.eventIndex++;
     }
 }
-

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "AudioBuffer.h"
 
-bool SaveWavFile(const SoundData& sound, const char* filePath);
+bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath);

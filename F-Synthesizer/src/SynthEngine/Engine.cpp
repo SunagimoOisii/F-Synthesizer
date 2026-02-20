@@ -1,41 +1,41 @@
-﻿#include "Internal.h"
+#include "Internal.h"
 
 #include <algorithm>
 
 namespace
 {
-    void CleanupVoices(RenderState& state)
+void CleanupVoices(RenderState& state)
+{
+    if (state.voices.empty() || state.pendingRemoveCount == 0)
     {
-        if (state.voices.empty() || state.pendingRemoveCount == 0)
-        {
-            return;
-        }
+        return;
+    }
 
-        size_t removed = 0;
-        state.voices.erase(
-            std::remove_if(state.voices.begin(), state.voices.end(), [&](const Voice& v)
+    size_t removed = 0;
+    state.voices.erase(
+        std::remove_if(state.voices.begin(), state.voices.end(), [&](const Voice& v)
+            {
+                if (v.pendingRemove)
                 {
-                    if (v.pendingRemove)
-                    {
-                        removed++;
-                        return true;
-                    }
-                    return false;
-                }),
-            state.voices.end());
-        if (removed > 0)
-        {
-            state.pendingRemoveCount = 0;
-        }
+                    removed++;
+                    return true;
+                }
+                return false;
+            }),
+        state.voices.end());
+
+    if (removed > 0)
+    {
+        state.pendingRemoveCount = 0;
     }
 }
+} // namespace
 
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs)
 {
-    //Voice, CC初期化
     RenderState state;
     for (int i = 0; i < 16; i++)
     {
@@ -44,7 +44,6 @@ void RenderMIDIEvents(
         state.channelPitch[i] = 1.0;
     }
 
-    //サンプルループ
     const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
@@ -57,4 +56,3 @@ void RenderMIDIEvents(
         }
     }
 }
-

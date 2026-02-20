@@ -1,4 +1,4 @@
-﻿#include "Internal.h"
+#include "Internal.h"
 
 #include <cmath>
 #include <type_traits>
@@ -111,14 +111,15 @@ namespace
 
 double RenderVoices(RenderState& state, const SoundData& sound)
 {
-    //Voice合成
     double sum = 0.0;
+    int activeVoices = 0;
     for (auto& v : state.voices)
     {
         if (v.env.stage == ADSRStage::Off)
         {
             continue;
         }
+        activeVoices++;
 
         double dt = 1.0 / sound.fs;
         double envGain = StepADSR(v.env, dt, v.attackSec, v.decaySec, v.sustainLevel, v.releaseSec);
@@ -167,5 +168,6 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             }
         }, v.source);
     }
+
     return sum;
 }
