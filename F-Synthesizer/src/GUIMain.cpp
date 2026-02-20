@@ -1,6 +1,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <memory>
 #include <mutex>
 #include <future>
 #include <chrono>
@@ -9,6 +10,7 @@
 #include <regex>
 #include <optional>
 #include <ctime>
+#include <algorithm>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -65,7 +67,10 @@ struct GuiState
     bool running = false;
     bool stopRequested = false;
     bool serialSave = false;
+    int selectedChannel = 0;
+    int selectedDrumNote = 36;
     std::string lastOutputPath{};
+    std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
     std::future<int> runFuture{};
     std::mutex logMutex{};
     std::vector<std::string> logs{};
@@ -137,6 +142,71 @@ WaveType WaveFromIndex(int idx)
     case 2: return WaveType::Saw;
     case 3: return WaveType::Triangle;
     default: return WaveType::Saw;
+    }
+}
+
+int WaveToIndex(WaveType w)
+{
+    switch (w)
+    {
+    case WaveType::Sine: return 0;
+    case WaveType::Square: return 1;
+    case WaveType::Saw: return 2;
+    case WaveType::Triangle: return 3;
+    }
+    return 2;
+}
+
+NoiseType NoiseFromIndex(int idx)
+{
+    switch (idx)
+    {
+    case 0: return NoiseType::White;
+    case 1: return NoiseType::Pink;
+    case 2: return NoiseType::Brown;
+    case 3: return NoiseType::Blue;
+    default: return NoiseType::White;
+    }
+}
+
+int NoiseToIndex(NoiseType n)
+{
+    switch (n)
+    {
+    case NoiseType::White: return 0;
+    case NoiseType::Pink: return 1;
+    case NoiseType::Brown: return 2;
+    case NoiseType::Blue: return 3;
+    }
+    return 0;
+}
+
+int SourceTypeIndex(const SourceConfig& src)
+{
+    if (std::holds_alternative<WaveformConfig>(src)) return 0;
+    if (std::holds_alternative<NoiseConfig>(src)) return 1;
+    if (std::holds_alternative<FmConfig>(src)) return 2;
+    if (std::holds_alternative<DrumConfig>(src)) return 3;
+    if (std::holds_alternative<DrumKitConfig>(src)) return 4;
+    return 0;
+}
+
+SourceConfig DefaultSourceByType(int idx)
+{
+    switch (idx)
+    {
+    case 0: return WaveformConfig{ WaveType::Saw };
+    case 1: return NoiseConfig{ NoiseType::White };
+    case 2: return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0 };
+    case 3: return DrumConfig{ DrumType::Kick };
+    case 4:
+    {
+        DrumKitConfig kit{};
+        for (auto& d : kit.map) d.type = DrumType::None;
+        kit.map[36] = DrumConfig{ DrumType::Kick };
+        return kit;
+    }
+    default: return WaveformConfig{ WaveType::Saw };
     }
 }
 
@@ -288,6 +358,8 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonInt(text, "defaultWave")) state.defaultWave = *v;
     if (auto v = ReadJsonInt(text, "presetIndex")) state.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
+    if (auto v = ReadJsonInt(text, "selectedChannel")) state.selectedChannel = *v;
+    if (auto v = ReadJsonInt(text, "selectedDrumNote")) state.selectedDrumNote = *v;
 
     return true;
 }
@@ -315,7 +387,9 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"extraReleaseSec\": " << state.extraReleaseSec << ",\n";
     fout << "  \"defaultWave\": " << state.defaultWave << ",\n";
     fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
-    fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << "\n";
+    fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
+    fout << "  \"selectedChannel\": " << state.selectedChannel << ",\n";
+    fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << "\n";
     fout << "}\n";
 
     return true;
@@ -355,6 +429,10 @@ AppConfig BuildConfigFromGui(const GuiState& state)
     cfg.bits = state.bits;
     cfg.extraReleaseSec = state.extraReleaseSec;
     cfg.defaultWave = WaveFromIndex(state.defaultWave);
+    if (state.channelConfigs)
+    {
+        cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(state.channelConfigs);
+    }
     return cfg;
 }
 
@@ -426,6 +504,8 @@ void InitGuiState(GuiState& state)
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
     state.defaultWave = 2;
     state.presetIndex = 0;
+    state.selectedChannel = 0;
+    state.selectedDrumNote = 36;
     state.running = false;
     state.stopRequested = false;
     state.hasRun = false;
@@ -435,6 +515,12 @@ void InitGuiState(GuiState& state)
     state.logs.clear();
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
+
+    state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
+    if (cfg.channelConfigs)
+    {
+        *state.channelConfigs = *cfg.channelConfigs;
+    }
 }
 
 void RepairGuiStatePathsIfNeeded(GuiState& state)
@@ -477,6 +563,116 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
     if (repaired)
     {
         AppendGuiLog(state, "[GUI] Detected invalid saved paths. Recovered to default paths.");
+    }
+}
+
+void DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
+{
+    int drumType = static_cast<int>(d.type);
+    const char* drumTypes[] = { "none", "kick", "snare", "hat" };
+    std::string key = std::string("Drum Type##") + idPrefix;
+    ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
+    d.type = static_cast<DrumType>(drumType);
+
+    key = std::string("Gain##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
+    key = std::string("Base Freq##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
+    key = std::string("Pitch Drop##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
+    key = std::string("Pitch Decay##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
+    key = std::string("Tone Freq##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
+    key = std::string("Tone Level##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
+    key = std::string("Noise Level##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
+    key = std::string("HP Cut##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
+    key = std::string("LP Cut##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
+
+    int toneWave = d.toneWave >= 0 ? d.toneWave : 0;
+    const char* waves[] = { "sine", "square", "saw", "triangle" };
+    key = std::string("Tone Wave##") + idPrefix;
+    ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
+    d.toneWave = toneWave;
+
+    int noiseType = d.noiseType >= 0 ? d.noiseType : 0;
+    const char* noises[] = { "white", "pink", "brown", "blue" };
+    key = std::string("Noise Type##") + idPrefix;
+    ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
+    d.noiseType = noiseType;
+}
+
+void EnsureChannelConfigs(GuiState& state)
+{
+    if (state.channelConfigs)
+    {
+        return;
+    }
+    AppConfig cfg = DefaultConfig();
+    state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
+    if (cfg.channelConfigs)
+    {
+        *state.channelConfigs = *cfg.channelConfigs;
+    }
+}
+
+void DrawChannelEditor(GuiState& state)
+{
+    EnsureChannelConfigs(state);
+    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
+
+    ImGui::Separator();
+    ImGui::Text("Channel Editor (Phase C)");
+    ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
+    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+
+    ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
+    ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
+    ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
+    ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
+    ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
+
+    int srcType = SourceTypeIndex(chCfg.source);
+    const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
+    if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
+    {
+        chCfg.source = DefaultSourceByType(srcType);
+    }
+
+    if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))
+    {
+        int idx = WaveToIndex(wf->wave);
+        const char* waves[] = { "sine", "square", "saw", "triangle" };
+        ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+        wf->wave = WaveFromIndex(idx);
+    }
+    else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
+    {
+        int idx = NoiseToIndex(nz->noise);
+        const char* noises[] = { "white", "pink", "brown", "blue" };
+        ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
+        nz->noise = NoiseFromIndex(idx);
+    }
+    else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
+    {
+        int cIdx = WaveToIndex(fm->carrierWave);
+        int mIdx = WaveToIndex(fm->modWave);
+        const char* waves[] = { "sine", "square", "saw", "triangle" };
+        ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
+        ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
+        fm->carrierWave = WaveFromIndex(cIdx);
+        fm->modWave = WaveFromIndex(mIdx);
+        ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
+        ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
+        ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
+        ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
+    }
+    else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
+    {
+        DrawDrumConfigEditor("drum_single", *drum);
+    }
+    else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
+    {
+        ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
+        state.selectedDrumNote = std::clamp(state.selectedDrumNote, 0, 127);
+        DrumConfig& d = kit->map[state.selectedDrumNote];
+        DrawDrumConfigEditor("drum_kit", d);
     }
 }
 } // namespace
@@ -574,6 +770,7 @@ int RunGuiApp()
         const char* waves[] = { "sine", "square", "saw", "triangle" };
         ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
         ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+        DrawChannelEditor(state);
 
         if (ImGui::Button("Run"))
         {
