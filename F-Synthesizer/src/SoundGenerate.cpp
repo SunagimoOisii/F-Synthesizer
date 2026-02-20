@@ -285,9 +285,15 @@ bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std
     return true;
 }
 
-bool ParseArguments(int argc, char** argv, std::filesystem::path& configPath, bool& showHelp)
+bool ParseArguments(
+    int argc,
+    char** argv,
+    std::filesystem::path& configPath,
+    std::string& presetName,
+    bool& showHelp)
 {
     configPath.clear();
+    presetName.clear();
     showHelp = false;
     for (int i = 1; i < argc; i++)
     {
@@ -300,9 +306,17 @@ bool ParseArguments(int argc, char** argv, std::filesystem::path& configPath, bo
             }
             configPath = std::filesystem::path(argv[++i]);
         }
+        else if (arg == "--preset")
+        {
+            if (i + 1 >= argc)
+            {
+                return false;
+            }
+            presetName = argv[++i];
+        }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "Usage: F-Synthesizer.exe [--config path/to/config.json]" << std::endl;
+            std::cout << "Usage: F-Synthesizer.exe [--config path/to/config.json] [--preset name]" << std::endl;
             showHelp = true;
             return true;
         }
@@ -593,8 +607,9 @@ int Run(const AppConfig& config)
 int main(int argc, char** argv)
 {
     std::filesystem::path cliConfigPath;
+    std::string cliPresetName;
     bool showHelp = false;
-    if (!ParseArguments(argc, argv, cliConfigPath, showHelp))
+    if (!ParseArguments(argc, argv, cliConfigPath, cliPresetName, showHelp))
     {
         return 1;
     }
@@ -604,14 +619,15 @@ int main(int argc, char** argv)
     }
 
     AppConfig config = DefaultConfig();
+    const std::filesystem::path projectRoot = FindProjectRoot();
     std::filesystem::path selectedConfigPath;
     if (!cliConfigPath.empty())
     {
         selectedConfigPath = cliConfigPath;
     }
-    else
+    else if (cliPresetName.empty())
     {
-        const std::filesystem::path autoConfigPath = FindProjectRoot() / "config" / "default.json";
+        const std::filesystem::path autoConfigPath = projectRoot / "config" / "default.json";
         if (std::filesystem::exists(autoConfigPath))
         {
             selectedConfigPath = autoConfigPath;
@@ -626,6 +642,61 @@ int main(int argc, char** argv)
             std::cout << "Failed to load config: " << selectedConfigPath.string()
                 << " (" << err << ")" << std::endl;
             return 1;
+        }
+    }
+    else if (!cliPresetName.empty())
+    {
+        std::string err;
+        const std::filesystem::path basePath = projectRoot / "config" / "base.json";
+        const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (cliPresetName + ".json");
+        if (!std::filesystem::exists(basePath))
+        {
+            std::cout << "Base config not found: " << basePath.string() << std::endl;
+            return 1;
+        }
+        if (!std::filesystem::exists(presetPath))
+        {
+            std::cout << "Preset config not found: " << presetPath.string() << std::endl;
+            return 1;
+        }
+        if (!LoadConfigFile(basePath, config, err))
+        {
+            std::cout << "Failed to load base config: " << basePath.string()
+                << " (" << err << ")" << std::endl;
+            return 1;
+        }
+        if (!LoadConfigFile(presetPath, config, err))
+        {
+            std::cout << "Failed to load preset config: " << presetPath.string()
+                << " (" << err << ")" << std::endl;
+            return 1;
+        }
+        std::cout << "Preset: " << cliPresetName << std::endl;
+        std::cout << "Base Config Path: " << basePath.string() << std::endl;
+        std::cout << "Preset Config Path: " << presetPath.string() << std::endl;
+    }
+    else
+    {
+        const std::filesystem::path basePath = projectRoot / "config" / "base.json";
+        const std::filesystem::path fallbackPresetPath = projectRoot / "config" / "presets" / "solstice.json";
+        std::string err;
+        if (std::filesystem::exists(basePath) && std::filesystem::exists(fallbackPresetPath))
+        {
+            if (!LoadConfigFile(basePath, config, err))
+            {
+                std::cout << "Failed to load base config: " << basePath.string()
+                    << " (" << err << ")" << std::endl;
+                return 1;
+            }
+            if (!LoadConfigFile(fallbackPresetPath, config, err))
+            {
+                std::cout << "Failed to load preset config: " << fallbackPresetPath.string()
+                    << " (" << err << ")" << std::endl;
+                return 1;
+            }
+            std::cout << "Preset: solstice (auto)" << std::endl;
+            std::cout << "Base Config Path: " << basePath.string() << std::endl;
+            std::cout << "Preset Config Path: " << fallbackPresetPath.string() << std::endl;
         }
     }
 
