@@ -1,0 +1,17 @@
+{
+  "midiPath": "../../assets/midi/solstice_intro.mid",
+  "wavPath": "../../output/invalid.wav",
+  "channels": {
+    "16": {
+      "amp": 0.5,
+      "attackSec": 0.1,
+      "decaySec": 0.2,
+      "sustainLevel": 0.7,
+      "releaseSec": 0.3,
+      "source": {
+        "type": "waveform",
+        "wave": "sine"
+      }
+    }
+  }
+}
