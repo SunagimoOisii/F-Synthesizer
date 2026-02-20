@@ -4,6 +4,10 @@
 #include <vector>
 #include <filesystem>
 #include <cmath>
+#include <fstream>
+#include <optional>
+#include <regex>
+#include <sstream>
 #include <Windows.h>
 
 #include "AudioBuffer.h"
@@ -145,12 +149,212 @@ AppConfig DefaultConfig()
     config.channelConfigs = BuildFrogThemeChannelConfigs();
     return config;
 }
+
+std::string ReadTextFile(const std::filesystem::path& filePath)
+{
+    std::ifstream fin(filePath, std::ios::binary);
+    if (!fin)
+    {
+        return "";
+    }
+    std::ostringstream oss;
+    oss << fin.rdbuf();
+    return oss.str();
+}
+
+std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key)
+{
+    const std::regex pat("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
+    std::smatch m;
+    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    {
+        return m[1].str();
+    }
+    return std::nullopt;
+}
+
+std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
+{
+    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+)");
+    std::smatch m;
+    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    {
+        return std::stoi(m[1].str());
+    }
+    return std::nullopt;
+}
+
+std::optional<double> ReadJsonDouble(const std::string& text, const std::string& key)
+{
+    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
+    std::smatch m;
+    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    {
+        return std::stod(m[1].str());
+    }
+    return std::nullopt;
+}
+
+bool TryParseWaveType(const std::string& name, WaveType& outWave)
+{
+    if (name == "sine")
+    {
+        outWave = WaveType::Sine;
+        return true;
+    }
+    if (name == "square")
+    {
+        outWave = WaveType::Square;
+        return true;
+    }
+    if (name == "saw")
+    {
+        outWave = WaveType::Saw;
+        return true;
+    }
+    if (name == "triangle")
+    {
+        outWave = WaveType::Triangle;
+        return true;
+    }
+    return false;
+}
+
+std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, const std::string& v)
+{
+    std::filesystem::path p(v);
+    if (p.is_absolute())
+    {
+        return p;
+    }
+    return std::filesystem::weakly_canonical(baseDir / p);
+}
+
+bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
+{
+    const std::string text = ReadTextFile(configPath);
+    if (text.empty())
+    {
+        err = "failed to read config file";
+        return false;
+    }
+
+    const std::filesystem::path baseDir = configPath.has_parent_path()
+        ? configPath.parent_path()
+        : std::filesystem::current_path();
+
+    if (auto v = ReadJsonString(text, "midiPath"))
+    {
+        cfg.midiPath = ResolvePathFromBase(baseDir, *v);
+    }
+    if (auto v = ReadJsonString(text, "wavPath"))
+    {
+        cfg.wavPath = ResolvePathFromBase(baseDir, *v);
+    }
+    if (auto v = ReadJsonInt(text, "targetChannel"))
+    {
+        cfg.targetChannel = *v;
+    }
+    if (auto v = ReadJsonInt(text, "initialSeconds"))
+    {
+        cfg.initialSeconds = *v;
+    }
+    if (auto v = ReadJsonInt(text, "bits"))
+    {
+        cfg.bits = *v;
+    }
+    if (auto v = ReadJsonInt(text, "sampleRate"))
+    {
+        cfg.sampleRate = *v;
+    }
+    if (auto v = ReadJsonDouble(text, "extraReleaseSec"))
+    {
+        cfg.extraReleaseSec = *v;
+    }
+    if (auto v = ReadJsonString(text, "defaultWave"))
+    {
+        WaveType w{};
+        if (!TryParseWaveType(*v, w))
+        {
+            err = "invalid defaultWave: " + *v;
+            return false;
+        }
+        cfg.defaultWave = w;
+    }
+
+    return true;
+}
+
+bool ParseArguments(int argc, char** argv, std::filesystem::path& configPath, bool& showHelp)
+{
+    configPath.clear();
+    showHelp = false;
+    for (int i = 1; i < argc; i++)
+    {
+        const std::string arg = argv[i];
+        if (arg == "--config")
+        {
+            if (i + 1 >= argc)
+            {
+                return false;
+            }
+            configPath = std::filesystem::path(argv[++i]);
+        }
+        else if (arg == "--help" || arg == "-h")
+        {
+            std::cout << "Usage: F-Synthesizer.exe [--config path/to/config.json]" << std::endl;
+            showHelp = true;
+            return true;
+        }
+    }
+    return true;
+}
 } // namespace
 
-int main()
+int main(int argc, char** argv)
 {
-    const AppConfig config = DefaultConfig();
+    std::filesystem::path cliConfigPath;
+    bool showHelp = false;
+    if (!ParseArguments(argc, argv, cliConfigPath, showHelp))
+    {
+        return 1;
+    }
+    if (showHelp)
+    {
+        return 0;
+    }
+
+    AppConfig config = DefaultConfig();
+    std::filesystem::path selectedConfigPath;
+    if (!cliConfigPath.empty())
+    {
+        selectedConfigPath = cliConfigPath;
+    }
+    else
+    {
+        const std::filesystem::path autoConfigPath = FindProjectRoot() / "config" / "default.json";
+        if (std::filesystem::exists(autoConfigPath))
+        {
+            selectedConfigPath = autoConfigPath;
+        }
+    }
+
+    if (!selectedConfigPath.empty())
+    {
+        std::string err;
+        if (!LoadConfigFile(selectedConfigPath, config, err))
+        {
+            std::cout << "Failed to load config: " << selectedConfigPath.string()
+                << " (" << err << ")" << std::endl;
+            return 1;
+        }
+    }
+
     std::cout << "Build Marker: 2026-02-21-save-debug-v1" << std::endl;
+    if (!selectedConfigPath.empty())
+    {
+        std::cout << "Config Path: " << selectedConfigPath.string() << std::endl;
+    }
     std::filesystem::create_directories(config.wavPath.parent_path());
     std::cout << "Working Directory: " << std::filesystem::current_path().string() << std::endl;
     std::cout << "MIDI Path: " << config.midiPath.string() << std::endl;
