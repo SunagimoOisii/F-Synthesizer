@@ -290,10 +290,12 @@ bool ParseArguments(
     char** argv,
     std::filesystem::path& configPath,
     std::string& presetName,
+    bool& startGui,
     bool& showHelp)
 {
     configPath.clear();
     presetName.clear();
+    startGui = false;
     showHelp = false;
     for (int i = 1; i < argc; i++)
     {
@@ -314,9 +316,13 @@ bool ParseArguments(
             }
             presetName = argv[++i];
         }
+        else if (arg == "--gui")
+        {
+            startGui = true;
+        }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "Usage: F-Synthesizer.exe [--config path/to/config.json] [--preset name]" << std::endl;
+            std::cout << "Usage: F-Synthesizer.exe [--gui] [--config path/to/config.json] [--preset name]" << std::endl;
             showHelp = true;
             return true;
         }
@@ -604,18 +610,25 @@ int Run(const AppConfig& config)
     return 0;
 }
 
+int RunGuiApp();
+
 int main(int argc, char** argv)
 {
     std::filesystem::path cliConfigPath;
     std::string cliPresetName;
+    bool startGui = false;
     bool showHelp = false;
-    if (!ParseArguments(argc, argv, cliConfigPath, cliPresetName, showHelp))
+    if (!ParseArguments(argc, argv, cliConfigPath, cliPresetName, startGui, showHelp))
     {
         return 1;
     }
     if (showHelp)
     {
         return 0;
+    }
+    if (startGui)
+    {
+        return RunGuiApp();
     }
 
     AppConfig config = DefaultConfig();

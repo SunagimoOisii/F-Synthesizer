@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="src\\AudioBuffer.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
+    <ClCompile Include="src\\GUIMain.cpp" />
     <ClCompile Include="src\MIDIParser.cpp" />
     <ClCompile Include="src\\Oscillator.cpp" />
     <ClCompile Include="src\\Sequencer.cpp" />
@@ -169,3 +170,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
