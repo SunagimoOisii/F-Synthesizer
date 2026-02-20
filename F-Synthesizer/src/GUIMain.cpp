@@ -11,6 +11,8 @@
 #include <optional>
 #include <ctime>
 #include <algorithm>
+#include <cmath>
+#include <type_traits>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -69,7 +71,10 @@ struct GuiState
     bool serialSave = false;
     int selectedChannel = 0;
     int selectedDrumNote = 36;
+    char presetName[128]{ "custom" };
+    bool presetDirty = false;
     std::string lastOutputPath{};
+    std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
     std::future<int> runFuture{};
     std::mutex logMutex{};
@@ -131,6 +136,11 @@ void CopyPath(char* dst, size_t dstSize, const std::filesystem::path& p)
         return;
     }
     strncpy_s(dst, dstSize, s.c_str(), _TRUNCATE);
+}
+
+bool NearlyEq(double a, double b, double eps = 1e-9)
+{
+    return std::fabs(a - b) <= eps;
 }
 
 WaveType WaveFromIndex(int idx)
@@ -208,6 +218,241 @@ SourceConfig DefaultSourceByType(int idx)
     }
     default: return WaveformConfig{ WaveType::Saw };
     }
+}
+
+bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
+{
+    return a.type == b.type &&
+        NearlyEq(a.gain, b.gain) &&
+        NearlyEq(a.baseFreq, b.baseFreq) &&
+        NearlyEq(a.pitchDrop, b.pitchDrop) &&
+        NearlyEq(a.pitchDecaySec, b.pitchDecaySec) &&
+        NearlyEq(a.toneFreq, b.toneFreq) &&
+        NearlyEq(a.toneLevel, b.toneLevel) &&
+        NearlyEq(a.noiseLevel, b.noiseLevel) &&
+        NearlyEq(a.hpCut, b.hpCut) &&
+        NearlyEq(a.lpCut, b.lpCut) &&
+        a.toneWave == b.toneWave &&
+        a.noiseType == b.noiseType;
+}
+
+bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
+{
+    if (a.index() != b.index())
+    {
+        return false;
+    }
+    return std::visit([&](const auto& av) -> bool
+        {
+            using T = std::decay_t<decltype(av)>;
+            const auto* bv = std::get_if<T>(&b);
+            if (bv == nullptr) return false;
+            if constexpr (std::is_same_v<T, WaveformConfig>)
+            {
+                return av.wave == bv->wave;
+            }
+            else if constexpr (std::is_same_v<T, NoiseConfig>)
+            {
+                return av.noise == bv->noise;
+            }
+            else if constexpr (std::is_same_v<T, FmConfig>)
+            {
+                return av.carrierWave == bv->carrierWave &&
+                    av.modWave == bv->modWave &&
+                    NearlyEq(av.carrierRatio, bv->carrierRatio) &&
+                    NearlyEq(av.modRatio, bv->modRatio) &&
+                    NearlyEq(av.index, bv->index) &&
+                    NearlyEq(av.outLevel, bv->outLevel);
+            }
+            else if constexpr (std::is_same_v<T, DrumConfig>)
+            {
+                return DrumConfigEquals(av, *bv);
+            }
+            else if constexpr (std::is_same_v<T, DrumKitConfig>)
+            {
+                for (int i = 0; i < 128; i++)
+                {
+                    if (!DrumConfigEquals(av.map[i], bv->map[i])) return false;
+                }
+                return true;
+            }
+            return false;
+        }, a);
+}
+
+bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
+{
+    return NearlyEq(a.amp, b.amp) &&
+        NearlyEq(a.attackSec, b.attackSec) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
+        NearlyEq(a.sustainLevel, b.sustainLevel) &&
+        NearlyEq(a.releaseSec, b.releaseSec) &&
+        SourceConfigEquals(a.source, b.source);
+}
+
+void WriteJsonEscaped(std::ostream& out, const std::string& s)
+{
+    for (char c : s)
+    {
+        if (c == '\\') out << "\\\\";
+        else if (c == '"') out << "\\\"";
+        else if (c == '\n') out << "\\n";
+        else out << c;
+    }
+}
+
+std::string WaveToText(WaveType w)
+{
+    switch (w)
+    {
+    case WaveType::Sine: return "sine";
+    case WaveType::Square: return "square";
+    case WaveType::Saw: return "saw";
+    case WaveType::Triangle: return "triangle";
+    }
+    return "saw";
+}
+
+std::string NoiseToText(NoiseType n)
+{
+    switch (n)
+    {
+    case NoiseType::White: return "white";
+    case NoiseType::Pink: return "pink";
+    case NoiseType::Brown: return "brown";
+    case NoiseType::Blue: return "blue";
+    }
+    return "white";
+}
+
+std::string DrumTypeToText(DrumType d)
+{
+    switch (d)
+    {
+    case DrumType::None: return "none";
+    case DrumType::Kick: return "kick";
+    case DrumType::Snare: return "snare";
+    case DrumType::Hat: return "hat";
+    }
+    return "none";
+}
+
+void WriteSourceJson(std::ostream& out, const SourceConfig& src, int indent)
+{
+    const std::string sp(indent, ' ');
+    out << sp << "\"source\": {\n";
+    std::visit([&](const auto& v)
+        {
+            using T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v<T, WaveformConfig>)
+            {
+                out << sp << "  \"type\": \"waveform\",\n";
+                out << sp << "  \"wave\": \"" << WaveToText(v.wave) << "\"\n";
+            }
+            else if constexpr (std::is_same_v<T, NoiseConfig>)
+            {
+                out << sp << "  \"type\": \"noise\",\n";
+                out << sp << "  \"noise\": \"" << NoiseToText(v.noise) << "\"\n";
+            }
+            else if constexpr (std::is_same_v<T, FmConfig>)
+            {
+                out << sp << "  \"type\": \"fm\",\n";
+                out << sp << "  \"carrierWave\": \"" << WaveToText(v.carrierWave) << "\",\n";
+                out << sp << "  \"modWave\": \"" << WaveToText(v.modWave) << "\",\n";
+                out << sp << "  \"carrierRatio\": " << v.carrierRatio << ",\n";
+                out << sp << "  \"modRatio\": " << v.modRatio << ",\n";
+                out << sp << "  \"index\": " << v.index << ",\n";
+                out << sp << "  \"outLevel\": " << v.outLevel << "\n";
+            }
+            else if constexpr (std::is_same_v<T, DrumConfig>)
+            {
+                out << sp << "  \"type\": \"drum\",\n";
+                out << sp << "  \"drumType\": \"" << DrumTypeToText(v.type) << "\",\n";
+                out << sp << "  \"gain\": " << v.gain << ",\n";
+                out << sp << "  \"baseFreq\": " << v.baseFreq << ",\n";
+                out << sp << "  \"pitchDrop\": " << v.pitchDrop << ",\n";
+                out << sp << "  \"pitchDecaySec\": " << v.pitchDecaySec << ",\n";
+                out << sp << "  \"toneFreq\": " << v.toneFreq << ",\n";
+                out << sp << "  \"toneLevel\": " << v.toneLevel << ",\n";
+                out << sp << "  \"noiseLevel\": " << v.noiseLevel << ",\n";
+                out << sp << "  \"hpCut\": " << v.hpCut << ",\n";
+                out << sp << "  \"lpCut\": " << v.lpCut << ",\n";
+                out << sp << "  \"toneWave\": \"" << WaveToText((WaveType)v.toneWave) << "\",\n";
+                out << sp << "  \"noiseType\": \"" << NoiseToText((NoiseType)v.noiseType) << "\"\n";
+            }
+            else if constexpr (std::is_same_v<T, DrumKitConfig>)
+            {
+                out << sp << "  \"type\": \"drumkit\",\n";
+                out << sp << "  \"map\": {\n";
+                bool first = true;
+                for (int note = 0; note < 128; note++)
+                {
+                    const auto& d = v.map[note];
+                    if (d.type == DrumType::None) continue;
+                    if (!first) out << ",\n";
+                    first = false;
+                    out << sp << "    \"" << note << "\": {\n";
+                    out << sp << "      \"drumType\": \"" << DrumTypeToText(d.type) << "\",\n";
+                    out << sp << "      \"gain\": " << d.gain << ",\n";
+                    out << sp << "      \"baseFreq\": " << d.baseFreq << "\n";
+                    out << sp << "    }";
+                }
+                out << "\n" << sp << "  }\n";
+            }
+        }, src);
+    out << sp << "}";
+}
+
+bool SavePresetDiff(const GuiState& state, const std::filesystem::path& presetPath, std::string& err)
+{
+    AppConfig base = DefaultConfig();
+    if (!state.channelConfigs || !base.channelConfigs)
+    {
+        err = "channelConfigs is not initialized";
+        return false;
+    }
+    std::error_code ec;
+    std::filesystem::create_directories(presetPath.parent_path(), ec);
+    std::ofstream out(presetPath, std::ios::binary | std::ios::trunc);
+    if (!out)
+    {
+        err = "failed to open preset file";
+        return false;
+    }
+
+    out << "{\n";
+    out << "  \"midiPath\": \"";
+    WriteJsonEscaped(out, state.midiPath);
+    out << "\",\n";
+    out << "  \"wavPath\": \"";
+    WriteJsonEscaped(out, state.wavPath);
+    out << "\",\n";
+    out << "  \"channels\": {\n";
+
+    bool first = true;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const ChannelConfig& cur = (*state.channelConfigs)[ch];
+        const ChannelConfig& def = (*base.channelConfigs)[ch];
+        if (ChannelConfigEquals(cur, def))
+        {
+            continue;
+        }
+        if (!first) out << ",\n";
+        first = false;
+        out << "    \"" << ch << "\": {\n";
+        out << "      \"amp\": " << cur.amp << ",\n";
+        out << "      \"attackSec\": " << cur.attackSec << ",\n";
+        out << "      \"decaySec\": " << cur.decaySec << ",\n";
+        out << "      \"sustainLevel\": " << cur.sustainLevel << ",\n";
+        out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
+        WriteSourceJson(out, cur.source, 6);
+        out << "\n    }";
+    }
+
+    out << "\n  }\n";
+    out << "}\n";
+    return true;
 }
 
 void ApplyPresetPath(GuiState& state)
@@ -360,6 +605,8 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
     if (auto v = ReadJsonInt(text, "selectedChannel")) state.selectedChannel = *v;
     if (auto v = ReadJsonInt(text, "selectedDrumNote")) state.selectedDrumNote = *v;
+    if (auto v = ReadJsonString(text, "presetName")) strncpy_s(state.presetName, sizeof(state.presetName), v->c_str(), _TRUNCATE);
+    if (auto v = ReadJsonString(text, "lastPresetPath")) state.lastPresetPath = *v;
 
     return true;
 }
@@ -389,7 +636,9 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
     fout << "  \"selectedChannel\": " << state.selectedChannel << ",\n";
-    fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << "\n";
+    fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << ",\n";
+    fout << "  \"presetName\": \"" << EscapeJson(state.presetName) << "\",\n";
+    fout << "  \"lastPresetPath\": \"" << EscapeJson(state.lastPresetPath) << "\"\n";
     fout << "}\n";
 
     return true;
@@ -506,12 +755,14 @@ void InitGuiState(GuiState& state)
     state.presetIndex = 0;
     state.selectedChannel = 0;
     state.selectedDrumNote = 36;
+    strncpy_s(state.presetName, sizeof(state.presetName), "solstice", _TRUNCATE);
     state.running = false;
     state.stopRequested = false;
     state.hasRun = false;
     state.lastRunExitCode = 0;
     state.serialSave = false;
     state.lastOutputPath.clear();
+    state.lastPresetPath.clear();
     state.logs.clear();
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
@@ -566,35 +817,37 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
     }
 }
 
-void DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
+bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
 {
+    bool changed = false;
     int drumType = static_cast<int>(d.type);
     const char* drumTypes[] = { "none", "kick", "snare", "hat" };
     std::string key = std::string("Drum Type##") + idPrefix;
-    ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
+    changed |= ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
     d.type = static_cast<DrumType>(drumType);
 
-    key = std::string("Gain##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
-    key = std::string("Base Freq##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
-    key = std::string("Pitch Drop##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
-    key = std::string("Pitch Decay##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
-    key = std::string("Tone Freq##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
-    key = std::string("Tone Level##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
-    key = std::string("Noise Level##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
-    key = std::string("HP Cut##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
-    key = std::string("LP Cut##") + idPrefix; ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
+    key = std::string("Gain##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
+    key = std::string("Base Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
+    key = std::string("Pitch Drop##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
+    key = std::string("Pitch Decay##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
+    key = std::string("Tone Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
+    key = std::string("Tone Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
+    key = std::string("Noise Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
+    key = std::string("HP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
+    key = std::string("LP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
 
     int toneWave = d.toneWave >= 0 ? d.toneWave : 0;
     const char* waves[] = { "sine", "square", "saw", "triangle" };
     key = std::string("Tone Wave##") + idPrefix;
-    ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
+    changed |= ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
     d.toneWave = toneWave;
 
     int noiseType = d.noiseType >= 0 ? d.noiseType : 0;
     const char* noises[] = { "white", "pink", "brown", "blue" };
     key = std::string("Noise Type##") + idPrefix;
-    ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
+    changed |= ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
     d.noiseType = noiseType;
+    return changed;
 }
 
 void EnsureChannelConfigs(GuiState& state)
@@ -611,27 +864,29 @@ void EnsureChannelConfigs(GuiState& state)
     }
 }
 
-void DrawChannelEditor(GuiState& state)
+bool DrawChannelEditor(GuiState& state)
 {
+    bool changed = false;
     EnsureChannelConfigs(state);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
 
     ImGui::Separator();
     ImGui::Text("Channel Editor (Phase C)");
-    ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
+    changed |= ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
 
-    ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
-    ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
-    ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
-    ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
-    ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
+    changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
+    changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
+    changed |= ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
+    changed |= ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
+    changed |= ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
 
     int srcType = SourceTypeIndex(chCfg.source);
     const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
     if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
     {
+        changed = true;
         chCfg.source = DefaultSourceByType(srcType);
     }
 
@@ -639,14 +894,14 @@ void DrawChannelEditor(GuiState& state)
     {
         int idx = WaveToIndex(wf->wave);
         const char* waves[] = { "sine", "square", "saw", "triangle" };
-        ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+        changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
         wf->wave = WaveFromIndex(idx);
     }
     else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
     {
         int idx = NoiseToIndex(nz->noise);
         const char* noises[] = { "white", "pink", "brown", "blue" };
-        ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
+        changed |= ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
         nz->noise = NoiseFromIndex(idx);
     }
     else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
@@ -654,26 +909,27 @@ void DrawChannelEditor(GuiState& state)
         int cIdx = WaveToIndex(fm->carrierWave);
         int mIdx = WaveToIndex(fm->modWave);
         const char* waves[] = { "sine", "square", "saw", "triangle" };
-        ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
-        ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
+        changed |= ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
+        changed |= ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
         fm->carrierWave = WaveFromIndex(cIdx);
         fm->modWave = WaveFromIndex(mIdx);
-        ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
-        ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
-        ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
-        ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
     }
     else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
     {
-        DrawDrumConfigEditor("drum_single", *drum);
+        changed |= DrawDrumConfigEditor("drum_single", *drum);
     }
     else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
     {
-        ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
+        changed |= ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
         state.selectedDrumNote = std::clamp(state.selectedDrumNote, 0, 127);
         DrumConfig& d = kit->map[state.selectedDrumNote];
-        DrawDrumConfigEditor("drum_kit", d);
+        changed |= DrawDrumConfigEditor("drum_kit", d);
     }
+    return changed;
 }
 } // namespace
 
@@ -742,35 +998,98 @@ int RunGuiApp()
         ImGui::Begin("F-Synthesizer GUI");
         ImGui::Text("Phase 5: Release Ready");
         ImGui::Separator();
+        if (state.presetDirty)
+        {
+            ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
+        }
 
         ImGui::BeginDisabled(state.running);
         const char* presets[] = { "solstice", "frog" };
         if (ImGui::Combo("Preset", &state.presetIndex, presets, IM_ARRAYSIZE(presets)))
         {
             ApplyPresetPath(state);
+            state.presetDirty = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Apply Preset Paths"))
         {
             ApplyPresetPath(state);
+            state.presetDirty = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset Defaults"))
         {
             InitGuiState(state);
+            state.presetDirty = false;
         }
 
-        ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
-        ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
-        ImGui::InputInt("Target Channel", &state.targetChannel);
-        ImGui::InputInt("Sample Rate", &state.sampleRate);
-        ImGui::InputInt("Initial Seconds", &state.initialSeconds);
-        ImGui::InputInt("Bits", &state.bits);
-        ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+        ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+        ImGui::SameLine();
+        if (ImGui::Button("Save Preset As"))
+        {
+            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+            std::string err;
+            if (SavePresetDiff(state, p, err))
+            {
+                state.lastPresetPath = PathToUtf8(p);
+                state.presetDirty = false;
+                AppendGuiLog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Preset save failed: " + err);
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Duplicate Preset"))
+        {
+            std::string copyName = std::string(state.presetName) + "_copy";
+            strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
+            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+            std::string err;
+            if (SavePresetDiff(state, p, err))
+            {
+                state.lastPresetPath = PathToUtf8(p);
+                state.presetDirty = false;
+                AppendGuiLog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Preset duplicate failed: " + err);
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Channel"))
+        {
+            EnsureChannelConfigs(state);
+            AppConfig def = DefaultConfig();
+            if (def.channelConfigs)
+            {
+                (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
+                state.presetDirty = true;
+                AppendGuiLog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+            }
+        }
+        if (!state.lastPresetPath.empty())
+        {
+            ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
+        }
+
+        state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
+        state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+        state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
+        state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
+        state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
+        state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
+        state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
         const char* waves[] = { "sine", "square", "saw", "triangle" };
-        ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
-        ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
-        DrawChannelEditor(state);
+        state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
+        state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+        state.presetDirty |= DrawChannelEditor(state);
 
         if (ImGui::Button("Run"))
         {
