@@ -20,6 +20,12 @@
 
 namespace
 {
+std::string PathToUtf8(const std::filesystem::path& p)
+{
+    const auto u8 = p.u8string();
+    return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
+}
+
 std::filesystem::path GetExecutableDirectory()
 {
     wchar_t modulePath[MAX_PATH] = {};
@@ -389,9 +395,9 @@ int Run(const AppConfig& config, IRunObserver* observer)
 {
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     std::filesystem::create_directories(config.wavPath.parent_path());
-    LogLine(observer, "Working Directory: " + std::filesystem::current_path().string());
-    LogLine(observer, "MIDI Path: " + config.midiPath.string());
-    LogLine(observer, "Output Path: " + config.wavPath.string());
+    LogLine(observer, "Working Directory: " + PathToUtf8(std::filesystem::current_path()));
+    LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
+    LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
 
     // Output buffer
     SoundData sound(config.initialSeconds * config.sampleRate, config.bits, config.sampleRate);
@@ -409,9 +415,9 @@ int Run(const AppConfig& config, IRunObserver* observer)
     int c = 0;
     int midiTPQ = 0;
     MIDIParseStatus stats{};
-    if (!LoadMIDIBasic(config.midiPath.string(), config.targetChannel, ticks, tempoEvents, midiTPQ, stats))
+    if (!LoadMIDIBasic(config.midiPath, config.targetChannel, ticks, tempoEvents, midiTPQ, stats))
     {
-        LogLine(observer, "Failed to load MIDI: " + config.midiPath.string());
+        LogLine(observer, "Failed to load MIDI: " + PathToUtf8(config.midiPath));
         return 1;
     }
 
@@ -678,12 +684,12 @@ int Run(const AppConfig& config, IRunObserver* observer)
     if (!SaveWavFilePath(sound, config.wavPath))
     {
         std::ostringstream oss;
-        oss << "Failed to save WAV: " << config.wavPath.string()
+        oss << "Failed to save WAV: " << PathToUtf8(config.wavPath)
             << " lastError=" << (unsigned long)GetLastError();
         LogLine(observer, oss.str());
         return 1;
     }
-    LogLine(observer, "Saved SoundData: " + config.wavPath.string());
+    LogLine(observer, "Saved SoundData: " + PathToUtf8(config.wavPath));
 
     return 0;
 }
@@ -697,6 +703,9 @@ int RunGuiApp();
 
 int main(int argc, char** argv)
 {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     std::filesystem::path cliConfigPath;
     std::string cliPresetName;
     bool startCli = false;

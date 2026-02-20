@@ -298,7 +298,7 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
     }
 }
 
-bool LoadMIDIBasic(const std::string& path, int targetChannel,
+bool LoadMIDIBasic(const std::filesystem::path& path, int targetChannel,
     std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
     int& ticksPerQuarter, MIDIParseStatus& outStats)
 {

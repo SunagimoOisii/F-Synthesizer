@@ -72,6 +72,46 @@ struct GuiState
     GuiRunObserver observer{};
 };
 
+std::string PathToUtf8(const std::filesystem::path& p)
+{
+    const auto u8 = p.u8string();
+    return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
+}
+
+std::filesystem::path Utf8ToPath(const std::string& s)
+{
+    std::u8string u8;
+    u8.assign(reinterpret_cast<const char8_t*>(s.data()),
+        reinterpret_cast<const char8_t*>(s.data() + s.size()));
+    return std::filesystem::path(u8);
+}
+
+void SetupImGuiFont()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    const ImWchar* ranges = io.Fonts->GetGlyphRangesJapanese();
+    const char* candidates[] = {
+        "C:\\Windows\\Fonts\\meiryo.ttc",
+        "C:\\Windows\\Fonts\\YuGothM.ttc",
+        "C:\\Windows\\Fonts\\msgothic.ttc"
+    };
+
+    for (const char* fontPath : candidates)
+    {
+        std::error_code ec;
+        if (!std::filesystem::exists(fontPath, ec))
+        {
+            continue;
+        }
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, 18.0f, nullptr, ranges);
+        if (font != nullptr)
+        {
+            io.FontDefault = font;
+            return;
+        }
+    }
+}
+
 void AppendGuiLog(GuiState& state, const std::string& line)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
@@ -80,7 +120,7 @@ void AppendGuiLog(GuiState& state, const std::string& line)
 
 void CopyPath(char* dst, size_t dstSize, const std::filesystem::path& p)
 {
-    std::string s = p.string();
+    std::string s = PathToUtf8(p);
     if (dstSize == 0)
     {
         return;
@@ -151,7 +191,37 @@ std::optional<std::string> ReadJsonString(const std::string& text, const std::st
     std::smatch m;
     if (std::regex_search(text, m, pat) && m.size() >= 2)
     {
-        return m[1].str();
+        const std::string raw = m[1].str();
+        std::string out;
+        out.reserve(raw.size());
+        for (size_t i = 0; i < raw.size(); i++)
+        {
+            const char c = raw[i];
+            if (c == '\\' && i + 1 < raw.size())
+            {
+                const char n = raw[i + 1];
+                if (n == '\\')
+                {
+                    out.push_back('\\');
+                    i++;
+                    continue;
+                }
+                if (n == '"')
+                {
+                    out.push_back('"');
+                    i++;
+                    continue;
+                }
+                if (n == 'n')
+                {
+                    out.push_back('\n');
+                    i++;
+                    continue;
+                }
+            }
+            out.push_back(c);
+        }
+        return out;
     }
     return std::nullopt;
 }
@@ -277,8 +347,8 @@ std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
 AppConfig BuildConfigFromGui(const GuiState& state)
 {
     AppConfig cfg = DefaultConfig();
-    cfg.midiPath = state.midiPath;
-    cfg.wavPath = state.wavPath;
+    cfg.midiPath = Utf8ToPath(state.midiPath);
+    cfg.wavPath = Utf8ToPath(state.wavPath);
     cfg.targetChannel = state.targetChannel;
     cfg.sampleRate = state.sampleRate;
     cfg.initialSeconds = state.initialSeconds;
@@ -302,9 +372,28 @@ bool ValidateBeforeRun(const GuiState& state, std::string& err)
         err = "Output Path is empty.";
         return false;
     }
-    if (!std::filesystem::exists(std::filesystem::path(midi)))
+    const std::filesystem::path wavPath = Utf8ToPath(wav);
+    if (wavPath.has_filename() && !wavPath.extension().empty())
+    {
+        if (std::filesystem::is_directory(wavPath))
+        {
+            err = "Output Path points to a directory, not a .wav file.";
+            return false;
+        }
+    }
+    else
+    {
+        err = "Output Path must include a .wav filename.";
+        return false;
+    }
+    if (!std::filesystem::exists(Utf8ToPath(midi)))
     {
         err = "MIDI file not found: " + midi;
+        return false;
+    }
+    if (state.targetChannel < -1 || state.targetChannel > 15)
+    {
+        err = "Target Channel must be -1 or 0..15.";
         return false;
     }
     if (state.sampleRate <= 0)
@@ -347,6 +436,49 @@ void InitGuiState(GuiState& state)
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
 }
+
+void RepairGuiStatePathsIfNeeded(GuiState& state)
+{
+    const AppConfig def = DefaultConfig();
+    const std::filesystem::path midi = Utf8ToPath(state.midiPath);
+    const std::filesystem::path wav = Utf8ToPath(state.wavPath);
+
+    bool repaired = false;
+    if (!std::filesystem::exists(midi))
+    {
+        CopyPath(state.midiPath, sizeof(state.midiPath), def.midiPath);
+        repaired = true;
+    }
+    if (wav.extension().empty() || std::filesystem::is_directory(wav))
+    {
+        CopyPath(state.wavPath, sizeof(state.wavPath), def.wavPath);
+        repaired = true;
+    }
+    if (state.targetChannel < -1 || state.targetChannel > 15)
+    {
+        state.targetChannel = def.targetChannel;
+        repaired = true;
+    }
+    if (state.sampleRate <= 0)
+    {
+        state.sampleRate = def.sampleRate;
+        repaired = true;
+    }
+    if (state.initialSeconds <= 0)
+    {
+        state.initialSeconds = def.initialSeconds;
+        repaired = true;
+    }
+    if (state.bits != 16)
+    {
+        state.bits = 16;
+        repaired = true;
+    }
+    if (repaired)
+    {
+        AppendGuiLog(state, "[GUI] Detected invalid saved paths. Recovered to default paths.");
+    }
+}
 } // namespace
 
 int RunGuiApp()
@@ -374,6 +506,7 @@ int RunGuiApp()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
+    SetupImGuiFont();
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -391,6 +524,7 @@ int RunGuiApp()
         {
             AppendGuiLog(state, "[GUI] gui_state loaded: " + GuiStatePath().string());
         }
+        RepairGuiStatePathsIfNeeded(state);
     }
 
     while (!glfwWindowShouldClose(window))
