@@ -1,0 +1,12 @@
+{
+  "midiPath": "C:\\\\Users\\\\sunag_qspg5zm\\\\OneDrive\\\\ドキュメント\\\\作業台\\\\Dev\\\\GitHub\\\\F-Synthesizer\\\\F-Synthesizer\\\\assets\\\\midi\\\\solstice_intro.mid",
+  "wavPath": "C:\\\\Users\\\\sunag_qspg5zm\\\\OneDrive\\\\ドキュメント\\\\作業台\\\\Dev\\\\GitHub\\\\F-Synthesizer\\\\F-Synthesizer\\\\output\\\\test.wav",
+  "targetChannel": -1,
+  "sampleRate": 44100,
+  "initialSeconds": 6,
+  "bits": 16,
+  "extraReleaseSec": 0.3,
+  "defaultWave": 2,
+  "presetIndex": 0,
+  "serialSave": false
+}

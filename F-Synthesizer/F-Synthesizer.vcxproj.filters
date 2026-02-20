@@ -56,6 +56,9 @@
     <ClInclude Include="include\\AudioBuffer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\AppCore.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\Envelope.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

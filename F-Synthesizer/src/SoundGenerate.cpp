@@ -8,35 +8,52 @@
 #include <optional>
 #include <regex>
 #include <sstream>
+#include <memory>
 #include <Windows.h>
 
+#include "AppCore.h"
 #include "AudioBuffer.h"
 #include "MIDIParser.h"
 #include "Sequencer.h"
 #include "SynthEngine/SynthEngine.h"
 #include "Writer.h"
 
-struct AppConfig
-{
-    std::filesystem::path midiPath;
-    std::filesystem::path wavPath;
-    int targetChannel;
-    WaveType defaultWave;
-    int initialSeconds;
-    int bits;
-    int sampleRate;
-    double extraReleaseSec;
-    std::array<ChannelConfig, 16> channelConfigs;
-};
-
 namespace
 {
-std::filesystem::path FindProjectRoot()
+std::filesystem::path GetExecutableDirectory()
 {
-    std::filesystem::path cur = std::filesystem::current_path();
+    wchar_t modulePath[MAX_PATH] = {};
+    DWORD len = GetModuleFileNameW(nullptr, modulePath, MAX_PATH);
+    if (len == 0 || len >= MAX_PATH)
+    {
+        return std::filesystem::path(".");
+    }
+    std::filesystem::path p(modulePath);
+    if (p.has_parent_path())
+    {
+        return p.parent_path();
+    }
+    return std::filesystem::path(".");
+}
+
+std::filesystem::path FindProjectRootInternal()
+{
+    std::error_code ec;
+    std::filesystem::path cur = std::filesystem::current_path(ec);
+    if (ec || cur.empty())
+    {
+        cur = GetExecutableDirectory();
+    }
+
+    auto hasProjectMarker = [](const std::filesystem::path& dir)
+    {
+        std::error_code existsEc;
+        return std::filesystem::exists(dir / "F-Synthesizer.vcxproj", existsEc) && !existsEc;
+    };
+
     for (int depth = 0; depth < 8; depth++)
     {
-        if (std::filesystem::exists(cur / "F-Synthesizer.vcxproj"))
+        if (hasProjectMarker(cur))
         {
             return cur;
         }
@@ -46,10 +63,26 @@ std::filesystem::path FindProjectRoot()
         }
         cur = cur.parent_path();
     }
-    return std::filesystem::current_path();
+
+    // Fallback: search from executable directory as well.
+    cur = GetExecutableDirectory();
+    for (int depth = 0; depth < 8; depth++)
+    {
+        if (hasProjectMarker(cur))
+        {
+            return cur;
+        }
+        if (!cur.has_parent_path())
+        {
+            break;
+        }
+        cur = cur.parent_path();
+    }
+
+    return GetExecutableDirectory();
 }
 
-std::array<ChannelConfig, 16> BuildFrogThemeChannelConfigs()
+std::shared_ptr<const std::array<ChannelConfig, 16>> BuildFrogThemeChannelConfigs()
 {
     auto makeFm = [](WaveType carrierWave, WaveType modWave,
         double amp, double atk, double dec, double sus, double rel,
@@ -65,8 +98,8 @@ std::array<ChannelConfig, 16> BuildFrogThemeChannelConfigs()
     };
     auto makeGmDrumKit = []()
     {
-        DrumKitConfig kit{};
-        for (auto& d : kit.map)
+        auto kit = std::make_unique<DrumKitConfig>();
+        for (auto& d : kit->map)
         {
             d.type = DrumType::None;
         }
@@ -97,57 +130,52 @@ std::array<ChannelConfig, 16> BuildFrogThemeChannelConfigs()
         hat.toneWave = (int)WaveType::Sine;
         hat.noiseType = (int)NoiseType::White;
 
-        kit.map[36] = kick;  // Bass Drum 1
-        kit.map[38] = snare; // Acoustic Snare
-        kit.map[40] = snare; // Electric Snare
-        kit.map[42] = hat;   // Closed Hi-Hat
-        kit.map[44] = hat;   // Pedal Hi-Hat
-        kit.map[46] = hat;   // Open Hi-Hat
-        kit.map[49] = hat;   // Crash Cymbal 1
+        kit->map[36] = kick;  // Bass Drum 1
+        kit->map[38] = snare; // Acoustic Snare
+        kit->map[40] = snare; // Electric Snare
+        kit->map[42] = hat;   // Closed Hi-Hat
+        kit->map[44] = hat;   // Pedal Hi-Hat
+        kit->map[46] = hat;   // Open Hi-Hat
+        kit->map[49] = hat;   // Crash Cymbal 1
 
-        return kit;
+        return *kit;
     };
 
-    return {
-        // Flute
-        makeFm(WaveType::Sine, WaveType::Triangle, 0.40, 0.04, 0.22, 0.90, 0.35, 1.0, 2.01, 1.45, 0.9), // ch0
-        makeFm(WaveType::Sine, WaveType::Triangle, 0.38, 0.04, 0.22, 0.90, 0.35, 1.0, 2.015, 1.45, 0.9), // ch1
-        // Trumpet
-        makeFm(WaveType::Saw, WaveType::Triangle, 0.45, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15), // ch2
-        makeFm(WaveType::Saw, WaveType::Square, 0.48, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15), // ch3
-        // Strings
-        makeFm(WaveType::Sine, WaveType::Triangle, 0.30, 0.08, 0.40, 0.80, 0.55, 1.0, 1.01, 1.4, 1.0), // ch4
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.26, 0.06, 0.32, 0.72, 0.45, 1.0, 1.01, 1.4, 1.0), // ch5
-        // Bass
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.5, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05), // ch6
-        makeFm(WaveType::Triangle, WaveType::Sine, 0.47, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05), // ch7
-        makeFm(WaveType::Square, WaveType::Square, 0.22, 0.01, 0.1, 0.75, 0.2, 1.0, 1.0, 0.9975, 1.0), // ch8
-        // Drums
-        makeDrumKitDetail(makeGmDrumKit(), 10.0, 0.001, 0.15, 0.1, 0.3), // ch9
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0), // ch10
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0), // ch11
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0), // ch12
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0), // ch13
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0), // ch14
-        makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0)  // ch15
-    };
+    auto table = std::make_shared<std::array<ChannelConfig, 16>>();
+    (*table)[0] = makeFm(WaveType::Sine, WaveType::Triangle, 0.40, 0.04, 0.22, 0.90, 0.35, 1.0, 2.01, 1.45, 0.9);
+    (*table)[1] = makeFm(WaveType::Sine, WaveType::Triangle, 0.38, 0.04, 0.22, 0.90, 0.35, 1.0, 2.015, 1.45, 0.9);
+    (*table)[2] = makeFm(WaveType::Saw, WaveType::Triangle, 0.45, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15);
+    (*table)[3] = makeFm(WaveType::Saw, WaveType::Square, 0.48, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15);
+    (*table)[4] = makeFm(WaveType::Sine, WaveType::Triangle, 0.30, 0.08, 0.40, 0.80, 0.55, 1.0, 1.01, 1.4, 1.0);
+    (*table)[5] = makeFm(WaveType::Triangle, WaveType::Sine, 0.26, 0.06, 0.32, 0.72, 0.45, 1.0, 1.01, 1.4, 1.0);
+    (*table)[6] = makeFm(WaveType::Triangle, WaveType::Sine, 0.5, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05);
+    (*table)[7] = makeFm(WaveType::Triangle, WaveType::Sine, 0.47, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05);
+    (*table)[8] = makeFm(WaveType::Square, WaveType::Square, 0.22, 0.01, 0.1, 0.75, 0.2, 1.0, 1.0, 0.9975, 1.0);
+    (*table)[9] = makeDrumKitDetail(makeGmDrumKit(), 10.0, 0.001, 0.15, 0.1, 0.3);
+    (*table)[10] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[11] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[12] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[13] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[14] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[15] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    return table;
 }
 
-AppConfig DefaultConfig()
+AppConfig BuildDefaultConfig()
 {
-    const std::filesystem::path projectRoot = FindProjectRoot();
+    const std::filesystem::path projectRoot = FindProjectRootInternal();
 
-    AppConfig config{};
-    config.midiPath = projectRoot / "assets" / "midi" / "solstice_intro.mid";
-    config.wavPath = projectRoot / "output" / "test.wav";
-    config.targetChannel = -1;
-    config.defaultWave = WaveType::Saw;
-    config.initialSeconds = 6;
-    config.bits = 16;
-    config.sampleRate = 44100;
-    config.extraReleaseSec = 0.3;
-    config.channelConfigs = BuildFrogThemeChannelConfigs();
-    return config;
+    auto config = std::make_unique<AppConfig>();
+    config->midiPath = projectRoot / "assets" / "midi" / "solstice_intro.mid";
+    config->wavPath = projectRoot / "output" / "test.wav";
+    config->targetChannel = -1;
+    config->defaultWave = WaveType::Saw;
+    config->initialSeconds = 6;
+    config->bits = 16;
+    config->sampleRate = 44100;
+    config->extraReleaseSec = 0.3;
+    config->channelConfigs = BuildFrogThemeChannelConfigs();
+    return *config;
 }
 
 std::string ReadTextFile(const std::filesystem::path& filePath)
@@ -290,12 +318,12 @@ bool ParseArguments(
     char** argv,
     std::filesystem::path& configPath,
     std::string& presetName,
-    bool& startGui,
+    bool& startCli,
     bool& showHelp)
 {
     configPath.clear();
     presetName.clear();
-    startGui = false;
+    startCli = false;
     showHelp = false;
     for (int i = 1; i < argc; i++)
     {
@@ -307,6 +335,7 @@ bool ParseArguments(
                 return false;
             }
             configPath = std::filesystem::path(argv[++i]);
+            startCli = true;
         }
         else if (arg == "--preset")
         {
@@ -315,29 +344,54 @@ bool ParseArguments(
                 return false;
             }
             presetName = argv[++i];
+            startCli = true;
+        }
+        else if (arg == "--cli")
+        {
+            startCli = true;
         }
         else if (arg == "--gui")
         {
-            startGui = true;
+            startCli = false;
         }
         else if (arg == "--help" || arg == "-h")
         {
-            std::cout << "Usage: F-Synthesizer.exe [--gui] [--config path/to/config.json] [--preset name]" << std::endl;
+            std::cout << "Usage: F-Synthesizer.exe [--gui] [--cli] [--config path/to/config.json] [--preset name]" << std::endl;
+            std::cout << "Default: start GUI when no CLI options are given." << std::endl;
             showHelp = true;
             return true;
         }
     }
     return true;
 }
+
+void LogLine(IRunObserver* observer, const std::string& line)
+{
+    std::cout << line << std::endl;
+    if (observer != nullptr)
+    {
+        observer->OnLogLine(line);
+    }
+}
 } // namespace
 
-int Run(const AppConfig& config)
+std::filesystem::path FindProjectRootPath()
 {
-    std::cout << "Build Marker: 2026-02-21-save-debug-v1" << std::endl;
+    return FindProjectRootInternal();
+}
+
+AppConfig DefaultConfig()
+{
+    return BuildDefaultConfig();
+}
+
+int Run(const AppConfig& config, IRunObserver* observer)
+{
+    LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     std::filesystem::create_directories(config.wavPath.parent_path());
-    std::cout << "Working Directory: " << std::filesystem::current_path().string() << std::endl;
-    std::cout << "MIDI Path: " << config.midiPath.string() << std::endl;
-    std::cout << "Output Path: " << config.wavPath.string() << std::endl;
+    LogLine(observer, "Working Directory: " + std::filesystem::current_path().string());
+    LogLine(observer, "MIDI Path: " + config.midiPath.string());
+    LogLine(observer, "Output Path: " + config.wavPath.string());
 
     // Output buffer
     SoundData sound(config.initialSeconds * config.sampleRate, config.bits, config.sampleRate);
@@ -357,7 +411,7 @@ int Run(const AppConfig& config)
     MIDIParseStatus stats{};
     if (!LoadMIDIBasic(config.midiPath.string(), config.targetChannel, ticks, tempoEvents, midiTPQ, stats))
     {
-        std::cout << "Failed to load MIDI: " << config.midiPath.string() << std::endl;
+        LogLine(observer, "Failed to load MIDI: " + config.midiPath.string());
         return 1;
     }
 
@@ -391,35 +445,50 @@ int Run(const AppConfig& config)
     }
 
     // Print parse summary
-    std::cout << "MIDI Info: format=" << stats.format
-        << ", tracks=" << stats.numTracks
-        << ", TPQ=" << midiTPQ
-        << ", tempoEvents=" << tempoEvents.size() << std::endl;
-    std::cout << "Event Counts: note=" << noteCount
-        << ", cc=" << ccCount
-        << ", tempo=" << tempoEvents.size() << std::endl;
-    std::cout << "Channel Note Counts:";
+    {
+        std::ostringstream oss;
+        oss << "MIDI Info: format=" << stats.format
+            << ", tracks=" << stats.numTracks
+            << ", TPQ=" << midiTPQ
+            << ", tempoEvents=" << tempoEvents.size();
+        LogLine(observer, oss.str());
+    }
+    {
+        std::ostringstream oss;
+        oss << "Event Counts: note=" << noteCount
+            << ", cc=" << ccCount
+            << ", tempo=" << tempoEvents.size();
+        LogLine(observer, oss.str());
+    }
+    std::ostringstream noteCounts;
+    noteCounts << "Channel Note Counts:";
     for (ch = 0; ch < 16; ch++)
     {
-        std::cout << " ch" << ch << "=" << noteByChannel[ch];
+        noteCounts << " ch" << ch << "=" << noteByChannel[ch];
     }
-    std::cout << std::endl;
-    std::cout << "Channel CC Counts:";
+    LogLine(observer, noteCounts.str());
+    std::ostringstream ccCounts;
+    ccCounts << "Channel CC Counts:";
     for (ch = 0; ch < 16; ch++)
     {
-        std::cout << " ch" << ch << "=" << ccByChannel[ch];
+        ccCounts << " ch" << ch << "=" << ccByChannel[ch];
     }
-    std::cout << std::endl;
-    std::cout << "CC Types:";
+    LogLine(observer, ccCounts.str());
+    std::ostringstream ccTypes;
+    ccTypes << "CC Types:";
     for (c = 0; c < 128; c++)
     {
         if (ccByType[c] > 0)
         {
-            std::cout << " cc" << c << "=" << ccByType[c];
+            ccTypes << " cc" << c << "=" << ccByType[c];
         }
     }
-    std::cout << std::endl;
-    std::cout << "Unsupported Events: " << stats.unsupportedEvents << std::endl;
+    LogLine(observer, ccTypes.str());
+    {
+        std::ostringstream oss;
+        oss << "Unsupported Events: " << stats.unsupportedEvents;
+        LogLine(observer, oss.str());
+    }
 
     // Convert tick events to sample events
     std::vector<MIDIEvent> events;
@@ -441,7 +510,7 @@ int Run(const AppConfig& config)
         int zeroOrNegativeLengthNotes = 0;
         int minNoteLength = 0;
         int maxNoteLength = 0;
-        std::array<std::vector<int>, 16 * 128> noteOnSamples;
+        std::vector<std::vector<int>> noteOnSamples(16 * 128);
         for (const auto& e : events)
         {
             if (e.type == MIDIEventType::Note && e.isNoteOn)
@@ -498,40 +567,42 @@ int Run(const AppConfig& config)
                 if (e.value > cc11Max) cc11Max = e.value;
             }
         }
-        std::cout << "[EventStats] noteOn=" << noteOnCount
+        std::ostringstream eventStats;
+        eventStats << "[EventStats] noteOn=" << noteOnCount
             << " cc7=" << cc7Count
             << " cc11=" << cc11Count;
         if (cc7Count > 0)
         {
-            std::cout << " cc7Range=[" << cc7Min << "," << cc7Max << "]";
+            eventStats << " cc7Range=[" << cc7Min << "," << cc7Max << "]";
         }
         if (cc11Count > 0)
         {
-            std::cout << " cc11Range=[" << cc11Min << "," << cc11Max << "]";
+            eventStats << " cc11Range=[" << cc11Min << "," << cc11Max << "]";
         }
-        std::cout << " noteLen(paired=" << pairedNotes
+        eventStats << " noteLen(paired=" << pairedNotes
             << ",positive=" << positiveLengthNotes
             << ",zeroOrNeg=" << zeroOrNegativeLengthNotes;
         if (positiveLengthNotes > 0)
         {
-            std::cout << ",min=" << minNoteLength
+            eventStats << ",min=" << minNoteLength
                 << ",max=" << maxNoteLength;
         }
-        std::cout << ")";
+        eventStats << ")";
         if (firstNoteOnSample >= 0)
         {
-            std::cout << " firstNoteOn(sample=" << firstNoteOnSample
+            eventStats << " firstNoteOn(sample=" << firstNoteOnSample
                 << ",ch=" << firstNoteOnChannel
                 << ",note=" << firstNoteOnNote
                 << ",vel=" << firstNoteOnVelocity
                 << ")";
         }
-        std::cout << std::endl;
+        LogLine(observer, eventStats.str());
 
         for (size_t i = 0; i < events.size() && i < 8; i++)
         {
             const auto& e = events[i];
-            std::cout << "[EventHead] i=" << i
+            std::ostringstream head;
+            head << "[EventHead] i=" << i
                 << " sample=" << e.sample
                 << " type=" << (int)e.type
                 << " noteOn=" << (e.isNoteOn ? 1 : 0)
@@ -539,19 +610,20 @@ int Run(const AppConfig& config)
                 << " note=" << e.noteNumber
                 << " vel=" << e.velocity
                 << " cc=" << e.controller
-                << " val=" << e.value
-                << std::endl;
+                << " val=" << e.value;
+            LogLine(observer, head.str());
         }
     }
 
     if (events.empty())
     {
-        std::cout << "No note events found." << std::endl;
+        LogLine(observer, "No note events found.");
         return 1;
     }
 
     // Channel config (default preset)
-    const auto& channelConfigs = config.channelConfigs;
+    const auto fallbackChannelConfigs = BuildFrogThemeChannelConfigs();
+    const auto& channelConfigs = config.channelConfigs ? *config.channelConfigs : *fallbackChannelConfigs;
 
     // Resize output buffer
     int lastSample = events.back().sample;
@@ -562,10 +634,14 @@ int Run(const AppConfig& config)
         sound = SoundData(neededSamples, sound.bits, sound.fs);
     }
 
-    std::cout << "Events: " << events.size()
-        << ", FirstSample: " << events.front().sample
-        << ", LastSample: " << events.back().sample
-        << ", Length: " << sound.length << std::endl;
+    {
+        std::ostringstream oss;
+        oss << "Events: " << events.size()
+            << ", FirstSample: " << events.front().sample
+            << ", LastSample: " << events.back().sample
+            << ", Length: " << sound.length;
+        LogLine(observer, oss.str());
+    }
 
     // Render
     RenderMIDIEvents(sound, events, channelConfigs);
@@ -581,11 +657,12 @@ int Run(const AppConfig& config)
             if (a > 1e-8) nonZero++;
         }
         double rms = sound.data.empty() ? 0.0 : std::sqrt(sumSq / (double)sound.data.size());
-        std::cout << "[RenderStats] peak=" << peak
+        std::ostringstream oss;
+        oss << "[RenderStats] peak=" << peak
             << " rms=" << rms
             << " nonZero=" << nonZero
-            << "/" << sound.data.size()
-            << std::endl;
+            << "/" << sound.data.size();
+        LogLine(observer, oss.str());
     }
 
     // Save
@@ -595,19 +672,25 @@ int Run(const AppConfig& config)
         std::filesystem::remove(config.wavPath, rmEc);
         if (rmEc)
         {
-            std::cout << "[SavePrep] failed to remove old file: " << rmEc.message() << std::endl;
+            LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
         }
     }
     if (!SaveWavFilePath(sound, config.wavPath))
     {
-        std::cout << "Failed to save WAV: " << config.wavPath.string()
-            << " lastError=" << (unsigned long)GetLastError()
-            << std::endl;
+        std::ostringstream oss;
+        oss << "Failed to save WAV: " << config.wavPath.string()
+            << " lastError=" << (unsigned long)GetLastError();
+        LogLine(observer, oss.str());
         return 1;
     }
-    std::cout << "Saved SoundData: " << config.wavPath.string() << std::endl;
+    LogLine(observer, "Saved SoundData: " + config.wavPath.string());
 
     return 0;
+}
+
+int Run(const AppConfig& config)
+{
+    return Run(config, nullptr);
 }
 
 int RunGuiApp();
@@ -616,9 +699,9 @@ int main(int argc, char** argv)
 {
     std::filesystem::path cliConfigPath;
     std::string cliPresetName;
-    bool startGui = false;
+    bool startCli = false;
     bool showHelp = false;
-    if (!ParseArguments(argc, argv, cliConfigPath, cliPresetName, startGui, showHelp))
+    if (!ParseArguments(argc, argv, cliConfigPath, cliPresetName, startCli, showHelp))
     {
         return 1;
     }
@@ -626,13 +709,13 @@ int main(int argc, char** argv)
     {
         return 0;
     }
-    if (startGui)
+    if (!startCli)
     {
         return RunGuiApp();
     }
 
     AppConfig config = DefaultConfig();
-    const std::filesystem::path projectRoot = FindProjectRoot();
+    const std::filesystem::path projectRoot = FindProjectRootPath();
     std::filesystem::path selectedConfigPath;
     if (!cliConfigPath.empty())
     {
