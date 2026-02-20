@@ -2,6 +2,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <filesystem>
 
 #include "AudioBuffer.h"
 #include "MIDIParser.h"
@@ -15,7 +16,7 @@ int main()
     SoundData sound(6 * 44100, 16, 44100);
 
     //MIDI入力設定
-    const std::string midiPath = "logo.mid";
+    const std::string midiPath = (std::filesystem::path("assets") / "midi" / "logo.mid").string();
     const int targetChannel = -1; // -1で全チャネル
     const WaveType defaultWave = WaveType::Saw;
 

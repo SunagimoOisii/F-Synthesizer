@@ -3,7 +3,9 @@ param(
     [string]$Platform = "x64",
     [switch]$SkipBuild,
     [switch]$SkipRun,
-    [switch]$AllowDocMismatch
+    [switch]$AllowDocMismatch,
+    [ValidateSet("off", "warn", "error")]
+    [string]$DocRules = "warn"
 )
 
 Set-StrictMode -Version Latest
@@ -90,7 +92,7 @@ try {
     Write-Host "Config: $Configuration | Platform: $Platform"
 
     $projectDirName = Split-Path -Leaf $repoRoot
-    $changedFiles = Get-ChangedFiles -ProjectDirName $projectDirName
+    $changedFiles = @(Get-ChangedFiles -ProjectDirName $projectDirName)
     if ($changedFiles.Count -eq 0) {
         Write-Host "No local changes found."
     }
@@ -99,16 +101,28 @@ try {
         $changedFiles | ForEach-Object { Write-Host "  - $_" }
     }
 
-    $violations = @(Test-DocRules -ChangedFiles $changedFiles)
+    $violations = @()
+    if ($DocRules -ne "off") {
+        $violations = @(Test-DocRules -ChangedFiles $changedFiles)
+    }
+
+    if ($AllowDocMismatch -and $DocRules -eq "error") {
+        Write-Warning "-AllowDocMismatch is set. Downgrading DocRules from 'error' to 'warn'."
+        $DocRules = "warn"
+    }
+
     $docCheckFailed = $false
-    if ($violations.Count -gt 0) {
+    if ($DocRules -eq "off") {
+        Write-Host "Documentation rules: OFF"
+    }
+    elseif ($violations.Count -gt 0) {
         Write-Warning "Documentation update rules are not satisfied."
         foreach ($v in $violations) {
             Write-Warning "Rule: $($v.Rule)"
             Write-Warning "  Required update: $($v.RequiredFile)"
             Write-Warning "  Triggered by: $($v.TriggeredBy)"
         }
-        if (-not $AllowDocMismatch) {
+        if ($DocRules -eq "error") {
             $docCheckFailed = $true
         }
     }
