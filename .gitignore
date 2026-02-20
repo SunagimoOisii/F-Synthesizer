@@ -2,14 +2,14 @@
 # Visual Studio / C++ (MSVC)
 ############################################################
 
-# User-specific files
+# ユーザー固有ファイル
 *.user
 *.rsuser
 *.suo
 *.userosscache
 *.sln.docstates
 
-# Build results
+# ビルド成果物
 [Bb]in/
 [Oo]bj/
 [xX]64/
@@ -18,12 +18,12 @@
 [Aa][Rr][Mm]64/
 [Ll]og/
 
-# Visual Studio cache
+# Visual Studio キャッシュ
 .vs/
 
 .F-Synthesizer/Result/
 
-# CMake
+# CMake 関連
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -31,7 +31,7 @@ install_manifest.txt
 CTestTestfile.cmake
 CMakeSettings.json
 
-# MSVC intermediate files
+# MSVC 中間ファイル
 *.ipch
 *.iobj
 *.ipdb
@@ -48,36 +48,39 @@ CMakeSettings.json
 *.tlog
 *.lastbuildstate
 
-# Debug / Release folders
+# Debug / Release フォルダ
 Debug/
 Release/
 MinSizeRel/
 RelWithDebInfo/
 
-# Precompiled headers
+# プリコンパイル済みヘッダー
 *.gch
 
-# Profiling / analysis
+# プロファイル / 解析関連
 *.pgc
 *.pgd
 *.vsp
 *.vspx
 *.sap
 
-# Clang / LLVM
+# Clang / LLVM 関連
 *.dSYM/
 compile_commands.json
 
 ############################################################
-# Assets to exclude
+# 除外するアセット
 ############################################################
 
-# Audio files
+# 音声・MIDIファイル
 *.wav
 *.mid
 
+# Markdown ドキュメント
+*.md
+
 ############################################################
-# OS / Editor noise
+# OS / エディタ由来ファイル
 ############################################################
 
 # Windows
@@ -85,10 +88,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# macOS (in case of cross-use)
+# macOS（クロス利用時）
 .DS_Store
 
-# Backup / temp
+# バックアップ / 一時ファイル
 *~
 *.tmp
 *.bak
