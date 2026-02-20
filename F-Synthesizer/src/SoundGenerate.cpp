@@ -311,50 +311,9 @@ bool ParseArguments(int argc, char** argv, std::filesystem::path& configPath, bo
 }
 } // namespace
 
-int main(int argc, char** argv)
+int Run(const AppConfig& config)
 {
-    std::filesystem::path cliConfigPath;
-    bool showHelp = false;
-    if (!ParseArguments(argc, argv, cliConfigPath, showHelp))
-    {
-        return 1;
-    }
-    if (showHelp)
-    {
-        return 0;
-    }
-
-    AppConfig config = DefaultConfig();
-    std::filesystem::path selectedConfigPath;
-    if (!cliConfigPath.empty())
-    {
-        selectedConfigPath = cliConfigPath;
-    }
-    else
-    {
-        const std::filesystem::path autoConfigPath = FindProjectRoot() / "config" / "default.json";
-        if (std::filesystem::exists(autoConfigPath))
-        {
-            selectedConfigPath = autoConfigPath;
-        }
-    }
-
-    if (!selectedConfigPath.empty())
-    {
-        std::string err;
-        if (!LoadConfigFile(selectedConfigPath, config, err))
-        {
-            std::cout << "Failed to load config: " << selectedConfigPath.string()
-                << " (" << err << ")" << std::endl;
-            return 1;
-        }
-    }
-
     std::cout << "Build Marker: 2026-02-21-save-debug-v1" << std::endl;
-    if (!selectedConfigPath.empty())
-    {
-        std::cout << "Config Path: " << selectedConfigPath.string() << std::endl;
-    }
     std::filesystem::create_directories(config.wavPath.parent_path());
     std::cout << "Working Directory: " << std::filesystem::current_path().string() << std::endl;
     std::cout << "MIDI Path: " << config.midiPath.string() << std::endl;
@@ -571,7 +530,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-        // Channel config (default preset)
+    // Channel config (default preset)
     const auto& channelConfigs = config.channelConfigs;
 
     // Resize output buffer
@@ -629,4 +588,50 @@ int main(int argc, char** argv)
     std::cout << "Saved SoundData: " << config.wavPath.string() << std::endl;
 
     return 0;
+}
+
+int main(int argc, char** argv)
+{
+    std::filesystem::path cliConfigPath;
+    bool showHelp = false;
+    if (!ParseArguments(argc, argv, cliConfigPath, showHelp))
+    {
+        return 1;
+    }
+    if (showHelp)
+    {
+        return 0;
+    }
+
+    AppConfig config = DefaultConfig();
+    std::filesystem::path selectedConfigPath;
+    if (!cliConfigPath.empty())
+    {
+        selectedConfigPath = cliConfigPath;
+    }
+    else
+    {
+        const std::filesystem::path autoConfigPath = FindProjectRoot() / "config" / "default.json";
+        if (std::filesystem::exists(autoConfigPath))
+        {
+            selectedConfigPath = autoConfigPath;
+        }
+    }
+
+    if (!selectedConfigPath.empty())
+    {
+        std::string err;
+        if (!LoadConfigFile(selectedConfigPath, config, err))
+        {
+            std::cout << "Failed to load config: " << selectedConfigPath.string()
+                << " (" << err << ")" << std::endl;
+            return 1;
+        }
+    }
+
+    if (!selectedConfigPath.empty())
+    {
+        std::cout << "Config Path: " << selectedConfigPath.string() << std::endl;
+    }
+    return Run(config);
 }
