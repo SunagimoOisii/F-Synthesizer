@@ -75,6 +75,38 @@ int SnapStepTicks(int snapIndex, int tpq)
     }
 }
 
+const char* SnapLabel(int snapIndex)
+{
+    switch (snapIndex)
+    {
+    case 0: return "OFF";
+    case 1: return "1/4";
+    case 2: return "1/8";
+    case 3: return "1/16";
+    case 4: return "1/32";
+    default: return "1/16";
+    }
+}
+
+void SetSnapIndex(PianoRollState& state, int newIndex, const std::function<void(const std::string&)>& appendLog)
+{
+    const int clamped = std::clamp(newIndex, 0, 4);
+    if (clamped == state.snapIndex)
+    {
+        return;
+    }
+    state.snapIndex = clamped;
+    if (state.snapIndex != 0)
+    {
+        state.lastSnapIndex = state.snapIndex;
+    }
+    state.snapOverlaySec = 1.2f;
+    if (appendLog)
+    {
+        appendLog(std::string("[PianoRoll] snap changed: ") + SnapLabel(state.snapIndex));
+    }
+}
+
 int SnapTick(int tick, int step)
 {
     if (step <= 1)
@@ -942,6 +974,7 @@ void DrawPianoRollPanel(
     const std::filesystem::path midiPath = (midiPathUtf8 != nullptr) ? Utf8ToPath(midiPathUtf8) : std::filesystem::path{};
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
+    state.snapOverlaySec = (std::max)(0.0f, state.snapOverlaySec - ImGui::GetIO().DeltaTime);
 
     ImGui::TextUnformatted("Piano Roll (Phase 5: Polish/Perf)");
     ImGui::BeginDisabled();
@@ -953,7 +986,38 @@ void DrawPianoRollPanel(
     ImGui::SameLine();
     ImGui::SetNextItemWidth(180.0f);
     const char* snapItems[] = { "OFF", "1/4", "1/8", "1/16", "1/32" };
-    ImGui::Combo("PR Snap", &state.snapIndex, snapItems, IM_ARRAYSIZE(snapItems));
+    int comboSnapIndex = state.snapIndex;
+    if (ImGui::Combo("PR Snap", &comboSnapIndex, snapItems, IM_ARRAYSIZE(snapItems)))
+    {
+        SetSnapIndex(state, comboSnapIndex, appendLog);
+    }
+    ImGui::SameLine();
+    ImGui::TextUnformatted("Quick:");
+    ImGui::SameLine();
+    if (ImGui::SmallButton("OFF"))
+    {
+        SetSnapIndex(state, 0, appendLog);
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("1/4"))
+    {
+        SetSnapIndex(state, 1, appendLog);
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("1/8"))
+    {
+        SetSnapIndex(state, 2, appendLog);
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("1/16"))
+    {
+        SetSnapIndex(state, 3, appendLog);
+    }
+    ImGui::SameLine();
+    if (ImGui::SmallButton("1/32"))
+    {
+        SetSnapIndex(state, 4, appendLog);
+    }
     ImGui::SetNextItemWidth(260.0f);
     ImGui::SliderFloat("PR Zoom", &state.pixelsPerQuarter, 16.0f, 240.0f, "%.0f px/qn");
     ImGui::SetNextItemWidth(220.0f);
@@ -1100,6 +1164,31 @@ void DrawPianoRollPanel(
             {
                 requestPreviewPlay();
             }
+        }
+    }
+    if (panelFocused && !ImGui::GetIO().WantTextInput)
+    {
+        if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
+        {
+            const int restore = (state.lastSnapIndex >= 1 && state.lastSnapIndex <= 4) ? state.lastSnapIndex : 3;
+            const int next = (state.snapIndex == 0) ? restore : 0;
+            SetSnapIndex(state, next, appendLog);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_1, false))
+        {
+            SetSnapIndex(state, 1, appendLog);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_2, false))
+        {
+            SetSnapIndex(state, 2, appendLog);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_3, false))
+        {
+            SetSnapIndex(state, 3, appendLog);
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_4, false))
+        {
+            SetSnapIndex(state, 4, appendLog);
         }
     }
 
@@ -1271,6 +1360,21 @@ void DrawPianoRollPanel(
         }
     }
     drawList->PopClipRect();
+
+    if (state.snapOverlaySec > 0.0f)
+    {
+        const std::string overlay = std::string("Snap: ") + SnapLabel(state.snapIndex) + " (Q/1-4)";
+        const ImVec2 textSize = ImGui::CalcTextSize(overlay.c_str());
+        const float padX = 8.0f;
+        const float padY = 4.0f;
+        const float boxW = textSize.x + padX * 2.0f;
+        const float boxH = textSize.y + padY * 2.0f;
+        const ImVec2 boxMin(canvasMax.x - boxW - 8.0f, canvasMin.y + 8.0f);
+        const ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
+        drawList->AddRectFilled(boxMin, boxMax, IM_COL32(14, 16, 22, 220), 4.0f);
+        drawList->AddRect(boxMin, boxMax, IM_COL32(120, 130, 150, 180), 4.0f);
+        drawList->AddText(ImVec2(boxMin.x + padX, boxMin.y + padY), IM_COL32(220, 225, 235, 255), overlay.c_str());
+    }
 
     if (state.isRangeSelecting)
     {
