@@ -31,12 +31,6 @@
 
 namespace
 {
-enum class PresetKind
-{
-    Solstice = 0,
-    Frog = 1,
-};
-
 struct GuiState
 {
     struct GuiRunObserver : IRunObserver
@@ -73,6 +67,7 @@ struct GuiState
     int selectedDrumNote = 36;
     char presetName[128]{ "custom" };
     bool presetDirty = false;
+    std::vector<std::string> presetItems{};
     std::string lastOutputPath{};
     std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
@@ -81,6 +76,8 @@ struct GuiState
     std::vector<std::string> logs{};
     GuiRunObserver observer{};
 };
+
+std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
 
 std::string PathToUtf8(const std::filesystem::path& p)
 {
@@ -455,18 +452,109 @@ bool SavePresetDiff(const GuiState& state, const std::filesystem::path& presetPa
     return true;
 }
 
-void ApplyPresetPath(GuiState& state)
+std::vector<std::string> CollectPresetItems()
 {
+    std::vector<std::string> names;
     const std::filesystem::path root = FindProjectRootPath();
-    if (state.presetIndex == static_cast<int>(PresetKind::Frog))
+    const std::filesystem::path dir = root / "config" / "presets";
+
+    std::error_code ec;
+    if (std::filesystem::exists(dir, ec))
     {
-        CopyPath(state.midiPath, sizeof(state.midiPath), root / "assets" / "midi" / "test_frog.mid");
-        CopyPath(state.wavPath, sizeof(state.wavPath), root / "output" / "frog.wav");
-        return;
+        for (const auto& ent : std::filesystem::directory_iterator(dir, ec))
+        {
+            if (ec) break;
+            if (!ent.is_regular_file()) continue;
+            if (ent.path().extension() != ".json") continue;
+            names.push_back(ent.path().stem().string());
+        }
     }
 
-    CopyPath(state.midiPath, sizeof(state.midiPath), root / "assets" / "midi" / "solstice_intro.mid");
-    CopyPath(state.wavPath, sizeof(state.wavPath), root / "output" / "solstice.wav");
+    std::sort(names.begin(), names.end());
+    const auto it = std::find(names.begin(), names.end(), "basic_wave");
+    if (it != names.end() && it != names.begin())
+    {
+        std::rotate(names.begin(), it, it + 1);
+    }
+    return names;
+}
+
+int FindPresetIndex(const GuiState& state, const std::string& name)
+{
+    for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
+    {
+        if (state.presetItems[i] == name)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void RefreshPresetItems(GuiState& state, const std::string& preferName)
+{
+    state.presetItems = CollectPresetItems();
+    if (state.presetItems.empty())
+    {
+        state.presetItems.push_back("basic_wave");
+    }
+
+    int idx = FindPresetIndex(state, preferName);
+    if (idx < 0)
+    {
+        idx = FindPresetIndex(state, "basic_wave");
+    }
+    state.presetIndex = (idx >= 0) ? idx : 0;
+}
+
+std::filesystem::path ResolvePathFromPreset(const std::filesystem::path& presetPath, const std::string& value)
+{
+    std::filesystem::path p = Utf8ToPath(value);
+    if (p.is_absolute())
+    {
+        return p;
+    }
+    return presetPath.parent_path() / p;
+}
+
+bool ApplySelectedPresetPaths(GuiState& state, std::string& err)
+{
+    if (state.presetItems.empty())
+    {
+        err = "preset list is empty";
+        return false;
+    }
+    if (state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
+    {
+        err = "invalid preset index";
+        return false;
+    }
+
+    const std::string& presetName = state.presetItems[state.presetIndex];
+    strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
+    const std::filesystem::path presetPath =
+        FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
+
+    std::ifstream fin(presetPath, std::ios::binary);
+    if (!fin)
+    {
+        err = "failed to open preset: " + presetPath.string();
+        return false;
+    }
+
+    std::ostringstream oss;
+    oss << fin.rdbuf();
+    const std::string text = oss.str();
+
+    if (auto midi = ReadJsonString(text, "midiPath"))
+    {
+        CopyPath(state.midiPath, sizeof(state.midiPath), ResolvePathFromPreset(presetPath, *midi));
+    }
+    if (auto wav = ReadJsonString(text, "wavPath"))
+    {
+        CopyPath(state.wavPath, sizeof(state.wavPath), ResolvePathFromPreset(presetPath, *wav));
+    }
+    return true;
 }
 
 std::filesystem::path GuiStatePath()
@@ -755,7 +843,7 @@ void InitGuiState(GuiState& state)
     state.presetIndex = 0;
     state.selectedChannel = 0;
     state.selectedDrumNote = 36;
-    strncpy_s(state.presetName, sizeof(state.presetName), "solstice", _TRUNCATE);
+    strncpy_s(state.presetName, sizeof(state.presetName), "basic_wave", _TRUNCATE);
     state.running = false;
     state.stopRequested = false;
     state.hasRun = false;
@@ -766,6 +854,7 @@ void InitGuiState(GuiState& state)
     state.logs.clear();
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
+    RefreshPresetItems(state, state.presetName);
 
     state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
     if (cfg.channelConfigs)
@@ -794,6 +883,15 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
     if (state.targetChannel < -1 || state.targetChannel > 15)
     {
         state.targetChannel = def.targetChannel;
+        repaired = true;
+    }
+    if (state.presetItems.empty())
+    {
+        RefreshPresetItems(state, state.presetName);
+    }
+    if (state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
+    {
+        RefreshPresetItems(state, state.presetName);
         repaired = true;
     }
     if (state.sampleRate <= 0)
@@ -1008,17 +1106,40 @@ int RunGuiApp()
         }
 
         ImGui::BeginDisabled(state.running);
-        const char* presets[] = { "solstice", "frog" };
-        if (ImGui::Combo("Preset", &state.presetIndex, presets, IM_ARRAYSIZE(presets)))
+        auto presetGetter = [](void* data, int idx, const char** outText) -> bool
         {
-            ApplyPresetPath(state);
-            state.presetDirty = true;
+            auto* items = static_cast<std::vector<std::string>*>(data);
+            if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
+            {
+                return false;
+            }
+            *outText = (*items)[idx].c_str();
+            return true;
+        };
+        if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
+        {
+            std::string err;
+            if (ApplySelectedPresetPaths(state, err))
+            {
+                state.presetDirty = true;
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Apply Preset Paths"))
         {
-            ApplyPresetPath(state);
-            state.presetDirty = true;
+            std::string err;
+            if (ApplySelectedPresetPaths(state, err))
+            {
+                state.presetDirty = true;
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset Defaults"))
@@ -1037,6 +1158,7 @@ int RunGuiApp()
             {
                 state.lastPresetPath = PathToUtf8(p);
                 state.presetDirty = false;
+                RefreshPresetItems(state, state.presetName);
                 AppendGuiLog(state, "[GUI] Preset saved: " + state.lastPresetPath);
             }
             else
@@ -1055,6 +1177,7 @@ int RunGuiApp()
             {
                 state.lastPresetPath = PathToUtf8(p);
                 state.presetDirty = false;
+                RefreshPresetItems(state, state.presetName);
                 AppendGuiLog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
             }
             else

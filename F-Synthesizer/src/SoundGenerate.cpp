@@ -1452,7 +1452,7 @@ int main(int argc, char** argv)
     else
     {
         const std::filesystem::path basePath = projectRoot / "config" / "base.json";
-        const std::filesystem::path fallbackPresetPath = projectRoot / "config" / "presets" / "solstice.json";
+        const std::filesystem::path fallbackPresetPath = projectRoot / "config" / "presets" / "basic_wave.json";
         std::string err;
         if (std::filesystem::exists(basePath) && std::filesystem::exists(fallbackPresetPath))
         {
@@ -1468,7 +1468,7 @@ int main(int argc, char** argv)
                     << " (" << err << ")" << std::endl;
                 return 1;
             }
-            std::cout << "Preset: solstice (auto)" << std::endl;
+            std::cout << "Preset: basic_wave (auto)" << std::endl;
             std::cout << "Base Config Path: " << basePath.string() << std::endl;
             std::cout << "Preset Config Path: " << fallbackPresetPath.string() << std::endl;
         }

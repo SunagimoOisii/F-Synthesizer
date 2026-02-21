@@ -1,0 +1,54 @@
+{
+  "midiPath": "../../assets/midi/solstice_intro.mid",
+  "wavPath": "../../output/fm_default.wav",
+  "channels": {
+    "0": {
+      "amp": 0.35,
+      "attackSec": 0.02,
+      "decaySec": 0.18,
+      "sustainLevel": 0.78,
+      "releaseSec": 0.28,
+      "source": {
+        "type": "fm",
+        "carrierWave": "sine",
+        "modWave": "triangle",
+        "carrierRatio": 1.0,
+        "modRatio": 2.0,
+        "index": 1.25,
+        "outLevel": 1.0
+      }
+    },
+    "1": {
+      "amp": 0.32,
+      "attackSec": 0.01,
+      "decaySec": 0.16,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.24,
+      "source": {
+        "type": "fm",
+        "carrierWave": "sine",
+        "modWave": "square",
+        "carrierRatio": 1.0,
+        "modRatio": 1.5,
+        "index": 1.1,
+        "outLevel": 1.0
+      }
+    },
+    "2": {
+      "amp": 0.28,
+      "attackSec": 0.005,
+      "decaySec": 0.12,
+      "sustainLevel": 0.65,
+      "releaseSec": 0.18,
+      "source": {
+        "type": "fm",
+        "carrierWave": "triangle",
+        "modWave": "sine",
+        "carrierRatio": 0.5,
+        "modRatio": 1.0,
+        "index": 0.9,
+        "outLevel": 1.0
+      }
+    }
+  }
+}

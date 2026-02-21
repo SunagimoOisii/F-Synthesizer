@@ -1,0 +1,24 @@
+{
+  "midiPath": "../../assets/midi/solstice_intro.mid",
+  "wavPath": "../../output/basic_wave.wav",
+  "channels": {
+    "0": {
+      "source": {
+        "type": "waveform",
+        "wave": "saw"
+      }
+    },
+    "1": {
+      "source": {
+        "type": "waveform",
+        "wave": "saw"
+      }
+    },
+    "2": {
+      "source": {
+        "type": "waveform",
+        "wave": "triangle"
+      }
+    }
+  }
+}
