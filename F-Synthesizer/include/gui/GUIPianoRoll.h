@@ -42,7 +42,6 @@ struct PianoRollState
     int displayChannel = 0;
     int snapIndex = 3; // 0=OFF, 1=1/4, 2=1/8, 3=1/16, 4=1/32
     int lastSnapIndex = 3;
-    float snapOverlaySec = 0.0f;
     float pixelsPerQuarter = 72.0f;
     int tickOffset = 0;
     int noteOffset = 36;

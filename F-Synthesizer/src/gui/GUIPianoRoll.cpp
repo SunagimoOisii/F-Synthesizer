@@ -100,7 +100,6 @@ void SetSnapIndex(PianoRollState& state, int newIndex, const std::function<void(
     {
         state.lastSnapIndex = state.snapIndex;
     }
-    state.snapOverlaySec = 1.2f;
     if (appendLog)
     {
         appendLog(std::string("[PianoRoll] snap changed: ") + SnapLabel(state.snapIndex));
@@ -974,7 +973,6 @@ void DrawPianoRollPanel(
     const std::filesystem::path midiPath = (midiPathUtf8 != nullptr) ? Utf8ToPath(midiPathUtf8) : std::filesystem::path{};
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
-    state.snapOverlaySec = (std::max)(0.0f, state.snapOverlaySec - ImGui::GetIO().DeltaTime);
 
     ImGui::TextUnformatted("Piano Roll (Phase 5: Polish/Perf)");
     ImGui::BeginDisabled();
@@ -1360,21 +1358,6 @@ void DrawPianoRollPanel(
         }
     }
     drawList->PopClipRect();
-
-    if (state.snapOverlaySec > 0.0f)
-    {
-        const std::string overlay = std::string("Snap: ") + SnapLabel(state.snapIndex) + " (Q/1-4)";
-        const ImVec2 textSize = ImGui::CalcTextSize(overlay.c_str());
-        const float padX = 8.0f;
-        const float padY = 4.0f;
-        const float boxW = textSize.x + padX * 2.0f;
-        const float boxH = textSize.y + padY * 2.0f;
-        const ImVec2 boxMin(canvasMax.x - boxW - 8.0f, canvasMin.y + 8.0f);
-        const ImVec2 boxMax(boxMin.x + boxW, boxMin.y + boxH);
-        drawList->AddRectFilled(boxMin, boxMax, IM_COL32(14, 16, 22, 220), 4.0f);
-        drawList->AddRect(boxMin, boxMax, IM_COL32(120, 130, 150, 180), 4.0f);
-        drawList->AddText(ImVec2(boxMin.x + padX, boxMin.y + padY), IM_COL32(220, 225, 235, 255), overlay.c_str());
-    }
 
     if (state.isRangeSelecting)
     {
