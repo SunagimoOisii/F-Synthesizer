@@ -598,7 +598,10 @@ void DrawPianoGrid(
             ImVec2(canvasMin.x, y0),
             ImVec2(gridMinX, y1),
             IsBlackKey(note) ? keyDark : keyLight);
-        drawList->AddText(ImVec2(canvasMin.x + 4.0f, y0 + 1.0f), IM_COL32(210, 210, 215, 255), std::to_string(note).c_str());
+        const std::string noteText = std::to_string(note);
+        const ImVec2 textSize = ImGui::CalcTextSize(noteText.c_str());
+        const float textY = y0 + (std::max)(0.0f, (rowHeight - textSize.y) * 0.5f);
+        drawList->AddText(ImVec2(canvasMin.x + 4.0f, textY), IM_COL32(210, 210, 215, 255), noteText.c_str());
     }
 
     const int firstSnapTick = (startTick / snapStep) * snapStep;
@@ -929,8 +932,8 @@ void DrawPianoRollPanel(
         ImGui::EndDisabled();
     }
 
-    const float rowHeight = 12.0f;
-    const float pianoWidth = 56.0f;
+    const float rowHeight = (std::max)(12.0f, ImGui::GetTextLineHeight() + 4.0f);
+    const float pianoWidth = (std::max)(56.0f, ImGui::CalcTextSize("127").x + 12.0f);
     const float panelHeight = std::clamp(state.visibleNoteCount * rowHeight + 4.0f, 180.0f, 460.0f);
     const ImVec2 canvasSize((std::max)(120.0f, ImGui::GetContentRegionAvail().x - 4.0f), panelHeight);
     ImGui::InvisibleButton("piano_roll_canvas", canvasSize);
