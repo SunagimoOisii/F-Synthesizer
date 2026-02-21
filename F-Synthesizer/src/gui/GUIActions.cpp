@@ -184,6 +184,67 @@ bool ValidateBeforeRun(const GUIState& state, std::string& err)
         state.bits,
         err);
 }
+
+bool ValidatePreviewOnlySettings(const GUIState& state, std::string& err)
+{
+    if (state.targetChannel < -1 || state.targetChannel > 15)
+    {
+        err = "Target Channel must be -1 or 0..15.";
+        return false;
+    }
+    if (state.selectedChannel < 0 || state.selectedChannel > 15)
+    {
+        err = "Selected Channel must be 0..15.";
+        return false;
+    }
+    if (state.sampleRate <= 0)
+    {
+        err = "Sample Rate must be positive.";
+        return false;
+    }
+    if (state.bits != 16)
+    {
+        err = "Bits must be 16 in current implementation.";
+        return false;
+    }
+    return true;
+}
+
+std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSoundTone(
+    int channel,
+    int noteNumber,
+    int velocity,
+    int ticksPerQuarter)
+{
+    auto ticks = std::make_shared<std::vector<MIDIEventTick>>();
+    ticks->reserve(2);
+
+    MIDIEventTick on{};
+    on.type = MIDIEventType::Note;
+    on.tick = 0;
+    on.noteNumber = std::clamp(noteNumber, 0, 127);
+    on.velocity = std::clamp(velocity, 1, 127);
+    on.channel = std::clamp(channel, 0, 15);
+    on.controller = 0;
+    on.value = 0;
+    on.order = 0;
+    on.isNoteOn = true;
+    ticks->push_back(on);
+
+    MIDIEventTick off{};
+    off.type = MIDIEventType::Note;
+    off.tick = (std::max)(1, ticksPerQuarter);
+    off.noteNumber = on.noteNumber;
+    off.velocity = 0;
+    off.channel = on.channel;
+    off.controller = 0;
+    off.value = 0;
+    off.order = 1;
+    off.isNoteOn = false;
+    ticks->push_back(off);
+
+    return ticks;
+}
 } // namespace
 
 namespace gui
@@ -455,6 +516,62 @@ void StartGUIRun(GUIState& state, bool previewSelected)
                 " sec=" + std::to_string(options.startSec));
         }
     }
+    AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
+    state.hasRun = false;
+    state.stopRequested.store(false, std::memory_order_relaxed);
+    state.running = true;
+    state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
+        return Run(cfg, options, &state.observer, outBuffer.get());
+        });
+}
+
+void StartGUISoundTonePreview(GUIState& state)
+{
+    std::string validationError;
+    if (!ValidatePreviewOnlySettings(state, validationError))
+    {
+        state.hasRun = true;
+        state.lastRunExitCode = 1;
+        AppendGUILog(state, "[GUI] Sound Tone Preview validation failed: " + validationError);
+        return;
+    }
+
+    const int previewChannel = std::clamp(state.selectedChannel, 0, 15);
+    ActivateSoloPreview(state, previewChannel);
+    if (state.playback.playing.load(std::memory_order_relaxed))
+    {
+        StopPreviewAudio(state.playback);
+        AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
+    }
+
+    AppConfig cfg = BuildConfigFromGUI(state);
+    cfg.targetChannel = previewChannel;
+    cfg.midiPath.clear();
+    cfg.overrideTicksPerQuarter = 480;
+    cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, 60, 110, cfg.overrideTicksPerQuarter);
+
+    RenderOptions options = DefaultPreviewRenderOptions();
+    options.writeWav = false;
+    options.startSec = 0.0;
+    options.durationSec = 1.5;
+
+    state.restorePreviewOnRunComplete = true;
+    state.previewRequestedStartTick = 0;
+    state.previewRequestedDurationSec = options.durationSec;
+    state.lastOutputPath = "[memory preview]";
+
+    state.runLogTab = state.uiModeTab;
+    state.observer.logs = &LogsByTab(state, state.runLogTab);
+    {
+        std::lock_guard<std::mutex> lock(state.logMutex);
+        LogsByTab(state, state.runLogTab).clear();
+    }
+    state.lastPeak = 0.0;
+    state.hasPeak = false;
+    state.runOutputBuffer = std::make_shared<SoundData>();
+    state.runIsPreview = true;
+    state.autoPlayPreviewOnRunComplete = true;
+    AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (C4)");
     AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);

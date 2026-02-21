@@ -138,15 +138,48 @@ bool BuildMidiPipeline(
     std::string& err)
 {
     out = MidiBuildOutput{};
-    if (!LoadMIDIBasic(midiPath, targetChannel, out.ticks, out.tempoEvents, out.ticksPerQuarter, out.stats))
+    const bool hasOverrideNotes = (overrideNoteTicks != nullptr && !overrideNoteTicks->empty());
+    bool loadedBaseMidi = false;
+    if (!midiPath.empty())
+    {
+        loadedBaseMidi = LoadMIDIBasic(midiPath, targetChannel, out.ticks, out.tempoEvents, out.ticksPerQuarter, out.stats);
+    }
+
+    if (!loadedBaseMidi && !hasOverrideNotes)
     {
         err = "failed to load MIDI";
         return false;
     }
-
-    if (overrideNoteTicks != nullptr && !overrideNoteTicks->empty())
+    if (!loadedBaseMidi)
     {
-        out.ticks = ReplaceNoteTicks(out.ticks, *overrideNoteTicks, targetChannel);
+        out.ticks.clear();
+        out.tempoEvents.clear();
+        out.ticksPerQuarter = (overrideTicksPerQuarter > 0) ? overrideTicksPerQuarter : 480;
+        out.stats = MIDIParseStatus{};
+    }
+
+    if (hasOverrideNotes)
+    {
+        if (loadedBaseMidi)
+        {
+            out.ticks = ReplaceNoteTicks(out.ticks, *overrideNoteTicks, targetChannel);
+        }
+        else
+        {
+            out.ticks.reserve(overrideNoteTicks->size());
+            for (const auto& e : *overrideNoteTicks)
+            {
+                if (e.type != MIDIEventType::Note)
+                {
+                    continue;
+                }
+                if (targetChannel >= 0 && e.channel != targetChannel)
+                {
+                    continue;
+                }
+                out.ticks.push_back(e);
+            }
+        }
         if (overrideTicksPerQuarter > 0)
         {
             out.ticksPerQuarter = overrideTicksPerQuarter;

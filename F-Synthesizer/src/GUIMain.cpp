@@ -41,6 +41,7 @@ using gui::ApplySelectedPresetPaths;
 using gui::SavePresetDiffFromState;
 using gui::AnalyzeRenderPeakFromLogs;
 using gui::StartGUIRun;
+using gui::StartGUISoundTonePreview;
 using gui::StopGUIRunAndPreview;
 using gui::TryFinalizeCompletedRun;
 using gui::LoadGUIStateFile;
@@ -287,6 +288,12 @@ int RunGUIApp()
                 StartGUIRun(state, true);
             }
             updateHoverHelp("選択中チャンネルだけを再生成して再生します。");
+            ImGui::SameLine();
+            if (ImGui::Button("Play Tone (C4)"))
+            {
+                StartGUISoundTonePreview(state);
+            }
+            updateHoverHelp("MIDIに依存せず、現在の音色設定でC4の単音を試聴します。");
             ImGui::SameLine();
             ImGui::Checkbox("Loop Preview", &state.previewLoop);
             updateHoverHelp("Preview終了後に先頭へ戻ってループ再生します。");
