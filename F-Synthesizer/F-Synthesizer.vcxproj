@@ -148,6 +148,7 @@
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
     <ClCompile Include="src\\GUIMain.cpp" />
+    <ClCompile Include="src\\gui\\GUIChannelEditor.cpp" />
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
     <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
     <ClInclude Include="include\\Envelope.h" />
+    <ClInclude Include="include\\gui\\GUIChannelEditor.h" />
     <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />

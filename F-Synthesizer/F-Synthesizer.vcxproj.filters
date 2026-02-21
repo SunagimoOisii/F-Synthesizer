@@ -39,6 +39,9 @@
     <ClCompile Include="src\\GUIMain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIChannelEditor.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -114,6 +117,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\Envelope.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\GUIChannelEditor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIConfigUtils.h">

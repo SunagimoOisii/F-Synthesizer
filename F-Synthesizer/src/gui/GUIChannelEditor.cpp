@@ -1,0 +1,190 @@
+#include "gui/GUIChannelEditor.h"
+
+#include <algorithm>
+#include <string>
+
+#include <imgui.h>
+
+#include "gui/GUIConfigUtils.h"
+#include "gui/GUIStateModel.h"
+
+namespace
+{
+bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
+{
+    bool changed = false;
+    int drumType = static_cast<int>(d.type);
+    const char* drumTypes[] = { "none", "kick", "snare", "hat" };
+    std::string key = std::string("Drum Type##") + idPrefix;
+    changed |= ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
+    d.type = static_cast<DrumType>(drumType);
+
+    key = std::string("Gain##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
+    key = std::string("Base Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
+    key = std::string("Pitch Drop##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
+    key = std::string("Pitch Decay##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
+    key = std::string("Tone Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
+    key = std::string("Tone Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
+    key = std::string("Noise Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
+    key = std::string("HP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
+    key = std::string("LP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
+
+    int toneWave = d.toneWave >= 0 ? d.toneWave : 0;
+    const char* waves[] = { "sine", "square", "saw", "triangle" };
+    key = std::string("Tone Wave##") + idPrefix;
+    changed |= ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
+    d.toneWave = toneWave;
+
+    int noiseType = d.noiseType >= 0 ? d.noiseType : 0;
+    const char* noises[] = { "white", "pink", "brown", "blue" };
+    key = std::string("Noise Type##") + idPrefix;
+    changed |= ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
+    d.noiseType = noiseType;
+    return changed;
+}
+} // namespace
+
+namespace gui
+{
+bool DrawChannelEditor(GUIState& state)
+{
+    bool changed = false;
+    EnsureChannelConfigs(state);
+    EnsureChannelMixStates(state);
+    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+
+    ImGui::Text("Channel");
+    changed |= ImGui::InputInt("Selected Channel (0-15)", &state.selectedChannel);
+    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+
+    auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
+    {
+        float v = static_cast<float>(value);
+        bool edited = ImGui::SliderFloat(label, &v, minV, maxV, "%.2f");
+        if (edited)
+        {
+            value = static_cast<double>(v);
+        }
+        return edited;
+    };
+
+    ImGui::Text("Mix Summary (M/S/L)");
+    ImGui::BeginChild("mix_summary", ImVec2(0, 210), true);
+    if (ImGui::BeginTable("mix_compact_table", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
+    {
+        ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
+        ImGui::TableSetupColumn("sel", ImGuiTableColumnFlags_WidthFixed, 56.0f);
+        ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 36.0f);
+        ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 36.0f);
+        ImGui::TableSetupColumn("L");
+        ImGui::TableHeadersRow();
+
+        for (int ch = 0; ch < 16; ch++)
+        {
+            ChannelMixState& mix = (*state.channelMixStates)[ch];
+            ImGui::TableNextRow();
+            ImGui::PushID(ch);
+
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("ch%d", ch);
+
+            ImGui::TableSetColumnIndex(1);
+            bool selected = (state.selectedChannel == ch);
+            if (ImGui::Selectable("Edit", selected))
+            {
+                state.selectedChannel = ch;
+            }
+
+            ImGui::TableSetColumnIndex(2);
+            changed |= ImGui::Checkbox("##mute", &mix.mute);
+
+            ImGui::TableSetColumnIndex(3);
+            changed |= ImGui::Checkbox("##solo", &mix.solo);
+
+            ImGui::TableSetColumnIndex(4);
+            changed |= sliderMix("##level", mix.level, 0.0f, 2.0f);
+
+            ImGui::PopID();
+        }
+        ImGui::EndTable();
+    }
+    ImGui::EndChild();
+
+    ImGui::Separator();
+    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
+    ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
+    ImGui::Text("Selected ch%d", state.selectedChannel);
+    ImGui::TextDisabled("Audition target: selected channel (use Play Preview)");
+
+    if (ImGui::CollapsingHeader("Mix Details", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        changed |= ImGui::Checkbox("Mute", &chMix.mute);
+        ImGui::SameLine();
+        changed |= ImGui::Checkbox("Solo", &chMix.solo);
+        changed |= sliderMix("Level", chMix.level, 0.0f, 2.0f);
+        changed |= sliderMix("Pan", chMix.pan, -1.0f, 1.0f);
+        changed |= sliderMix("Gain", chMix.gain, 0.0f, 4.0f);
+    }
+
+    if (ImGui::CollapsingHeader("Envelope / Gain", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
+    }
+
+    if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        int srcType = SourceTypeIndex(chCfg.source);
+        const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
+        if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
+        {
+            changed = true;
+            chCfg.source = DefaultSourceByType(srcType);
+        }
+
+        if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))
+        {
+            int idx = WaveToIndex(wf->wave);
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+            wf->wave = WaveFromIndex(idx);
+        }
+        else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
+        {
+            int idx = NoiseToIndex(nz->noise);
+            const char* noises[] = { "white", "pink", "brown", "blue" };
+            changed |= ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
+            nz->noise = NoiseFromIndex(idx);
+        }
+        else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
+        {
+            int cIdx = WaveToIndex(fm->carrierWave);
+            int mIdx = WaveToIndex(fm->modWave);
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            changed |= ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
+            changed |= ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
+            fm->carrierWave = WaveFromIndex(cIdx);
+            fm->modWave = WaveFromIndex(mIdx);
+            changed |= ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
+        }
+        else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
+        {
+            changed |= DrawDrumConfigEditor("drum_single", *drum);
+        }
+        else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
+        {
+            changed |= ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
+            state.selectedDrumNote = std::clamp(state.selectedDrumNote, 0, 127);
+            DrumConfig& d = kit->map[state.selectedDrumNote];
+            changed |= DrawDrumConfigEditor("drum_kit", d);
+        }
+    }
+    return changed;
+}
+} // namespace gui
