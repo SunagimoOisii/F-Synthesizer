@@ -12,9 +12,11 @@ void LogLine(IRunObserver* observer, const std::string& line)
 {
     if (observer != nullptr)
     {
+        // GUI実行時はobserver経由でUIログへ流す。
         observer->OnLogLine(line);
         return;
     }
+    // CLI実行時は標準出力をログ終端とする。
     std::cout << line << std::endl;
 }
 

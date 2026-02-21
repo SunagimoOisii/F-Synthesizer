@@ -10,6 +10,7 @@ int RunCliApplication(const CliOptions& options)
 {
     ResolvedRuntimeConfig resolved{};
     std::string err;
+    // 設定解決は ConfigResolver に委譲し、入口は「表示 + Run呼び出し」に限定する。
     if (!ResolveRuntimeConfig(options, resolved, err))
     {
         std::cout << err << std::endl;

@@ -31,6 +31,7 @@ int RunMain(
     LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
     LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));
 
+    // app層の責務として、MIDI読込〜sampleイベント化まではここで完結させる。
     MidiBuildOutput midiOut{};
     std::string midiErr;
     if (!BuildMidiPipeline(
@@ -69,6 +70,7 @@ int RunMain(
     const auto* channelMixStates = config.channelMixStates.get();
     if (channelConfigs == nullptr)
     {
+        // 互換維持: 不完全な設定入力でも既定テーブルで実行可能にする。
         channelConfigs = BuildDefaultChannelConfigs().get();
     }
     if (channelMixStates == nullptr)
@@ -81,6 +83,7 @@ int RunMain(
     int neededSamples = lastSample + extraRelease + 1;
     if (previewMode && options.durationSec >= 0.0)
     {
+        // Previewは指定window内に収め、Exportの全長確保方針と分離する。
         const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
         const int previewMax = static_cast<int>(durSec * config.sampleRate) + extraRelease + 1;
         if (neededSamples > previewMax)

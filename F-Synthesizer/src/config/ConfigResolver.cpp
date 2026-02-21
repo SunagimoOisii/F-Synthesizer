@@ -9,6 +9,11 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
     outResolved.config = DefaultConfig();
 
     const std::filesystem::path projectRoot = FindProjectRootPath();
+    // 優先順:
+    // 1) --config 明示
+    // 2) --preset 未指定時の default.json
+    // 3) --preset 指定時の base + preset 合成
+    // 4) 何も無ければ base + basic_wave を自動適用
     if (!options.configPath.empty())
     {
         outResolved.selectedConfigPath = options.configPath;
@@ -36,6 +41,7 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
 
     if (!options.presetName.empty())
     {
+        // presetは base.json を先に適用し、preset側で後勝ち上書きする。
         const std::filesystem::path basePath = projectRoot / "config" / "base.json";
         const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (options.presetName + ".json");
         if (!std::filesystem::exists(basePath))

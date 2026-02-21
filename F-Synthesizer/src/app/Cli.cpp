@@ -16,6 +16,7 @@ namespace
 bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOptions)
 {
     outOptions = CliOptions{};
+    // 既存CLI互換を維持するため、--config/--preset/--cli は明示的にCLI起動へ倒す。
     for (size_t i = 1; i < args.size(); i++)
     {
         const std::string& arg = args[i];
@@ -67,6 +68,7 @@ bool ParseWideArgs(CliOptions& outOptions)
     }
 
     outOptions = CliOptions{};
+    // 日本語パスを壊さないため、Windowsではwide argvを優先して解釈する。
     for (int i = 1; i < argc; i++)
     {
         const std::wstring arg = argv[i];
@@ -117,6 +119,7 @@ bool ParseWideArgs(CliOptions& outOptions)
 bool ParseCliArguments(int argc, char** argv, CliOptions& outOptions)
 {
 #ifdef _WIN32
+    // wide解析に成功した場合はnarrow側へフォールバックしない。
     if (ParseWideArgs(outOptions))
     {
         return true;

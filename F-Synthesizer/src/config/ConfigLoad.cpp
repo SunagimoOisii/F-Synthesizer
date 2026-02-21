@@ -127,6 +127,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     if (*type == "drumkit")
     {
+        // drumkit は差分上書き前提のため、未指定noteは None 初期値を維持する。
         DrumKitConfig kit{};
         for (auto& d : kit.map)
         {
@@ -215,6 +216,7 @@ bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err)
         return true;
     }
 
+    // 既定値を基底に差分だけを適用し、preset互換を維持する。
     auto table = MakeMutableChannelConfigs(cfg);
     if (!ParseTopLevelObjectEntries(channelsObj, [&](const std::string& k, const std::string& valueObj) {
         int ch = -1;
@@ -288,6 +290,7 @@ bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& er
         return true;
     }
 
+    // channelMix も channels と同じく「差分マージ」を採用する。
     auto table = MakeMutableChannelMixStates(cfg);
     if (!ParseTopLevelObjectEntries(mixObj, [&](const std::string& k, const std::string& valueObj) {
         int ch = -1;
@@ -332,6 +335,7 @@ bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& 
         return false;
     }
 
+    // 相対パスは設定ファイル配置ディレクトリ基準で解決する。
     const std::filesystem::path baseDir = configPath.has_parent_path()
         ? configPath.parent_path()
         : std::filesystem::current_path();
@@ -392,6 +396,7 @@ bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& 
     }
     if (cfg.bits != 16)
     {
+        // Writer実装の現行制約に合わせて fail-fast する。
         err = "bits must be 16";
         return false;
     }

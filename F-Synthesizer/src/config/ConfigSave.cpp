@@ -32,6 +32,7 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     out << "  \"extraReleaseSec\": " << config.extraReleaseSec << ",\n";
     out << "  \"channels\": {\n";
 
+    // 出力時に常に16ch/16mixを書き出し、ロード側の差分適用と組み合わせて再現性を優先する。
     AppConfig base = DefaultConfig();
     const auto& channels = config.channelConfigs ? *config.channelConfigs : *base.channelConfigs;
     for (int ch = 0; ch < 16; ch++)
