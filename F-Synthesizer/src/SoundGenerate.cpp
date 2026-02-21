@@ -1296,7 +1296,7 @@ std::vector<MIDIEvent> BuildWindowedEvents(
     return prefix;
 }
 
-int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer)
+int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound)
 {
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     if (options.writeWav)
@@ -1608,6 +1608,11 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
         LogLine(observer, oss.str());
     }
 
+    if (renderedSound != nullptr)
+    {
+        *renderedSound = sound;
+    }
+
     // Save
     if (options.writeWav)
     {
@@ -1640,17 +1645,22 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
 
 int Run(const AppConfig& config)
 {
-    return Run(config, DefaultRenderOptions(), nullptr);
+    return Run(config, DefaultRenderOptions(), nullptr, nullptr);
 }
 
 int Run(const AppConfig& config, const RenderOptions& options)
 {
-    return Run(config, options, nullptr);
+    return Run(config, options, nullptr, nullptr);
 }
 
 int Run(const AppConfig& config, IRunObserver* observer)
 {
-    return Run(config, DefaultRenderOptions(), observer);
+    return Run(config, DefaultRenderOptions(), observer, nullptr);
+}
+
+int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer)
+{
+    return Run(config, options, observer, nullptr);
 }
 
 int RunGuiApp();

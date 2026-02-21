@@ -2,6 +2,7 @@
 #include <cstring>
 #include <vector>
 #include <memory>
+#include <atomic>
 #include <mutex>
 #include <future>
 #include <chrono>
@@ -14,6 +15,9 @@
 #include <cmath>
 #include <cctype>
 #include <type_traits>
+
+#define MINIAUDIO_IMPLEMENTATION
+#include "third_party/miniaudio.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -32,6 +36,19 @@
 
 namespace
 {
+struct PreviewPlaybackState
+{
+    ma_device device{};
+    bool deviceReady = false;
+    std::mutex mutex{};
+    std::vector<float> pcm{};
+    std::atomic<uint64_t> frameCursor{ 0 };
+    std::atomic<bool> playing{ false };
+    std::atomic<bool> loop{ false };
+    ma_uint32 channels = 1;
+    ma_uint32 sampleRate = 44100;
+};
+
 struct GuiState
 {
     struct GuiRunObserver : IRunObserver
@@ -79,6 +96,13 @@ struct GuiState
     bool restorePreviewOnRunComplete = false;
     int soloPreviewChannel = 0;
     std::array<ChannelMixState, 16> soloPreviewBackup{};
+    bool previewLoop = false;
+    bool previewAudioReady = false;
+    bool runIsPreview = false;
+    bool autoPlayPreviewOnRunComplete = false;
+    std::shared_ptr<SoundData> previewRenderedSound{};
+    std::shared_ptr<SoundData> runOutputBuffer{};
+    PreviewPlaybackState playback{};
     std::future<int> runFuture{};
     std::mutex logMutex{};
     std::vector<std::string> logs{};
@@ -133,6 +157,131 @@ void AppendGuiLog(GuiState& state, const std::string& line)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
     state.logs.push_back(line);
+}
+
+void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/, ma_uint32 frameCount)
+{
+    auto* playback = reinterpret_cast<PreviewPlaybackState*>(device->pUserData);
+    float* out = reinterpret_cast<float*>(output);
+    if (out == nullptr || playback == nullptr)
+    {
+        return;
+    }
+
+    std::fill(out, out + frameCount, 0.0f);
+    std::lock_guard<std::mutex> lock(playback->mutex);
+    if (!playback->playing.load(std::memory_order_relaxed) || playback->pcm.empty())
+    {
+        return;
+    }
+
+    const uint64_t totalFrames = static_cast<uint64_t>(playback->pcm.size());
+    uint64_t cursor = playback->frameCursor.load(std::memory_order_relaxed);
+    ma_uint32 written = 0;
+    while (written < frameCount)
+    {
+        if (cursor >= totalFrames)
+        {
+            if (playback->loop.load(std::memory_order_relaxed))
+            {
+                cursor = 0;
+            }
+            else
+            {
+                playback->playing.store(false, std::memory_order_relaxed);
+                break;
+            }
+        }
+
+        const uint64_t remain = totalFrames - cursor;
+        const ma_uint32 chunk = static_cast<ma_uint32>((std::min<uint64_t>)(remain, frameCount - written));
+        std::memcpy(out + written, playback->pcm.data() + cursor, sizeof(float) * chunk);
+        written += chunk;
+        cursor += chunk;
+    }
+
+    playback->frameCursor.store(cursor, std::memory_order_relaxed);
+}
+
+bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, std::string& err)
+{
+    std::lock_guard<std::mutex> lock(playback.mutex);
+
+    if (playback.deviceReady && playback.sampleRate != static_cast<ma_uint32>(sampleRate))
+    {
+        ma_device_uninit(&playback.device);
+        playback.deviceReady = false;
+    }
+
+    if (playback.deviceReady)
+    {
+        return true;
+    }
+
+    ma_device_config config = ma_device_config_init(ma_device_type_playback);
+    config.playback.format = ma_format_f32;
+    config.playback.channels = 1;
+    config.sampleRate = static_cast<ma_uint32>(sampleRate);
+    config.dataCallback = PreviewAudioCallback;
+    config.pUserData = &playback;
+
+    if (ma_device_init(nullptr, &config, &playback.device) != MA_SUCCESS)
+    {
+        err = "Failed to initialize preview audio device.";
+        return false;
+    }
+    if (ma_device_start(&playback.device) != MA_SUCCESS)
+    {
+        ma_device_uninit(&playback.device);
+        err = "Failed to start preview audio device.";
+        return false;
+    }
+
+    playback.deviceReady = true;
+    playback.sampleRate = static_cast<ma_uint32>(sampleRate);
+    return true;
+}
+
+void StopPreviewAudio(PreviewPlaybackState& playback)
+{
+    playback.playing.store(false, std::memory_order_relaxed);
+    playback.frameCursor.store(0, std::memory_order_relaxed);
+}
+
+void ShutdownPreviewAudio(PreviewPlaybackState& playback)
+{
+    std::lock_guard<std::mutex> lock(playback.mutex);
+    playback.playing.store(false, std::memory_order_relaxed);
+    if (playback.deviceReady)
+    {
+        ma_device_uninit(&playback.device);
+        playback.deviceReady = false;
+    }
+}
+
+bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err)
+{
+    if (sound.data.empty())
+    {
+        err = "Preview buffer is empty.";
+        return false;
+    }
+    if (!EnsurePreviewAudioDevice(playback, sound.fs, err))
+    {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(playback.mutex);
+    playback.pcm.resize(sound.data.size());
+    for (size_t i = 0; i < sound.data.size(); i++)
+    {
+        const double clamped = (std::max)(-1.0, (std::min)(1.0, sound.data[i]));
+        playback.pcm[i] = static_cast<float>(clamped);
+    }
+    playback.frameCursor.store(0, std::memory_order_relaxed);
+    playback.loop.store(loop, std::memory_order_relaxed);
+    playback.playing.store(true, std::memory_order_relaxed);
+    return true;
 }
 
 void CopyPath(char* dst, size_t dstSize, const std::filesystem::path& p)
@@ -739,6 +888,7 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonInt(text, "defaultWave")) state.defaultWave = *v;
     if (auto v = ReadJsonInt(text, "presetIndex")) state.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
+    if (auto v = ReadJsonBool(text, "previewLoop")) state.previewLoop = *v;
     if (auto v = ReadJsonInt(text, "selectedChannel")) state.selectedChannel = *v;
     if (auto v = ReadJsonInt(text, "selectedDrumNote")) state.selectedDrumNote = *v;
     if (auto v = ReadJsonString(text, "presetName")) strncpy_s(state.presetName, sizeof(state.presetName), v->c_str(), _TRUNCATE);
@@ -786,6 +936,7 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"defaultWave\": " << state.defaultWave << ",\n";
     fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
+    fout << "  \"previewLoop\": " << (state.previewLoop ? "true" : "false") << ",\n";
     fout << "  \"selectedChannel\": " << state.selectedChannel << ",\n";
     fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << ",\n";
     fout << "  \"presetName\": \"" << EscapeJson(state.presetName) << "\",\n";
@@ -917,6 +1068,7 @@ bool ValidateBeforeRun(const GuiState& state, std::string& err)
 
 void InitGuiState(GuiState& state)
 {
+    StopPreviewAudio(state.playback);
     AppConfig cfg = DefaultConfig();
     CopyPath(state.midiPath, sizeof(state.midiPath), cfg.midiPath);
     CopyPath(state.wavPath, sizeof(state.wavPath), cfg.wavPath);
@@ -943,6 +1095,12 @@ void InitGuiState(GuiState& state)
     state.soloPreviewActive = false;
     state.restorePreviewOnRunComplete = false;
     state.soloPreviewChannel = 0;
+    state.previewLoop = false;
+    state.previewAudioReady = false;
+    state.runIsPreview = false;
+    state.autoPlayPreviewOnRunComplete = false;
+    state.previewRenderedSound.reset();
+    state.runOutputBuffer.reset();
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
     RefreshPresetItems(state, state.presetName);
@@ -1338,6 +1496,37 @@ int RunGuiApp()
             state.hasRun = true;
             state.running = false;
             AppendGuiLog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
+            if (state.runIsPreview)
+            {
+                if (state.lastRunExitCode == 0 &&
+                    state.runOutputBuffer != nullptr &&
+                    !state.runOutputBuffer->data.empty())
+                {
+                    state.previewRenderedSound = state.runOutputBuffer;
+                    state.previewAudioReady = true;
+                    AppendGuiLog(state, "[GUI] Preview audio buffer ready");
+                    if (state.autoPlayPreviewOnRunComplete)
+                    {
+                        std::string playErr;
+                        if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, playErr))
+                        {
+                            AppendGuiLog(state, "[GUI] Preview playback started");
+                        }
+                        else
+                        {
+                            AppendGuiLog(state, "[GUI] Preview playback failed: " + playErr);
+                        }
+                    }
+                }
+                else
+                {
+                    state.previewAudioReady = false;
+                    state.previewRenderedSound.reset();
+                }
+                state.runOutputBuffer.reset();
+                state.runIsPreview = false;
+                state.autoPlayPreviewOnRunComplete = false;
+            }
             if (state.restorePreviewOnRunComplete)
             {
                 DeactivateSoloPreview(state);
@@ -1490,27 +1679,32 @@ int RunGuiApp()
                     ActivateSoloPreview(state, state.selectedChannel);
                 }
                 AppConfig cfg = BuildConfigFromGui(state);
-                if (state.serialSave)
+                RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
+                if (!previewSelected && state.serialSave)
                 {
                     cfg.wavPath = BuildSerialWavPath(cfg.wavPath);
                 }
                 if (previewSelected)
                 {
-                    cfg.wavPath = BuildPreviewWavPath(cfg.wavPath, state.selectedChannel);
                     state.restorePreviewOnRunComplete = true;
+                    options = DefaultPreviewRenderOptions();
+                    options.writeWav = false;
                 }
-                state.lastOutputPath = cfg.wavPath.string();
+                state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
 
                 state.logs.clear();
                 state.lastPeak = 0.0;
                 state.hasPeak = false;
+                state.runOutputBuffer = previewSelected ? std::make_shared<SoundData>() : nullptr;
+                state.runIsPreview = previewSelected;
+                state.autoPlayPreviewOnRunComplete = previewSelected;
                 AppendGuiLog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
                 AppendGuiLog(state, "[GUI] Effective Output: " + state.lastOutputPath);
                 state.hasRun = false;
                 state.stopRequested = false;
                 state.running = true;
-                state.runFuture = std::async(std::launch::async, [cfg, &state]() {
-                    return Run(cfg, &state.observer);
+                state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
+                    return Run(cfg, options, &state.observer, outBuffer.get());
                     });
             }
         };
@@ -1519,18 +1713,43 @@ int RunGuiApp()
             startRun(false);
         }
         ImGui::SameLine();
-        if (ImGui::Button("Preview Play (Selected ch)"))
+        if (ImGui::Button("Play Preview (Selected ch)"))
         {
             startRun(true);
         }
         ImGui::EndDisabled();
 
         ImGui::SameLine();
-        ImGui::BeginDisabled(!state.running);
+        ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
+        if (ImGui::Button("Replay Preview"))
+        {
+            std::string err;
+            if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
+            {
+                AppendGuiLog(state, "[GUI] Preview replay started");
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
+            }
+        }
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
+        ImGui::BeginDisabled(!canStop);
         if (ImGui::Button("Stop"))
         {
-            state.stopRequested = true;
-            AppendGuiLog(state, "[GUI] Stop requested (current engine does not support cancellation yet)");
+            if (state.playback.playing.load(std::memory_order_relaxed))
+            {
+                StopPreviewAudio(state.playback);
+                AppendGuiLog(state, "[GUI] Preview playback stopped");
+            }
+            if (state.running)
+            {
+                state.stopRequested = true;
+                AppendGuiLog(state, "[GUI] Stop requested (render cancellation is not implemented yet)");
+            }
         }
         ImGui::EndDisabled();
 
@@ -1541,6 +1760,8 @@ int RunGuiApp()
         }
 
         ImGui::BeginDisabled(state.running);
+        ImGui::Checkbox("Loop Preview", &state.previewLoop);
+        ImGui::SameLine();
         if (state.soloPreviewActive)
         {
             if (ImGui::Button("Solo Preview Off"))
@@ -1564,6 +1785,10 @@ int RunGuiApp()
         if (state.running)
         {
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.2f, 1.0f), "Status: Running...");
+        }
+        else if (state.playback.playing.load(std::memory_order_relaxed))
+        {
+            ImGui::TextColored(ImVec4(0.3f, 0.85f, 0.95f, 1.0f), "Status: Preview Playing%s", state.previewLoop ? " (Loop)" : "");
         }
         else if (state.hasRun)
         {
@@ -1635,6 +1860,8 @@ int RunGuiApp()
             AppendGuiLog(state, "[GUI] gui_state save failed: " + err);
         }
     }
+
+    ShutdownPreviewAudio(state.playback);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

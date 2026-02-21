@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include "AudioBuffer.h"
 #include "SynthEngine/SynthEngine.h"
 
 enum class RunMode
@@ -52,3 +53,4 @@ int Run(const AppConfig& config);
 int Run(const AppConfig& config, IRunObserver* observer);
 int Run(const AppConfig& config, const RenderOptions& options);
 int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer);
+int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound);
