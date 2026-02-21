@@ -19,6 +19,11 @@
 
 namespace
 {
+double SafeBpm(double bpm)
+{
+    return (bpm > 1e-3) ? bpm : 120.0;
+}
+
 double SecondsAtTickForPreview(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, int targetTick)
 {
     if (targetTick <= 0 || ticksPerQuarter <= 0)
@@ -40,22 +45,22 @@ double SecondsAtTickForPreview(const std::vector<TempoEvent>& tempoEvents, int t
 
     double seconds = 0.0;
     int cursorTick = 0;
-    double cursorBpm = sorted.front().bpm;
+    double cursorBpm = SafeBpm(sorted.front().bpm);
     size_t idx = 1;
     while (idx < sorted.size() && sorted[idx].tick <= targetTick)
     {
         const int nextTick = sorted[idx].tick;
         const int deltaTick = nextTick - cursorTick;
-        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        const double secPerTick = (60.0 / SafeBpm(cursorBpm)) / static_cast<double>(ticksPerQuarter);
         seconds += secPerTick * static_cast<double>(deltaTick);
         cursorTick = nextTick;
-        cursorBpm = sorted[idx].bpm;
+        cursorBpm = SafeBpm(sorted[idx].bpm);
         idx++;
     }
     if (targetTick > cursorTick)
     {
         const int deltaTick = targetTick - cursorTick;
-        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        const double secPerTick = (60.0 / SafeBpm(cursorBpm)) / static_cast<double>(ticksPerQuarter);
         seconds += secPerTick * static_cast<double>(deltaTick);
     }
     return seconds;
@@ -389,6 +394,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     {
         state.restorePreviewOnRunComplete = true;
         options.writeWav = false;
+        const double rangeDurationSec = PreviewRangeDurationSec(state);
+        if (state.pianoRoll.previewRangeEnabled && rangeDurationSec > 0.0)
+        {
+            // 範囲指定時は既定8秒上限ではなく範囲長を使う。
+            options.durationSec = rangeDurationSec;
+        }
         int startTick = state.pianoRoll.previewStartTick;
         if (state.pianoRoll.previewRangeEnabled)
         {
@@ -402,7 +413,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
                 startTick);
         }
         state.previewRequestedStartTick = startTick;
-        state.previewRequestedDurationSec = PreviewRangeDurationSec(state);
+        state.previewRequestedDurationSec = rangeDurationSec;
     }
     else
     {
@@ -435,7 +446,8 @@ void StartGUIRun(GUIState& state, bool previewSelected)
             const int a = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
             const int b = (std::max)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
             AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview range tick=" + std::to_string(a) + "-" +
-                std::to_string(b) + " secStart=" + std::to_string(options.startSec));
+                std::to_string(b) + " secStart=" + std::to_string(options.startSec) +
+                " secDuration=" + std::to_string(options.durationSec));
         }
         else
         {

@@ -52,7 +52,6 @@ struct PianoRollState
     bool previewRangeEnabled = false;
     int previewRangeStartTick = 0;
     int previewRangeEndTick = 0;
-    bool previewRangeShortcutArmed = false;
     bool isPreviewRangeDragging = false;
     int previewRangeDragStartTick = 0;
 

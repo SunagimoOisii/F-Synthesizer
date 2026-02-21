@@ -1079,7 +1079,7 @@ void DrawPianoRollPanel(
     {
         ImGui::Text("PR StartTick=%d", state.previewStartTick);
     }
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / ルーラ後Ctrl+A=全範囲 / Space=再生停止 / Q,1-4=Snap");
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / Space=再生停止 / Q,1-4=Snap");
 
     if (state.hasLoadError)
     {
@@ -1219,32 +1219,13 @@ void DrawPianoRollPanel(
         }
     }
 
-    const bool rulerDoubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && mouseInRuler;
-    if (rulerDoubleClicked)
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInRuler)
     {
-        state.previewRangeShortcutArmed = true;
-        state.previewRangeEnabled = true;
-        state.previewRangeStartTick = 0;
-        state.previewRangeEndTick = (std::max)(state.maxTick, 0);
-        NormalizePreviewRange(state);
-        if (appendLog)
-        {
-            appendLog("[PianoRoll] preview range set: full");
-        }
-    }
-
-    if (!rulerDoubleClicked && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInRuler)
-    {
-        state.previewRangeShortcutArmed = true;
         state.isPreviewRangeDragging = true;
         state.previewRangeDragStartTick = SnapTick(mouseTick, snapStep);
         state.previewRangeStartTick = state.previewRangeDragStartTick;
         state.previewRangeEndTick = state.previewRangeDragStartTick;
         state.previewRangeEnabled = true;
-    }
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !mouseInRuler)
-    {
-        state.previewRangeShortcutArmed = false;
     }
     if (state.isPreviewRangeDragging)
     {
@@ -1298,17 +1279,6 @@ void DrawPianoRollPanel(
     }
     if (panelFocused && !ImGui::GetIO().WantTextInput)
     {
-        if (state.previewRangeShortcutArmed && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A, false))
-        {
-            state.previewRangeEnabled = true;
-            state.previewRangeStartTick = 0;
-            state.previewRangeEndTick = (std::max)(state.maxTick, 0);
-            NormalizePreviewRange(state);
-            if (appendLog)
-            {
-                appendLog("[PianoRoll] preview range set: full (Ctrl+A)");
-            }
-        }
         if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) || ImGui::IsKeyPressed(ImGuiKey_Backspace, false))
         {
             if (DeleteSelectedNotes(state))

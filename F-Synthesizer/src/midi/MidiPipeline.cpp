@@ -1,6 +1,7 @@
 #include "midi/MidiPipeline.h"
 
 #include <array>
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -162,7 +163,8 @@ bool BuildMidiPipeline(
         if (durationSec >= 0.0)
         {
             const double normalizedDurationSec = (durationSec > 0.0) ? durationSec : 0.0;
-            const int durationSamples = static_cast<int>(normalizedDurationSec * sampleRate);
+            // 範囲終端のNoteOffを落とさないよう、ceil+1sampleで右端をわずかに広げる。
+            const int durationSamples = static_cast<int>(std::ceil(normalizedDurationSec * sampleRate)) + 1;
             endSample = startSample + durationSamples;
         }
         out.events = BuildWindowedEvents(out.events, startSample, endSample);
