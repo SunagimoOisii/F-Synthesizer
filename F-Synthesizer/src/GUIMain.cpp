@@ -12,6 +12,7 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+#include <cctype>
 #include <type_traits>
 
 #include <GLFW/glfw3.h>
@@ -71,6 +72,9 @@ struct GuiState
     std::string lastOutputPath{};
     std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
+    std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
+    double lastPeak = 0.0;
+    bool hasPeak = false;
     std::future<int> runFuture{};
     std::mutex logMutex{};
     std::vector<std::string> logs{};
@@ -770,6 +774,10 @@ AppConfig BuildConfigFromGui(const GuiState& state)
     {
         cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(state.channelConfigs);
     }
+    if (state.channelMixStates)
+    {
+        cfg.channelMixStates = std::static_pointer_cast<const std::array<ChannelMixState, 16>>(state.channelMixStates);
+    }
     return cfg;
 }
 
@@ -852,6 +860,8 @@ void InitGuiState(GuiState& state)
     state.lastOutputPath.clear();
     state.lastPresetPath.clear();
     state.logs.clear();
+    state.lastPeak = 0.0;
+    state.hasPeak = false;
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
     RefreshPresetItems(state, state.presetName);
@@ -860,6 +870,11 @@ void InitGuiState(GuiState& state)
     if (cfg.channelConfigs)
     {
         *state.channelConfigs = *cfg.channelConfigs;
+    }
+    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
+    if (cfg.channelMixStates)
+    {
+        *state.channelMixStates = *cfg.channelMixStates;
     }
 }
 
@@ -962,17 +977,110 @@ void EnsureChannelConfigs(GuiState& state)
     }
 }
 
+void EnsureChannelMixStates(GuiState& state)
+{
+    if (state.channelMixStates)
+    {
+        return;
+    }
+    AppConfig cfg = DefaultConfig();
+    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
+    if (cfg.channelMixStates)
+    {
+        *state.channelMixStates = *cfg.channelMixStates;
+    }
+}
+
+void AnalyzeRenderPeakFromLogs(GuiState& state)
+{
+    std::lock_guard<std::mutex> lock(state.logMutex);
+    for (auto it = state.logs.rbegin(); it != state.logs.rend(); ++it)
+    {
+        const std::string& line = *it;
+        const std::string key = "[RenderStats] peak=";
+        const size_t pos = line.find(key);
+        if (pos == std::string::npos)
+        {
+            continue;
+        }
+        const size_t start = pos + key.size();
+        size_t end = start;
+        while (end < line.size() && (std::isdigit(static_cast<unsigned char>(line[end])) || line[end] == '.' || line[end] == '-'))
+        {
+            end++;
+        }
+        if (end <= start)
+        {
+            break;
+        }
+        try
+        {
+            state.lastPeak = std::stod(line.substr(start, end - start));
+            state.hasPeak = true;
+        }
+        catch (...)
+        {
+            state.hasPeak = false;
+        }
+        return;
+    }
+}
+
 bool DrawChannelEditor(GuiState& state)
 {
     bool changed = false;
     EnsureChannelConfigs(state);
+    EnsureChannelMixStates(state);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
+    ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
 
     ImGui::Separator();
-    ImGui::Text("Channel Editor (Phase C)");
+    ImGui::Text("Channel Editor (Phase B/C)");
     changed |= ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+    chMix = (*state.channelMixStates)[state.selectedChannel];
+
+    ImGui::Separator();
+    ImGui::Text("Channel Mix Monitor (0-15)");
+    auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
+    {
+        float v = static_cast<float>(value);
+        bool edited = ImGui::SliderFloat(label, &v, minV, maxV, "%.2f");
+        if (edited)
+        {
+            value = static_cast<double>(v);
+        }
+        return edited;
+    };
+    for (int ch = 0; ch < 16; ch++)
+    {
+        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        ImGui::PushID(ch);
+        if ((ch % 4) != 0)
+        {
+            ImGui::SameLine();
+        }
+        ImGui::BeginGroup();
+        ImGui::Text("ch%d", ch);
+        changed |= ImGui::Checkbox("M", &mix.mute);
+        ImGui::SameLine();
+        changed |= ImGui::Checkbox("S", &mix.solo);
+        changed |= sliderMix("L", mix.level, 0.0f, 2.0f);
+        changed |= sliderMix("P", mix.pan, -1.0f, 1.0f);
+        changed |= sliderMix("G", mix.gain, 0.0f, 4.0f);
+        ImGui::EndGroup();
+        ImGui::PopID();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Selected Channel Mix (ch%d)", state.selectedChannel);
+    changed |= ImGui::Checkbox("Mute", &chMix.mute);
+    ImGui::SameLine();
+    changed |= ImGui::Checkbox("Solo", &chMix.solo);
+    changed |= sliderMix("Level", chMix.level, 0.0f, 2.0f);
+    changed |= sliderMix("Pan", chMix.pan, -1.0f, 1.0f);
+    changed |= sliderMix("Gain", chMix.gain, 0.0f, 4.0f);
 
     changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
     changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
@@ -1189,10 +1297,15 @@ int RunGuiApp()
         if (ImGui::Button("Reset Channel"))
         {
             EnsureChannelConfigs(state);
+            EnsureChannelMixStates(state);
             AppConfig def = DefaultConfig();
             if (def.channelConfigs)
             {
                 (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
+                if (def.channelMixStates)
+                {
+                    (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
+                }
                 state.presetDirty = true;
                 AppendGuiLog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
             }
@@ -1233,6 +1346,8 @@ int RunGuiApp()
                 state.lastOutputPath = cfg.wavPath.string();
 
                 state.logs.clear();
+                state.lastPeak = 0.0;
+                state.hasPeak = false;
                 AppendGuiLog(state, "[GUI] Run started");
                 AppendGuiLog(state, "[GUI] Effective Output: " + state.lastOutputPath);
                 state.hasRun = false;
@@ -1278,6 +1393,18 @@ int RunGuiApp()
         if (!state.lastOutputPath.empty())
         {
             ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
+        }
+        AnalyzeRenderPeakFromLogs(state);
+        if (state.hasPeak)
+        {
+            const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
+            ImGui::Text("Peak: %.4f", state.lastPeak);
+            ImGui::ProgressBar(meter, ImVec2(220, 0));
+            if (state.lastPeak > 1.0)
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+            }
         }
 
         ImGui::Separator();
