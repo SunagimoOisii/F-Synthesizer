@@ -39,6 +39,12 @@
     <ClCompile Include="src\\GUIMain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIPlatform.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\gui\\PreviewAudio.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\io\\PlatformPaths.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -95,6 +101,12 @@
     <ClInclude Include="include\\Envelope.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\gui\\GUIPlatform.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\PreviewAudio.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\io\\PlatformPaths.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -121,4 +133,5 @@
     </ClInclude>
   </ItemGroup>
 </Project>
+
 

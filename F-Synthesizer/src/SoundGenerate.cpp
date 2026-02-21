@@ -622,7 +622,7 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     return Run(config, options, observer, nullptr);
 }
 
-int RunGuiApp();
+int RunGUIApp();
 
 int main(int argc, char** argv)
 {
@@ -640,9 +640,10 @@ int main(int argc, char** argv)
     }
     if (!cli.startCli)
     {
-        return RunGuiApp();
+        return RunGUIApp();
     }
 
     return RunCliApplication(cli);
 }
+
 

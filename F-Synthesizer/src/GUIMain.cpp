@@ -15,19 +15,15 @@
 #include <cmath>
 #include <cctype>
 #include <type_traits>
-#include <cwchar>
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "third_party/miniaudio.h"
-
-#include <windows.h>
-#include <commdlg.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
 #include "AppCore.h"
+#include "gui/GUIPlatform.h"
+#include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
 
 #pragma comment(lib, "opengl32.lib")
@@ -40,22 +36,9 @@
 
 namespace
 {
-struct PreviewPlaybackState
+struct GUIState
 {
-    ma_device device{};
-    bool deviceReady = false;
-    std::mutex mutex{};
-    std::vector<float> pcm{};
-    std::atomic<uint64_t> frameCursor{ 0 };
-    std::atomic<bool> playing{ false };
-    std::atomic<bool> loop{ false };
-    ma_uint32 channels = 1;
-    ma_uint32 sampleRate = 44100;
-};
-
-struct GuiState
-{
-    struct GuiRunObserver : IRunObserver
+    struct GUIRunObserver : IRunObserver
     {
         std::mutex* logMutex = nullptr;
         std::vector<std::string>* logs = nullptr;
@@ -118,81 +101,15 @@ struct GuiState
     std::future<int> runFuture{};
     std::mutex logMutex{};
     std::vector<std::string> logs{};
-    GuiRunObserver observer{};
+    GUIRunObserver observer{};
 };
 
 std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
-void EnsureChannelConfigs(GuiState& state);
-void EnsureChannelMixStates(GuiState& state);
+void EnsureChannelConfigs(GUIState& state);
+void EnsureChannelMixStates(GUIState& state);
 float UiScaleFromIndex(int idx);
 const char* UiScaleLabelFromIndex(int idx);
-void DrawStatusBadge(const GuiState& state);
-
-bool BrowseOpenPath(const std::string& initialPathUtf8, const wchar_t* filter, std::string& outPathUtf8)
-{
-    wchar_t fileBuf[2048]{};
-    if (!initialPathUtf8.empty())
-    {
-        std::wstring initial = Utf8ToWide(initialPathUtf8);
-        wcsncpy_s(fileBuf, initial.c_str(), _TRUNCATE);
-    }
-
-    OPENFILENAMEW ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = nullptr;
-    ofn.lpstrFile = fileBuf;
-    ofn.nMaxFile = static_cast<DWORD>(std::size(fileBuf));
-    ofn.lpstrFilter = filter;
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-
-    if (!GetOpenFileNameW(&ofn))
-    {
-        return false;
-    }
-
-    outPathUtf8 = WideToUtf8(fileBuf);
-    return true;
-}
-
-bool BrowseSavePath(const std::string& initialPathUtf8, const wchar_t* filter, const wchar_t* defExt, std::string& outPathUtf8)
-{
-    wchar_t fileBuf[2048]{};
-    if (!initialPathUtf8.empty())
-    {
-        std::wstring initial = Utf8ToWide(initialPathUtf8);
-        wcsncpy_s(fileBuf, initial.c_str(), _TRUNCATE);
-    }
-
-    OPENFILENAMEW ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = nullptr;
-    ofn.lpstrFile = fileBuf;
-    ofn.nMaxFile = static_cast<DWORD>(std::size(fileBuf));
-    ofn.lpstrFilter = filter;
-    ofn.nFilterIndex = 1;
-    ofn.lpstrDefExt = defExt;
-    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
-
-    if (!GetSaveFileNameW(&ofn))
-    {
-        return false;
-    }
-
-    outPathUtf8 = WideToUtf8(fileBuf);
-    return true;
-}
-
-std::string CompactPathForUi(const std::string& s, size_t maxChars = 72)
-{
-    if (s.size() <= maxChars)
-    {
-        return s;
-    }
-    const size_t head = maxChars / 2 - 3;
-    const size_t tail = maxChars - head - 3;
-    return s.substr(0, head) + "..." + s.substr(s.size() - tail);
-}
+void DrawStatusBadge(const GUIState& state);
 
 void SetupImGuiFont()
 {
@@ -220,145 +137,10 @@ void SetupImGuiFont()
     }
 }
 
-void AppendGuiLog(GuiState& state, const std::string& line)
+void AppendGUILog(GUIState& state, const std::string& line)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
     state.logs.push_back(line);
-}
-
-void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/, ma_uint32 frameCount)
-{
-    auto* playback = reinterpret_cast<PreviewPlaybackState*>(device->pUserData);
-    float* out = reinterpret_cast<float*>(output);
-    if (out == nullptr || playback == nullptr)
-    {
-        return;
-    }
-
-    std::fill(out, out + frameCount, 0.0f);
-    std::lock_guard<std::mutex> lock(playback->mutex);
-    if (!playback->playing.load(std::memory_order_relaxed) || playback->pcm.empty())
-    {
-        return;
-    }
-
-    const uint64_t totalFrames = static_cast<uint64_t>(playback->pcm.size());
-    uint64_t cursor = playback->frameCursor.load(std::memory_order_relaxed);
-    ma_uint32 written = 0;
-    while (written < frameCount)
-    {
-        if (cursor >= totalFrames)
-        {
-            if (playback->loop.load(std::memory_order_relaxed))
-            {
-                cursor = 0;
-            }
-            else
-            {
-                playback->playing.store(false, std::memory_order_relaxed);
-                break;
-            }
-        }
-
-        const uint64_t remain = totalFrames - cursor;
-        const ma_uint32 chunk = static_cast<ma_uint32>((std::min<uint64_t>)(remain, frameCount - written));
-        std::memcpy(out + written, playback->pcm.data() + cursor, sizeof(float) * chunk);
-        written += chunk;
-        cursor += chunk;
-    }
-
-    playback->frameCursor.store(cursor, std::memory_order_relaxed);
-}
-
-bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, std::string& err)
-{
-    std::lock_guard<std::mutex> lock(playback.mutex);
-
-    if (playback.deviceReady && playback.sampleRate != static_cast<ma_uint32>(sampleRate))
-    {
-        ma_device_uninit(&playback.device);
-        playback.deviceReady = false;
-    }
-
-    if (playback.deviceReady)
-    {
-        return true;
-    }
-
-    ma_device_config config = ma_device_config_init(ma_device_type_playback);
-    config.playback.format = ma_format_f32;
-    config.playback.channels = 1;
-    config.sampleRate = static_cast<ma_uint32>(sampleRate);
-    config.dataCallback = PreviewAudioCallback;
-    config.pUserData = &playback;
-
-    if (ma_device_init(nullptr, &config, &playback.device) != MA_SUCCESS)
-    {
-        err = "Failed to initialize preview audio device.";
-        return false;
-    }
-    if (ma_device_start(&playback.device) != MA_SUCCESS)
-    {
-        ma_device_uninit(&playback.device);
-        err = "Failed to start preview audio device.";
-        return false;
-    }
-
-    playback.deviceReady = true;
-    playback.sampleRate = static_cast<ma_uint32>(sampleRate);
-    return true;
-}
-
-void StopPreviewAudio(PreviewPlaybackState& playback)
-{
-    playback.playing.store(false, std::memory_order_relaxed);
-    playback.frameCursor.store(0, std::memory_order_relaxed);
-}
-
-void ShutdownPreviewAudio(PreviewPlaybackState& playback)
-{
-    std::lock_guard<std::mutex> lock(playback.mutex);
-    playback.playing.store(false, std::memory_order_relaxed);
-    if (playback.deviceReady)
-    {
-        ma_device_uninit(&playback.device);
-        playback.deviceReady = false;
-    }
-}
-
-bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err)
-{
-    if (sound.data.empty())
-    {
-        err = "Preview buffer is empty.";
-        return false;
-    }
-    if (!EnsurePreviewAudioDevice(playback, sound.fs, err))
-    {
-        return false;
-    }
-
-    std::lock_guard<std::mutex> lock(playback.mutex);
-    playback.pcm.resize(sound.data.size());
-    for (size_t i = 0; i < sound.data.size(); i++)
-    {
-        const double clamped = (std::max)(-1.0, (std::min)(1.0, sound.data[i]));
-        playback.pcm[i] = static_cast<float>(clamped);
-    }
-    playback.frameCursor.store(0, std::memory_order_relaxed);
-    playback.loop.store(loop, std::memory_order_relaxed);
-    playback.playing.store(true, std::memory_order_relaxed);
-    return true;
-}
-
-void CopyPath(char* dst, size_t dstSize, const std::filesystem::path& p)
-{
-    std::string s = PathToUtf8(p);
-    if (dstSize == 0)
-    {
-        return;
-    }
-    strncpy_s(dst, dstSize, s.c_str(), _TRUNCATE);
 }
 
 bool NearlyEq(double a, double b, double eps = 1e-9)
@@ -635,7 +417,7 @@ void WriteSourceJson(std::ostream& out, const SourceConfig& src, int indent)
     out << sp << "}";
 }
 
-bool SavePresetDiff(const GuiState& state, const std::filesystem::path& presetPath, std::string& err)
+bool SavePresetDiff(const GUIState& state, const std::filesystem::path& presetPath, std::string& err)
 {
     AppConfig base = DefaultConfig();
     if (!state.channelConfigs || !base.channelConfigs || !state.channelMixStates || !base.channelMixStates)
@@ -737,7 +519,7 @@ std::vector<std::string> CollectPresetItems()
     return names;
 }
 
-int FindPresetIndex(const GuiState& state, const std::string& name)
+int FindPresetIndex(const GUIState& state, const std::string& name)
 {
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
     {
@@ -749,7 +531,7 @@ int FindPresetIndex(const GuiState& state, const std::string& name)
     return -1;
 }
 
-void RefreshPresetItems(GuiState& state, const std::string& preferName)
+void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
     state.presetItems = CollectPresetItems();
     if (state.presetItems.empty())
@@ -765,7 +547,7 @@ void RefreshPresetItems(GuiState& state, const std::string& preferName)
     state.presetIndex = (idx >= 0) ? idx : 0;
 }
 
-bool ApplySelectedPresetPaths(GuiState& state, std::string& err)
+bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
 {
     if (state.presetItems.empty())
     {
@@ -821,7 +603,7 @@ bool ApplySelectedPresetPaths(GuiState& state, std::string& err)
     return true;
 }
 
-std::filesystem::path GuiStatePath()
+std::filesystem::path GUIStatePath()
 {
     return FindProjectRootPath() / "config" / "gui_state.json";
 }
@@ -926,9 +708,9 @@ std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key
     return std::nullopt;
 }
 
-bool LoadGuiStateFile(GuiState& state, std::string& err)
+bool LoadGUIStateFile(GUIState& state, std::string& err)
 {
-    const std::filesystem::path path = GuiStatePath();
+    const std::filesystem::path path = GUIStatePath();
     if (!std::filesystem::exists(path))
     {
         return true;
@@ -981,9 +763,9 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     return true;
 }
 
-bool SaveGuiStateFile(const GuiState& state, std::string& err)
+bool SaveGUIStateFile(const GUIState& state, std::string& err)
 {
-    const std::filesystem::path path = GuiStatePath();
+    const std::filesystem::path path = GUIStatePath();
     std::error_code ec;
     std::filesystem::create_directories(path.parent_path(), ec);
 
@@ -1059,7 +841,7 @@ std::filesystem::path BuildPreviewWavPath(const std::filesystem::path& basePath,
     return basePath.parent_path() / (stem + "_preview_ch" + std::to_string(channel) + ext);
 }
 
-AppConfig BuildConfigFromGui(const GuiState& state)
+AppConfig BuildConfigFromGUI(const GUIState& state)
 {
     AppConfig cfg = DefaultConfig();
     cfg.midiPath = Utf8ToPath(state.midiPath);
@@ -1081,7 +863,7 @@ AppConfig BuildConfigFromGui(const GuiState& state)
     return cfg;
 }
 
-bool ValidateBeforeRun(const GuiState& state, std::string& err)
+bool ValidateBeforeRun(const GUIState& state, std::string& err)
 {
     const std::string midi = state.midiPath;
     const std::string wav = state.wavPath;
@@ -1137,7 +919,7 @@ bool ValidateBeforeRun(const GuiState& state, std::string& err)
     return true;
 }
 
-void InitGuiState(GuiState& state)
+void InitGUIState(GUIState& state)
 {
     StopPreviewAudio(state.playback);
     AppConfig cfg = DefaultConfig();
@@ -1192,7 +974,7 @@ void InitGuiState(GuiState& state)
     state.soloPreviewBackup = *state.channelMixStates;
 }
 
-void RepairGuiStatePathsIfNeeded(GuiState& state)
+void RepairGUIStatePathsIfNeeded(GUIState& state)
 {
     const AppConfig def = DefaultConfig();
     const std::filesystem::path midi = Utf8ToPath(state.midiPath);
@@ -1271,12 +1053,12 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
         if (mixRepaired)
         {
             repaired = true;
-            AppendGuiLog(state, "[GUI] Invalid mix state detected and clamped: ch" + std::to_string(ch));
+            AppendGUILog(state, "[GUI] Invalid mix state detected and clamped: ch" + std::to_string(ch));
         }
     }
     if (repaired)
     {
-        AppendGuiLog(state, "[GUI] Detected invalid saved state. Recovered to safe defaults.");
+        AppendGUILog(state, "[GUI] Detected invalid saved state. Recovered to safe defaults.");
     }
 }
 
@@ -1313,7 +1095,7 @@ bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
     return changed;
 }
 
-void EnsureChannelConfigs(GuiState& state)
+void EnsureChannelConfigs(GUIState& state)
 {
     if (state.channelConfigs)
     {
@@ -1327,7 +1109,7 @@ void EnsureChannelConfigs(GuiState& state)
     }
 }
 
-void EnsureChannelMixStates(GuiState& state)
+void EnsureChannelMixStates(GUIState& state)
 {
     if (state.channelMixStates)
     {
@@ -1341,7 +1123,7 @@ void EnsureChannelMixStates(GuiState& state)
     }
 }
 
-void AnalyzeRenderPeakFromLogs(GuiState& state)
+void AnalyzeRenderPeakFromLogs(GUIState& state)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
     for (auto it = state.logs.rbegin(); it != state.logs.rend(); ++it)
@@ -1376,7 +1158,7 @@ void AnalyzeRenderPeakFromLogs(GuiState& state)
     }
 }
 
-void ActivateSoloPreview(GuiState& state, int channel)
+void ActivateSoloPreview(GUIState& state, int channel)
 {
     EnsureChannelMixStates(state);
     channel = std::clamp(channel, 0, 15);
@@ -1395,22 +1177,22 @@ void ActivateSoloPreview(GuiState& state, int channel)
     }
     state.soloPreviewChannel = channel;
     state.soloPreviewActive = true;
-    AppendGuiLog(state, "[GUI] Solo Preview ON: ch" + std::to_string(channel));
+    AppendGUILog(state, "[GUI] Solo Preview ON: ch" + std::to_string(channel));
 }
 
-void DeactivateSoloPreview(GuiState& state)
+void DeactivateSoloPreview(GUIState& state)
 {
     if (!state.soloPreviewActive || !state.channelMixStates)
     {
         return;
     }
     *state.channelMixStates = state.soloPreviewBackup;
-    AppendGuiLog(state, "[GUI] Solo Preview OFF: restore previous mix state");
+    AppendGUILog(state, "[GUI] Solo Preview OFF: restore previous mix state");
     state.soloPreviewActive = false;
     state.restorePreviewOnRunComplete = false;
 }
 
-bool DrawChannelEditor(GuiState& state)
+bool DrawChannelEditor(GUIState& state)
 {
     bool changed = false;
     EnsureChannelConfigs(state);
@@ -1574,7 +1356,7 @@ const char* UiScaleLabelFromIndex(int idx)
     }
 }
 
-void DrawStatusBadge(const GuiState& state)
+void DrawStatusBadge(const GUIState& state)
 {
     ImVec4 color = ImVec4(0.55f, 0.55f, 0.55f, 1.0f);
     const char* label = "Idle";
@@ -1613,7 +1395,7 @@ void DrawStatusBadge(const GuiState& state)
 }
 } // namespace
 
-int RunGuiApp()
+int RunGUIApp()
 {
     if (!glfwInit())
     {
@@ -1643,20 +1425,20 @@ int RunGuiApp()
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
-    GuiState state{};
-    InitGuiState(state);
+    GUIState state{};
+    InitGUIState(state);
 
     {
         std::string err;
-        if (!LoadGuiStateFile(state, err))
+        if (!LoadGUIStateFile(state, err))
         {
-            AppendGuiLog(state, "[GUI] gui_state load failed: " + err);
+            AppendGUILog(state, "[GUI] gui_state load failed: " + err);
         }
         else
         {
-            AppendGuiLog(state, "[GUI] gui_state loaded: " + GuiStatePath().string());
+            AppendGUILog(state, "[GUI] gui_state loaded: " + GUIStatePath().string());
         }
-        RepairGuiStatePathsIfNeeded(state);
+        RepairGUIStatePathsIfNeeded(state);
     }
 
     while (!glfwWindowShouldClose(window))
@@ -1669,7 +1451,7 @@ int RunGuiApp()
             state.lastRunExitCode = state.runFuture.get();
             state.hasRun = true;
             state.running = false;
-            AppendGuiLog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
+            AppendGUILog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
             if (state.runIsPreview)
             {
                 if (state.lastRunExitCode == 0 &&
@@ -1678,17 +1460,17 @@ int RunGuiApp()
                 {
                     state.previewRenderedSound = state.runOutputBuffer;
                     state.previewAudioReady = true;
-                    AppendGuiLog(state, "[GUI] Preview audio buffer ready");
+                    AppendGUILog(state, "[GUI] Preview audio buffer ready");
                     if (state.autoPlayPreviewOnRunComplete)
                     {
                         std::string playErr;
                         if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, playErr))
                         {
-                            AppendGuiLog(state, "[GUI] Preview playback started");
+                            AppendGUILog(state, "[GUI] Preview playback started");
                         }
                         else
                         {
-                            AppendGuiLog(state, "[GUI] Preview playback failed: " + playErr);
+                            AppendGUILog(state, "[GUI] Preview playback failed: " + playErr);
                         }
                     }
                 }
@@ -1734,7 +1516,7 @@ int RunGuiApp()
         const char* uiScales[] = { "100%", "125%", "150%" };
         if (ImGui::Combo("##ui_scale", &state.uiScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
         {
-            AppendGuiLog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
+            AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
         }
         ImGui::Separator();
         auto startRun = [&](bool previewSelected)
@@ -1744,7 +1526,7 @@ int RunGuiApp()
             {
                 state.hasRun = true;
                 state.lastRunExitCode = 1;
-                AppendGuiLog(state, "[GUI] Validation failed: " + validationError);
+                AppendGUILog(state, "[GUI] Validation failed: " + validationError);
             }
             else
             {
@@ -1755,9 +1537,9 @@ int RunGuiApp()
                 if (state.playback.playing.load(std::memory_order_relaxed))
                 {
                     StopPreviewAudio(state.playback);
-                    AppendGuiLog(state, "[GUI] Previous preview playback stopped for new run");
+                    AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
                 }
-                AppConfig cfg = BuildConfigFromGui(state);
+                AppConfig cfg = BuildConfigFromGUI(state);
                 RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
                 if (!previewSelected && state.serialSave)
                 {
@@ -1777,8 +1559,8 @@ int RunGuiApp()
                 state.runOutputBuffer = previewSelected ? std::make_shared<SoundData>() : nullptr;
                 state.runIsPreview = previewSelected;
                 state.autoPlayPreviewOnRunComplete = previewSelected;
-                AppendGuiLog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
-                AppendGuiLog(state, "[GUI] Effective Output: " + state.lastOutputPath);
+                AppendGUILog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
+                AppendGUILog(state, "[GUI] Effective Output: " + state.lastOutputPath);
                 state.hasRun = false;
                 state.stopRequested.store(false, std::memory_order_relaxed);
                 state.running = true;
@@ -1808,11 +1590,11 @@ int RunGuiApp()
             std::string err;
             if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
             {
-                AppendGuiLog(state, "[GUI] Preview replay started");
+                AppendGUILog(state, "[GUI] Preview replay started");
             }
             else
             {
-                AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
+                AppendGUILog(state, "[GUI] Preview replay failed: " + err);
             }
         }
         ImGui::EndDisabled();
@@ -1824,12 +1606,12 @@ int RunGuiApp()
             if (state.playback.playing.load(std::memory_order_relaxed))
             {
                 StopPreviewAudio(state.playback);
-                AppendGuiLog(state, "[GUI] Preview playback stopped");
+                AppendGUILog(state, "[GUI] Preview playback stopped");
             }
             if (state.running)
             {
                 state.stopRequested.store(true, std::memory_order_relaxed);
-                AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
+                AppendGUILog(state, "[GUI] Stop requested (render cancellation signal sent)");
             }
         }
         ImGui::EndDisabled();
@@ -1882,7 +1664,7 @@ int RunGuiApp()
                 }
                 else
                 {
-                    AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+                    AppendGUILog(state, "[GUI] Apply preset failed: " + err);
                 }
             }
             ImGui::SameLine();
@@ -1895,13 +1677,13 @@ int RunGuiApp()
                 }
                 else
                 {
-                    AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+                    AppendGUILog(state, "[GUI] Apply preset failed: " + err);
                 }
             }
             ImGui::SameLine();
             if (ImGui::Button("Reset Defaults"))
             {
-                InitGuiState(state);
+                InitGUIState(state);
                 state.presetDirty = false;
             }
 
@@ -1916,11 +1698,11 @@ int RunGuiApp()
                     state.lastPresetPath = PathToUtf8(p);
                     state.presetDirty = false;
                     RefreshPresetItems(state, state.presetName);
-                    AppendGuiLog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                    AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
                 }
                 else
                 {
-                    AppendGuiLog(state, "[GUI] Preset save failed: " + err);
+                    AppendGUILog(state, "[GUI] Preset save failed: " + err);
                 }
             }
             ImGui::SameLine();
@@ -1935,11 +1717,11 @@ int RunGuiApp()
                     state.lastPresetPath = PathToUtf8(p);
                     state.presetDirty = false;
                     RefreshPresetItems(state, state.presetName);
-                    AppendGuiLog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+                    AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
                 }
                 else
                 {
-                    AppendGuiLog(state, "[GUI] Preset duplicate failed: " + err);
+                    AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
                 }
             }
             ImGui::SameLine();
@@ -1956,7 +1738,7 @@ int RunGuiApp()
                         (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
                     }
                     state.presetDirty = true;
-                    AppendGuiLog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+                    AppendGUILog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
                 }
             }
             if (!state.lastPresetPath.empty())
@@ -2087,9 +1869,9 @@ int RunGuiApp()
 
     {
         std::string err;
-        if (!SaveGuiStateFile(state, err))
+        if (!SaveGUIStateFile(state, err))
         {
-            AppendGuiLog(state, "[GUI] gui_state save failed: " + err);
+            AppendGUILog(state, "[GUI] gui_state save failed: " + err);
         }
     }
 
@@ -2103,3 +1885,4 @@ int RunGuiApp()
     glfwTerminate();
     return 0;
 }
+
