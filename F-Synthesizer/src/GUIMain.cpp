@@ -82,6 +82,7 @@ struct GuiState
     float extraReleaseSec = 0.3f;
     int defaultWave = 2; // saw
     int uiScaleIndex = 1; // 0=100%, 1=125%, 2=150%
+    float logPanelHeight = 240.0f;
     int presetIndex = 0;
     int lastRunExitCode = 0;
     bool hasRun = false;
@@ -897,6 +898,7 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonFloat(text, "extraReleaseSec")) state.extraReleaseSec = *v;
     if (auto v = ReadJsonInt(text, "defaultWave")) state.defaultWave = *v;
     if (auto v = ReadJsonInt(text, "uiScaleIndex")) state.uiScaleIndex = *v;
+    if (auto v = ReadJsonFloat(text, "logPanelHeight")) state.logPanelHeight = *v;
     if (auto v = ReadJsonInt(text, "presetIndex")) state.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
     if (auto v = ReadJsonBool(text, "previewLoop")) state.previewLoop = *v;
@@ -946,6 +948,7 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"extraReleaseSec\": " << state.extraReleaseSec << ",\n";
     fout << "  \"defaultWave\": " << state.defaultWave << ",\n";
     fout << "  \"uiScaleIndex\": " << state.uiScaleIndex << ",\n";
+    fout << "  \"logPanelHeight\": " << state.logPanelHeight << ",\n";
     fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
     fout << "  \"previewLoop\": " << (state.previewLoop ? "true" : "false") << ",\n";
@@ -1091,6 +1094,7 @@ void InitGuiState(GuiState& state)
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
     state.defaultWave = 2;
     state.uiScaleIndex = 1;
+    state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
     state.selectedChannel = 0;
     state.selectedDrumNote = 36;
@@ -1181,6 +1185,11 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
     if (state.uiScaleIndex < 0 || state.uiScaleIndex > 2)
     {
         state.uiScaleIndex = 1;
+        repaired = true;
+    }
+    if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)
+    {
+        state.logPanelHeight = std::clamp(state.logPanelHeight, 140.0f, 520.0f);
         repaired = true;
     }
     EnsureChannelMixStates(state);
@@ -1629,129 +1638,6 @@ int RunGuiApp()
             AppendGuiLog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
         }
         ImGui::Separator();
-        if (state.presetDirty)
-        {
-            ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
-        }
-
-        ImGui::BeginDisabled(state.running);
-        auto presetGetter = [](void* data, int idx, const char** outText) -> bool
-        {
-            auto* items = static_cast<std::vector<std::string>*>(data);
-            if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
-            {
-                return false;
-            }
-            *outText = (*items)[idx].c_str();
-            return true;
-        };
-        if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
-        {
-            std::string err;
-            if (ApplySelectedPresetPaths(state, err))
-            {
-                state.presetDirty = true;
-            }
-            else
-            {
-                AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Apply Preset Paths"))
-        {
-            std::string err;
-            if (ApplySelectedPresetPaths(state, err))
-            {
-                state.presetDirty = true;
-            }
-            else
-            {
-                AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Reset Defaults"))
-        {
-            InitGuiState(state);
-            state.presetDirty = false;
-        }
-
-        ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
-        ImGui::SameLine();
-        if (ImGui::Button("Save Preset As"))
-        {
-            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-            std::string err;
-            if (SavePresetDiff(state, p, err))
-            {
-                state.lastPresetPath = PathToUtf8(p);
-                state.presetDirty = false;
-                RefreshPresetItems(state, state.presetName);
-                AppendGuiLog(state, "[GUI] Preset saved: " + state.lastPresetPath);
-            }
-            else
-            {
-                AppendGuiLog(state, "[GUI] Preset save failed: " + err);
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Duplicate Preset"))
-        {
-            std::string copyName = std::string(state.presetName) + "_copy";
-            strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
-            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-            std::string err;
-            if (SavePresetDiff(state, p, err))
-            {
-                state.lastPresetPath = PathToUtf8(p);
-                state.presetDirty = false;
-                RefreshPresetItems(state, state.presetName);
-                AppendGuiLog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
-            }
-            else
-            {
-                AppendGuiLog(state, "[GUI] Preset duplicate failed: " + err);
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Reset Channel"))
-        {
-            EnsureChannelConfigs(state);
-            EnsureChannelMixStates(state);
-            AppConfig def = DefaultConfig();
-            if (def.channelConfigs)
-            {
-                (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
-                if (def.channelMixStates)
-                {
-                    (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
-                }
-                state.presetDirty = true;
-                AppendGuiLog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
-            }
-        }
-        if (!state.lastPresetPath.empty())
-        {
-            ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
-        }
-
-        state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
-        state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
-        state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
-        state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
-        state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
-        state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
-        state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
-        const char* waves[] = { "sine", "square", "saw", "triangle" };
-        state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
-        state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
-        state.presetDirty |= DrawChannelEditor(state);
-
         auto startRun = [&](bool previewSelected)
         {
             std::string validationError;
@@ -1802,125 +1688,240 @@ int RunGuiApp()
                     });
             }
         };
-        if (ImGui::Button("Play"))
+        const float availY = ImGui::GetContentRegionAvail().y;
+        const float reserveForLog = state.logPanelHeight + ImGui::GetFrameHeightWithSpacing() + 12.0f;
+        const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
+        ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true);
+        if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
         {
-            startRun(false);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Play Preview (Selected ch)"))
-        {
-            startRun(true);
-        }
-        ImGui::EndDisabled();
+            ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.56f);
+            ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthStretch, 0.44f);
+            ImGui::TableNextRow();
 
-        ImGui::SameLine();
-        ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
-        if (ImGui::Button("Replay Preview"))
-        {
-            std::string err;
-            if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
+            ImGui::TableSetColumnIndex(0);
+            if (state.presetDirty)
             {
-                AppendGuiLog(state, "[GUI] Preview replay started");
+                ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
             }
             else
             {
-                AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
+                ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
             }
-        }
-        ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
-        ImGui::BeginDisabled(!canStop);
-        if (ImGui::Button("Stop"))
-        {
-            if (state.playback.playing.load(std::memory_order_relaxed))
+            ImGui::BeginDisabled(state.running);
+            auto presetGetter = [](void* data, int idx, const char** outText) -> bool
             {
-                StopPreviewAudio(state.playback);
-                AppendGuiLog(state, "[GUI] Preview playback stopped");
-            }
-            if (state.running)
+                auto* items = static_cast<std::vector<std::string>*>(data);
+                if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
+                {
+                    return false;
+                }
+                *outText = (*items)[idx].c_str();
+                return true;
+            };
+            if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
             {
-                state.stopRequested.store(true, std::memory_order_relaxed);
-                AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
-            }
-        }
-        ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        ImGui::BeginDisabled(state.running);
-        if (ImGui::Button("Close"))
-        {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-        ImGui::EndDisabled();
-
-        ImGui::BeginDisabled(state.running);
-        ImGui::Checkbox("Loop Preview", &state.previewLoop);
-        ImGui::SameLine();
-        if (state.soloPreviewActive)
-        {
-            if (ImGui::Button("Solo Preview Off"))
-            {
-                DeactivateSoloPreview(state);
-                state.presetDirty = true;
+                std::string err;
+                if (ApplySelectedPresetPaths(state, err))
+                {
+                    state.presetDirty = true;
+                }
+                else
+                {
+                    AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+                }
             }
             ImGui::SameLine();
-            ImGui::Text("Solo Preview: ch%d", state.soloPreviewChannel);
-        }
-        else
-        {
-            if (ImGui::Button("Solo Preview On (Selected ch)"))
+            if (ImGui::Button("Apply Preset Paths"))
             {
-                ActivateSoloPreview(state, state.selectedChannel);
-                state.presetDirty = true;
+                std::string err;
+                if (ApplySelectedPresetPaths(state, err))
+                {
+                    state.presetDirty = true;
+                }
+                else
+                {
+                    AppendGuiLog(state, "[GUI] Apply preset failed: " + err);
+                }
             }
-        }
-        ImGui::EndDisabled();
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Defaults"))
+            {
+                InitGuiState(state);
+                state.presetDirty = false;
+            }
 
-        if (state.running)
-        {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.2f, 1.0f), "Status: Running...");
-        }
-        else if (state.playback.playing.load(std::memory_order_relaxed))
-        {
-            ImGui::TextColored(ImVec4(0.3f, 0.85f, 0.95f, 1.0f), "Status: Preview Playing%s", state.previewLoop ? " (Loop)" : "");
-        }
-        else if (state.hasRun)
-        {
-            if (state.lastRunExitCode == 0)
+            ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+            ImGui::SameLine();
+            if (ImGui::Button("Save Preset As"))
             {
-                ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "Last Run: Success");
+                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                std::string err;
+                if (SavePresetDiff(state, p, err))
+                {
+                    state.lastPresetPath = PathToUtf8(p);
+                    state.presetDirty = false;
+                    RefreshPresetItems(state, state.presetName);
+                    AppendGuiLog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                }
+                else
+                {
+                    AppendGuiLog(state, "[GUI] Preset save failed: " + err);
+                }
             }
-            else if (state.lastRunExitCode == 2)
+            ImGui::SameLine();
+            if (ImGui::Button("Duplicate Preset"))
             {
-                ImGui::TextColored(ImVec4(0.9f, 0.7f, 0.2f, 1.0f), "Last Run: Canceled");
+                std::string copyName = std::string(state.presetName) + "_copy";
+                strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
+                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                std::string err;
+                if (SavePresetDiff(state, p, err))
+                {
+                    state.lastPresetPath = PathToUtf8(p);
+                    state.presetDirty = false;
+                    RefreshPresetItems(state, state.presetName);
+                    AppendGuiLog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+                }
+                else
+                {
+                    AppendGuiLog(state, "[GUI] Preset duplicate failed: " + err);
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Channel"))
+            {
+                EnsureChannelConfigs(state);
+                EnsureChannelMixStates(state);
+                AppConfig def = DefaultConfig();
+                if (def.channelConfigs)
+                {
+                    (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
+                    if (def.channelMixStates)
+                    {
+                        (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
+                    }
+                    state.presetDirty = true;
+                    AppendGuiLog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+                }
+            }
+            if (!state.lastPresetPath.empty())
+            {
+                ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
+            }
+
+            state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
+            state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+            state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
+            state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
+            state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
+            state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
+            state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
+            state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+            ImGui::EndDisabled();
+
+            ImGui::Separator();
+            ImGui::BeginDisabled(state.running);
+            if (ImGui::Button("Play"))
+            {
+                startRun(false);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Play Preview (Selected ch)"))
+            {
+                startRun(true);
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
+            if (ImGui::Button("Replay Preview"))
+            {
+                std::string err;
+                if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
+                {
+                    AppendGuiLog(state, "[GUI] Preview replay started");
+                }
+                else
+                {
+                    AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
+                }
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
+            ImGui::BeginDisabled(!canStop);
+            if (ImGui::Button("Stop"))
+            {
+                if (state.playback.playing.load(std::memory_order_relaxed))
+                {
+                    StopPreviewAudio(state.playback);
+                    AppendGuiLog(state, "[GUI] Preview playback stopped");
+                }
+                if (state.running)
+                {
+                    state.stopRequested.store(true, std::memory_order_relaxed);
+                    AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
+                }
+            }
+            ImGui::EndDisabled();
+            ImGui::SameLine();
+            ImGui::BeginDisabled(state.running);
+            if (ImGui::Button("Close"))
+            {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
+            ImGui::EndDisabled();
+
+            ImGui::TableSetColumnIndex(1);
+            state.presetDirty |= DrawChannelEditor(state);
+            ImGui::BeginDisabled(state.running);
+            ImGui::Checkbox("Loop Preview", &state.previewLoop);
+            ImGui::SameLine();
+            if (state.soloPreviewActive)
+            {
+                if (ImGui::Button("Solo Preview Off"))
+                {
+                    DeactivateSoloPreview(state);
+                    state.presetDirty = true;
+                }
+                ImGui::SameLine();
+                ImGui::Text("Solo Preview: ch%d", state.soloPreviewChannel);
             }
             else
             {
-                ImGui::TextColored(ImVec4(0.9f, 0.3f, 0.3f, 1.0f), "Last Run: Failed (%d)", state.lastRunExitCode);
+                if (ImGui::Button("Solo Preview On (Selected ch)"))
+                {
+                    ActivateSoloPreview(state, state.selectedChannel);
+                    state.presetDirty = true;
+                }
             }
-        }
-        if (!state.lastOutputPath.empty())
-        {
-            ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
-        }
-        AnalyzeRenderPeakFromLogs(state);
-        if (state.hasPeak)
-        {
-            const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
-            ImGui::Text("Peak: %.4f", state.lastPeak);
-            ImGui::ProgressBar(meter, ImVec2(220, 0));
-            if (state.lastPeak > 1.0)
+            ImGui::EndDisabled();
+            if (!state.lastOutputPath.empty())
             {
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+                ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
             }
+            AnalyzeRenderPeakFromLogs(state);
+            if (state.hasPeak)
+            {
+                const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
+                ImGui::Text("Peak: %.4f", state.lastPeak);
+                ImGui::ProgressBar(meter, ImVec2(-1, 0));
+                if (state.lastPeak > 1.0)
+                {
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+                }
+            }
+            ImGui::EndTable();
         }
+        ImGui::EndChild();
 
         ImGui::Separator();
+        ImGui::SetNextItemWidth(260.0f);
+        ImGui::SliderFloat("Log Height", &state.logPanelHeight, 140.0f, 520.0f, "%.0f");
         ImGui::Text("Logs");
-        ImGui::BeginChild("log_panel", ImVec2(0, 240), true);
+        ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
         {
             std::lock_guard<std::mutex> lock(state.logMutex);
             for (const std::string& line : state.logs)
