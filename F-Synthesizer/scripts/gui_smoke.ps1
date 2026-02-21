@@ -16,28 +16,28 @@ if (-not (Test-Path $exePath)) {
 Write-Host "== GUI smoke test =="
 Write-Host "Exe: $exePath"
 
-Write-Host "[1/12] help output"
+Write-Host "[1/13] help output"
 & $exePath --help | Out-Host
 
-Write-Host "[2/12] cli success run (default.json)"
+Write-Host "[2/13] cli success run (default.json)"
 & $exePath --cli --config (Join-Path $repoRoot "config\default.json") | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "Expected success for default.json, but exit code was $LASTEXITCODE."
 }
 
-Write-Host "[3/12] cli success run (channel_minimal.json)"
+Write-Host "[3/13] cli success run (channel_minimal.json)"
 & $exePath --cli --config (Join-Path $repoRoot "config\samples\channel_minimal.json") | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "Expected success for channel_minimal.json, but exit code was $LASTEXITCODE."
 }
 
-Write-Host "[4/12] cli success run (channel_full.json)"
+Write-Host "[4/13] cli success run (channel_full.json)"
 & $exePath --cli --config (Join-Path $repoRoot "config\samples\channel_full.json") | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "Expected success for channel_full.json, but exit code was $LASTEXITCODE."
 }
 
-Write-Host "[5/12] cli success run (mix_all_mute.json)"
+Write-Host "[5/13] cli success run (mix_all_mute.json)"
 $mixAllMutePath = Join-Path $repoRoot "config\samples\mix_all_mute.json"
 $mixOut = & $exePath --cli --config $mixAllMutePath | Out-String
 $mixOut | Out-Host
@@ -48,7 +48,7 @@ if ($mixOut -notmatch "\[RenderStats\].*nonZero=0/") {
     throw "Expected nonZero=0 render stats for mix_all_mute.json."
 }
 
-Write-Host "[6/12] cli success run (preset: basic_wave)"
+Write-Host "[6/13] cli success run (preset: basic_wave)"
 $basicOut = & $exePath --cli --preset basic_wave | Out-String
 $basicOut | Out-Host
 if ($LASTEXITCODE -ne 0) {
@@ -58,7 +58,7 @@ if ($basicOut -notmatch "\[RenderStats\].*nonZero=[1-9]") {
     throw "Expected non-zero render stats for preset basic_wave."
 }
 
-Write-Host "[7/12] cli success run (preset: fm_default)"
+Write-Host "[7/13] cli success run (preset: fm_default)"
 $fmOut = & $exePath --cli --preset fm_default | Out-String
 $fmOut | Out-Host
 if ($LASTEXITCODE -ne 0) {
@@ -68,19 +68,19 @@ if ($fmOut -notmatch "\[RenderStats\].*nonZero=[1-9]") {
     throw "Expected non-zero render stats for preset fm_default."
 }
 
-Write-Host "[8/12] cli failure run (channel_mix_invalid.json)"
+Write-Host "[8/13] cli failure run (channel_mix_invalid.json)"
 & $exePath --cli --config (Join-Path $repoRoot "config\samples\channel_mix_invalid.json") | Out-Host
 if ($LASTEXITCODE -eq 0) {
     throw "Expected failure for channel_mix_invalid.json, but exit code was 0."
 }
 
-Write-Host "[9/12] cli failure run (missing config)"
+Write-Host "[9/13] cli failure run (missing config)"
 & $exePath --cli --config (Join-Path $repoRoot "config\__missing__.json") | Out-Host
 if ($LASTEXITCODE -eq 0) {
     throw "Expected failure for missing config, but exit code was 0."
 }
 
-Write-Host "[10/12] cli failure run (channel_invalid.json)"
+Write-Host "[10/13] cli failure run (channel_invalid.json)"
 & $exePath --cli --config (Join-Path $repoRoot "config\samples\channel_invalid.json") | Out-Host
 if ($LASTEXITCODE -eq 0) {
     throw "Expected failure for channel_invalid.json, but exit code was 0."
@@ -137,3 +137,7 @@ else {
 }
 
 Write-Host "GUI smoke test completed."
+
+if (Test-Path $jpDir) {
+    Remove-Item -Path $jpDir -Recurse -Force -ErrorAction SilentlyContinue
+}

@@ -91,6 +91,10 @@ function Get-AutoArchitectureSection {
 
     $targets = @(
         "src/SoundGenerate.cpp",
+        "src/app/RunDefaults.cpp",
+        "src/app/RunExecution.cpp",
+        "src/app/RunSave.cpp",
+        "src/app/RunStats.cpp",
         "src/midi/MIDIParser.cpp",
         "src/midi/Sequencer.cpp",
         "src/midi/MidiPipeline.cpp",
@@ -237,7 +241,13 @@ try {
     }
 
     if (-not $SkipRun) {
-        $exePath = Join-Path $repoRoot "$Platform\$Configuration\F-Synthesizer.exe"
+        $exePath = Join-Path $repoRoot "build\$Platform\$Configuration\F-Synthesizer.exe"
+        if (-not (Test-Path $exePath)) {
+            $legacyPath = Join-Path $repoRoot "$Platform\$Configuration\F-Synthesizer.exe"
+            if (Test-Path $legacyPath) {
+                $exePath = $legacyPath
+            }
+        }
         if (Test-Path $exePath) {
             Write-Host "Running executable: $exePath"
             & $exePath
