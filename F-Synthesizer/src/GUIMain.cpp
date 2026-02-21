@@ -75,6 +75,10 @@ struct GuiState
     std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
     double lastPeak = 0.0;
     bool hasPeak = false;
+    bool soloPreviewActive = false;
+    bool restorePreviewOnRunComplete = false;
+    int soloPreviewChannel = 0;
+    std::array<ChannelMixState, 16> soloPreviewBackup{};
     std::future<int> runFuture{};
     std::mutex logMutex{};
     std::vector<std::string> logs{};
@@ -759,6 +763,13 @@ std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
     return candidate;
 }
 
+std::filesystem::path BuildPreviewWavPath(const std::filesystem::path& basePath, int channel)
+{
+    const std::string stem = basePath.stem().string();
+    const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();
+    return basePath.parent_path() / (stem + "_preview_ch" + std::to_string(channel) + ext);
+}
+
 AppConfig BuildConfigFromGui(const GuiState& state)
 {
     AppConfig cfg = DefaultConfig();
@@ -862,6 +873,9 @@ void InitGuiState(GuiState& state)
     state.logs.clear();
     state.lastPeak = 0.0;
     state.hasPeak = false;
+    state.soloPreviewActive = false;
+    state.restorePreviewOnRunComplete = false;
+    state.soloPreviewChannel = 0;
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
     RefreshPresetItems(state, state.presetName);
@@ -876,6 +890,7 @@ void InitGuiState(GuiState& state)
     {
         *state.channelMixStates = *cfg.channelMixStates;
     }
+    state.soloPreviewBackup = *state.channelMixStates;
 }
 
 void RepairGuiStatePathsIfNeeded(GuiState& state)
@@ -1024,6 +1039,40 @@ void AnalyzeRenderPeakFromLogs(GuiState& state)
         }
         return;
     }
+}
+
+void ActivateSoloPreview(GuiState& state, int channel)
+{
+    EnsureChannelMixStates(state);
+    channel = std::clamp(channel, 0, 15);
+    if (!state.soloPreviewActive)
+    {
+        state.soloPreviewBackup = *state.channelMixStates;
+    }
+    for (int ch = 0; ch < 16; ch++)
+    {
+        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        mix.solo = (ch == channel);
+        if (ch == channel)
+        {
+            mix.mute = false;
+        }
+    }
+    state.soloPreviewChannel = channel;
+    state.soloPreviewActive = true;
+    AppendGuiLog(state, "[GUI] Solo Preview ON: ch" + std::to_string(channel));
+}
+
+void DeactivateSoloPreview(GuiState& state)
+{
+    if (!state.soloPreviewActive || !state.channelMixStates)
+    {
+        return;
+    }
+    *state.channelMixStates = state.soloPreviewBackup;
+    AppendGuiLog(state, "[GUI] Solo Preview OFF: restore previous mix state");
+    state.soloPreviewActive = false;
+    state.restorePreviewOnRunComplete = false;
 }
 
 bool DrawChannelEditor(GuiState& state)
@@ -1195,6 +1244,11 @@ int RunGuiApp()
             state.lastRunExitCode = state.runFuture.get();
             state.hasRun = true;
             state.running = false;
+            AppendGuiLog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
+            if (state.restorePreviewOnRunComplete)
+            {
+                DeactivateSoloPreview(state);
+            }
         }
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -1327,7 +1381,7 @@ int RunGuiApp()
         state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
         state.presetDirty |= DrawChannelEditor(state);
 
-        if (ImGui::Button("Run"))
+        auto startRun = [&](bool previewSelected)
         {
             std::string validationError;
             if (!ValidateBeforeRun(state, validationError))
@@ -1338,17 +1392,26 @@ int RunGuiApp()
             }
             else
             {
+                if (previewSelected)
+                {
+                    ActivateSoloPreview(state, state.selectedChannel);
+                }
                 AppConfig cfg = BuildConfigFromGui(state);
                 if (state.serialSave)
                 {
                     cfg.wavPath = BuildSerialWavPath(cfg.wavPath);
+                }
+                if (previewSelected)
+                {
+                    cfg.wavPath = BuildPreviewWavPath(cfg.wavPath, state.selectedChannel);
+                    state.restorePreviewOnRunComplete = true;
                 }
                 state.lastOutputPath = cfg.wavPath.string();
 
                 state.logs.clear();
                 state.lastPeak = 0.0;
                 state.hasPeak = false;
-                AppendGuiLog(state, "[GUI] Run started");
+                AppendGuiLog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
                 AppendGuiLog(state, "[GUI] Effective Output: " + state.lastOutputPath);
                 state.hasRun = false;
                 state.stopRequested = false;
@@ -1357,6 +1420,15 @@ int RunGuiApp()
                     return Run(cfg, &state.observer);
                     });
             }
+        };
+        if (ImGui::Button("Play"))
+        {
+            startRun(false);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Preview Play (Selected ch)"))
+        {
+            startRun(true);
         }
         ImGui::EndDisabled();
 
@@ -1374,6 +1446,27 @@ int RunGuiApp()
         {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+
+        ImGui::BeginDisabled(state.running);
+        if (state.soloPreviewActive)
+        {
+            if (ImGui::Button("Solo Preview Off"))
+            {
+                DeactivateSoloPreview(state);
+                state.presetDirty = true;
+            }
+            ImGui::SameLine();
+            ImGui::Text("Solo Preview: ch%d", state.soloPreviewChannel);
+        }
+        else
+        {
+            if (ImGui::Button("Solo Preview On (Selected ch)"))
+            {
+                ActivateSoloPreview(state, state.selectedChannel);
+                state.presetDirty = true;
+            }
+        }
+        ImGui::EndDisabled();
 
         if (state.running)
         {
