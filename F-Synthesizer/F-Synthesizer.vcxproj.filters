@@ -27,6 +27,15 @@
     <ClCompile Include="src\\config\\ConfigFileIO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\config\\ConfigJsonUtils.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\ConfigLoad.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\ConfigSave.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\config\\ConfigResolver.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -120,6 +129,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\config\\ConfigResolver.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\config\\ConfigFileInternal.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\Envelope.h">
