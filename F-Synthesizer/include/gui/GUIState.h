@@ -9,7 +9,9 @@
 #include <vector>
 
 #include "AppCore.h"
+#include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
+#include "GUIPianoRoll.h"
 
 // GUI画面の編集値・実行状態・ログ状態を集約した永続/実行モデル。
 // 1フレーム内で参照するUI状態と、非同期Run連携状態を同居させる。
@@ -79,4 +81,5 @@ struct GUIState
     std::mutex logMutex{};
     std::vector<std::string> logs{};
     GUIRunObserver observer{};
+    gui::PianoRollState pianoRoll{};
 };

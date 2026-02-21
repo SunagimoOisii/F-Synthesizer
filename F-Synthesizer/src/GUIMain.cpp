@@ -11,6 +11,7 @@
 #include "AppCore.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIChannelEditor.h"
+#include "gui/GUIPianoRoll.h"
 #include "gui/GUIPlatform.h"
 #include "gui/GUIState.h"
 #include "gui/GUIStateModel.h"
@@ -45,6 +46,7 @@ using gui::TryFinalizeCompletedRun;
 using gui::LoadGUIStateFile;
 using gui::SaveGUIStateFile;
 using gui::GUIStatePath;
+using gui::DrawPianoRollPanel;
 
 void SetupImGuiFont()
 {
@@ -469,6 +471,11 @@ int RunGUIApp()
             }
             ImGui::EndTable();
         }
+        ImGui::Separator();
+        DrawPianoRollPanel(
+            state.pianoRoll,
+            state.midiPath,
+            [&](const std::string& line) { AppendGUILog(state, line); });
         ImGui::EndChild();
 
         ImGui::Separator();

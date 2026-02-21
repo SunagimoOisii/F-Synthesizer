@@ -66,6 +66,9 @@
     <ClCompile Include="src\\gui\\GUIChannelEditor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIPianoRoll.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -153,6 +156,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIChannelEditor.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\GUIPianoRoll.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIActions.h">
