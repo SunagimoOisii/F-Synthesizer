@@ -1439,17 +1439,11 @@ bool DrawChannelEditor(GuiState& state)
     EnsureChannelConfigs(state);
     EnsureChannelMixStates(state);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
-    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
-    ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
 
-    ImGui::Separator();
-    ImGui::Text("Channel Editor");
-    changed |= ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
+    ImGui::Text("Channel");
+    changed |= ImGui::InputInt("Selected Channel (0-15)", &state.selectedChannel);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
-    chMix = (*state.channelMixStates)[state.selectedChannel];
 
-    ImGui::Separator();
-    ImGui::Text("Channel Mix Monitor (0-15)");
     auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
     {
         float v = static_cast<float>(value);
@@ -1460,87 +1454,123 @@ bool DrawChannelEditor(GuiState& state)
         }
         return edited;
     };
-    for (int ch = 0; ch < 16; ch++)
+
+    ImGui::Text("Mix Summary (M/S/L)");
+    ImGui::BeginChild("mix_summary", ImVec2(0, 210), true);
+    if (ImGui::BeginTable("mix_compact_table", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
     {
-        ChannelMixState& mix = (*state.channelMixStates)[ch];
-        ImGui::PushID(ch);
-        if ((ch % 4) != 0)
+        ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
+        ImGui::TableSetupColumn("sel", ImGuiTableColumnFlags_WidthFixed, 56.0f);
+        ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 36.0f);
+        ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 36.0f);
+        ImGui::TableSetupColumn("L");
+        ImGui::TableHeadersRow();
+
+        for (int ch = 0; ch < 16; ch++)
         {
-            ImGui::SameLine();
+            ChannelMixState& mix = (*state.channelMixStates)[ch];
+            ImGui::TableNextRow();
+            ImGui::PushID(ch);
+
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("ch%d", ch);
+
+            ImGui::TableSetColumnIndex(1);
+            bool selected = (state.selectedChannel == ch);
+            if (ImGui::Selectable("Edit", selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
+            {
+                state.selectedChannel = ch;
+            }
+
+            ImGui::TableSetColumnIndex(2);
+            changed |= ImGui::Checkbox("##mute", &mix.mute);
+
+            ImGui::TableSetColumnIndex(3);
+            changed |= ImGui::Checkbox("##solo", &mix.solo);
+
+            ImGui::TableSetColumnIndex(4);
+            changed |= sliderMix("##level", mix.level, 0.0f, 2.0f);
+
+            ImGui::PopID();
         }
-        ImGui::BeginGroup();
-        ImGui::Text("ch%d", ch);
-        changed |= ImGui::Checkbox("M", &mix.mute);
-        ImGui::SameLine();
-        changed |= ImGui::Checkbox("S", &mix.solo);
-        changed |= sliderMix("L", mix.level, 0.0f, 2.0f);
-        changed |= sliderMix("P", mix.pan, -1.0f, 1.0f);
-        changed |= sliderMix("G", mix.gain, 0.0f, 4.0f);
-        ImGui::EndGroup();
-        ImGui::PopID();
+        ImGui::EndTable();
     }
+    ImGui::EndChild();
 
     ImGui::Separator();
-    ImGui::Text("Selected Channel Mix (ch%d)", state.selectedChannel);
-    changed |= ImGui::Checkbox("Mute", &chMix.mute);
-    ImGui::SameLine();
-    changed |= ImGui::Checkbox("Solo", &chMix.solo);
-    changed |= sliderMix("Level", chMix.level, 0.0f, 2.0f);
-    changed |= sliderMix("Pan", chMix.pan, -1.0f, 1.0f);
-    changed |= sliderMix("Gain", chMix.gain, 0.0f, 4.0f);
+    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
+    ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
+    ImGui::Text("Selected ch%d", state.selectedChannel);
+    ImGui::TextDisabled("Audition target: selected channel (use Play Preview)");
 
-    changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
-    changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
-    changed |= ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
-    changed |= ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
-    changed |= ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
-
-    int srcType = SourceTypeIndex(chCfg.source);
-    const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
-    if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
+    if (ImGui::CollapsingHeader("Mix Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        changed = true;
-        chCfg.source = DefaultSourceByType(srcType);
+        changed |= ImGui::Checkbox("Mute", &chMix.mute);
+        ImGui::SameLine();
+        changed |= ImGui::Checkbox("Solo", &chMix.solo);
+        changed |= sliderMix("Level", chMix.level, 0.0f, 2.0f);
+        changed |= sliderMix("Pan", chMix.pan, -1.0f, 1.0f);
+        changed |= sliderMix("Gain", chMix.gain, 0.0f, 4.0f);
     }
 
-    if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))
+    if (ImGui::CollapsingHeader("Envelope / Gain", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        int idx = WaveToIndex(wf->wave);
-        const char* waves[] = { "sine", "square", "saw", "triangle" };
-        changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
-        wf->wave = WaveFromIndex(idx);
+        changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
     }
-    else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
+
+    if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        int idx = NoiseToIndex(nz->noise);
-        const char* noises[] = { "white", "pink", "brown", "blue" };
-        changed |= ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
-        nz->noise = NoiseFromIndex(idx);
-    }
-    else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
-    {
-        int cIdx = WaveToIndex(fm->carrierWave);
-        int mIdx = WaveToIndex(fm->modWave);
-        const char* waves[] = { "sine", "square", "saw", "triangle" };
-        changed |= ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
-        changed |= ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
-        fm->carrierWave = WaveFromIndex(cIdx);
-        fm->modWave = WaveFromIndex(mIdx);
-        changed |= ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
-    }
-    else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
-    {
-        changed |= DrawDrumConfigEditor("drum_single", *drum);
-    }
-    else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
-    {
-        changed |= ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
-        state.selectedDrumNote = std::clamp(state.selectedDrumNote, 0, 127);
-        DrumConfig& d = kit->map[state.selectedDrumNote];
-        changed |= DrawDrumConfigEditor("drum_kit", d);
+        int srcType = SourceTypeIndex(chCfg.source);
+        const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
+        if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
+        {
+            changed = true;
+            chCfg.source = DefaultSourceByType(srcType);
+        }
+
+        if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))
+        {
+            int idx = WaveToIndex(wf->wave);
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+            wf->wave = WaveFromIndex(idx);
+        }
+        else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
+        {
+            int idx = NoiseToIndex(nz->noise);
+            const char* noises[] = { "white", "pink", "brown", "blue" };
+            changed |= ImGui::Combo("Noise", &idx, noises, IM_ARRAYSIZE(noises));
+            nz->noise = NoiseFromIndex(idx);
+        }
+        else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
+        {
+            int cIdx = WaveToIndex(fm->carrierWave);
+            int mIdx = WaveToIndex(fm->modWave);
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            changed |= ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
+            changed |= ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
+            fm->carrierWave = WaveFromIndex(cIdx);
+            fm->modWave = WaveFromIndex(mIdx);
+            changed |= ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
+            changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
+        }
+        else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
+        {
+            changed |= DrawDrumConfigEditor("drum_single", *drum);
+        }
+        else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
+        {
+            changed |= ImGui::InputInt("DrumKit Note (0-127)", &state.selectedDrumNote);
+            state.selectedDrumNote = std::clamp(state.selectedDrumNote, 0, 127);
+            DrumConfig& d = kit->map[state.selectedDrumNote];
+            changed |= DrawDrumConfigEditor("drum_kit", d);
+        }
     }
     return changed;
 }
@@ -2007,26 +2037,6 @@ int RunGuiApp()
 
             ImGui::TableSetColumnIndex(1);
             state.presetDirty |= DrawChannelEditor(state);
-            ImGui::BeginDisabled(state.running);
-            if (state.soloPreviewActive)
-            {
-                if (ImGui::Button("Solo Preview Off"))
-                {
-                    DeactivateSoloPreview(state);
-                    state.presetDirty = true;
-                }
-                ImGui::SameLine();
-                ImGui::Text("Solo Preview: ch%d", state.soloPreviewChannel);
-            }
-            else
-            {
-                if (ImGui::Button("Solo Preview On (Selected ch)"))
-                {
-                    ActivateSoloPreview(state, state.selectedChannel);
-                    state.presetDirty = true;
-                }
-            }
-            ImGui::EndDisabled();
             if (!state.lastOutputPath.empty())
             {
                 ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
