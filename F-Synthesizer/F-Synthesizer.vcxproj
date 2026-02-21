@@ -148,7 +148,9 @@
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
     <ClCompile Include="src\\GUIMain.cpp" />
+    <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
+    <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
@@ -173,7 +175,9 @@
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
     <ClInclude Include="include\\Envelope.h" />
+    <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
+    <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="include\\io\\PlatformPaths.h" />
     <ClInclude Include="include\MIDIParser.h" />

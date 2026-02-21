@@ -22,7 +22,9 @@
 #include <imgui_impl_opengl3.h>
 
 #include "AppCore.h"
+#include "gui/GUIConfigUtils.h"
 #include "gui/GUIPlatform.h"
+#include "gui/GUIStateStorage.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
 
@@ -104,12 +106,24 @@ struct GUIState
     GUIRunObserver observer{};
 };
 
-std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
 void EnsureChannelConfigs(GUIState& state);
 void EnsureChannelMixStates(GUIState& state);
 float UiScaleFromIndex(int idx);
 const char* UiScaleLabelFromIndex(int idx);
 void DrawStatusBadge(const GUIState& state);
+using gui::ChannelConfigEquals;
+using gui::ChannelMixStateEquals;
+using gui::DefaultSourceByType;
+using gui::DrumTypeToText;
+using gui::NoiseFromIndex;
+using gui::NoiseToIndex;
+using gui::NoiseToText;
+using gui::SourceTypeIndex;
+using gui::WaveFromIndex;
+using gui::WaveToIndex;
+using gui::WaveToText;
+using gui::WriteJsonEscaped;
+using gui::WriteSourceJson;
 
 void SetupImGuiFont()
 {
@@ -141,280 +155,6 @@ void AppendGUILog(GUIState& state, const std::string& line)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
     state.logs.push_back(line);
-}
-
-bool NearlyEq(double a, double b, double eps = 1e-9)
-{
-    return std::fabs(a - b) <= eps;
-}
-
-WaveType WaveFromIndex(int idx)
-{
-    switch (idx)
-    {
-    case 0: return WaveType::Sine;
-    case 1: return WaveType::Square;
-    case 2: return WaveType::Saw;
-    case 3: return WaveType::Triangle;
-    default: return WaveType::Saw;
-    }
-}
-
-int WaveToIndex(WaveType w)
-{
-    switch (w)
-    {
-    case WaveType::Sine: return 0;
-    case WaveType::Square: return 1;
-    case WaveType::Saw: return 2;
-    case WaveType::Triangle: return 3;
-    }
-    return 2;
-}
-
-NoiseType NoiseFromIndex(int idx)
-{
-    switch (idx)
-    {
-    case 0: return NoiseType::White;
-    case 1: return NoiseType::Pink;
-    case 2: return NoiseType::Brown;
-    case 3: return NoiseType::Blue;
-    default: return NoiseType::White;
-    }
-}
-
-int NoiseToIndex(NoiseType n)
-{
-    switch (n)
-    {
-    case NoiseType::White: return 0;
-    case NoiseType::Pink: return 1;
-    case NoiseType::Brown: return 2;
-    case NoiseType::Blue: return 3;
-    }
-    return 0;
-}
-
-int SourceTypeIndex(const SourceConfig& src)
-{
-    if (std::holds_alternative<WaveformConfig>(src)) return 0;
-    if (std::holds_alternative<NoiseConfig>(src)) return 1;
-    if (std::holds_alternative<FmConfig>(src)) return 2;
-    if (std::holds_alternative<DrumConfig>(src)) return 3;
-    if (std::holds_alternative<DrumKitConfig>(src)) return 4;
-    return 0;
-}
-
-SourceConfig DefaultSourceByType(int idx)
-{
-    switch (idx)
-    {
-    case 0: return WaveformConfig{ WaveType::Saw };
-    case 1: return NoiseConfig{ NoiseType::White };
-    case 2: return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0 };
-    case 3: return DrumConfig{ DrumType::Kick };
-    case 4:
-    {
-        DrumKitConfig kit{};
-        for (auto& d : kit.map) d.type = DrumType::None;
-        kit.map[36] = DrumConfig{ DrumType::Kick };
-        return kit;
-    }
-    default: return WaveformConfig{ WaveType::Saw };
-    }
-}
-
-bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
-{
-    return a.type == b.type &&
-        NearlyEq(a.gain, b.gain) &&
-        NearlyEq(a.baseFreq, b.baseFreq) &&
-        NearlyEq(a.pitchDrop, b.pitchDrop) &&
-        NearlyEq(a.pitchDecaySec, b.pitchDecaySec) &&
-        NearlyEq(a.toneFreq, b.toneFreq) &&
-        NearlyEq(a.toneLevel, b.toneLevel) &&
-        NearlyEq(a.noiseLevel, b.noiseLevel) &&
-        NearlyEq(a.hpCut, b.hpCut) &&
-        NearlyEq(a.lpCut, b.lpCut) &&
-        a.toneWave == b.toneWave &&
-        a.noiseType == b.noiseType;
-}
-
-bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
-{
-    if (a.index() != b.index())
-    {
-        return false;
-    }
-    return std::visit([&](const auto& av) -> bool
-        {
-            using T = std::decay_t<decltype(av)>;
-            const auto* bv = std::get_if<T>(&b);
-            if (bv == nullptr) return false;
-            if constexpr (std::is_same_v<T, WaveformConfig>)
-            {
-                return av.wave == bv->wave;
-            }
-            else if constexpr (std::is_same_v<T, NoiseConfig>)
-            {
-                return av.noise == bv->noise;
-            }
-            else if constexpr (std::is_same_v<T, FmConfig>)
-            {
-                return av.carrierWave == bv->carrierWave &&
-                    av.modWave == bv->modWave &&
-                    NearlyEq(av.carrierRatio, bv->carrierRatio) &&
-                    NearlyEq(av.modRatio, bv->modRatio) &&
-                    NearlyEq(av.index, bv->index) &&
-                    NearlyEq(av.outLevel, bv->outLevel);
-            }
-            else if constexpr (std::is_same_v<T, DrumConfig>)
-            {
-                return DrumConfigEquals(av, *bv);
-            }
-            else if constexpr (std::is_same_v<T, DrumKitConfig>)
-            {
-                for (int i = 0; i < 128; i++)
-                {
-                    if (!DrumConfigEquals(av.map[i], bv->map[i])) return false;
-                }
-                return true;
-            }
-            return false;
-        }, a);
-}
-
-bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
-{
-    return NearlyEq(a.amp, b.amp) &&
-        NearlyEq(a.attackSec, b.attackSec) &&
-        NearlyEq(a.decaySec, b.decaySec) &&
-        NearlyEq(a.sustainLevel, b.sustainLevel) &&
-        NearlyEq(a.releaseSec, b.releaseSec) &&
-        SourceConfigEquals(a.source, b.source);
-}
-
-bool ChannelMixStateEquals(const ChannelMixState& a, const ChannelMixState& b)
-{
-    return a.mute == b.mute &&
-        a.solo == b.solo &&
-        NearlyEq(a.level, b.level) &&
-        NearlyEq(a.pan, b.pan) &&
-        NearlyEq(a.gain, b.gain);
-}
-
-void WriteJsonEscaped(std::ostream& out, const std::string& s)
-{
-    for (char c : s)
-    {
-        if (c == '\\') out << "\\\\";
-        else if (c == '"') out << "\\\"";
-        else if (c == '\n') out << "\\n";
-        else out << c;
-    }
-}
-
-std::string WaveToText(WaveType w)
-{
-    switch (w)
-    {
-    case WaveType::Sine: return "sine";
-    case WaveType::Square: return "square";
-    case WaveType::Saw: return "saw";
-    case WaveType::Triangle: return "triangle";
-    }
-    return "saw";
-}
-
-std::string NoiseToText(NoiseType n)
-{
-    switch (n)
-    {
-    case NoiseType::White: return "white";
-    case NoiseType::Pink: return "pink";
-    case NoiseType::Brown: return "brown";
-    case NoiseType::Blue: return "blue";
-    }
-    return "white";
-}
-
-std::string DrumTypeToText(DrumType d)
-{
-    switch (d)
-    {
-    case DrumType::None: return "none";
-    case DrumType::Kick: return "kick";
-    case DrumType::Snare: return "snare";
-    case DrumType::Hat: return "hat";
-    }
-    return "none";
-}
-
-void WriteSourceJson(std::ostream& out, const SourceConfig& src, int indent)
-{
-    const std::string sp(indent, ' ');
-    out << sp << "\"source\": {\n";
-    std::visit([&](const auto& v)
-        {
-            using T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v<T, WaveformConfig>)
-            {
-                out << sp << "  \"type\": \"waveform\",\n";
-                out << sp << "  \"wave\": \"" << WaveToText(v.wave) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, NoiseConfig>)
-            {
-                out << sp << "  \"type\": \"noise\",\n";
-                out << sp << "  \"noise\": \"" << NoiseToText(v.noise) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, FmConfig>)
-            {
-                out << sp << "  \"type\": \"fm\",\n";
-                out << sp << "  \"carrierWave\": \"" << WaveToText(v.carrierWave) << "\",\n";
-                out << sp << "  \"modWave\": \"" << WaveToText(v.modWave) << "\",\n";
-                out << sp << "  \"carrierRatio\": " << v.carrierRatio << ",\n";
-                out << sp << "  \"modRatio\": " << v.modRatio << ",\n";
-                out << sp << "  \"index\": " << v.index << ",\n";
-                out << sp << "  \"outLevel\": " << v.outLevel << "\n";
-            }
-            else if constexpr (std::is_same_v<T, DrumConfig>)
-            {
-                out << sp << "  \"type\": \"drum\",\n";
-                out << sp << "  \"drumType\": \"" << DrumTypeToText(v.type) << "\",\n";
-                out << sp << "  \"gain\": " << v.gain << ",\n";
-                out << sp << "  \"baseFreq\": " << v.baseFreq << ",\n";
-                out << sp << "  \"pitchDrop\": " << v.pitchDrop << ",\n";
-                out << sp << "  \"pitchDecaySec\": " << v.pitchDecaySec << ",\n";
-                out << sp << "  \"toneFreq\": " << v.toneFreq << ",\n";
-                out << sp << "  \"toneLevel\": " << v.toneLevel << ",\n";
-                out << sp << "  \"noiseLevel\": " << v.noiseLevel << ",\n";
-                out << sp << "  \"hpCut\": " << v.hpCut << ",\n";
-                out << sp << "  \"lpCut\": " << v.lpCut << ",\n";
-                out << sp << "  \"toneWave\": \"" << WaveToText((WaveType)v.toneWave) << "\",\n";
-                out << sp << "  \"noiseType\": \"" << NoiseToText((NoiseType)v.noiseType) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, DrumKitConfig>)
-            {
-                out << sp << "  \"type\": \"drumkit\",\n";
-                out << sp << "  \"map\": {\n";
-                bool first = true;
-                for (int note = 0; note < 128; note++)
-                {
-                    const auto& d = v.map[note];
-                    if (d.type == DrumType::None) continue;
-                    if (!first) out << ",\n";
-                    first = false;
-                    out << sp << "    \"" << note << "\": {\n";
-                    out << sp << "      \"drumType\": \"" << DrumTypeToText(d.type) << "\",\n";
-                    out << sp << "      \"gain\": " << d.gain << ",\n";
-                    out << sp << "      \"baseFreq\": " << d.baseFreq << "\n";
-                    out << sp << "    }";
-                }
-                out << "\n" << sp << "  }\n";
-            }
-        }, src);
-    out << sp << "}";
 }
 
 bool SavePresetDiff(const GUIState& state, const std::filesystem::path& presetPath, std::string& err)
@@ -608,207 +348,77 @@ std::filesystem::path GUIStatePath()
     return FindProjectRootPath() / "config" / "gui_state.json";
 }
 
-std::string EscapeJson(const std::string& src)
+GUIStateStorageData BuildStateStorageData(const GUIState& state)
 {
-    std::string out;
-    out.reserve(src.size() + 16);
-    for (char c : src)
+    GUIStateStorageData data{};
+    data.midiPath = state.midiPath;
+    data.wavPath = state.wavPath;
+    data.targetChannel = state.targetChannel;
+    data.sampleRate = state.sampleRate;
+    data.initialSeconds = state.initialSeconds;
+    data.bits = state.bits;
+    data.extraReleaseSec = state.extraReleaseSec;
+    data.defaultWave = state.defaultWave;
+    data.uiScaleIndex = state.uiScaleIndex;
+    data.logPanelHeight = state.logPanelHeight;
+    data.presetIndex = state.presetIndex;
+    data.serialSave = state.serialSave;
+    data.previewLoop = state.previewLoop;
+    data.selectedChannel = state.selectedChannel;
+    data.selectedDrumNote = state.selectedDrumNote;
+    data.presetName = state.presetName;
+    data.lastPresetPath = state.lastPresetPath;
+    for (int ch = 0; ch < 16; ch++)
     {
-        if (c == '\\')
-        {
-            out += "\\\\";
-        }
-        else if (c == '"')
-        {
-            out += "\\\"";
-        }
-        else if (c == '\n')
-        {
-            out += "\\n";
-        }
-        else
-        {
-            out += c;
-        }
+        data.channelMixStates[ch] = (state.channelMixStates != nullptr)
+            ? (*state.channelMixStates)[ch]
+            : ChannelMixState{};
     }
-    return out;
+    return data;
 }
 
-std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key)
+void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
 {
-    const std::regex pat("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
-    {
-        const std::string raw = m[1].str();
-        std::string out;
-        out.reserve(raw.size());
-        for (size_t i = 0; i < raw.size(); i++)
-        {
-            const char c = raw[i];
-            if (c == '\\' && i + 1 < raw.size())
-            {
-                const char n = raw[i + 1];
-                if (n == '\\')
-                {
-                    out.push_back('\\');
-                    i++;
-                    continue;
-                }
-                if (n == '"')
-                {
-                    out.push_back('"');
-                    i++;
-                    continue;
-                }
-                if (n == 'n')
-                {
-                    out.push_back('\n');
-                    i++;
-                    continue;
-                }
-            }
-            out.push_back(c);
-        }
-        return out;
-    }
-    return std::nullopt;
-}
+    strncpy_s(state.midiPath, sizeof(state.midiPath), data.midiPath.c_str(), _TRUNCATE);
+    strncpy_s(state.wavPath, sizeof(state.wavPath), data.wavPath.c_str(), _TRUNCATE);
+    state.targetChannel = data.targetChannel;
+    state.sampleRate = data.sampleRate;
+    state.initialSeconds = data.initialSeconds;
+    state.bits = data.bits;
+    state.extraReleaseSec = data.extraReleaseSec;
+    state.defaultWave = data.defaultWave;
+    state.uiScaleIndex = data.uiScaleIndex;
+    state.logPanelHeight = data.logPanelHeight;
+    state.presetIndex = data.presetIndex;
+    state.serialSave = data.serialSave;
+    state.previewLoop = data.previewLoop;
+    state.selectedChannel = data.selectedChannel;
+    state.selectedDrumNote = data.selectedDrumNote;
+    strncpy_s(state.presetName, sizeof(state.presetName), data.presetName.c_str(), _TRUNCATE);
+    state.lastPresetPath = data.lastPresetPath;
 
-std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
-{
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    EnsureChannelMixStates(state);
+    for (int ch = 0; ch < 16; ch++)
     {
-        return std::stoi(m[1].str());
+        (*state.channelMixStates)[ch] = data.channelMixStates[ch];
     }
-    return std::nullopt;
-}
-
-std::optional<float> ReadJsonFloat(const std::string& text, const std::string& key)
-{
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
-    {
-        return std::stof(m[1].str());
-    }
-    return std::nullopt;
-}
-
-std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key)
-{
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(true|false)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
-    {
-        return m[1].str() == "true";
-    }
-    return std::nullopt;
 }
 
 bool LoadGUIStateFile(GUIState& state, std::string& err)
 {
-    const std::filesystem::path path = GUIStatePath();
-    if (!std::filesystem::exists(path))
+    GUIStateStorageData data = BuildStateStorageData(state);
+    if (!LoadGUIStateStorageFile(GUIStatePath(), data, err))
     {
-        return true;
-    }
-
-    std::ifstream fin(path, std::ios::binary);
-    if (!fin)
-    {
-        err = "failed to open " + path.string();
         return false;
     }
-
-    std::ostringstream oss;
-    oss << fin.rdbuf();
-    const std::string text = oss.str();
-
-    if (auto v = ReadJsonString(text, "midiPath")) strncpy_s(state.midiPath, sizeof(state.midiPath), v->c_str(), _TRUNCATE);
-    if (auto v = ReadJsonString(text, "wavPath")) strncpy_s(state.wavPath, sizeof(state.wavPath), v->c_str(), _TRUNCATE);
-    if (auto v = ReadJsonInt(text, "targetChannel")) state.targetChannel = *v;
-    if (auto v = ReadJsonInt(text, "sampleRate")) state.sampleRate = *v;
-    if (auto v = ReadJsonInt(text, "initialSeconds")) state.initialSeconds = *v;
-    if (auto v = ReadJsonInt(text, "bits")) state.bits = *v;
-    if (auto v = ReadJsonFloat(text, "extraReleaseSec")) state.extraReleaseSec = *v;
-    if (auto v = ReadJsonInt(text, "defaultWave")) state.defaultWave = *v;
-    if (auto v = ReadJsonInt(text, "uiScaleIndex")) state.uiScaleIndex = *v;
-    if (auto v = ReadJsonFloat(text, "logPanelHeight")) state.logPanelHeight = *v;
-    if (auto v = ReadJsonInt(text, "presetIndex")) state.presetIndex = *v;
-    if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
-    if (auto v = ReadJsonBool(text, "previewLoop")) state.previewLoop = *v;
-    if (auto v = ReadJsonInt(text, "selectedChannel")) state.selectedChannel = *v;
-    if (auto v = ReadJsonInt(text, "selectedDrumNote")) state.selectedDrumNote = *v;
-    if (auto v = ReadJsonString(text, "presetName")) strncpy_s(state.presetName, sizeof(state.presetName), v->c_str(), _TRUNCATE);
-    if (auto v = ReadJsonString(text, "lastPresetPath")) state.lastPresetPath = *v;
-    EnsureChannelMixStates(state);
-    for (int ch = 0; ch < 16; ch++)
-    {
-        ChannelMixState& mix = (*state.channelMixStates)[ch];
-        const std::string kMute = "mixCh" + std::to_string(ch) + "Mute";
-        const std::string kSolo = "mixCh" + std::to_string(ch) + "Solo";
-        const std::string kLevel = "mixCh" + std::to_string(ch) + "Level";
-        const std::string kPan = "mixCh" + std::to_string(ch) + "Pan";
-        const std::string kGain = "mixCh" + std::to_string(ch) + "Gain";
-        if (auto v = ReadJsonBool(text, kMute)) mix.mute = *v;
-        if (auto v = ReadJsonBool(text, kSolo)) mix.solo = *v;
-        if (auto v = ReadJsonFloat(text, kLevel)) mix.level = *v;
-        if (auto v = ReadJsonFloat(text, kPan)) mix.pan = *v;
-        if (auto v = ReadJsonFloat(text, kGain)) mix.gain = *v;
-    }
-
+    ApplyStateStorageData(state, data);
     return true;
 }
 
 bool SaveGUIStateFile(const GUIState& state, std::string& err)
 {
-    const std::filesystem::path path = GUIStatePath();
-    std::error_code ec;
-    std::filesystem::create_directories(path.parent_path(), ec);
-
-    std::ofstream fout(path, std::ios::binary | std::ios::trunc);
-    if (!fout)
-    {
-        err = "failed to open " + path.string();
-        return false;
-    }
-
-    fout << "{\n";
-    fout << "  \"midiPath\": \"" << EscapeJson(state.midiPath) << "\",\n";
-    fout << "  \"wavPath\": \"" << EscapeJson(state.wavPath) << "\",\n";
-    fout << "  \"targetChannel\": " << state.targetChannel << ",\n";
-    fout << "  \"sampleRate\": " << state.sampleRate << ",\n";
-    fout << "  \"initialSeconds\": " << state.initialSeconds << ",\n";
-    fout << "  \"bits\": " << state.bits << ",\n";
-    fout << "  \"extraReleaseSec\": " << state.extraReleaseSec << ",\n";
-    fout << "  \"defaultWave\": " << state.defaultWave << ",\n";
-    fout << "  \"uiScaleIndex\": " << state.uiScaleIndex << ",\n";
-    fout << "  \"logPanelHeight\": " << state.logPanelHeight << ",\n";
-    fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
-    fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
-    fout << "  \"previewLoop\": " << (state.previewLoop ? "true" : "false") << ",\n";
-    fout << "  \"selectedChannel\": " << state.selectedChannel << ",\n";
-    fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << ",\n";
-    fout << "  \"presetName\": \"" << EscapeJson(state.presetName) << "\",\n";
-    fout << "  \"lastPresetPath\": \"" << EscapeJson(state.lastPresetPath) << "\",\n";
-    for (int ch = 0; ch < 16; ch++)
-    {
-        const ChannelMixState mix = (state.channelMixStates != nullptr)
-            ? (*state.channelMixStates)[ch]
-            : ChannelMixState{};
-        fout << "  \"mixCh" << ch << "Mute\": " << (mix.mute ? "true" : "false") << ",\n";
-        fout << "  \"mixCh" << ch << "Solo\": " << (mix.solo ? "true" : "false") << ",\n";
-        fout << "  \"mixCh" << ch << "Level\": " << mix.level << ",\n";
-        fout << "  \"mixCh" << ch << "Pan\": " << mix.pan << ",\n";
-        fout << "  \"mixCh" << ch << "Gain\": " << mix.gain;
-        fout << (ch == 15 ? "\n" : ",\n");
-    }
-    fout << "}\n";
-
-    return true;
+    const GUIStateStorageData data = BuildStateStorageData(state);
+    return SaveGUIStateStorageFile(GUIStatePath(), data, err);
 }
 
 std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
