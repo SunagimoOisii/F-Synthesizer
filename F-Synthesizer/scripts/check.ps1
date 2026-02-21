@@ -91,8 +91,10 @@ function Get-AutoArchitectureSection {
 
     $targets = @(
         "src/SoundGenerate.cpp",
-        "src/MIDIParser.cpp",
-        "src/Sequencer.cpp",
+        "src/midi/MIDIParser.cpp",
+        "src/midi/Sequencer.cpp",
+        "src/midi/MidiPipeline.cpp",
+        "src/core/RenderGateway.cpp",
         "src/SynthEngine/Engine.cpp",
         "src/SynthEngine/Events.cpp",
         "src/SynthEngine/Renderer.cpp",

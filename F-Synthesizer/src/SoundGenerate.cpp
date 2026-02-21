@@ -17,12 +17,11 @@
 
 #include "AppCore.h"
 #include "AudioBuffer.h"
-#include "MIDIParser.h"
-#include "Sequencer.h"
-#include "SynthEngine/SynthEngine.h"
 #include "Writer.h"
 #include "app/AppEntry.h"
 #include "app/Cli.h"
+#include "core/RenderGateway.h"
+#include "midi/MidiPipeline.h"
 
 namespace
 {
@@ -1110,90 +1109,6 @@ RenderOptions DefaultPreviewRenderOptions()
     return opt;
 }
 
-std::vector<MIDIEvent> BuildWindowedEvents(
-    const std::vector<MIDIEvent>& events,
-    int startSample,
-    int endSample)
-{
-    std::array<bool, 16> hasCc7{};
-    std::array<bool, 16> hasCc11{};
-    std::array<bool, 16> hasPitch{};
-    std::array<int, 16> cc7{};
-    std::array<int, 16> cc11{};
-    std::array<int, 16> pitch{};
-    std::vector<MIDIEvent> out;
-    out.reserve(events.size());
-
-    for (const auto& e : events)
-    {
-        if (e.sample < startSample)
-        {
-            const int ch = (e.channel >= 0 && e.channel < 16) ? e.channel : 0;
-            if (e.type == MIDIEventType::ControlChange && e.controller == 7)
-            {
-                hasCc7[ch] = true;
-                cc7[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::ControlChange && e.controller == 11)
-            {
-                hasCc11[ch] = true;
-                cc11[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::PitchBend)
-            {
-                hasPitch[ch] = true;
-                pitch[ch] = e.value;
-            }
-            continue;
-        }
-        if (e.sample > endSample)
-        {
-            break;
-        }
-
-        MIDIEvent shifted = e;
-        shifted.sample -= startSample;
-        out.push_back(shifted);
-    }
-
-    std::vector<MIDIEvent> prefix;
-    for (int ch = 0; ch < 16; ch++)
-    {
-        if (hasCc7[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::ControlChange;
-            e.channel = ch;
-            e.controller = 7;
-            e.value = cc7[ch];
-            prefix.push_back(e);
-        }
-        if (hasCc11[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::ControlChange;
-            e.channel = ch;
-            e.controller = 11;
-            e.value = cc11[ch];
-            prefix.push_back(e);
-        }
-        if (hasPitch[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::PitchBend;
-            e.channel = ch;
-            e.value = pitch[ch];
-            prefix.push_back(e);
-        }
-    }
-
-    prefix.insert(prefix.end(), out.begin(), out.end());
-    return prefix;
-}
-
 int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound)
 {
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
@@ -1222,11 +1137,32 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     int c = 0;
     int midiTPQ = 0;
     MIDIParseStatus stats{};
-    if (!LoadMIDIBasic(config.midiPath, config.targetChannel, ticks, tempoEvents, midiTPQ, stats))
+    MidiBuildOutput midiOut{};
+    std::string midiErr;
+    if (!BuildMidiPipeline(
+        config.midiPath,
+        config.targetChannel,
+        sound.fs,
+        config.defaultWave,
+        options.startSec,
+        options.durationSec,
+        midiOut,
+        midiErr))
     {
-        LogLine(observer, "Failed to load MIDI: " + PathToUtf8(config.midiPath));
+        if (midiErr == "no note events found")
+        {
+            LogLine(observer, "No note events found.");
+        }
+        else
+        {
+            LogLine(observer, "Failed to load MIDI: " + PathToUtf8(config.midiPath));
+        }
         return 1;
     }
+    ticks = midiOut.ticks;
+    tempoEvents = midiOut.tempoEvents;
+    midiTPQ = midiOut.ticksPerQuarter;
+    stats = midiOut.stats;
 
     // MIDI event stats
     for (i = 0; i < 16; i++)
@@ -1304,21 +1240,7 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     }
 
     // Convert tick events to sample events
-    std::vector<MIDIEvent> events;
-    BuildSampleEvents(ticks, tempoEvents, midiTPQ, sound.fs, config.defaultWave, events);
-    if (options.startSec > 0.0 || options.durationSec >= 0.0)
-    {
-        const double startSec = (options.startSec > 0.0) ? options.startSec : 0.0;
-        int startSample = static_cast<int>(startSec * sound.fs);
-        int endSample = (std::numeric_limits<int>::max)();
-        if (options.durationSec >= 0.0)
-        {
-            const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
-            const int durSamples = static_cast<int>(durSec * sound.fs);
-            endSample = startSample + durSamples;
-        }
-        events = BuildWindowedEvents(events, startSample, endSample);
-    }
+    std::vector<MIDIEvent> events = std::move(midiOut.events);
     {
         int noteOnCount = 0;
         int firstNoteOnSample = -1;
@@ -1494,7 +1416,7 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
         }
         return observer->ShouldCancel();
     };
-    RenderMIDIEvents(sound, events, channelConfigs, channelMixStates, shouldCancel, &canceled);
+    RenderWithEngine(sound, events, channelConfigs, channelMixStates, shouldCancel, &canceled);
     if (canceled)
     {
         LogLine(observer, "[Run] Canceled by request.");

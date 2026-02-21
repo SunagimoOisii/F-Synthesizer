@@ -268,15 +268,22 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
         if (status & 0x80)
         {
             idx++;
-            runningStatus = status;
+            // Running status is valid only for channel messages (0x80..0xEF).
+            runningStatus = (status < 0xF0) ? status : 0;
         }
         else
         {
+            if (runningStatus == 0)
+            {
+                // Invalid running status sequence; stop parsing this track safely.
+                break;
+            }
             status = runningStatus;
         }
 
         if (status == 0xFF)
         {
+            runningStatus = 0;
             bool endOfTrack = false;
             if (!ParseMetaEvent(data, idx, currentTick, tempoEvents, stats, endOfTrack)) break;
             if (endOfTrack) break;
@@ -285,6 +292,7 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
 
         if (status == 0xF0 || status == 0xF7)
         {
+            runningStatus = 0;
             if (!ParseSysExEvent(data, idx, stats)) break;
             continue;
         }
