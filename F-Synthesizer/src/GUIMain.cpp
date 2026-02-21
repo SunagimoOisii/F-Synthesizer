@@ -147,7 +147,7 @@ int RunGUIApp()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "F-Synthesizer GUI (Preview)", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "F-Synthesizer", nullptr, nullptr);
     if (window == nullptr)
     {
         glfwTerminate();
@@ -220,48 +220,54 @@ int RunGUIApp()
             }
         };
 
-        ImGui::TextUnformatted("F-Synthesizer GUI");
-        ImGui::Separator();
-        DrawStatusBadge(state);
-        ImGui::SameLine();
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16.0f);
-        ImGui::TextUnformatted("UI Scale");
-        ImGui::SameLine();
-        const char* uiScales[] = { "100%", "125%", "150%" };
-        if (ImGui::Combo("##ui_scale", &state.uiScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
-        {
-            AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
-        }
-        updateHoverHelp("UI全体の表示倍率を変更します。");
         ImGui::Separator();
         static int syncedTab = -1;
-        if (ImGui::BeginTabBar("mode_tabs"))
+        if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
         {
-            const bool needSync = (syncedTab != state.uiModeTab);
-            ImGuiTabItemFlags soundFlags =
-                (needSync && state.uiModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-            ImGuiTabItemFlags musicFlags =
-                (needSync && state.uiModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-            if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
+            ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.72f);
+            ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthFixed, 360.0f);
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            if (ImGui::BeginTabBar("mode_tabs"))
             {
-                state.uiModeTab = 0;
-                ImGui::EndTabItem();
+                const bool needSync = (syncedTab != state.uiModeTab);
+                ImGuiTabItemFlags soundFlags =
+                    (needSync && state.uiModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+                ImGuiTabItemFlags musicFlags =
+                    (needSync && state.uiModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+                if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
+                {
+                    state.uiModeTab = 0;
+                    ImGui::EndTabItem();
+                }
+                updateHoverHelp("Sound: 音作りとチャンネル試聴を行うモードです。");
+                if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
+                {
+                    state.uiModeTab = 1;
+                    ImGui::EndTabItem();
+                }
+                updateHoverHelp("Music: ピアノロール確認と書き出しを行うモードです。");
+                ImGui::EndTabBar();
+                syncedTab = state.uiModeTab;
             }
-            updateHoverHelp("Sound: 音作りとチャンネル試聴を行うモードです。");
-            if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
-            {
-                state.uiModeTab = 1;
-                ImGui::EndTabItem();
-            }
-            updateHoverHelp("Music: ピアノロール確認と書き出しを行うモードです。");
-            ImGui::EndTabBar();
-            syncedTab = state.uiModeTab;
-        }
-        ImGui::TextDisabled(
-            state.uiModeTab == 0
-                ? "Sound mode: sound design + quick preview"
-                : "Music mode: piano roll + playback workflow");
 
+            ImGui::TableSetColumnIndex(1);
+            DrawStatusBadge(state);
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16.0f);
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted("UI Scale");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(120.0f);
+            const char* uiScales[] = { "100%", "125%", "150%" };
+            if (ImGui::Combo("##ui_scale", &state.uiScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
+            {
+                AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
+            }
+            updateHoverHelp("UI全体の表示倍率を変更します。");
+            ImGui::EndTable();
+        }
+        ImGui::Separator();
         if (state.uiModeTab != lastFrameTab)
         {
             // タブ切替時に再生/実行が残ると意図しない継続再生になるため即停止する。
@@ -322,10 +328,14 @@ int RunGUIApp()
         }
         updateHoverHelp("GUIを終了します。");
         ImGui::EndDisabled();
-        ImGui::TextDisabled(
-            state.uiModeTab == 0
-                ? "Sound: preview current sound design"
-                : "Music: export full WAV / preview always rerender");
+        ImGui::SameLine();
+        const std::string helpLine = std::string("Help: ") + hoverHelp;
+        const float helpX = ImGui::GetWindowContentRegionMax().x - ImGui::CalcTextSize(helpLine.c_str()).x;
+        if (helpX > ImGui::GetCursorPosX())
+        {
+            ImGui::SetCursorPosX(helpX);
+        }
+        ImGui::TextDisabled("%s", helpLine.c_str());
         ImGui::Separator();
 
         static bool logPanelExpanded = false;
@@ -578,8 +588,6 @@ int RunGUIApp()
         ImGui::EndChild();
 
         ImGui::Separator();
-        ImGui::TextDisabled("Help: %s", hoverHelp.c_str());
-        ImGui::Separator();
         if (logPanelExpanded)
         {
             ImGui::InvisibleButton("log_splitter", ImVec2(-1.0f, splitterThickness));
@@ -653,4 +661,3 @@ int RunGUIApp()
     glfwTerminate();
     return 0;
 }
-
