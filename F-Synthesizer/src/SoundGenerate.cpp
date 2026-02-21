@@ -11,6 +11,8 @@
 #include <memory>
 #include <functional>
 #include <type_traits>
+#include <algorithm>
+#include <limits>
 #include <Windows.h>
 
 #include "AppCore.h"
@@ -1194,13 +1196,117 @@ bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& co
     return true;
 }
 
-int Run(const AppConfig& config, IRunObserver* observer)
+RenderOptions DefaultRenderOptions()
+{
+    return RenderOptions{};
+}
+
+RenderOptions DefaultPreviewRenderOptions()
+{
+    RenderOptions opt{};
+    opt.mode = RunMode::Preview;
+    opt.startSec = 0.0;
+    opt.durationSec = 8.0;
+    opt.writeWav = false;
+    opt.allowCancel = true;
+    return opt;
+}
+
+std::vector<MIDIEvent> BuildWindowedEvents(
+    const std::vector<MIDIEvent>& events,
+    int startSample,
+    int endSample)
+{
+    std::array<bool, 16> hasCc7{};
+    std::array<bool, 16> hasCc11{};
+    std::array<bool, 16> hasPitch{};
+    std::array<int, 16> cc7{};
+    std::array<int, 16> cc11{};
+    std::array<int, 16> pitch{};
+    std::vector<MIDIEvent> out;
+    out.reserve(events.size());
+
+    for (const auto& e : events)
+    {
+        if (e.sample < startSample)
+        {
+            const int ch = (e.channel >= 0 && e.channel < 16) ? e.channel : 0;
+            if (e.type == MIDIEventType::ControlChange && e.controller == 7)
+            {
+                hasCc7[ch] = true;
+                cc7[ch] = e.value;
+            }
+            else if (e.type == MIDIEventType::ControlChange && e.controller == 11)
+            {
+                hasCc11[ch] = true;
+                cc11[ch] = e.value;
+            }
+            else if (e.type == MIDIEventType::PitchBend)
+            {
+                hasPitch[ch] = true;
+                pitch[ch] = e.value;
+            }
+            continue;
+        }
+        if (e.sample > endSample)
+        {
+            break;
+        }
+
+        MIDIEvent shifted = e;
+        shifted.sample -= startSample;
+        out.push_back(shifted);
+    }
+
+    std::vector<MIDIEvent> prefix;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        if (hasCc7[ch])
+        {
+            MIDIEvent e{};
+            e.sample = 0;
+            e.type = MIDIEventType::ControlChange;
+            e.channel = ch;
+            e.controller = 7;
+            e.value = cc7[ch];
+            prefix.push_back(e);
+        }
+        if (hasCc11[ch])
+        {
+            MIDIEvent e{};
+            e.sample = 0;
+            e.type = MIDIEventType::ControlChange;
+            e.channel = ch;
+            e.controller = 11;
+            e.value = cc11[ch];
+            prefix.push_back(e);
+        }
+        if (hasPitch[ch])
+        {
+            MIDIEvent e{};
+            e.sample = 0;
+            e.type = MIDIEventType::PitchBend;
+            e.channel = ch;
+            e.value = pitch[ch];
+            prefix.push_back(e);
+        }
+    }
+
+    prefix.insert(prefix.end(), out.begin(), out.end());
+    return prefix;
+}
+
+int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer)
 {
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
-    std::filesystem::create_directories(config.wavPath.parent_path());
+    if (options.writeWav)
+    {
+        std::filesystem::create_directories(config.wavPath.parent_path());
+    }
     LogLine(observer, "Working Directory: " + PathToUtf8(std::filesystem::current_path()));
     LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
     LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
+    LogLine(observer, std::string("Run Mode: ") + (options.mode == RunMode::Preview ? "preview" : "export"));
 
     // Output buffer
     SoundData sound(config.initialSeconds * config.sampleRate, config.bits, config.sampleRate);
@@ -1302,6 +1408,19 @@ int Run(const AppConfig& config, IRunObserver* observer)
     // Convert tick events to sample events
     std::vector<MIDIEvent> events;
     BuildSampleEvents(ticks, tempoEvents, midiTPQ, sound.fs, config.defaultWave, events);
+    if (options.startSec > 0.0 || options.durationSec >= 0.0)
+    {
+        const double startSec = (options.startSec > 0.0) ? options.startSec : 0.0;
+        int startSample = static_cast<int>(startSec * sound.fs);
+        int endSample = (std::numeric_limits<int>::max)();
+        if (options.durationSec >= 0.0)
+        {
+            const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
+            const int durSamples = static_cast<int>(durSec * sound.fs);
+            endSample = startSample + durSamples;
+        }
+        events = BuildWindowedEvents(events, startSample, endSample);
+    }
     {
         int noteOnCount = 0;
         int firstNoteOnSample = -1;
@@ -1440,7 +1559,20 @@ int Run(const AppConfig& config, IRunObserver* observer)
     int lastSample = events.back().sample;
     int extraRelease = (int)(config.extraReleaseSec * sound.fs);
     int neededSamples = lastSample + extraRelease + 1;
+    if (options.mode == RunMode::Preview && options.durationSec >= 0.0)
+    {
+        const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
+        const int previewMax = static_cast<int>(durSec * sound.fs) + extraRelease + 1;
+        if (neededSamples > previewMax)
+        {
+            neededSamples = previewMax;
+        }
+    }
     if (neededSamples > sound.length)
+    {
+        sound = SoundData(neededSamples, sound.bits, sound.fs);
+    }
+    else if (options.mode == RunMode::Preview && neededSamples > 0 && neededSamples < sound.length)
     {
         sound = SoundData(neededSamples, sound.bits, sound.fs);
     }
@@ -1477,31 +1609,48 @@ int Run(const AppConfig& config, IRunObserver* observer)
     }
 
     // Save
-    if (std::filesystem::exists(config.wavPath))
+    if (options.writeWav)
     {
-        std::error_code rmEc;
-        std::filesystem::remove(config.wavPath, rmEc);
-        if (rmEc)
+        if (std::filesystem::exists(config.wavPath))
         {
-            LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
+            std::error_code rmEc;
+            std::filesystem::remove(config.wavPath, rmEc);
+            if (rmEc)
+            {
+                LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
+            }
         }
+        if (!SaveWavFilePath(sound, config.wavPath))
+        {
+            std::ostringstream oss;
+            oss << "Failed to save WAV: " << PathToUtf8(config.wavPath)
+                << " lastError=" << (unsigned long)GetLastError();
+            LogLine(observer, oss.str());
+            return 1;
+        }
+        LogLine(observer, "Saved SoundData: " + PathToUtf8(config.wavPath));
     }
-    if (!SaveWavFilePath(sound, config.wavPath))
+    else
     {
-        std::ostringstream oss;
-        oss << "Failed to save WAV: " << PathToUtf8(config.wavPath)
-            << " lastError=" << (unsigned long)GetLastError();
-        LogLine(observer, oss.str());
-        return 1;
+        LogLine(observer, "Preview render completed (memory only, no WAV write).");
     }
-    LogLine(observer, "Saved SoundData: " + PathToUtf8(config.wavPath));
 
     return 0;
 }
 
 int Run(const AppConfig& config)
 {
-    return Run(config, nullptr);
+    return Run(config, DefaultRenderOptions(), nullptr);
+}
+
+int Run(const AppConfig& config, const RenderOptions& options)
+{
+    return Run(config, options, nullptr);
+}
+
+int Run(const AppConfig& config, IRunObserver* observer)
+{
+    return Run(config, DefaultRenderOptions(), observer);
 }
 
 int RunGuiApp();

@@ -7,6 +7,21 @@
 
 #include "SynthEngine/SynthEngine.h"
 
+enum class RunMode
+{
+    Export,
+    Preview
+};
+
+struct RenderOptions
+{
+    RunMode mode = RunMode::Export;
+    double startSec = 0.0;
+    double durationSec = -1.0; // < 0 means full length
+    bool writeWav = true;
+    bool allowCancel = true;
+};
+
 struct AppConfig
 {
     std::filesystem::path midiPath;
@@ -31,5 +46,9 @@ std::filesystem::path FindProjectRootPath();
 AppConfig DefaultConfig();
 bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
 bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
+RenderOptions DefaultRenderOptions();
+RenderOptions DefaultPreviewRenderOptions();
 int Run(const AppConfig& config);
 int Run(const AppConfig& config, IRunObserver* observer);
+int Run(const AppConfig& config, const RenderOptions& options);
+int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer);
