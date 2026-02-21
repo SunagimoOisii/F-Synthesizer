@@ -49,6 +49,12 @@ struct PianoRollState
     bool drumNameMode = false;
     bool followPreviewPlayback = true;
     int previewStartTick = 0;
+    bool previewRangeEnabled = false;
+    int previewRangeStartTick = 0;
+    int previewRangeEndTick = 0;
+    bool previewRangeShortcutArmed = false;
+    bool isPreviewRangeDragging = false;
+    int previewRangeDragStartTick = 0;
 
     std::filesystem::path loadedMidiPath{};
     std::filesystem::file_time_type loadedWriteTime{};

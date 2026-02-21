@@ -112,6 +112,23 @@ void SetSnapIndex(PianoRollState& state, int newIndex, const std::function<void(
     }
 }
 
+void NormalizePreviewRange(PianoRollState& state)
+{
+    if (!state.previewRangeEnabled)
+    {
+        return;
+    }
+    int a = (std::max)(0, state.previewRangeStartTick);
+    int b = (std::max)(0, state.previewRangeEndTick);
+    if (a > b)
+    {
+        std::swap(a, b);
+    }
+    state.previewRangeStartTick = a;
+    state.previewRangeEndTick = b;
+    state.previewStartTick = a;
+}
+
 int SnapTick(int tick, int step)
 {
     if (step <= 1)
@@ -1023,8 +1040,15 @@ void DrawPianoRollPanel(
     ImGui::SameLine();
     ImGui::Checkbox("PR Follow", &state.followPreviewPlayback);
     ImGui::SameLine();
-    ImGui::Text("PR StartTick=%d", state.previewStartTick);
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Space=再生停止 / Q,1-4=Snap");
+    if (state.previewRangeEnabled)
+    {
+        ImGui::Text("PR Range=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
+    }
+    else
+    {
+        ImGui::Text("PR StartTick=%d", state.previewStartTick);
+    }
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / ルーラD&D=再生範囲 / ルーラ後Ctrl+A=全範囲 / Space=再生停止 / Q,1-4=Snap");
 
     if (state.hasLoadError)
     {
@@ -1099,6 +1123,27 @@ void DrawPianoRollPanel(
     const int mouseTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
     const int mouseNote = MouseToNote(mousePos.y, noteAreaMinY, rowHeight, noteHigh);
 
+    if (state.previewRangeEnabled)
+    {
+        NormalizePreviewRange(state);
+        const int drawStartTick = (std::max)(0, state.tickOffset);
+        const float rangeX0 = gridMinX + static_cast<float>(state.previewRangeStartTick - drawStartTick) * pxPerTick;
+        const float rangeX1 = gridMinX + static_cast<float>(state.previewRangeEndTick - drawStartTick) * pxPerTick;
+        const float x0 = (std::max)(gridMinX, (std::min)(rangeX0, rangeX1));
+        const float x1 = (std::min)(canvasMax.x, (std::max)(rangeX0, rangeX1));
+        if (x1 > x0)
+        {
+            drawList->AddRectFilled(
+                ImVec2(x0, canvasMin.y),
+                ImVec2(x1, canvasMax.y),
+                IM_COL32(90, 140, 210, 36));
+            drawList->AddRect(
+                ImVec2(x0, canvasMin.y),
+                ImVec2(x1, canvasMax.y),
+                IM_COL32(90, 140, 210, 160));
+        }
+    }
+
     if (hovered)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -1143,12 +1188,62 @@ void DrawPianoRollPanel(
         }
     }
 
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInRuler)
+    const bool rulerDoubleClicked = ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && mouseInRuler;
+    if (rulerDoubleClicked)
     {
-        state.previewStartTick = SnapTick(mouseTick, snapStep);
+        state.previewRangeShortcutArmed = true;
+        state.previewRangeEnabled = true;
+        state.previewRangeStartTick = 0;
+        state.previewRangeEndTick = (std::max)(state.maxTick, 0);
+        NormalizePreviewRange(state);
         if (appendLog)
         {
-            appendLog("[PianoRoll] preview start tick set: " + std::to_string(state.previewStartTick));
+            appendLog("[PianoRoll] preview range set: full");
+        }
+    }
+
+    if (!rulerDoubleClicked && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInRuler)
+    {
+        state.previewRangeShortcutArmed = true;
+        state.isPreviewRangeDragging = true;
+        state.previewRangeDragStartTick = SnapTick(mouseTick, snapStep);
+        state.previewRangeStartTick = state.previewRangeDragStartTick;
+        state.previewRangeEndTick = state.previewRangeDragStartTick;
+        state.previewRangeEnabled = true;
+    }
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !mouseInRuler)
+    {
+        state.previewRangeShortcutArmed = false;
+    }
+    if (state.isPreviewRangeDragging)
+    {
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            state.previewRangeEndTick = SnapTick(mouseTick, snapStep);
+            NormalizePreviewRange(state);
+        }
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            state.isPreviewRangeDragging = false;
+            if (state.previewRangeStartTick == state.previewRangeEndTick)
+            {
+                state.previewRangeEnabled = false;
+                state.previewStartTick = state.previewRangeStartTick;
+                if (appendLog)
+                {
+                    appendLog("[PianoRoll] preview start tick set: " + std::to_string(state.previewStartTick));
+                }
+            }
+            else
+            {
+                NormalizePreviewRange(state);
+                if (appendLog)
+                {
+                    appendLog("[PianoRoll] preview range set: " +
+                        std::to_string(state.previewRangeStartTick) + "-" +
+                        std::to_string(state.previewRangeEndTick));
+                }
+            }
         }
     }
 
@@ -1172,6 +1267,17 @@ void DrawPianoRollPanel(
     }
     if (panelFocused && !ImGui::GetIO().WantTextInput)
     {
+        if (state.previewRangeShortcutArmed && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A, false))
+        {
+            state.previewRangeEnabled = true;
+            state.previewRangeStartTick = 0;
+            state.previewRangeEndTick = (std::max)(state.maxTick, 0);
+            NormalizePreviewRange(state);
+            if (appendLog)
+            {
+                appendLog("[PianoRoll] preview range set: full (Ctrl+A)");
+            }
+        }
         if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
         {
             const int restore = (state.lastSnapIndex >= 1 && state.lastSnapIndex <= 4) ? state.lastSnapIndex : 3;
@@ -1338,7 +1444,8 @@ void DrawPianoRollPanel(
         const ma_uint32 sr = (playback->sampleRate > 0) ? playback->sampleRate : 44100;
         const double playbackSec = static_cast<double>(playback->frameCursor.load(std::memory_order_relaxed)) /
             static_cast<double>(sr);
-        const double absoluteSec = SecondsAtTick(state.tempoEvents, state.ticksPerQuarter, state.previewStartTick) + playbackSec;
+        const int playStartTick = playback->playStartTick.load(std::memory_order_relaxed);
+        const double absoluteSec = SecondsAtTick(state.tempoEvents, state.ticksPerQuarter, playStartTick) + playbackSec;
         const int headTick = TickAtSeconds(state.tempoEvents, state.ticksPerQuarter, absoluteSec);
         if (state.followPreviewPlayback)
         {

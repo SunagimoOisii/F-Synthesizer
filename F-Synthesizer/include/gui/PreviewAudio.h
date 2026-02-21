@@ -17,6 +17,7 @@ struct PreviewPlaybackState
     std::mutex mutex{};
     std::vector<float> pcm{};
     std::atomic<uint64_t> frameCursor{ 0 };
+    std::atomic<int> playStartTick{ 0 };
     std::atomic<bool> playing{ false };
     std::atomic<bool> loop{ false };
     ma_uint32 channels = 1;

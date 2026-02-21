@@ -105,6 +105,7 @@ void StopPreviewAudio(PreviewPlaybackState& playback)
 {
     playback.playing.store(false, std::memory_order_relaxed);
     playback.frameCursor.store(0, std::memory_order_relaxed);
+    playback.playStartTick.store(0, std::memory_order_relaxed);
 }
 
 void ShutdownPreviewAudio(PreviewPlaybackState& playback)

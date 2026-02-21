@@ -74,6 +74,8 @@ struct GUIState
     bool previewAudioReady = false;
     bool runIsPreview = false;
     bool autoPlayPreviewOnRunComplete = false;
+    int previewRequestedStartTick = 0;
+    double previewRequestedDurationSec = 0.0;
     std::shared_ptr<SoundData> previewRenderedSound{};
     std::shared_ptr<SoundData> runOutputBuffer{};
     PreviewPlaybackState playback{};

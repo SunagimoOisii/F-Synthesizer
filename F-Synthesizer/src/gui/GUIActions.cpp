@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <future>
 #include <vector>
@@ -58,6 +59,44 @@ double SecondsAtTickForPreview(const std::vector<TempoEvent>& tempoEvents, int t
         seconds += secPerTick * static_cast<double>(deltaTick);
     }
     return seconds;
+}
+
+double PreviewRangeDurationSec(const GUIState& state)
+{
+    const auto& pr = state.pianoRoll;
+    if (!pr.previewRangeEnabled || pr.ticksPerQuarter <= 0)
+    {
+        return 0.0;
+    }
+    const int rangeStartTick = (std::min)(pr.previewRangeStartTick, pr.previewRangeEndTick);
+    const int rangeEndTick = (std::max)(pr.previewRangeStartTick, pr.previewRangeEndTick);
+    if (rangeEndTick <= rangeStartTick)
+    {
+        return 0.0;
+    }
+    const double startSec = SecondsAtTickForPreview(pr.tempoEvents, pr.ticksPerQuarter, rangeStartTick);
+    const double endSec = SecondsAtTickForPreview(pr.tempoEvents, pr.ticksPerQuarter, rangeEndTick);
+    return (std::max)(0.0, endSec - startSec);
+}
+
+void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
+{
+    if (durationSec <= 0.0 || sound.fs <= 0 || sound.data.empty())
+    {
+        return;
+    }
+    const uint64_t keepSamples = static_cast<uint64_t>(durationSec * static_cast<double>(sound.fs));
+    if (keepSamples == 0)
+    {
+        sound.data.clear();
+        sound.length = 0;
+        return;
+    }
+    if (keepSamples < sound.data.size())
+    {
+        sound.data.resize(static_cast<size_t>(keepSamples));
+        sound.length = static_cast<int>(sound.data.size());
+    }
 }
 
 std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPianoRoll(
@@ -350,13 +389,25 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     {
         state.restorePreviewOnRunComplete = true;
         options.writeWav = false;
-        if (state.pianoRoll.previewStartTick > 0 && state.pianoRoll.ticksPerQuarter > 0)
+        int startTick = state.pianoRoll.previewStartTick;
+        if (state.pianoRoll.previewRangeEnabled)
+        {
+            startTick = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
+        }
+        if (startTick > 0 && state.pianoRoll.ticksPerQuarter > 0)
         {
             options.startSec = SecondsAtTickForPreview(
                 state.pianoRoll.tempoEvents,
                 state.pianoRoll.ticksPerQuarter,
-                state.pianoRoll.previewStartTick);
+                startTick);
         }
+        state.previewRequestedStartTick = startTick;
+        state.previewRequestedDurationSec = PreviewRangeDurationSec(state);
+    }
+    else
+    {
+        state.previewRequestedStartTick = 0;
+        state.previewRequestedDurationSec = 0.0;
     }
     state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
 
@@ -379,8 +430,18 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     if (previewSelected)
     {
-        AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
-            " sec=" + std::to_string(options.startSec));
+        if (state.pianoRoll.previewRangeEnabled)
+        {
+            const int a = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
+            const int b = (std::max)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
+            AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview range tick=" + std::to_string(a) + "-" +
+                std::to_string(b) + " secStart=" + std::to_string(options.startSec));
+        }
+        else
+        {
+            AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
+                " sec=" + std::to_string(options.startSec));
+        }
     }
     AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
@@ -428,12 +489,31 @@ bool TryFinalizeCompletedRun(GUIState& state)
             state.runOutputBuffer != nullptr &&
             !state.runOutputBuffer->data.empty())
         {
+            if (state.pianoRoll.previewRangeEnabled)
+            {
+                TrimPreviewSoundByDuration(*state.runOutputBuffer, state.previewRequestedDurationSec);
+            }
+            if (state.runOutputBuffer->data.empty())
+            {
+                state.previewAudioReady = false;
+                state.previewRenderedSound.reset();
+                AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview range is too short: no audio");
+                state.runOutputBuffer.reset();
+                state.runIsPreview = false;
+                state.autoPlayPreviewOnRunComplete = false;
+                if (state.restorePreviewOnRunComplete)
+                {
+                    DeactivateSoloPreview(state);
+                }
+                return true;
+            }
             state.previewRenderedSound = state.runOutputBuffer;
             state.previewAudioReady = true;
             AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview audio buffer ready");
             if (state.autoPlayPreviewOnRunComplete)
             {
                 std::string playErr;
+                state.playback.playStartTick.store(state.previewRequestedStartTick, std::memory_order_relaxed);
                 if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, playErr))
                 {
                     AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback started");
