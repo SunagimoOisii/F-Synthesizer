@@ -85,6 +85,93 @@ int SnapTick(int tick, int step)
     return (std::max)(0, q * step);
 }
 
+double SecondsAtTick(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, int targetTick)
+{
+    if (targetTick <= 0 || ticksPerQuarter <= 0)
+    {
+        return 0.0;
+    }
+
+    std::vector<TempoEvent> sortedTempo = tempoEvents;
+    std::sort(sortedTempo.begin(), sortedTempo.end(), [](const TempoEvent& a, const TempoEvent& b) {
+        return a.tick < b.tick;
+    });
+    if (sortedTempo.empty() || sortedTempo.front().tick != 0)
+    {
+        TempoEvent te{};
+        te.tick = 0;
+        te.bpm = 120.0;
+        sortedTempo.insert(sortedTempo.begin(), te);
+    }
+
+    double seconds = 0.0;
+    int cursorTick = 0;
+    double cursorBpm = sortedTempo.front().bpm;
+    size_t tempoIndex = 1;
+    while (tempoIndex < sortedTempo.size() && sortedTempo[tempoIndex].tick <= targetTick)
+    {
+        const int nextTick = sortedTempo[tempoIndex].tick;
+        const int deltaTick = nextTick - cursorTick;
+        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        seconds += secPerTick * static_cast<double>(deltaTick);
+        cursorTick = nextTick;
+        cursorBpm = sortedTempo[tempoIndex].bpm;
+        tempoIndex++;
+    }
+    if (targetTick > cursorTick)
+    {
+        const int deltaTick = targetTick - cursorTick;
+        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        seconds += secPerTick * static_cast<double>(deltaTick);
+    }
+    return seconds;
+}
+
+int TickAtSeconds(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, double targetSeconds)
+{
+    if (targetSeconds <= 0.0 || ticksPerQuarter <= 0)
+    {
+        return 0;
+    }
+
+    std::vector<TempoEvent> sortedTempo = tempoEvents;
+    std::sort(sortedTempo.begin(), sortedTempo.end(), [](const TempoEvent& a, const TempoEvent& b) {
+        return a.tick < b.tick;
+    });
+    if (sortedTempo.empty() || sortedTempo.front().tick != 0)
+    {
+        TempoEvent te{};
+        te.tick = 0;
+        te.bpm = 120.0;
+        sortedTempo.insert(sortedTempo.begin(), te);
+    }
+
+    double seconds = 0.0;
+    int cursorTick = 0;
+    double cursorBpm = sortedTempo.front().bpm;
+    size_t tempoIndex = 1;
+    while (tempoIndex < sortedTempo.size())
+    {
+        const int nextTick = sortedTempo[tempoIndex].tick;
+        const int deltaTick = nextTick - cursorTick;
+        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        const double segmentSeconds = secPerTick * static_cast<double>(deltaTick);
+        if (seconds + segmentSeconds >= targetSeconds)
+        {
+            const double remain = targetSeconds - seconds;
+            return cursorTick + static_cast<int>(remain / secPerTick);
+        }
+        seconds += segmentSeconds;
+        cursorTick = nextTick;
+        cursorBpm = sortedTempo[tempoIndex].bpm;
+        tempoIndex++;
+    }
+
+    const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+    const double remain = targetSeconds - seconds;
+    return (std::max)(0, cursorTick + static_cast<int>(remain / secPerTick));
+}
+
 void ResetInteractionState(PianoRollState& state)
 {
     state.isRangeSelecting = false;
@@ -295,6 +382,7 @@ bool ShouldReload(const PianoRollState& state, const std::filesystem::path& midi
 void ClearModel(PianoRollState& state)
 {
     state.notes.clear();
+    state.tempoEvents.clear();
     state.maxTick = 0;
     state.ticksPerQuarter = 480;
     state.selected.clear();
@@ -423,6 +511,7 @@ void EnsureModelLoaded(
     }
 
     BuildNotesFromTicks(ticks, ticksPerQuarter, state);
+    state.tempoEvents = tempoEvents;
     bool appliedProjectData = false;
     if (state.hasProjectData && state.projectMidiPath == midiPath && !state.projectNotes.empty())
     {
@@ -721,6 +810,7 @@ void DrawNotes(
 void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,
+    const PreviewPlaybackState* playback,
     const std::function<void(const std::string&)>& appendLog)
 {
     const std::filesystem::path midiPath = (midiPathUtf8 != nullptr) ? Utf8ToPath(midiPathUtf8) : std::filesystem::path{};
@@ -746,6 +836,10 @@ void DrawPianoRollPanel(
     ImGui::SliderInt("PR Note Offset", &state.noteOffset, 0, 116);
     ImGui::SetNextItemWidth(220.0f);
     ImGui::SliderInt("PR Visible Notes", &state.visibleNoteCount, 12, 72);
+    ImGui::SameLine();
+    ImGui::Checkbox("PR Follow", &state.followPreviewPlayback);
+    ImGui::SameLine();
+    ImGui::Text("PR StartTick=%d", state.previewStartTick);
 
     if (state.hasLoadError)
     {
@@ -809,6 +903,15 @@ void DrawPianoRollPanel(
     const int noteHigh = (std::min)(127, state.noteOffset + state.visibleNoteCount - 1);
     const int mouseTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
     const int mouseNote = MouseToNote(mousePos.y, canvasMin.y, rowHeight, noteHigh);
+
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && mouseInGrid)
+    {
+        state.previewStartTick = SnapTick(mouseTick, snapStep);
+        if (appendLog)
+        {
+            appendLog("[PianoRoll] preview start tick set: " + std::to_string(state.previewStartTick));
+        }
+    }
 
     if (panelFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
     {
@@ -896,6 +999,37 @@ void DrawPianoRollPanel(
 
     drawList->PushClipRect(ImVec2(canvasMin.x + pianoWidth, canvasMin.y), canvasMax, true);
     DrawNotes(state, drawList, visibleNotes);
+
+    if (playback != nullptr && playback->playing.load(std::memory_order_relaxed))
+    {
+        const ma_uint32 sr = (playback->sampleRate > 0) ? playback->sampleRate : 44100;
+        const double playbackSec = static_cast<double>(playback->frameCursor.load(std::memory_order_relaxed)) /
+            static_cast<double>(sr);
+        const double absoluteSec = SecondsAtTick(state.tempoEvents, state.ticksPerQuarter, state.previewStartTick) + playbackSec;
+        const int headTick = TickAtSeconds(state.tempoEvents, state.ticksPerQuarter, absoluteSec);
+        if (state.followPreviewPlayback)
+        {
+            const int visibleTickSpan = static_cast<int>((canvasMax.x - canvasMin.x - pianoWidth) / (std::max)(0.0001f, pxPerTick));
+            const int leftBound = state.tickOffset;
+            const int rightBound = state.tickOffset + visibleTickSpan;
+            const int followMargin = (std::max)(1, visibleTickSpan / 4);
+            if (headTick > rightBound - followMargin)
+            {
+                state.tickOffset = (std::max)(0, headTick - (visibleTickSpan * 3) / 4);
+            }
+            else if (headTick < leftBound + followMargin)
+            {
+                state.tickOffset = (std::max)(0, headTick - visibleTickSpan / 4);
+            }
+        }
+
+        const int drawStartTick = (std::max)(0, state.tickOffset);
+        const float headX = canvasMin.x + pianoWidth + static_cast<float>(headTick - drawStartTick) * pxPerTick;
+        if (headX >= canvasMin.x + pianoWidth && headX <= canvasMax.x)
+        {
+            drawList->AddLine(ImVec2(headX, canvasMin.y), ImVec2(headX, canvasMax.y), IM_COL32(255, 80, 80, 240), 2.0f);
+        }
+    }
     drawList->PopClipRect();
 
     if (state.isRangeSelecting)

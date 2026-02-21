@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstring>
 #include <future>
+#include <vector>
 
 #include "AppCore.h"
 #include "gui/GUIConfigUtils.h"
@@ -17,6 +18,48 @@
 
 namespace
 {
+double SecondsAtTickForPreview(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, int targetTick)
+{
+    if (targetTick <= 0 || ticksPerQuarter <= 0)
+    {
+        return 0.0;
+    }
+
+    std::vector<TempoEvent> sorted = tempoEvents;
+    std::sort(sorted.begin(), sorted.end(), [](const TempoEvent& a, const TempoEvent& b) {
+        return a.tick < b.tick;
+    });
+    if (sorted.empty() || sorted.front().tick != 0)
+    {
+        TempoEvent te{};
+        te.tick = 0;
+        te.bpm = 120.0;
+        sorted.insert(sorted.begin(), te);
+    }
+
+    double seconds = 0.0;
+    int cursorTick = 0;
+    double cursorBpm = sorted.front().bpm;
+    size_t idx = 1;
+    while (idx < sorted.size() && sorted[idx].tick <= targetTick)
+    {
+        const int nextTick = sorted[idx].tick;
+        const int deltaTick = nextTick - cursorTick;
+        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        seconds += secPerTick * static_cast<double>(deltaTick);
+        cursorTick = nextTick;
+        cursorBpm = sorted[idx].bpm;
+        idx++;
+    }
+    if (targetTick > cursorTick)
+    {
+        const int deltaTick = targetTick - cursorTick;
+        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
+        seconds += secPerTick * static_cast<double>(deltaTick);
+    }
+    return seconds;
+}
+
 std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPianoRoll(
     const GUIState& state,
     int& outTicksPerQuarter)
@@ -288,6 +331,13 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     {
         state.restorePreviewOnRunComplete = true;
         options.writeWav = false;
+        if (state.pianoRoll.previewStartTick > 0 && state.pianoRoll.ticksPerQuarter > 0)
+        {
+            options.startSec = SecondsAtTickForPreview(
+                state.pianoRoll.tempoEvents,
+                state.pianoRoll.ticksPerQuarter,
+                state.pianoRoll.previewStartTick);
+        }
     }
     state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
 
@@ -302,6 +352,11 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     {
         AppendGUILog(state, "[GUI] PianoRoll edited notes applied: count=" +
             std::to_string(cfg.overrideNoteTicks->size() / 2));
+    }
+    if (previewSelected)
+    {
+        AppendGUILog(state, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
+            " sec=" + std::to_string(options.startSec));
     }
     AppendGUILog(state, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;

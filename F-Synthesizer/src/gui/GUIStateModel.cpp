@@ -219,6 +219,11 @@ void RepairGUIStatePaths(
         state.pianoRoll.visibleNoteCount = std::clamp(state.pianoRoll.visibleNoteCount, 12, 72);
         repaired = true;
     }
+    if (state.pianoRoll.previewStartTick < 0)
+    {
+        state.pianoRoll.previewStartTick = 0;
+        repaired = true;
+    }
 
     EnsureChannelMixStates(state);
     for (int ch = 0; ch < 16; ch++)

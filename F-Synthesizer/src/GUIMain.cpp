@@ -475,6 +475,7 @@ int RunGUIApp()
         DrawPianoRollPanel(
             state.pianoRoll,
             state.midiPath,
+            &state.playback,
             [&](const std::string& line) { AppendGUILog(state, line); });
         ImGui::EndChild();
 

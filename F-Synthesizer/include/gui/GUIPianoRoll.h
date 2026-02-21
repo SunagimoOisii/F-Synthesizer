@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#include "MIDIParser.h"
+#include "gui/PreviewAudio.h"
+
 namespace gui
 {
 struct PianoRollNote
@@ -34,11 +37,14 @@ struct PianoRollState
     int noteOffset = 36;
     int visibleNoteCount = 48;
     bool drumNameMode = false;
+    bool followPreviewPlayback = true;
+    int previewStartTick = 0;
 
     std::filesystem::path loadedMidiPath{};
     std::filesystem::file_time_type loadedWriteTime{};
     int ticksPerQuarter = 480;
     int maxTick = 0;
+    std::vector<TempoEvent> tempoEvents{};
     std::vector<PianoRollNote> notes{};
     std::vector<uint8_t> selected{};
     int primarySelectedIndex = -1;
@@ -73,5 +79,6 @@ struct PianoRollState
 void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,
+    const PreviewPlaybackState* playback,
     const std::function<void(const std::string&)>& appendLog);
 } // namespace gui

@@ -1,10 +1,12 @@
 #include "gui/GUIStateStorage.h"
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <optional>
 #include <regex>
 #include <sstream>
+#include <unordered_map>
 
 namespace
 {
@@ -107,6 +109,109 @@ std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key
     }
     return std::nullopt;
 }
+
+std::string Trim(const std::string& s)
+{
+    size_t b = 0;
+    while (b < s.size() && std::isspace(static_cast<unsigned char>(s[b])) != 0)
+    {
+        b++;
+    }
+    size_t e = s.size();
+    while (e > b && std::isspace(static_cast<unsigned char>(s[e - 1])) != 0)
+    {
+        e--;
+    }
+    return s.substr(b, e - b);
+}
+
+std::string UnescapeJsonString(const std::string& raw)
+{
+    std::string out;
+    out.reserve(raw.size());
+    for (size_t i = 0; i < raw.size(); i++)
+    {
+        const char c = raw[i];
+        if (c == '\\' && i + 1 < raw.size())
+        {
+            const char n = raw[i + 1];
+            if (n == '\\')
+            {
+                out.push_back('\\');
+                i++;
+                continue;
+            }
+            if (n == '"')
+            {
+                out.push_back('"');
+                i++;
+                continue;
+            }
+            if (n == 'n')
+            {
+                out.push_back('\n');
+                i++;
+                continue;
+            }
+        }
+        out.push_back(c);
+    }
+    return out;
+}
+
+bool ParseFlatJsonLine(const std::string& line, std::string& outKey, std::string& outValue)
+{
+    const size_t k0 = line.find('"');
+    if (k0 == std::string::npos)
+    {
+        return false;
+    }
+    const size_t k1 = line.find('"', k0 + 1);
+    if (k1 == std::string::npos || k1 <= k0 + 1)
+    {
+        return false;
+    }
+    const size_t colon = line.find(':', k1 + 1);
+    if (colon == std::string::npos)
+    {
+        return false;
+    }
+
+    outKey = line.substr(k0 + 1, k1 - k0 - 1);
+    outValue = Trim(line.substr(colon + 1));
+    if (!outValue.empty() && outValue.back() == ',')
+    {
+        outValue.pop_back();
+        outValue = Trim(outValue);
+    }
+    return true;
+}
+
+std::optional<int> ParseIntValue(const std::string& value)
+{
+    try
+    {
+        return std::stoi(value);
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::string> ParseStringValue(const std::string& value)
+{
+    if (value.size() < 2 || value.front() != '"' || value.back() != '"')
+    {
+        return std::nullopt;
+    }
+    return UnescapeJsonString(value.substr(1, value.size() - 2));
+}
+
+bool StartsWith(const std::string& s, const std::string& prefix)
+{
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
 } // namespace
 
 bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageData& data, std::string& err)
@@ -152,6 +257,8 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJsonInt(text, "prNoteOffset")) data.prNoteOffset = *v;
     if (auto v = ReadJsonInt(text, "prVisibleNoteCount")) data.prVisibleNoteCount = *v;
     if (auto v = ReadJsonBool(text, "prDrumNameMode")) data.prDrumNameMode = *v;
+    if (auto v = ReadJsonBool(text, "prFollowPreviewPlayback")) data.prFollowPreviewPlayback = *v;
+    if (auto v = ReadJsonInt(text, "prPreviewStartTick")) data.prPreviewStartTick = *v;
     if (auto v = ReadJsonInt(text, "prSelectedCount"))
     {
         data.prSelectedIndices.clear();
@@ -223,6 +330,8 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"prNoteOffset\": " << data.prNoteOffset << ",\n";
     fout << "  \"prVisibleNoteCount\": " << data.prVisibleNoteCount << ",\n";
     fout << "  \"prDrumNameMode\": " << (data.prDrumNameMode ? "true" : "false") << ",\n";
+    fout << "  \"prFollowPreviewPlayback\": " << (data.prFollowPreviewPlayback ? "true" : "false") << ",\n";
+    fout << "  \"prPreviewStartTick\": " << data.prPreviewStartTick << ",\n";
     fout << "  \"prSelectedCount\": " << data.prSelectedIndices.size() << ",\n";
     for (size_t i = 0; i < data.prSelectedIndices.size(); i++)
     {
@@ -257,24 +366,131 @@ bool LoadPianoRollProjectStorageFile(const std::filesystem::path& path, PianoRol
         return false;
     }
 
-    std::ostringstream oss;
-    oss << fin.rdbuf();
-    const std::string text = oss.str();
+    data = PianoRollProjectStorageData{};
 
-    if (auto v = ReadJsonString(text, "midiPath")) data.midiPath = *v;
-    if (auto v = ReadJsonInt(text, "ticksPerQuarter")) data.ticksPerQuarter = *v;
+    std::unordered_map<int, PianoRollProjectStorageNote> noteMap;
+    int noteCount = 0;
+    std::string line;
+    while (std::getline(fin, line))
+    {
+        std::string key;
+        std::string value;
+        if (!ParseFlatJsonLine(line, key, value))
+        {
+            continue;
+        }
 
-    data.notes.clear();
-    const int noteCount = ReadJsonInt(text, "noteCount").value_or(0);
-    data.notes.reserve(static_cast<size_t>((std::max)(0, noteCount)));
+        if (key == "midiPath")
+        {
+            if (auto v = ParseStringValue(value))
+            {
+                data.midiPath = *v;
+            }
+            continue;
+        }
+        if (key == "ticksPerQuarter")
+        {
+            if (auto v = ParseIntValue(value))
+            {
+                data.ticksPerQuarter = *v;
+            }
+            continue;
+        }
+        if (key == "noteCount")
+        {
+            if (auto v = ParseIntValue(value))
+            {
+                noteCount = (std::max)(0, *v);
+            }
+            continue;
+        }
+
+        if (!StartsWith(key, "note"))
+        {
+            continue;
+        }
+
+        auto setField = [&](const std::string& suffix, auto setter) {
+            if (key.size() <= 4 + suffix.size())
+            {
+                return false;
+            }
+            if (key.compare(key.size() - suffix.size(), suffix.size(), suffix) != 0)
+            {
+                return false;
+            }
+            const std::string idxStr = key.substr(4, key.size() - 4 - suffix.size());
+            int idx = 0;
+            try
+            {
+                idx = std::stoi(idxStr);
+            }
+            catch (...)
+            {
+                return false;
+            }
+            if (idx < 0)
+            {
+                return false;
+            }
+            auto it = noteMap.find(idx);
+            if (it == noteMap.end())
+            {
+                it = noteMap.emplace(idx, PianoRollProjectStorageNote{}).first;
+            }
+            setter(it->second, value);
+            return true;
+        };
+
+        if (setField("StartTick", [](PianoRollProjectStorageNote& n, const std::string& v) {
+            if (auto iv = ParseIntValue(v)) n.startTick = *iv;
+            }))
+        {
+            continue;
+        }
+        if (setField("EndTick", [](PianoRollProjectStorageNote& n, const std::string& v) {
+            if (auto iv = ParseIntValue(v)) n.endTick = *iv;
+            }))
+        {
+            continue;
+        }
+        if (setField("Note", [](PianoRollProjectStorageNote& n, const std::string& v) {
+            if (auto iv = ParseIntValue(v)) n.note = *iv;
+            }))
+        {
+            continue;
+        }
+        if (setField("Channel", [](PianoRollProjectStorageNote& n, const std::string& v) {
+            if (auto iv = ParseIntValue(v)) n.channel = *iv;
+            }))
+        {
+            continue;
+        }
+        setField("Velocity", [](PianoRollProjectStorageNote& n, const std::string& v) {
+            if (auto iv = ParseIntValue(v)) n.velocity = *iv;
+            });
+    }
+
+    if (noteCount <= 0)
+    {
+        return true;
+    }
+    data.notes.reserve(static_cast<size_t>(noteCount));
     for (int i = 0; i < noteCount; i++)
     {
-        PianoRollProjectStorageNote n{};
-        n.startTick = ReadJsonInt(text, "note" + std::to_string(i) + "StartTick").value_or(0);
-        n.endTick = ReadJsonInt(text, "note" + std::to_string(i) + "EndTick").value_or(n.startTick + 1);
-        n.note = ReadJsonInt(text, "note" + std::to_string(i) + "Note").value_or(60);
-        n.channel = ReadJsonInt(text, "note" + std::to_string(i) + "Channel").value_or(0);
-        n.velocity = ReadJsonInt(text, "note" + std::to_string(i) + "Velocity").value_or(100);
+        auto it = noteMap.find(i);
+        if (it == noteMap.end())
+        {
+            PianoRollProjectStorageNote n{};
+            n.endTick = n.startTick + 1;
+            data.notes.push_back(n);
+            continue;
+        }
+        PianoRollProjectStorageNote n = it->second;
+        if (n.endTick <= n.startTick)
+        {
+            n.endTick = n.startTick + 1;
+        }
         data.notes.push_back(n);
     }
 

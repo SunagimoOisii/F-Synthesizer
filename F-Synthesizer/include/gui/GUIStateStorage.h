@@ -33,6 +33,8 @@ struct GUIStateStorageData
     int prNoteOffset = 36;
     int prVisibleNoteCount = 48;
     bool prDrumNameMode = false;
+    bool prFollowPreviewPlayback = true;
+    int prPreviewStartTick = 0;
     std::vector<int> prSelectedIndices{};
     std::array<ChannelMixState, 16> channelMixStates{};
 };
