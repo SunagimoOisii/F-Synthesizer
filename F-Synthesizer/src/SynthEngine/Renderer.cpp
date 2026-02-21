@@ -115,7 +115,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;
 
-    // SoA 配列を先頭から線形走査するホットパス。
+    // SoA 配列を先頭から順に処理するホットパス。
     // 目的: キャッシュ局所性を高め、Voice 数増加時の劣化を抑える。
     for (size_t i = 0; i < voices.size(); i++)
     {

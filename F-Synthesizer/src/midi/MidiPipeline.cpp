@@ -113,7 +113,7 @@ bool BuildMidiPipeline(
     BuildSampleEvents(out.ticks, out.tempoEvents, out.ticksPerQuarter, sampleRate, defaultWave, out.events);
     if (startSec > 0.0 || durationSec >= 0.0)
     {
-        // 負値入力は 0 扱いに正規化し、呼び出し側の入力ぶれをここで吸収する。
+        // 負値入力は 0 扱いにそろえ、呼び出し側の入力ぶれをここで吸収する。
         const double normalizedStartSec = (startSec > 0.0) ? startSec : 0.0;
         const int startSample = static_cast<int>(normalizedStartSec * sampleRate);
         int endSample = (std::numeric_limits<int>::max)();
