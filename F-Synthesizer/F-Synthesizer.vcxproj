@@ -150,6 +150,7 @@
     <ClCompile Include="src\\GUIMain.cpp" />
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
+    <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="include\\Envelope.h" />
     <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
+    <ClInclude Include="include\\gui\\GUIPresetIO.h" />
     <ClInclude Include="include\\gui\\GUIRunHelpers.h" />
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
