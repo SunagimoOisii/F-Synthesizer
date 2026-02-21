@@ -39,6 +39,9 @@
     <ClCompile Include="src\\GUIMain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIActions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\gui\\GUIChannelEditor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -55,6 +58,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\gui\\GUIStateModel.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\gui\\GUIStatePersistence.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp">
@@ -122,6 +128,9 @@
     <ClInclude Include="include\\gui\\GUIChannelEditor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\gui\\GUIActions.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\gui\\GUIConfigUtils.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -138,6 +147,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIStateModel.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\GUIStatePersistence.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIStateStorage.h">
