@@ -16,6 +16,12 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
     }
 
     const ma_uint32 channels = (playback->channels > 0) ? playback->channels : 1;
+    if (!playback->playing.load(std::memory_order_relaxed))
+    {
+        std::fill(out, out + static_cast<size_t>(frameCount) * channels, 0.0f);
+        return;
+    }
+
     const ma_uint64 totalFrames = playback->pcm.empty()
         ? 0
         : static_cast<ma_uint64>(playback->pcm.size() / channels);

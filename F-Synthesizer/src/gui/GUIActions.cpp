@@ -369,6 +369,9 @@ void StartGUIRun(GUIState& state, bool previewSelected)
 
 void StopGUIRunAndPreview(GUIState& state)
 {
+    // Stop後にRun完了通知が到着しても、自動再生を再開しないようにする。
+    state.autoPlayPreviewOnRunComplete = false;
+
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);
