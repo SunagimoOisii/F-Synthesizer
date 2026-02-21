@@ -43,6 +43,12 @@ int ClampNote(int note)
     return std::clamp(note, 0, 127);
 }
 
+int MaxNoteOffset(int visibleCount)
+{
+    const int clampedVisible = std::clamp(visibleCount, 1, 128);
+    return (std::max)(0, 127 - clampedVisible + 1);
+}
+
 bool IsBlackKey(int note)
 {
     switch (note % 12)
@@ -649,6 +655,13 @@ void DrawPianoGrid(
     }
 
     const int firstSnapTick = (startTick / snapStep) * snapStep;
+    const float beatPixelStep = static_cast<float>(tpq) * pxPerTick;
+    const float minLabelGapPx = (std::max)(20.0f, ImGui::CalcTextSize("0000").x + 8.0f);
+    int beatLabelStep = 1;
+    if (beatPixelStep > 0.0001f)
+    {
+        beatLabelStep = (std::max)(1, static_cast<int>(std::ceil(minLabelGapPx / beatPixelStep)));
+    }
     for (int tick = firstSnapTick; tick <= endTick; tick += snapStep)
     {
         const float x = gridMinX + (tick - startTick) * pxPerTick;
@@ -658,8 +671,11 @@ void DrawPianoGrid(
         if (beatLine)
         {
             const int beat = tick / tpq;
-            const std::string beatText = std::to_string(beat);
-            drawList->AddText(ImVec2(x + 2.0f, canvasMin.y + 1.0f), IM_COL32(185, 190, 205, 255), beatText.c_str());
+            if ((beat % beatLabelStep) == 0)
+            {
+                const std::string beatText = std::to_string(beat);
+                drawList->AddText(ImVec2(x + 2.0f, canvasMin.y + 1.0f), IM_COL32(185, 190, 205, 255), beatText.c_str());
+            }
             drawList->AddLine(ImVec2(x, canvasMin.y), ImVec2(x, noteAreaMinY), IM_COL32(120, 130, 150, 180), 1.0f);
         }
     }
@@ -974,23 +990,11 @@ void DrawPianoRollPanel(
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
 
-    ImGui::TextUnformatted("Piano Roll (Phase 5: Polish/Perf)");
-    ImGui::BeginDisabled();
-    ImGui::Checkbox("Drum Name Mode (next phase)", &state.drumNameMode);
-    ImGui::EndDisabled();
-
+    ImGui::TextUnformatted("Piano Roll");
     ImGui::SetNextItemWidth(140.0f);
     ImGui::SliderInt("PR Channel", &state.displayChannel, 0, 15);
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
-    const char* snapItems[] = { "OFF", "1/4", "1/8", "1/16", "1/32" };
-    int comboSnapIndex = state.snapIndex;
-    if (ImGui::Combo("PR Snap", &comboSnapIndex, snapItems, IM_ARRAYSIZE(snapItems)))
-    {
-        SetSnapIndex(state, comboSnapIndex, appendLog);
-    }
-    ImGui::SameLine();
-    ImGui::TextUnformatted("Quick:");
+    ImGui::Text("Snap: %s", SnapLabel(state.snapIndex));
     ImGui::SameLine();
     if (ImGui::SmallButton("OFF"))
     {
@@ -1016,18 +1020,11 @@ void DrawPianoRollPanel(
     {
         SetSnapIndex(state, 4, appendLog);
     }
-    ImGui::SetNextItemWidth(260.0f);
-    ImGui::SliderFloat("PR Zoom", &state.pixelsPerQuarter, 16.0f, 240.0f, "%.0f px/qn");
-    ImGui::SetNextItemWidth(220.0f);
-    ImGui::DragInt("PR Tick Offset", &state.tickOffset, 8.0f, 0, (std::max)(state.maxTick, 0));
-    ImGui::SetNextItemWidth(220.0f);
-    ImGui::SliderInt("PR Note Offset", &state.noteOffset, 0, 116);
-    ImGui::SetNextItemWidth(220.0f);
-    ImGui::SliderInt("PR Visible Notes", &state.visibleNoteCount, 12, 72);
     ImGui::SameLine();
     ImGui::Checkbox("PR Follow", &state.followPreviewPlayback);
     ImGui::SameLine();
     ImGui::Text("PR StartTick=%d", state.previewStartTick);
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Space=再生停止 / Q,1-4=Snap");
 
     if (state.hasLoadError)
     {
@@ -1060,7 +1057,13 @@ void DrawPianoRollPanel(
     const float rowHeight = (std::max)(12.0f, ImGui::GetTextLineHeight() + 4.0f);
     const float rulerHeight = (std::max)(14.0f, ImGui::GetTextLineHeight() + 2.0f);
     const float pianoWidth = (std::max)(56.0f, ImGui::CalcTextSize("127").x + 12.0f);
-    const float panelHeight = std::clamp(rulerHeight + state.visibleNoteCount * rowHeight + 4.0f, 180.0f, 460.0f);
+    const float panelHeight = (std::max)(220.0f, ImGui::GetContentRegionAvail().y - 2.0f);
+    const int autoVisibleCount = std::clamp(
+        static_cast<int>(std::floor((panelHeight - rulerHeight - 2.0f) / rowHeight)),
+        12,
+        128);
+    state.visibleNoteCount = autoVisibleCount;
+    state.noteOffset = std::clamp(state.noteOffset, 0, MaxNoteOffset(state.visibleNoteCount));
     const ImVec2 canvasSize((std::max)(120.0f, ImGui::GetContentRegionAvail().x - 4.0f), panelHeight);
     ImGui::InvisibleButton("piano_roll_canvas", canvasSize);
 
@@ -1123,7 +1126,10 @@ void DrawPianoRollPanel(
             {
                 // 通常ホイール: 音高軸の縦スクロール。
                 const int noteStep = (std::max)(1, state.visibleNoteCount / 8);
-                state.noteOffset = std::clamp(state.noteOffset + wheelSteps * noteStep, 0, 116);
+                state.noteOffset = std::clamp(
+                    state.noteOffset + wheelSteps * noteStep,
+                    0,
+                    MaxNoteOffset(state.visibleNoteCount));
             }
             InvalidateVisibleCache(state);
         }
