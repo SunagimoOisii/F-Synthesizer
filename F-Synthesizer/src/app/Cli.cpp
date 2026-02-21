@@ -68,7 +68,7 @@ bool ParseWideArgs(CliOptions& outOptions)
     }
 
     outOptions = CliOptions{};
-    // 日本語パスを壊さないため、Windowsではwide argvを優先して解釈する。
+    // 日本語パスを壊さないため、Windowsではワイド文字引数を優先して解釈する。
     for (int i = 1; i < argc; i++)
     {
         const std::wstring arg = argv[i];
@@ -119,7 +119,7 @@ bool ParseWideArgs(CliOptions& outOptions)
 bool ParseCliArguments(int argc, char** argv, CliOptions& outOptions)
 {
 #ifdef _WIN32
-    // wide解析に成功した場合はnarrow側へフォールバックしない。
+    // ワイド文字解析に成功した場合は通常引数解析へフォールバックしない。
     if (ParseWideArgs(outOptions))
     {
         return true;

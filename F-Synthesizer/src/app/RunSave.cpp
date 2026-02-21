@@ -33,7 +33,7 @@ int SaveRunOutput(
     WavWriteError err{};
     if (!SaveWavFilePath(sound, config.wavPath, &err))
     {
-        // 保存失敗は path + cause + hint 形式へ正規化して上位ログへ返す。
+        // 保存失敗は path + cause + hint 形式へそろえて上位ログへ返す。
         std::ostringstream cause;
         cause << err.cause
             << " code=" << err.code

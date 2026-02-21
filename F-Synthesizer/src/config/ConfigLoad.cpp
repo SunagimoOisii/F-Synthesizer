@@ -396,7 +396,7 @@ bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& 
     }
     if (cfg.bits != 16)
     {
-        // Writer実装の現行制約に合わせて fail-fast する。
+        // Writer実装の現行制約に合わせて早期に失敗させる。
         err = "bits must be 16";
         return false;
     }
