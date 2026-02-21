@@ -347,7 +347,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.runOutputBuffer = previewSelected ? std::make_shared<SoundData>() : nullptr;
     state.runIsPreview = previewSelected;
     state.autoPlayPreviewOnRunComplete = previewSelected;
-    AppendGUILog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
+    AppendGUILog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
     if (cfg.overrideNoteTicks != nullptr)
     {
         AppendGUILog(state, "[GUI] PianoRoll edited notes applied: count=" +
@@ -365,27 +365,6 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
         return Run(cfg, options, &state.observer, outBuffer.get());
         });
-}
-
-void PlayOrReplayPreview(GUIState& state, bool forceRerender)
-{
-    if (state.running)
-    {
-        return;
-    }
-
-    if (!forceRerender && state.previewAudioReady && state.previewRenderedSound)
-    {
-        std::string err;
-        if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
-        {
-            AppendGUILog(state, "[GUI] Preview replay started");
-            return;
-        }
-        AppendGUILog(state, "[GUI] Preview replay failed: " + err + " (fallback to rerender)");
-    }
-
-    StartGUIRun(state, true);
 }
 
 void StopGUIRunAndPreview(GUIState& state)

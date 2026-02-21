@@ -41,7 +41,6 @@ using gui::ApplySelectedPresetPaths;
 using gui::SavePresetDiffFromState;
 using gui::AnalyzeRenderPeakFromLogs;
 using gui::StartGUIRun;
-using gui::PlayOrReplayPreview;
 using gui::StopGUIRunAndPreview;
 using gui::TryFinalizeCompletedRun;
 using gui::LoadGUIStateFile;
@@ -224,15 +223,14 @@ int RunGUIApp()
         }
         ImGui::Separator();
         ImGui::BeginDisabled(state.running);
-        if (ImGui::Button("Play"))
+        if (ImGui::Button("Export WAV"))
         {
             StartGUIRun(state, false);
         }
         ImGui::SameLine();
         if (ImGui::Button("Play Preview (Selected ch)"))
         {
-            const bool forceRerender = ImGui::GetIO().KeyCtrl;
-            PlayOrReplayPreview(state, forceRerender);
+            StartGUIRun(state, true);
         }
         ImGui::SameLine();
         ImGui::Checkbox("Loop Preview", &state.previewLoop);
@@ -253,7 +251,7 @@ int RunGUIApp()
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         ImGui::EndDisabled();
-        ImGui::TextDisabled("Play: export full run / Play Preview: replay if ready, Ctrl+Click to rerender");
+        ImGui::TextDisabled("Export WAV: full run / Play Preview: always rerender");
         ImGui::Separator();
 
         const float availY = ImGui::GetContentRegionAvail().y;
