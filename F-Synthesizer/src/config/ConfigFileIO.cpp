@@ -10,14 +10,10 @@
 #include <string>
 #include <type_traits>
 
+#include "io/PlatformPaths.h"
+
 namespace
 {
-std::string PathToUtf8(const std::filesystem::path& p)
-{
-    const auto u8 = p.u8string();
-    return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
-}
-
 std::string ReadTextFile(const std::filesystem::path& filePath)
 {
     std::ifstream fin(filePath, std::ios::binary);
@@ -681,16 +677,6 @@ bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& er
 
     cfg.channelMixStates = table;
     return true;
-}
-
-std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, const std::string& v)
-{
-    std::filesystem::path p(v);
-    if (p.is_absolute())
-    {
-        return p;
-    }
-    return std::filesystem::weakly_canonical(baseDir / p);
 }
 
 bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)

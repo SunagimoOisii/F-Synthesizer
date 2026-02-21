@@ -148,6 +148,7 @@
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
     <ClCompile Include="src\\GUIMain.cpp" />
+    <ClCompile Include="src\\io\\PlatformPaths.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
     <ClCompile Include="src\\midi\\MidiPipeline.cpp" />
     <ClCompile Include="src\\Oscillator.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
     <ClInclude Include="include\\Envelope.h" />
+    <ClInclude Include="include\\io\\PlatformPaths.h" />
     <ClInclude Include="include\MIDIParser.h" />
     <ClInclude Include="include\\Oscillator.h" />
     <ClInclude Include="include\\Sequencer.h" />

@@ -86,7 +86,35 @@ if ($LASTEXITCODE -eq 0) {
     throw "Expected failure for channel_invalid.json, but exit code was 0."
 }
 
-Write-Host "[11/12] gui launch smoke (default mode, 2 sec)"
+Write-Host "[11/13] cli success run (japanese path config/output)"
+$jpDir = Join-Path $repoRoot "output\日本語\スモーク"
+New-Item -ItemType Directory -Path $jpDir -Force | Out-Null
+$jpConfigPath = Join-Path $jpDir "jp_path_smoke.json"
+$jpOutPath = Join-Path $jpDir "結果.wav"
+$midiPath = (Join-Path $repoRoot "assets\midi\solstice_intro.mid") -replace "\\", "/"
+$wavPath = ($jpOutPath -replace "\\", "/")
+$jpConfig = @"
+{
+  "midiPath": "$midiPath",
+  "wavPath": "$wavPath",
+  "targetChannel": -1,
+  "defaultWave": "saw",
+  "initialSeconds": 2,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.1
+}
+"@
+Set-Content -Path $jpConfigPath -Value $jpConfig -Encoding UTF8
+& $exePath --cli --config $jpConfigPath | Out-Host
+if ($LASTEXITCODE -ne 0) {
+    throw "Expected success for japanese path smoke, but exit code was $LASTEXITCODE."
+}
+if (-not (Test-Path $jpOutPath)) {
+    throw "Japanese path smoke did not produce output wav: $jpOutPath"
+}
+
+Write-Host "[12/13] gui launch smoke (default mode, 2 sec)"
 $p = Start-Process -FilePath $exePath -PassThru
 Start-Sleep -Seconds 2
 if (-not $p.HasExited) {
@@ -97,7 +125,7 @@ else {
     throw "GUI process exited unexpectedly with code $($p.ExitCode)"
 }
 
-Write-Host "[12/12] gui launch smoke (--gui explicit, 2 sec)"
+Write-Host "[13/13] gui launch smoke (--gui explicit, 2 sec)"
 $p = Start-Process -FilePath $exePath -ArgumentList "--gui" -PassThru
 Start-Sleep -Seconds 2
 if (-not $p.HasExited) {

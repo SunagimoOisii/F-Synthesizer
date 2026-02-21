@@ -28,6 +28,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include "AppCore.h"
+#include "io/PlatformPaths.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")
@@ -126,30 +127,6 @@ void EnsureChannelMixStates(GuiState& state);
 float UiScaleFromIndex(int idx);
 const char* UiScaleLabelFromIndex(int idx);
 void DrawStatusBadge(const GuiState& state);
-
-std::string PathToUtf8(const std::filesystem::path& p)
-{
-    const auto u8 = p.u8string();
-    return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
-}
-
-std::filesystem::path Utf8ToPath(const std::string& s)
-{
-    std::u8string u8;
-    u8.assign(reinterpret_cast<const char8_t*>(s.data()),
-        reinterpret_cast<const char8_t*>(s.data() + s.size()));
-    return std::filesystem::path(u8);
-}
-
-std::wstring Utf8ToWide(const std::string& s)
-{
-    return Utf8ToPath(s).wstring();
-}
-
-std::string WideToUtf8(const std::wstring& w)
-{
-    return PathToUtf8(std::filesystem::path(w));
-}
 
 bool BrowseOpenPath(const std::string& initialPathUtf8, const wchar_t* filter, std::string& outPathUtf8)
 {

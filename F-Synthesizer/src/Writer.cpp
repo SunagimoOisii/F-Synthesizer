@@ -13,7 +13,36 @@ struct Chunk
     char id[4];
 };
 
+namespace
+{
+void FillError(
+    WavWriteError* outError,
+    const char* code,
+    const std::filesystem::path& path,
+    int err,
+    unsigned long lastError,
+    const char* cause,
+    const char* hint)
+{
+    if (outError == nullptr)
+    {
+        return;
+    }
+    outError->code = code;
+    outError->path = path;
+    outError->errnoValue = err;
+    outError->systemError = lastError;
+    outError->cause = cause;
+    outError->hint = hint;
+}
+} // namespace
+
 bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath)
+{
+    return SaveWavFilePath(sound, filePath, nullptr);
+}
+
+bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath, WavWriteError* outError)
 {
     std::cout << "[SaveWavFilePath] begin: " << filePath.string() << std::endl;
     SetLastError(0);
@@ -26,7 +55,17 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
             << " bad=" << fout.bad()
             << " errno=" << errno
             << std::endl;
-        SetLastError(0xE001);
+        const int err = errno;
+        const unsigned long lastError = (unsigned long)((err != 0) ? err : 0xE001);
+        SetLastError(lastError);
+        FillError(
+            outError,
+            "wav_open_failed",
+            filePath,
+            err,
+            lastError,
+            "failed to open destination file",
+            "close applications locking the file and verify the output folder is writable");
         return false;
     }
 
@@ -73,10 +112,24 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
             << " errno=" << errno
             << " wsize=" << wsize
             << std::endl;
-        SetLastError(0xE002);
+        const int err = errno;
+        const unsigned long lastError = (unsigned long)((err != 0) ? err : 0xE002);
+        SetLastError(lastError);
+        FillError(
+            outError,
+            "wav_write_failed",
+            filePath,
+            err,
+            lastError,
+            "stream write failed while emitting WAV payload",
+            "check disk free space and file permission, then retry");
         return false;
     }
     fout.close();
+    if (outError != nullptr)
+    {
+        *outError = WavWriteError{};
+    }
     std::cout << "[SaveWavFilePath] success" << std::endl;
     return true;
 }

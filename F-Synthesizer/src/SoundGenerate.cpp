@@ -16,16 +16,11 @@
 #include "app/AppEntry.h"
 #include "app/Cli.h"
 #include "core/RenderGateway.h"
+#include "io/PlatformPaths.h"
 #include "midi/MidiPipeline.h"
 
 namespace
 {
-std::string PathToUtf8(const std::filesystem::path& p)
-{
-    const auto u8 = p.u8string();
-    return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
-}
-
 std::filesystem::path GetExecutableDirectory()
 {
     wchar_t modulePath[MAX_PATH] = {};
@@ -236,7 +231,12 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     if (options.writeWav)
     {
-        std::filesystem::create_directories(config.wavPath.parent_path());
+        std::string dirErr;
+        if (!EnsureDirectoryForFile(config.wavPath, dirErr))
+        {
+            LogLine(observer, dirErr);
+            return 1;
+        }
     }
     LogLine(observer, "Working Directory: " + PathToUtf8(std::filesystem::current_path()));
     LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
@@ -581,12 +581,15 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
                 LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
             }
         }
-        if (!SaveWavFilePath(sound, config.wavPath))
+        WavWriteError err{};
+        if (!SaveWavFilePath(sound, config.wavPath, &err))
         {
-            std::ostringstream oss;
-            oss << "Failed to save WAV: " << PathToUtf8(config.wavPath)
-                << " lastError=" << (unsigned long)GetLastError();
-            LogLine(observer, oss.str());
+            std::ostringstream cause;
+            cause << err.cause
+                << " code=" << err.code
+                << " errno=" << err.errnoValue
+                << " winerr=" << err.systemError;
+            LogLine(observer, FormatPathDiagnostic("save wav", config.wavPath, cause.str(), err.hint));
             return 1;
         }
         LogLine(observer, "Saved SoundData: " + PathToUtf8(config.wavPath));
