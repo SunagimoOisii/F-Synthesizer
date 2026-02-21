@@ -12,6 +12,7 @@ enum class MIDIEventType
 
 struct MIDIEventTick
 {
+    // tick軸の生イベント表現（sample変換前）。
     MIDIEventType type;
     int tick;
     int noteNumber;
@@ -25,12 +26,14 @@ struct MIDIEventTick
 
 struct TempoEvent
 {
+    // tick時点で有効になるテンポ。
     int tick;
     double bpm;
 };
 
 struct MIDIParseStatus
 {
+    // パース時のメタ情報（診断/ログ向け）。
     int format;
     int numTracks;
     int unsupportedEvents;

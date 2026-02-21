@@ -4,6 +4,10 @@
 
 namespace
 {
+// pan をモノラル出力向けのゲインへ射影する。
+// 目的: GUI/CLI 共通の mix.pan をモノラルレンダに反映する。
+// 前提: 現在の出力はモノラルで、左右を独立出力しない。
+// トレードオフ: 厳密なステレオ定位ではなく、簡易的な音量減衰近似になる。
 double PanToMonoGain(double pan)
 {
     if (pan < -1.0) pan = -1.0;
@@ -42,6 +46,7 @@ void RenderMIDIEvents(
     }
 
     RenderState state;
+    // 初期化時にチャンネル状態を展開して、サンプルループ中の分岐/参照を最小化する。
     state.voices.reserve(256);
     for (int i = 0; i < 16; i++)
     {
@@ -58,9 +63,13 @@ void RenderMIDIEvents(
         state.channelMixGain[i] = mix.level * mix.gain * PanToMonoGain(mix.pan);
     }
 
+    // 目的: 毎サンプルで削除圧縮を走らせず、一定間隔でまとめて掃除して負荷を抑える。
+    // 前提: pendingRemove は短時間遅延しても音として破綻しない。
+    // トレードオフ: 削除タイミングが最大 cleanupInterval サンプルぶん遅れる。
     const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
+        // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
         if (shouldCancel && ((i % cleanupInterval) == 0) && shouldCancel())
         {
             if (canceled != nullptr)

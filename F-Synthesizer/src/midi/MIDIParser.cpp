@@ -20,6 +20,7 @@ uint16_t ReadBE16(std::ifstream& in)
 
 uint32_t ReadVarLen(const std::vector<unsigned char>& data, size_t& idx)
 {
+    // MIDI可変長値は最大4バイトを想定して読む。
     uint32_t value = 0;
     for (int i = 0; i < 4 && idx < data.size(); i++)
     {
@@ -62,7 +63,7 @@ bool ReadHeader(std::ifstream& in, MIDIHeader& header, MIDIParseStatus& stats)
     }
     if (header.format != 0 && header.format != 1) return false;
     if (header.numTracks < 1) return false;
-    if (header.division & 0x8000) return false; //SMPTEには未対応
+    if (header.division & 0x8000) return false; // SMPTEには未対応
 
     stats.format = header.format;
     stats.numTracks = header.numTracks;
@@ -159,6 +160,7 @@ bool ParseMetaEvent(const std::vector<unsigned char>& data,
 
     if (type == 0x51 && len == 3 && idx + 2 < data.size())
     {
+        // Set Tempo(0x51): us/qn -> bpm へ変換して tick 軸で保持する。
         uint32_t tempo = (data[idx] << 16) | (data[idx + 1] << 8) | data[idx + 2];
         if (tempo > 0)
         {
@@ -268,14 +270,14 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
         if (status & 0x80)
         {
             idx++;
-            // Running status is valid only for channel messages (0x80..0xEF).
+            // Running status は channel message (0x80..0xEF) のみ有効。
             runningStatus = (status < 0xF0) ? status : 0;
         }
         else
         {
             if (runningStatus == 0)
             {
-                // Invalid running status sequence; stop parsing this track safely.
+                // running status 不成立時は壊れた列として安全側でこのトラックを打ち切る。
                 break;
             }
             status = runningStatus;

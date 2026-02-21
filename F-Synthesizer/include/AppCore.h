@@ -14,6 +14,9 @@ enum class RunMode
     Preview
 };
 
+// Run実行時の挙動を切り替えるオプション集合。
+// app層から実行コアへ渡し、Export/Previewの境界条件を統一する。
+// durationSec < 0 は「末尾まで」を表す。
 struct RenderOptions
 {
     RunMode mode = RunMode::Export;
@@ -23,6 +26,9 @@ struct RenderOptions
     bool allowCancel = true;
 };
 
+// アプリ実行に必要な解決済み設定。
+// CLI/GUI/ConfigResolver で構築され、Run境界へ受け渡される。
+// channelConfigs/channelMixStates は共有所有で不変参照する前提。
 struct AppConfig
 {
     std::filesystem::path midiPath;
@@ -37,6 +43,8 @@ struct AppConfig
     std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
 };
 
+// Run実行の進捗通知と停止要求を受け持つ観測I/F。
+// GUIとCLIの双方から同じログ経路を扱えるようにするための境界型。
 struct IRunObserver
 {
     virtual ~IRunObserver() = default;

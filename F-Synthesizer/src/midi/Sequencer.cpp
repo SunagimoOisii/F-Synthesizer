@@ -28,6 +28,8 @@ namespace
         std::vector<MIDIEventTick> sortedTicks = ticks;
         std::sort(sortedTicks.begin(), sortedTicks.end(), [](const MIDIEventTick& a, const MIDIEventTick& b)
         {
+            // 同tickは Control -> NoteOff -> NoteOn の順で処理する。
+            // 目的: 同時刻イベントの音切れ/重なりを安定させる。
             if (a.tick != b.tick) return a.tick < b.tick;
             int aPri = PriorityValue(a);
             int bPri = PriorityValue(b);
@@ -144,14 +146,14 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     std::vector<TempoEvent> sortedTempo = NormalizeTempoEvents(tempoEvents);
     std::vector<MIDIEventTick> sortedTicks = SortTicksWithPriority(ticks);
 
-    //tick -> sample の変換準備
+    // tick -> sample の変換準備
     outEvents.clear();
     outEvents.reserve(sortedTicks.size());
     TempoCursor cursor{};
     cursor.currentBPM = sortedTempo.front().bpm;
     cursor.tempoIndex = 1;
 
-    //tickイベントをsampleイベントへ変換
+    // tick イベントを sample イベントへ変換
     for (const auto& t : sortedTicks)
     {
         AdvanceToTick(cursor, t.tick, sortedTempo, ticksPerQuarter, sampleRate);
@@ -171,7 +173,7 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
         outEvents.push_back(MakeNoteEvent(t, sample, defaultWave));
     }
 
-    //sample順で整列
+    // sample 順で整列
     std::stable_sort(outEvents.begin(), outEvents.end(), [](const MIDIEvent& a, const MIDIEvent& b)
     {
         return a.sample < b.sample;

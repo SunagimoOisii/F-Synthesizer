@@ -11,16 +11,19 @@
 
 struct WaveformConfig
 {
+    // 位相サンプルで生成する基本波形。
     WaveType wave;
 };
 
 struct NoiseConfig
 {
+    // ノイズ音源種別。
     NoiseType noise;
 };
 
 struct FmConfig
 {
+    // 2オペレータFM用の最小パラメータ集合。
     WaveType carrierWave;
     WaveType modWave;
     double carrierRatio;
@@ -39,6 +42,7 @@ enum class DrumType
 
 struct DrumConfig
 {
+    // DrumType ごとに参照する項目が異なるため、未使用値は 0/負値で未指定を表す。
     DrumType type = DrumType::None;
     double gain = 1.0;
     double baseFreq = 0.0;
@@ -55,6 +59,7 @@ struct DrumConfig
 
 struct DrumKitConfig
 {
+    // GM想定の note(0..127) -> DrumConfig マップ。
     std::array<DrumConfig, 128> map;
 };
 
@@ -62,7 +67,8 @@ using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumCon
 
 struct Voice
 {
-    //識別, 状態
+    // 旧AoS互換の Voice 定義。実レンダは SoA 側を使用する。
+    // 識別, 状態
     SourceConfig source;
     int noteNumber;
     int velocity;
@@ -101,7 +107,8 @@ struct Voice
 
 struct ChannelConfig
 {
-    //音源
+    // 1チャンネルの合成設定（音源 + ADSR + 振幅）
+    // 音源
     SourceConfig source;
 
     //レベル, エンベロープ
@@ -114,6 +121,7 @@ struct ChannelConfig
 
 struct ChannelMixState
 {
+    // GUI/CLI 共通のミックス状態。solo は hasAnySolo 判定と組み合わせて使う。
     bool mute = false;
     bool solo = false;
     double level = 1.0;

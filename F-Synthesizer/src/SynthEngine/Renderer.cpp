@@ -115,6 +115,8 @@ double RenderVoices(RenderState& state, const SoundData& sound)
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;
 
+    // SoA 配列を先頭から線形走査するホットパス。
+    // 目的: キャッシュ局所性を高め、Voice 数増加時の劣化を抑える。
     for (size_t i = 0; i < voices.size(); i++)
     {
         if (voices.env[i].stage == ADSRStage::Off)
@@ -126,6 +128,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             voices.env[i], dt, voices.attackSec[i], voices.decaySec[i], voices.sustainLevel[i], voices.releaseSec[i]);
         if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
         {
+            // 即時 erase は O(n) 連鎖になるため、削除フラグだけ立てて後段でまとめて圧縮する。
             voices.pendingRemove[i] = 1;
             state.pendingRemoveCount++;
             continue;
@@ -178,6 +181,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             }
             else if constexpr (std::is_same_v<T, DrumConfig>)
             {
+                // Drum は NoteOn 後に自動リリースへ遷移する one-shot 系を想定する。
                 const double drumGain = (src.gain > 0.0) ? src.gain : 1.0;
                 w = RenderDrumSample(src, voices, i, dt, sound.fs);
                 sum += mixGain * drumGain * voices.amp[i] * ccGain * velGain * w * envGain;

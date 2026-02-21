@@ -7,6 +7,8 @@
 #include "AppCore.h"
 #include "app/Cli.h"
 
+// 実行時設定の解決結果。
+// 解決済みAppConfigと、採用された設定ファイル情報/通知行をまとめて返す。
 struct ResolvedRuntimeConfig
 {
     AppConfig config;

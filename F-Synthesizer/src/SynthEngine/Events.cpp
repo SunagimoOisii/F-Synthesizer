@@ -49,7 +49,8 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleRate,
     RenderState& state)
 {
-    // Event processing (ControlChange, Note)
+    // sampleIndex までに到達したイベントを順次適用する。
+    // 目的: RenderVoices 実行前に CC/Pitch/Note 状態をサンプル境界で確定させる。
     while (state.eventIndex < events.size() && events[state.eventIndex].sample <= sampleIndex)
     {
         const auto& e = events[state.eventIndex];
@@ -72,6 +73,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
             const ChannelConfig& cfg = channelConfigs[ClampChannel(e.channel)];
             if (const auto* kit = std::get_if<DrumKitConfig>(&cfg.source))
             {
+                // DrumKit は note -> DrumConfig へ展開してから通常 Voice として投入する。
                 int note = e.noteNumber;
                 if (note < 0) note = 0;
                 if (note > 127) note = 127;

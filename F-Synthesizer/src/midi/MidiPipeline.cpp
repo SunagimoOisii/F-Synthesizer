@@ -11,6 +11,8 @@ std::vector<MIDIEvent> BuildWindowedEvents(
     int startSample,
     int endSample)
 {
+    // 目的: 部分レンダでも CC/Pitch の直前状態を失わないよう、window 開始時点の状態を補う。
+    // 前提: イベント列は sample 昇順に整列済み。
     std::array<bool, 16> hasCc7{};
     std::array<bool, 16> hasCc11{};
     std::array<bool, 16> hasPitch{};
@@ -111,6 +113,7 @@ bool BuildMidiPipeline(
     BuildSampleEvents(out.ticks, out.tempoEvents, out.ticksPerQuarter, sampleRate, defaultWave, out.events);
     if (startSec > 0.0 || durationSec >= 0.0)
     {
+        // 負値入力は 0 扱いに正規化し、呼び出し側の入力ぶれをここで吸収する。
         const double normalizedStartSec = (startSec > 0.0) ? startSec : 0.0;
         const int startSample = static_cast<int>(normalizedStartSec * sampleRate);
         int endSample = (std::numeric_limits<int>::max)();

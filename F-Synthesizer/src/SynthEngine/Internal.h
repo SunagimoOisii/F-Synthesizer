@@ -9,6 +9,10 @@
 
 struct VoicesSoA
 {
+    // SoA 構造:
+    // 目的: sample ループで必要な属性を列単位に連続配置し、キャッシュ効率を上げる。
+    // 前提: すべての配列は同じ index が同じ Voice を指す。
+    // トレードオフ: デバッグ時に 1 Voice の全体像が追いにくくなる。
     std::vector<SourceConfig> source;
     std::vector<int> noteNumber;
     std::vector<int> velocity;
@@ -50,6 +54,7 @@ struct VoicesSoA
 
 struct RenderState
 {
+    // RenderMIDIEvents の 1 実行スコープで共有される可変状態。
     VoicesSoA voices;
     size_t eventIndex = 0;
     size_t pendingRemoveCount = 0;

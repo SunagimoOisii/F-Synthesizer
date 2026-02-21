@@ -7,23 +7,23 @@
 
 struct MIDIEvent
 {
-    //時間
+    // sample霆ｸ縺ｮ逋ｺ轣ｫ菴咲ｽｮ
     int sample;
 
-    //イベント種別
+    // 繧､繝吶Φ繝育ｨｮ蛻･
     MIDIEventType type;
     bool isNoteOn;
 
-    //ノート
+    // 繝弱�ｼ繝域ュ蝣ｱ
     int noteNumber;
     int velocity;
     int channel;
 
-    //コントロールチェンジ
+    // Control Change / Pitch Bend 縺ｮ蛟､
     int controller;
     int value;
 
-    //音色
+    // 莠呈鋤邯ｭ謖∫畑縺ｮ譌｢螳壽ｳ｢蠖｢諠�蝣ｱ
     WaveType typeWave;
 };
 

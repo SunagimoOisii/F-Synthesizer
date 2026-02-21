@@ -40,6 +40,8 @@ void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int samp
 template <typename T>
 void CompactVectorByKeep(std::vector<T>& v, const std::vector<uint8_t>& keep)
 {
+    // keep フラグに従って前方へ詰める共通処理。
+    // 目的: SoA 各配列を同じ生存集合で同期圧縮する。
     size_t out = 0;
     for (size_t i = 0; i < v.size(); i++)
     {
@@ -128,6 +130,7 @@ void VoicesSoA::clear()
 
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
+    // SoA 全配列へ同一インデックスで push し、列単位アクセス可能な状態を維持する。
     source.push_back(cfg.source);
     noteNumber.push_back(e.noteNumber);
     velocity.push_back(e.velocity);
@@ -169,6 +172,8 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
 
 void VoicesSoA::MarkNoteOff(int ch, int note)
 {
+    // 同一 note の重なりでは最も古い未 release Voice から閉じる方針。
+    // トレードオフ: MPE/voice-id 由来の厳密対応はしていない。
     for (size_t i = 0; i < size(); i++)
     {
         if (std::holds_alternative<DrumConfig>(source[i]))
@@ -206,6 +211,7 @@ size_t VoicesSoA::CleanupPending()
         return 0;
     }
 
+    // source 以外も完全に同順で圧縮し、列間のインデックス整合を崩さない。
     CompactVectorByKeep(source, keep);
     CompactVectorByKeep(noteNumber, keep);
     CompactVectorByKeep(velocity, keep);

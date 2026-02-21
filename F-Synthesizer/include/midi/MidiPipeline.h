@@ -9,6 +9,7 @@
 
 struct MidiBuildOutput
 {
+    // Parse -> tick列 -> sample列 までの中間成果物を一括で返す。
     std::vector<MIDIEventTick> ticks;
     std::vector<TempoEvent> tempoEvents;
     std::vector<MIDIEvent> events;
