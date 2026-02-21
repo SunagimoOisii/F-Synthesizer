@@ -242,6 +242,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJsonFloat(text, "extraReleaseSec")) data.extraReleaseSec = *v;
     if (auto v = ReadJsonInt(text, "defaultWave")) data.defaultWave = *v;
     if (auto v = ReadJsonInt(text, "uiScaleIndex")) data.uiScaleIndex = *v;
+    if (auto v = ReadJsonInt(text, "uiModeTab")) data.uiModeTab = *v;
     if (auto v = ReadJsonFloat(text, "logPanelHeight")) data.logPanelHeight = *v;
     if (auto v = ReadJsonInt(text, "presetIndex")) data.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) data.serialSave = *v;
@@ -315,6 +316,7 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"extraReleaseSec\": " << data.extraReleaseSec << ",\n";
     fout << "  \"defaultWave\": " << data.defaultWave << ",\n";
     fout << "  \"uiScaleIndex\": " << data.uiScaleIndex << ",\n";
+    fout << "  \"uiModeTab\": " << data.uiModeTab << ",\n";
     fout << "  \"logPanelHeight\": " << data.logPanelHeight << ",\n";
     fout << "  \"presetIndex\": " << data.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (data.serialSave ? "true" : "false") << ",\n";

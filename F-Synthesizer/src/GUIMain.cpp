@@ -222,6 +222,32 @@ int RunGUIApp()
             AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
         }
         ImGui::Separator();
+        static int syncedTab = -1;
+        if (ImGui::BeginTabBar("mode_tabs"))
+        {
+            const bool needSync = (syncedTab != state.uiModeTab);
+            ImGuiTabItemFlags soundFlags =
+                (needSync && state.uiModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+            ImGuiTabItemFlags musicFlags =
+                (needSync && state.uiModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+            if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
+            {
+                state.uiModeTab = 0;
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
+            {
+                state.uiModeTab = 1;
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+            syncedTab = state.uiModeTab;
+        }
+        ImGui::TextDisabled(
+            state.uiModeTab == 0
+                ? "Sound mode: sound design + quick preview"
+                : "Music mode: piano roll + playback workflow");
+        ImGui::Separator();
         ImGui::BeginDisabled(state.running);
         if (ImGui::Button("Export WAV"))
         {

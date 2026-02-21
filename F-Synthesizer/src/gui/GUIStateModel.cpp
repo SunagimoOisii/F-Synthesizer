@@ -77,6 +77,7 @@ void InitializeGUIState(
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
     state.defaultWave = 2;
     state.uiScaleIndex = 1;
+    state.uiModeTab = 0;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
     state.selectedChannel = 0;
@@ -182,6 +183,11 @@ void RepairGUIStatePaths(
     if (state.uiScaleIndex < 0 || state.uiScaleIndex > 2)
     {
         state.uiScaleIndex = 1;
+        repaired = true;
+    }
+    if (state.uiModeTab < 0 || state.uiModeTab > 1)
+    {
+        state.uiModeTab = 0;
         repaired = true;
     }
     if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)

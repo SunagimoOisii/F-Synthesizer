@@ -8,6 +8,7 @@
   "extraReleaseSec": 0.3,
   "defaultWave": 2,
   "uiScaleIndex": 1,
+  "uiModeTab": 0,
   "logPanelHeight": 140,
   "presetIndex": 1,
   "serialSave": false,

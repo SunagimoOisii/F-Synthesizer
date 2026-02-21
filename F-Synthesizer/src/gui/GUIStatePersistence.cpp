@@ -26,6 +26,7 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.extraReleaseSec = state.extraReleaseSec;
     data.defaultWave = state.defaultWave;
     data.uiScaleIndex = state.uiScaleIndex;
+    data.uiModeTab = state.uiModeTab;
     data.logPanelHeight = state.logPanelHeight;
     data.presetIndex = state.presetIndex;
     data.serialSave = state.serialSave;
@@ -72,6 +73,7 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.extraReleaseSec = data.extraReleaseSec;
     state.defaultWave = data.defaultWave;
     state.uiScaleIndex = data.uiScaleIndex;
+    state.uiModeTab = data.uiModeTab;
     state.logPanelHeight = data.logPanelHeight;
     state.presetIndex = data.presetIndex;
     state.serialSave = data.serialSave;

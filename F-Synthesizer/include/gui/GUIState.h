@@ -11,7 +11,6 @@
 #include "AppCore.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
-#include "GUIPianoRoll.h"
 
 // GUI画面の編集値・実行状態・ログ状態を集約した永続/実行モデル。
 // 1フレーム内で参照するUI状態と、非同期Run連携状態を同居させる。
@@ -48,6 +47,7 @@ struct GUIState
     float extraReleaseSec = 0.3f;
     int defaultWave = 2; // saw
     int uiScaleIndex = 1; // 0=100%, 1=125%, 2=150%
+    int uiModeTab = 0; // 0=Sound, 1=Music
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
     int lastRunExitCode = 0;
