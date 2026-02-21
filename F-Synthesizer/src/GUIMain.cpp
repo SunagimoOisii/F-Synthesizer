@@ -185,6 +185,7 @@ int RunGUIApp()
             [&](const std::string& preferName) { RefreshPresetItems(state, preferName); },
             [&](const std::string& line) { AppendGUILog(state, line); });
     }
+    int lastFrameTab = state.uiModeTab;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -247,19 +248,43 @@ int RunGUIApp()
             state.uiModeTab == 0
                 ? "Sound mode: sound design + quick preview"
                 : "Music mode: piano roll + playback workflow");
+
+        if (state.uiModeTab != lastFrameTab)
+        {
+            // タブ切替時に再生/実行が残ると意図しない継続再生になるため即停止する。
+            if (state.running || state.playback.playing.load(std::memory_order_relaxed))
+            {
+                StopGUIRunAndPreview(state);
+                AppendGUILog(state, "[GUI] Playback stopped by tab switch.");
+            }
+            lastFrameTab = state.uiModeTab;
+        }
         ImGui::Separator();
         ImGui::BeginDisabled(state.running);
-        if (ImGui::Button("Export WAV"))
+        if (state.uiModeTab == 0)
         {
-            StartGUIRun(state, false);
+            if (ImGui::Button("Play Preview (Selected ch)"))
+            {
+                StartGUIRun(state, true);
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("Loop Preview", &state.previewLoop);
         }
-        ImGui::SameLine();
-        if (ImGui::Button("Play Preview (Selected ch)"))
+        else
         {
-            StartGUIRun(state, true);
+            if (ImGui::Button("Export WAV"))
+            {
+                StartGUIRun(state, false);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Play Preview (Display ch)"))
+            {
+                state.selectedChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                StartGUIRun(state, true);
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("Loop Preview", &state.previewLoop);
         }
-        ImGui::SameLine();
-        ImGui::Checkbox("Loop Preview", &state.previewLoop);
         ImGui::EndDisabled();
         ImGui::SameLine();
         // Stopは「レンダ中」または「プレビュー再生中」のどちらでも有効。
@@ -277,130 +302,227 @@ int RunGUIApp()
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         ImGui::EndDisabled();
-        ImGui::TextDisabled("Export WAV: full run / Play Preview: always rerender");
+        ImGui::TextDisabled(
+            state.uiModeTab == 0
+                ? "Sound: preview current sound design"
+                : "Music: export full WAV / preview always rerender");
         ImGui::Separator();
 
+        static bool logPanelExpanded = false;
         const float availY = ImGui::GetContentRegionAvail().y;
-        const float reserveForLog = state.logPanelHeight + ImGui::GetFrameHeightWithSpacing() + 12.0f;
+        const float splitterThickness = 8.0f;
+        const float logHeaderReserve = ImGui::GetFrameHeightWithSpacing() + 4.0f;
+        const float reserveForLog = logPanelExpanded
+            ? (splitterThickness + logHeaderReserve + state.logPanelHeight + 8.0f)
+            : (logHeaderReserve + 6.0f);
         const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
         ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true);
-        if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+        if (state.uiModeTab == 0)
         {
-            ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.56f);
-            ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthStretch, 0.44f);
-            ImGui::TableNextRow();
+            if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+            {
+                ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.56f);
+                ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthStretch, 0.44f);
+                ImGui::TableNextRow();
 
-            ImGui::TableSetColumnIndex(0);
-            if (state.presetDirty)
-            {
-                ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
-            }
-            else
-            {
-                ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
-            }
-            ImGui::BeginDisabled(state.running);
-            auto presetGetter = [](void* data, int idx, const char** outText) -> bool
-            {
-                auto* items = static_cast<std::vector<std::string>*>(data);
-                if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
+                ImGui::TableSetColumnIndex(0);
+                if (state.presetDirty)
                 {
-                    return false;
-                }
-                *outText = (*items)[idx].c_str();
-                return true;
-            };
-            if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
-            {
-                std::string err;
-                if (ApplySelectedPresetPaths(state, err))
-                {
-                    state.presetDirty = true;
+                    ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
                 }
                 else
                 {
-                    AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                    ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
                 }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Apply Preset Paths"))
-            {
-                std::string err;
-                if (ApplySelectedPresetPaths(state, err))
+                ImGui::BeginDisabled(state.running);
+                auto presetGetter = [](void* data, int idx, const char** outText) -> bool
                 {
-                    state.presetDirty = true;
-                }
-                else
-                {
-                    AppendGUILog(state, "[GUI] Apply preset failed: " + err);
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Reset Defaults"))
-            {
-                InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
-                state.presetDirty = false;
-            }
-
-            ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
-            ImGui::SameLine();
-            if (ImGui::Button("Save Preset As"))
-            {
-                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-                std::string err;
-                if (SavePresetDiffFromState(state, p, err))
-                {
-                    state.lastPresetPath = PathToUtf8(p);
-                    state.presetDirty = false;
-                    RefreshPresetItems(state, state.presetName);
-                    AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
-                }
-                else
-                {
-                    AppendGUILog(state, "[GUI] Preset save failed: " + err);
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Duplicate Preset"))
-            {
-                std::string copyName = std::string(state.presetName) + "_copy";
-                strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
-                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-                std::string err;
-                if (SavePresetDiffFromState(state, p, err))
-                {
-                    state.lastPresetPath = PathToUtf8(p);
-                    state.presetDirty = false;
-                    RefreshPresetItems(state, state.presetName);
-                    AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
-                }
-                else
-                {
-                    AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Reset Channel"))
-            {
-                gui::EnsureChannelConfigs(state);
-                gui::EnsureChannelMixStates(state);
-                AppConfig def = DefaultConfig();
-                if (def.channelConfigs)
-                {
-                    (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
-                    if (def.channelMixStates)
+                    auto* items = static_cast<std::vector<std::string>*>(data);
+                    if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
                     {
-                        (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
+                        return false;
                     }
-                    state.presetDirty = true;
-                    AppendGUILog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+                    *outText = (*items)[idx].c_str();
+                    return true;
+                };
+                if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
+                {
+                    std::string err;
+                    if (ApplySelectedPresetPaths(state, err))
+                    {
+                        state.presetDirty = true;
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                    }
                 }
-            }
-            if (!state.lastPresetPath.empty())
-            {
-                ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
-            }
+                ImGui::SameLine();
+                if (ImGui::Button("Apply Preset Paths"))
+                {
+                    std::string err;
+                    if (ApplySelectedPresetPaths(state, err))
+                    {
+                        state.presetDirty = true;
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Defaults"))
+                {
+                    InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
+                    state.presetDirty = false;
+                }
 
+                ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+                ImGui::SameLine();
+                if (ImGui::Button("Save Preset As"))
+                {
+                    const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                    std::string err;
+                    if (SavePresetDiffFromState(state, p, err))
+                    {
+                        state.lastPresetPath = PathToUtf8(p);
+                        state.presetDirty = false;
+                        RefreshPresetItems(state, state.presetName);
+                        AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Preset save failed: " + err);
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Duplicate Preset"))
+                {
+                    std::string copyName = std::string(state.presetName) + "_copy";
+                    strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
+                    const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                    std::string err;
+                    if (SavePresetDiffFromState(state, p, err))
+                    {
+                        state.lastPresetPath = PathToUtf8(p);
+                        state.presetDirty = false;
+                        RefreshPresetItems(state, state.presetName);
+                        AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Channel"))
+                {
+                    gui::EnsureChannelConfigs(state);
+                    gui::EnsureChannelMixStates(state);
+                    AppConfig def = DefaultConfig();
+                    if (def.channelConfigs)
+                    {
+                        (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
+                        if (def.channelMixStates)
+                        {
+                            (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
+                        }
+                        state.presetDirty = true;
+                        AppendGUILog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+                    }
+                }
+                if (!state.lastPresetPath.empty())
+                {
+                    ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
+                }
+
+                state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
+                ImGui::SameLine();
+                if (ImGui::Button("Browse MIDI..."))
+                {
+                    std::string selected;
+                    const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
+                    if (BrowseOpenPath(state.midiPath, midiFilter, selected))
+                    {
+                        strncpy_s(state.midiPath, sizeof(state.midiPath), selected.c_str(), _TRUNCATE);
+                        state.presetDirty = true;
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Copy MIDI"))
+                {
+                    ImGui::SetClipboardText(state.midiPath);
+                }
+                {
+                    const std::string compact = CompactPathForUi(state.midiPath);
+                    ImGui::TextDisabled("%s", compact.c_str());
+                    if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
+                    {
+                        ImGui::SetTooltip("%s", state.midiPath);
+                    }
+                }
+
+                state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+                ImGui::SameLine();
+                if (ImGui::Button("Browse Output..."))
+                {
+                    std::string selected;
+                    const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
+                    if (BrowseSavePath(state.wavPath, wavFilter, L"wav", selected))
+                    {
+                        strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
+                        state.presetDirty = true;
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Copy Output"))
+                {
+                    ImGui::SetClipboardText(state.wavPath);
+                }
+                {
+                    const std::string compact = CompactPathForUi(state.wavPath);
+                    ImGui::TextDisabled("%s", compact.c_str());
+                    if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
+                    {
+                        ImGui::SetTooltip("%s", state.wavPath);
+                    }
+                }
+                state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
+                state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
+                state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
+                state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
+                state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+                const char* waves[] = { "sine", "square", "saw", "triangle" };
+                state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
+                state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+                ImGui::EndDisabled();
+
+                ImGui::TableSetColumnIndex(1);
+                state.presetDirty |= DrawChannelEditor(state);
+                if (!state.lastOutputPath.empty())
+                {
+                    ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
+                }
+                AnalyzeRenderPeakFromLogs(state);
+                if (state.hasPeak)
+                {
+                    const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
+                    ImGui::Text("Peak: %.4f", state.lastPeak);
+                    ImGui::ProgressBar(meter, ImVec2(-1, 0));
+                    if (state.lastPeak > 1.0)
+                    {
+                        ImGui::SameLine();
+                        ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+                    }
+                }
+                ImGui::EndTable();
+            }
+        }
+        else
+        {
+            ImGui::TextUnformatted("Music");
+            ImGui::Separator();
+            ImGui::BeginDisabled(state.running);
             state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
             ImGui::SameLine();
             if (ImGui::Button("Browse MIDI..."))
@@ -413,20 +535,6 @@ int RunGUIApp()
                     state.presetDirty = true;
                 }
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Copy MIDI"))
-            {
-                ImGui::SetClipboardText(state.midiPath);
-            }
-            {
-                const std::string compact = CompactPathForUi(state.midiPath);
-                ImGui::TextDisabled("%s", compact.c_str());
-                if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
-                {
-                    ImGui::SetTooltip("%s", state.midiPath);
-                }
-            }
-
             state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
             ImGui::SameLine();
             if (ImGui::Button("Browse Output..."))
@@ -439,74 +547,50 @@ int RunGUIApp()
                     state.presetDirty = true;
                 }
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Copy Output"))
-            {
-                ImGui::SetClipboardText(state.wavPath);
-            }
-            {
-                const std::string compact = CompactPathForUi(state.wavPath);
-                ImGui::TextDisabled("%s", compact.c_str());
-                if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
-                {
-                    ImGui::SetTooltip("%s", state.wavPath);
-                }
-            }
-            state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
-            state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
-            state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
-            state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
-            state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
-            const char* waves[] = { "sine", "square", "saw", "triangle" };
-            state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
-            state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
             ImGui::EndDisabled();
+            ImGui::Separator();
+            DrawPianoRollPanel(
+                state.pianoRoll,
+                state.midiPath,
+                &state.playback,
+                [&](const std::string& line) { AppendGUILog(state, line); });
+        }
+        ImGui::EndChild();
 
-            ImGui::TableSetColumnIndex(1);
-            state.presetDirty |= DrawChannelEditor(state);
-            if (!state.lastOutputPath.empty())
+        ImGui::Separator();
+        if (logPanelExpanded)
+        {
+            ImGui::InvisibleButton("log_splitter", ImVec2(-1.0f, splitterThickness));
+            if (ImGui::IsItemHovered() || ImGui::IsItemActive())
             {
-                ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
             }
-            AnalyzeRenderPeakFromLogs(state);
-            if (state.hasPeak)
+            if (ImGui::IsItemActive())
             {
-                const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
-                ImGui::Text("Peak: %.4f", state.lastPeak);
-                ImGui::ProgressBar(meter, ImVec2(-1, 0));
-                if (state.lastPeak > 1.0)
+                state.logPanelHeight = std::clamp(
+                    state.logPanelHeight - ImGui::GetIO().MouseDelta.y,
+                    140.0f,
+                    520.0f);
+            }
+        }
+        ImGui::SetNextItemOpen(logPanelExpanded, ImGuiCond_Once);
+        logPanelExpanded = ImGui::CollapsingHeader("Logs");
+        if (logPanelExpanded)
+        {
+            ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
+            {
+                std::lock_guard<std::mutex> lock(state.logMutex);
+                for (const std::string& line : state.logs)
                 {
-                    ImGui::SameLine();
-                    ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+                    ImGui::TextUnformatted(line.c_str());
+                }
+                if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+                {
+                    ImGui::SetScrollHereY(1.0f);
                 }
             }
-            ImGui::EndTable();
+            ImGui::EndChild();
         }
-        ImGui::Separator();
-        DrawPianoRollPanel(
-            state.pianoRoll,
-            state.midiPath,
-            &state.playback,
-            [&](const std::string& line) { AppendGUILog(state, line); });
-        ImGui::EndChild();
-
-        ImGui::Separator();
-        ImGui::SetNextItemWidth(260.0f);
-        ImGui::SliderFloat("Log Height", &state.logPanelHeight, 140.0f, 520.0f, "%.0f");
-        ImGui::Text("Logs");
-        ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
-        {
-            std::lock_guard<std::mutex> lock(state.logMutex);
-            for (const std::string& line : state.logs)
-            {
-                ImGui::TextUnformatted(line.c_str());
-            }
-            if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-            {
-                ImGui::SetScrollHereY(1.0f);
-            }
-        }
-        ImGui::EndChild();
         ImGui::End();
 
         ImGui::Render();
