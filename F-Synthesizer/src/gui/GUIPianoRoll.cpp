@@ -1006,6 +1006,47 @@ void DrawPianoRollPanel(
     const int mouseTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
     const int mouseNote = MouseToNote(mousePos.y, canvasMin.y, rowHeight, noteHigh);
 
+    if (hovered)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        if (std::fabs(io.MouseWheel) > 0.0001f)
+        {
+            const float wheel = io.MouseWheel;
+            const int wheelSteps = (wheel > 0.0f) ? 1 : -1;
+            if (io.KeyCtrl)
+            {
+                // Ctrl+ホイール: マウス位置を中心に時間ズーム。
+                const int anchorTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
+                const float factor = std::pow(1.10f, wheel);
+                state.pixelsPerQuarter = std::clamp(state.pixelsPerQuarter * factor, 16.0f, 240.0f);
+                const float newPxPerTick = (std::max)(0.01f, state.pixelsPerQuarter / tpq);
+                const int anchorScreenTick = static_cast<int>((mousePos.x - gridMinX) / newPxPerTick);
+                state.tickOffset = (std::max)(0, anchorTick - anchorScreenTick);
+            }
+            else if (io.KeyShift)
+            {
+                // Shift+ホイール: 時間軸の横スクロール。
+                const int tickStep = (std::max)(1, state.ticksPerQuarter / 2);
+                state.tickOffset = (std::max)(0, state.tickOffset - wheelSteps * tickStep);
+            }
+            else
+            {
+                // 通常ホイール: 音高軸の縦スクロール。
+                const int noteStep = (std::max)(1, state.visibleNoteCount / 8);
+                state.noteOffset = std::clamp(state.noteOffset + wheelSteps * noteStep, 0, 116);
+            }
+            InvalidateVisibleCache(state);
+        }
+
+        if (std::fabs(io.MouseWheelH) > 0.0001f && !io.KeyCtrl)
+        {
+            const int wheelHSteps = (io.MouseWheelH > 0.0f) ? 1 : -1;
+            const int tickStep = (std::max)(1, state.ticksPerQuarter / 2);
+            state.tickOffset = (std::max)(0, state.tickOffset - wheelHSteps * tickStep);
+            InvalidateVisibleCache(state);
+        }
+    }
+
     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && mouseInGrid)
     {
         state.previewStartTick = SnapTick(mouseTick, snapStep);
