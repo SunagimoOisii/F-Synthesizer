@@ -1,9 +1,18 @@
 #include "Internal.h"
 
 #include <algorithm>
+#include <cmath>
 
 namespace
 {
+double PanToMonoGain(double pan)
+{
+    if (pan < -1.0) pan = -1.0;
+    if (pan > 1.0) pan = 1.0;
+    // Mono renderer approximation: reduce level as pan moves away from center.
+    return 1.0 - 0.5 * std::abs(pan);
+}
+
 void CleanupVoices(RenderState& state)
 {
     if (state.voices.empty() || state.pendingRemoveCount == 0)
@@ -34,7 +43,8 @@ void CleanupVoices(RenderState& state)
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs)
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates)
 {
     RenderState state;
     for (int i = 0; i < 16; i++)
@@ -42,6 +52,14 @@ void RenderMIDIEvents(
         state.channelCc7[i] = 1.0;
         state.channelCc11[i] = 1.0;
         state.channelPitch[i] = 1.0;
+        const ChannelMixState& mix = channelMixStates[i];
+        state.channelMute[i] = mix.mute;
+        state.channelSolo[i] = mix.solo;
+        if (mix.solo)
+        {
+            state.hasAnySolo = true;
+        }
+        state.channelMixGain[i] = mix.level * mix.gain * PanToMonoGain(mix.pan);
     }
 
     const int cleanupInterval = 256;

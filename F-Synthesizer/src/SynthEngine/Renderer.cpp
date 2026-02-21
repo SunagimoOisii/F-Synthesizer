@@ -132,6 +132,19 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         double w = 0.0;
         double velGain = VelocityToGain(v.velocity);
         int ch = v.channelIndex;
+        if (state.channelMute[ch])
+        {
+            continue;
+        }
+        if (state.hasAnySolo && !state.channelSolo[ch])
+        {
+            continue;
+        }
+        double mixGain = state.channelMixGain[ch];
+        if (mixGain <= 0.0)
+        {
+            continue;
+        }
         double pitchFactor = state.channelPitch[ch];
 
         std::visit([&](const auto& src)
@@ -140,7 +153,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
                 w = SampleWavePhase(src.wave, v.phase);
-                sum += v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
+                sum += mixGain * v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
 
                 v.phase += v.phaseInc * pitchFactor;
                 if (v.phase >= 1.0) v.phase -= 1.0;
@@ -148,12 +161,12 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             else if constexpr (std::is_same_v<T, NoiseConfig>)
             {
                 w = SampleNoise(src.noise);
-                sum += v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
+                sum += mixGain * v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
             }
             else if constexpr (std::is_same_v<T, FmConfig>)
             {
                 w = SampleFmPhase(src.carrierWave, src.modWave, v.fmCarrierPhase, v.fmModPhase, src.index);
-                sum += v.amp * src.outLevel * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
+                sum += mixGain * v.amp * src.outLevel * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
 
                 v.fmCarrierPhase += v.phaseInc * pitchFactor * src.carrierRatio;
                 if (v.fmCarrierPhase >= 1.0) v.fmCarrierPhase -= 1.0;
@@ -164,7 +177,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             {
                 double drumGain = (src.gain > 0.0) ? src.gain : 1.0;
                 w = RenderDrumSample(src, v, dt, sound.fs);
-                sum += drumGain * v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
+                sum += mixGain * drumGain * v.amp * state.channelCc7[ch] * state.channelCc11[ch] * velGain * w * envGain;
             }
         }, v.source);
     }

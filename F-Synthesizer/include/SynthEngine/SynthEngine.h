@@ -111,7 +111,17 @@ struct ChannelConfig
     double releaseSec;
 };
 
+struct ChannelMixState
+{
+    bool mute = false;
+    bool solo = false;
+    double level = 1.0;
+    double pan = 0.0;
+    double gain = 1.0;
+};
+
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs);
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates);

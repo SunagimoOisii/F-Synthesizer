@@ -18,6 +18,7 @@ struct AppConfig
     int sampleRate;
     double extraReleaseSec;
     std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
+    std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
 };
 
 struct IRunObserver

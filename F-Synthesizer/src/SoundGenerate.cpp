@@ -168,6 +168,16 @@ std::shared_ptr<const std::array<ChannelConfig, 16>> BuildDefaultChannelConfigs(
     return table;
 }
 
+std::shared_ptr<const std::array<ChannelMixState, 16>> BuildDefaultChannelMixStates()
+{
+    auto table = std::make_shared<std::array<ChannelMixState, 16>>();
+    for (int ch = 0; ch < 16; ch++)
+    {
+        (*table)[ch] = ChannelMixState{};
+    }
+    return table;
+}
+
 AppConfig BuildDefaultConfig()
 {
     const std::filesystem::path projectRoot = FindProjectRootInternal();
@@ -182,6 +192,7 @@ AppConfig BuildDefaultConfig()
     config->sampleRate = 44100;
     config->extraReleaseSec = 0.3;
     config->channelConfigs = BuildDefaultChannelConfigs();
+    config->channelMixStates = BuildDefaultChannelMixStates();
     return *config;
 }
 
@@ -226,6 +237,17 @@ std::optional<double> ReadJsonDouble(const std::string& text, const std::string&
     if (std::regex_search(text, m, pat) && m.size() >= 2)
     {
         return std::stod(m[1].str());
+    }
+    return std::nullopt;
+}
+
+std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key)
+{
+    const std::regex pat("\"" + key + "\"\\s*:\\s*(true|false)");
+    std::smatch m;
+    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    {
+        return m[1].str() == "true";
     }
     return std::nullopt;
 }
@@ -513,6 +535,15 @@ std::shared_ptr<std::array<ChannelConfig, 16>> MakeMutableChannelConfigs(const A
     return table;
 }
 
+std::shared_ptr<std::array<ChannelMixState, 16>> MakeMutableChannelMixStates(const AppConfig& cfg)
+{
+    auto table = std::make_shared<std::array<ChannelMixState, 16>>();
+    const auto fallback = BuildDefaultChannelMixStates();
+    const auto& src = cfg.channelMixStates ? *cfg.channelMixStates : *fallback;
+    *table = src;
+    return table;
+}
+
 bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::string& err)
 {
     if (auto t = ReadJsonString(text, "drumType"))
@@ -756,6 +787,79 @@ bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err)
     return true;
 }
 
+bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
+{
+    if (auto v = ReadJsonBool(mixObjText, "mute")) mix.mute = *v;
+    if (auto v = ReadJsonBool(mixObjText, "solo")) mix.solo = *v;
+    if (auto v = ReadJsonDouble(mixObjText, "level")) mix.level = *v;
+    if (auto v = ReadJsonDouble(mixObjText, "pan")) mix.pan = *v;
+    if (auto v = ReadJsonDouble(mixObjText, "gain")) mix.gain = *v;
+
+    if (mix.level < 0.0 || mix.level > 2.0)
+    {
+        err = "level must be in range 0.0..2.0";
+        return false;
+    }
+    if (mix.pan < -1.0 || mix.pan > 1.0)
+    {
+        err = "pan must be in range -1.0..1.0";
+        return false;
+    }
+    if (mix.gain < 0.0 || mix.gain > 4.0)
+    {
+        err = "gain must be in range 0.0..4.0";
+        return false;
+    }
+    return true;
+}
+
+bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& err)
+{
+    std::string mixObj;
+    bool found = false;
+    if (!ExtractObjectForKey(text, "channelMix", mixObj, found, err))
+    {
+        return false;
+    }
+    if (!found)
+    {
+        return true;
+    }
+
+    auto table = MakeMutableChannelMixStates(cfg);
+    if (!ParseTopLevelObjectEntries(mixObj, [&](const std::string& k, const std::string& valueObj) {
+        int ch = -1;
+        try
+        {
+            ch = std::stoi(k);
+        }
+        catch (...)
+        {
+            err = "invalid channelMix key: " + k;
+            return false;
+        }
+        if (ch < 0 || ch > 15)
+        {
+            err = "channelMix key out of range: " + k;
+            return false;
+        }
+        ChannelMixState mix = (*table)[ch];
+        if (!ParseChannelMixObject(valueObj, mix, err))
+        {
+            err = "channelMix " + k + ": " + err;
+            return false;
+        }
+        (*table)[ch] = mix;
+        return true;
+        }, err))
+    {
+        return false;
+    }
+
+    cfg.channelMixStates = table;
+    return true;
+}
+
 std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, const std::string& v)
 {
     std::filesystem::path p(v);
@@ -839,6 +943,10 @@ bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std
         return false;
     }
     if (!LoadChannelsDiff(text, cfg, err))
+    {
+        return false;
+    }
+    if (!LoadChannelMixDiff(text, cfg, err))
     {
         return false;
     }
@@ -949,6 +1057,19 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     out << "\n";
 }
 
+void WriteChannelMixState(std::ostream& out, int ch, const ChannelMixState& mix, bool withComma)
+{
+    WriteIndent(out, 4); out << "\"" << ch << "\": {\n";
+    WriteIndent(out, 6); out << "\"mute\": " << (mix.mute ? "true" : "false") << ",\n";
+    WriteIndent(out, 6); out << "\"solo\": " << (mix.solo ? "true" : "false") << ",\n";
+    WriteIndent(out, 6); out << "\"level\": " << mix.level << ",\n";
+    WriteIndent(out, 6); out << "\"pan\": " << mix.pan << ",\n";
+    WriteIndent(out, 6); out << "\"gain\": " << mix.gain << "\n";
+    WriteIndent(out, 4); out << "}";
+    if (withComma) out << ",";
+    out << "\n";
+}
+
 bool ParseArguments(
     int argc,
     char** argv,
@@ -1054,6 +1175,14 @@ bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& co
         WriteChannelConfig(out, ch, channels[ch], ch != 15);
     }
 
+    out << "  },\n";
+    out << "  \"channelMix\": {\n";
+    const auto fallbackMix = BuildDefaultChannelMixStates();
+    const auto& channelMix = config.channelMixStates ? *config.channelMixStates : *fallbackMix;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        WriteChannelMixState(out, ch, channelMix[ch], ch != 15);
+    }
     out << "  }\n";
     out << "}\n";
 
@@ -1299,6 +1428,8 @@ int Run(const AppConfig& config, IRunObserver* observer)
     // Channel config (default preset)
     const auto fallbackChannelConfigs = BuildDefaultChannelConfigs();
     const auto& channelConfigs = config.channelConfigs ? *config.channelConfigs : *fallbackChannelConfigs;
+    const auto fallbackChannelMixStates = BuildDefaultChannelMixStates();
+    const auto& channelMixStates = config.channelMixStates ? *config.channelMixStates : *fallbackChannelMixStates;
 
     // Resize output buffer
     int lastSample = events.back().sample;
@@ -1319,7 +1450,7 @@ int Run(const AppConfig& config, IRunObserver* observer)
     }
 
     // Render
-    RenderMIDIEvents(sound, events, channelConfigs);
+    RenderMIDIEvents(sound, events, channelConfigs, channelMixStates);
     {
         double peak = 0.0;
         double sumSq = 0.0;
