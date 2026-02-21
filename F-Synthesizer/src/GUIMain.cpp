@@ -81,6 +81,7 @@ struct GuiState
     int bits = 16;
     float extraReleaseSec = 0.3f;
     int defaultWave = 2; // saw
+    int uiScaleIndex = 1; // 0=100%, 1=125%, 2=150%
     int presetIndex = 0;
     int lastRunExitCode = 0;
     bool hasRun = false;
@@ -118,6 +119,9 @@ struct GuiState
 std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
 void EnsureChannelConfigs(GuiState& state);
 void EnsureChannelMixStates(GuiState& state);
+float UiScaleFromIndex(int idx);
+const char* UiScaleLabelFromIndex(int idx);
+void DrawStatusBadge(const GuiState& state);
 
 std::string PathToUtf8(const std::filesystem::path& p)
 {
@@ -150,7 +154,7 @@ void SetupImGuiFont()
         {
             continue;
         }
-        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, 18.0f, nullptr, ranges);
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontPath, 20.0f, nullptr, ranges);
         if (font != nullptr)
         {
             io.FontDefault = font;
@@ -892,6 +896,7 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonInt(text, "bits")) state.bits = *v;
     if (auto v = ReadJsonFloat(text, "extraReleaseSec")) state.extraReleaseSec = *v;
     if (auto v = ReadJsonInt(text, "defaultWave")) state.defaultWave = *v;
+    if (auto v = ReadJsonInt(text, "uiScaleIndex")) state.uiScaleIndex = *v;
     if (auto v = ReadJsonInt(text, "presetIndex")) state.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) state.serialSave = *v;
     if (auto v = ReadJsonBool(text, "previewLoop")) state.previewLoop = *v;
@@ -940,6 +945,7 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"bits\": " << state.bits << ",\n";
     fout << "  \"extraReleaseSec\": " << state.extraReleaseSec << ",\n";
     fout << "  \"defaultWave\": " << state.defaultWave << ",\n";
+    fout << "  \"uiScaleIndex\": " << state.uiScaleIndex << ",\n";
     fout << "  \"presetIndex\": " << state.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (state.serialSave ? "true" : "false") << ",\n";
     fout << "  \"previewLoop\": " << (state.previewLoop ? "true" : "false") << ",\n";
@@ -1084,6 +1090,7 @@ void InitGuiState(GuiState& state)
     state.bits = cfg.bits;
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
     state.defaultWave = 2;
+    state.uiScaleIndex = 1;
     state.presetIndex = 0;
     state.selectedChannel = 0;
     state.selectedDrumNote = 36;
@@ -1169,6 +1176,11 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
     if (state.bits != 16)
     {
         state.bits = 16;
+        repaired = true;
+    }
+    if (state.uiScaleIndex < 0 || state.uiScaleIndex > 2)
+    {
+        state.uiScaleIndex = 1;
         repaired = true;
     }
     EnsureChannelMixStates(state);
@@ -1343,7 +1355,7 @@ bool DrawChannelEditor(GuiState& state)
     ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
 
     ImGui::Separator();
-    ImGui::Text("Channel Editor (Phase B/C)");
+    ImGui::Text("Channel Editor");
     changed |= ImGui::InputInt("Edit Channel (0-15)", &state.selectedChannel);
     state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
     chMix = (*state.channelMixStates)[state.selectedChannel];
@@ -1444,6 +1456,66 @@ bool DrawChannelEditor(GuiState& state)
     }
     return changed;
 }
+
+float UiScaleFromIndex(int idx)
+{
+    switch (idx)
+    {
+    case 0: return 1.0f;
+    case 1: return 1.25f;
+    case 2: return 1.5f;
+    default: return 1.25f;
+    }
+}
+
+const char* UiScaleLabelFromIndex(int idx)
+{
+    switch (idx)
+    {
+    case 0: return "100%";
+    case 1: return "125%";
+    case 2: return "150%";
+    default: return "125%";
+    }
+}
+
+void DrawStatusBadge(const GuiState& state)
+{
+    ImVec4 color = ImVec4(0.55f, 0.55f, 0.55f, 1.0f);
+    const char* label = "Idle";
+
+    if (state.running)
+    {
+        color = ImVec4(0.95f, 0.78f, 0.2f, 1.0f);
+        label = "Running";
+    }
+    else if (state.playback.playing.load(std::memory_order_relaxed))
+    {
+        color = ImVec4(0.28f, 0.82f, 0.95f, 1.0f);
+        label = state.previewLoop ? "Preview (Loop)" : "Preview";
+    }
+    else if (state.hasRun && state.lastRunExitCode == 2)
+    {
+        color = ImVec4(0.95f, 0.70f, 0.25f, 1.0f);
+        label = "Canceled";
+    }
+    else if (state.hasRun && state.lastRunExitCode == 0)
+    {
+        color = ImVec4(0.30f, 0.82f, 0.40f, 1.0f);
+        label = "Success";
+    }
+    else if (state.hasRun)
+    {
+        color = ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
+        label = "Failed";
+    }
+
+    ImGui::TextUnformatted("Status:");
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+    ImGui::TextUnformatted(label);
+    ImGui::PopStyleColor();
+}
 } // namespace
 
 int RunGuiApp()
@@ -1543,9 +1615,19 @@ int RunGuiApp()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGui::GetIO().FontGlobalScale = UiScaleFromIndex(state.uiScaleIndex);
 
         ImGui::Begin("F-Synthesizer GUI");
-        ImGui::Text("Phase 5: Release Ready");
+        DrawStatusBadge(state);
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16.0f);
+        ImGui::TextUnformatted("UI Scale");
+        ImGui::SameLine();
+        const char* uiScales[] = { "100%", "125%", "150%" };
+        if (ImGui::Combo("##ui_scale", &state.uiScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
+        {
+            AppendGuiLog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
+        }
         ImGui::Separator();
         if (state.presetDirty)
         {
