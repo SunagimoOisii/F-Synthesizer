@@ -21,7 +21,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "2) 受け入れ手順を表示します..."
-$acceptPath = Join-Path $repoRoot "docs\PIANO_ROLL_ACCEPTANCE_TEST.md"
+$acceptPath = Join-Path $repoRoot "docs\archive\piano-roll-migration\PIANO_ROLL_ACCEPTANCE_TEST.md"
 if (-not (Test-Path $acceptPath)) {
     throw "Acceptance document not found: $acceptPath"
 }
