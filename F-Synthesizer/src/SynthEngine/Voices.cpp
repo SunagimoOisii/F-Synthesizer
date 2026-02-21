@@ -1,85 +1,237 @@
-﻿#include "Internal.h"
+#include "Internal.h"
 
 #include <cmath>
+#include <utility>
 
 #include "Oscillator.h"
 
 namespace
 {
-    constexpr double kPi = 3.14159265358979323846;
+constexpr double kPi = 3.14159265358979323846;
 
-    void InitDrumVoice(const DrumConfig& drum, Voice& v, int sampleRate)
+void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
+{
+    if (drum.type == DrumType::Kick)
     {
-        if (drum.type == DrumType::Kick)
-        {
-            v.drumBaseFreq = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
-            v.drumPitchDrop = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
-            v.drumPitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
-            v.phaseInc = v.drumBaseFreq / sampleRate;
-        }
-        else if (drum.type == DrumType::Snare)
-        {
-            v.drumBaseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
-            v.phaseInc = v.drumBaseFreq / sampleRate;
-            double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 1200.0;
-            v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-            double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 6000.0;
-            v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
-        }
-        else if (drum.type == DrumType::Hat)
-        {
-            double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 6000.0;
-            v.drumHpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-            double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12000.0;
-            v.drumLpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
-            v.drumBaseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
-        }
+        voices.drumBaseFreq[i] = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
+        voices.drumPitchDrop[i] = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
+        voices.drumPitchDecaySec[i] = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
+        voices.phaseInc[i] = voices.drumBaseFreq[i] / sampleRate;
+    }
+    else if (drum.type == DrumType::Snare)
+    {
+        voices.drumBaseFreq[i] = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
+        voices.phaseInc[i] = voices.drumBaseFreq[i] / sampleRate;
+        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 1200.0;
+        voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 6000.0;
+        voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
+    }
+    else if (drum.type == DrumType::Hat)
+    {
+        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 6000.0;
+        voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12000.0;
+        voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        voices.drumBaseFreq[i] = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
     }
 }
 
-Voice MakeVoiceFromConfig(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+template <typename T>
+void CompactVectorByKeep(std::vector<T>& v, const std::vector<uint8_t>& keep)
 {
-    Voice v{};
-    //識別, 状態
-    v.source = cfg.source;
-    v.noteNumber = e.noteNumber;
-    v.velocity = e.velocity;
-    v.channel = e.channel;
-    v.channelIndex = ClampChannel(e.channel);
-    v.released = false;
-    v.pendingRemove = false;
+    size_t out = 0;
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        if (keep[i] != 0)
+        {
+            if (out != i)
+            {
+                v[out] = std::move(v[i]);
+            }
+            out++;
+        }
+    }
+    v.resize(out);
+}
+} // namespace
 
-    //レベル, エンベロープ
-    v.amp = cfg.amp;
-    v.attackSec = cfg.attackSec;
-    v.decaySec = cfg.decaySec;
-    v.sustainLevel = cfg.sustainLevel;
-    v.releaseSec = cfg.releaseSec;
-    NoteOn(v.env);
+size_t VoicesSoA::size() const
+{
+    return source.size();
+}
 
-    //基本波形位相
-    v.phase = 0.0;
-    v.phaseInc = NoteNumberToFreq(v.noteNumber) / sampleRate;
+bool VoicesSoA::empty() const
+{
+    return source.empty();
+}
 
-    //FM パラメータ
-    v.fmCarrierPhase = 0.0;
-    v.fmModPhase = 0.0;
+void VoicesSoA::reserve(size_t n)
+{
+    source.reserve(n);
+    noteNumber.reserve(n);
+    velocity.reserve(n);
+    channel.reserve(n);
+    channelIndex.reserve(n);
+    released.reserve(n);
+    pendingRemove.reserve(n);
+    amp.reserve(n);
+    attackSec.reserve(n);
+    decaySec.reserve(n);
+    sustainLevel.reserve(n);
+    releaseSec.reserve(n);
+    env.reserve(n);
+    phase.reserve(n);
+    phaseInc.reserve(n);
+    fmCarrierPhase.reserve(n);
+    fmModPhase.reserve(n);
+    drumTime.reserve(n);
+    drumBaseFreq.reserve(n);
+    drumPitchDrop.reserve(n);
+    drumPitchDecaySec.reserve(n);
+    drumNoisePrev.reserve(n);
+    drumHpPrev.reserve(n);
+    drumHpAlpha.reserve(n);
+    drumLpPrev.reserve(n);
+    drumLpAlpha.reserve(n);
+}
 
-    //Drum パラメータ
-    v.drumTime = 0.0;
-    v.drumBaseFreq = 0.0;
-    v.drumPitchDrop = 1.0;
-    v.drumPitchDecaySec = 0.0;
-    v.drumNoisePrev = 0.0;
-    v.drumHpPrev = 0.0;
-    v.drumHpAlpha = 0.0;
-    v.drumLpPrev = 0.0;
-    v.drumLpAlpha = 0.0;
+void VoicesSoA::clear()
+{
+    source.clear();
+    noteNumber.clear();
+    velocity.clear();
+    channel.clear();
+    channelIndex.clear();
+    released.clear();
+    pendingRemove.clear();
+    amp.clear();
+    attackSec.clear();
+    decaySec.clear();
+    sustainLevel.clear();
+    releaseSec.clear();
+    env.clear();
+    phase.clear();
+    phaseInc.clear();
+    fmCarrierPhase.clear();
+    fmModPhase.clear();
+    drumTime.clear();
+    drumBaseFreq.clear();
+    drumPitchDrop.clear();
+    drumPitchDecaySec.clear();
+    drumNoisePrev.clear();
+    drumHpPrev.clear();
+    drumHpAlpha.clear();
+    drumLpPrev.clear();
+    drumLpAlpha.clear();
+}
 
+void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+{
+    source.push_back(cfg.source);
+    noteNumber.push_back(e.noteNumber);
+    velocity.push_back(e.velocity);
+    channel.push_back(e.channel);
+    channelIndex.push_back(ClampChannel(e.channel));
+    released.push_back(0);
+    pendingRemove.push_back(0);
+
+    amp.push_back(cfg.amp);
+    attackSec.push_back(cfg.attackSec);
+    decaySec.push_back(cfg.decaySec);
+    sustainLevel.push_back(cfg.sustainLevel);
+    releaseSec.push_back(cfg.releaseSec);
+    ADSRState envState{};
+    NoteOn(envState);
+    env.push_back(envState);
+
+    phase.push_back(0.0);
+    phaseInc.push_back(NoteNumberToFreq(e.noteNumber) / sampleRate);
+    fmCarrierPhase.push_back(0.0);
+    fmModPhase.push_back(0.0);
+
+    drumTime.push_back(0.0);
+    drumBaseFreq.push_back(0.0);
+    drumPitchDrop.push_back(1.0);
+    drumPitchDecaySec.push_back(0.0);
+    drumNoisePrev.push_back(0.0);
+    drumHpPrev.push_back(0.0);
+    drumHpAlpha.push_back(0.0);
+    drumLpPrev.push_back(0.0);
+    drumLpAlpha.push_back(0.0);
+
+    const size_t i = size() - 1;
     if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
     {
-        InitDrumVoice(*drum, v, sampleRate);
+        InitDrumVoice(*drum, *this, i, sampleRate);
     }
-    return v;
 }
 
+void VoicesSoA::MarkNoteOff(int ch, int note)
+{
+    for (size_t i = 0; i < size(); i++)
+    {
+        if (std::holds_alternative<DrumConfig>(source[i]))
+        {
+            continue;
+        }
+        if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
+        {
+            NoteOff(env[i]);
+            released[i] = 1;
+            break;
+        }
+    }
+}
+
+size_t VoicesSoA::CleanupPending()
+{
+    if (empty())
+    {
+        return 0;
+    }
+
+    std::vector<uint8_t> keep(size(), 1);
+    size_t removed = 0;
+    for (size_t i = 0; i < size(); i++)
+    {
+        if (pendingRemove[i] != 0)
+        {
+            keep[i] = 0;
+            removed++;
+        }
+    }
+    if (removed == 0)
+    {
+        return 0;
+    }
+
+    CompactVectorByKeep(source, keep);
+    CompactVectorByKeep(noteNumber, keep);
+    CompactVectorByKeep(velocity, keep);
+    CompactVectorByKeep(channel, keep);
+    CompactVectorByKeep(channelIndex, keep);
+    CompactVectorByKeep(released, keep);
+    CompactVectorByKeep(pendingRemove, keep);
+    CompactVectorByKeep(amp, keep);
+    CompactVectorByKeep(attackSec, keep);
+    CompactVectorByKeep(decaySec, keep);
+    CompactVectorByKeep(sustainLevel, keep);
+    CompactVectorByKeep(releaseSec, keep);
+    CompactVectorByKeep(env, keep);
+    CompactVectorByKeep(phase, keep);
+    CompactVectorByKeep(phaseInc, keep);
+    CompactVectorByKeep(fmCarrierPhase, keep);
+    CompactVectorByKeep(fmModPhase, keep);
+    CompactVectorByKeep(drumTime, keep);
+    CompactVectorByKeep(drumBaseFreq, keep);
+    CompactVectorByKeep(drumPitchDrop, keep);
+    CompactVectorByKeep(drumPitchDecaySec, keep);
+    CompactVectorByKeep(drumNoisePrev, keep);
+    CompactVectorByKeep(drumHpPrev, keep);
+    CompactVectorByKeep(drumHpAlpha, keep);
+    CompactVectorByKeep(drumLpPrev, keep);
+    CompactVectorByKeep(drumLpAlpha, keep);
+
+    return removed;
+}

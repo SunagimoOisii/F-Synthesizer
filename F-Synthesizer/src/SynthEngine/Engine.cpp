@@ -1,6 +1,5 @@
 #include "Internal.h"
 
-#include <algorithm>
 #include <cmath>
 
 namespace
@@ -20,18 +19,7 @@ void CleanupVoices(RenderState& state)
         return;
     }
 
-    size_t removed = 0;
-    state.voices.erase(
-        std::remove_if(state.voices.begin(), state.voices.end(), [&](const Voice& v)
-            {
-                if (v.pendingRemove)
-                {
-                    removed++;
-                    return true;
-                }
-                return false;
-            }),
-        state.voices.end());
+    const size_t removed = state.voices.CleanupPending();
 
     if (removed > 0)
     {
@@ -54,6 +42,7 @@ void RenderMIDIEvents(
     }
 
     RenderState state;
+    state.voices.reserve(256);
     for (int i = 0; i < 16; i++)
     {
         state.channelCc7[i] = 1.0;

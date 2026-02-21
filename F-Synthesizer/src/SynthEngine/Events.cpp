@@ -37,21 +37,9 @@ namespace
         state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
     }
 
-    void HandleNoteOff(const MIDIEvent& e, std::vector<Voice>& voices)
+    void HandleNoteOff(const MIDIEvent& e, VoicesSoA& voices)
     {
-        for (auto& v : voices)
-        {
-            if (std::holds_alternative<DrumConfig>(v.source))
-            {
-                continue;
-            }
-            if (!v.released && v.noteNumber == e.noteNumber && v.channel == e.channel)
-            {
-                NoteOff(v.env);
-                v.released = true;
-                break;
-            }
-        }
+        voices.MarkNoteOff(e.channel, e.noteNumber);
     }
 }
 
@@ -92,12 +80,12 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
                 {
                     ChannelConfig drumCfg = cfg;
                     drumCfg.source = drum;
-                    state.voices.push_back(MakeVoiceFromConfig(drumCfg, e, sampleRate));
+                    state.voices.AddVoice(drumCfg, e, sampleRate);
                 }
             }
             else
             {
-                state.voices.push_back(MakeVoiceFromConfig(cfg, e, sampleRate));
+                state.voices.AddVoice(cfg, e, sampleRate);
             }
         }
         else
