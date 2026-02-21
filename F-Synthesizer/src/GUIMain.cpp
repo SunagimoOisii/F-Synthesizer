@@ -86,6 +86,8 @@ struct GuiState
 };
 
 std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
+void EnsureChannelConfigs(GuiState& state);
+void EnsureChannelMixStates(GuiState& state);
 
 std::string PathToUtf8(const std::filesystem::path& p)
 {
@@ -295,6 +297,15 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         SourceConfigEquals(a.source, b.source);
 }
 
+bool ChannelMixStateEquals(const ChannelMixState& a, const ChannelMixState& b)
+{
+    return a.mute == b.mute &&
+        a.solo == b.solo &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.pan, b.pan) &&
+        NearlyEq(a.gain, b.gain);
+}
+
 void WriteJsonEscaped(std::ostream& out, const std::string& s)
 {
     for (char c : s)
@@ -411,9 +422,9 @@ void WriteSourceJson(std::ostream& out, const SourceConfig& src, int indent)
 bool SavePresetDiff(const GuiState& state, const std::filesystem::path& presetPath, std::string& err)
 {
     AppConfig base = DefaultConfig();
-    if (!state.channelConfigs || !base.channelConfigs)
+    if (!state.channelConfigs || !base.channelConfigs || !state.channelMixStates || !base.channelMixStates)
     {
-        err = "channelConfigs is not initialized";
+        err = "channel configs or mix states are not initialized";
         return false;
     }
     std::error_code ec;
@@ -453,6 +464,29 @@ bool SavePresetDiff(const GuiState& state, const std::filesystem::path& presetPa
         out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
         WriteSourceJson(out, cur.source, 6);
         out << "\n    }";
+    }
+
+    out << "\n  },\n";
+    out << "  \"channelMix\": {\n";
+
+    bool firstMix = true;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const ChannelMixState& cur = (*state.channelMixStates)[ch];
+        const ChannelMixState& def = (*base.channelMixStates)[ch];
+        if (ChannelMixStateEquals(cur, def))
+        {
+            continue;
+        }
+        if (!firstMix) out << ",\n";
+        firstMix = false;
+        out << "    \"" << ch << "\": {\n";
+        out << "      \"mute\": " << (cur.mute ? "true" : "false") << ",\n";
+        out << "      \"solo\": " << (cur.solo ? "true" : "false") << ",\n";
+        out << "      \"level\": " << cur.level << ",\n";
+        out << "      \"pan\": " << cur.pan << ",\n";
+        out << "      \"gain\": " << cur.gain << "\n";
+        out << "    }";
     }
 
     out << "\n  }\n";
@@ -515,16 +549,6 @@ void RefreshPresetItems(GuiState& state, const std::string& preferName)
     state.presetIndex = (idx >= 0) ? idx : 0;
 }
 
-std::filesystem::path ResolvePathFromPreset(const std::filesystem::path& presetPath, const std::string& value)
-{
-    std::filesystem::path p = Utf8ToPath(value);
-    if (p.is_absolute())
-    {
-        return p;
-    }
-    return presetPath.parent_path() / p;
-}
-
 bool ApplySelectedPresetPaths(GuiState& state, std::string& err)
 {
     if (state.presetItems.empty())
@@ -540,27 +564,43 @@ bool ApplySelectedPresetPaths(GuiState& state, std::string& err)
 
     const std::string& presetName = state.presetItems[state.presetIndex];
     strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
-    const std::filesystem::path presetPath =
-        FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
+    const std::filesystem::path root = FindProjectRootPath();
+    const std::filesystem::path basePath = root / "config" / "base.json";
+    const std::filesystem::path presetPath = root / "config" / "presets" / (presetName + ".json");
 
-    std::ifstream fin(presetPath, std::ios::binary);
-    if (!fin)
+    AppConfig cfg = DefaultConfig();
+    if (std::filesystem::exists(basePath))
     {
-        err = "failed to open preset: " + presetPath.string();
+        if (!LoadConfigFile(basePath, cfg, err))
+        {
+            err = "failed to load base config: " + err;
+            return false;
+        }
+    }
+    if (!LoadConfigFile(presetPath, cfg, err))
+    {
+        err = "failed to load preset config: " + err;
         return false;
     }
 
-    std::ostringstream oss;
-    oss << fin.rdbuf();
-    const std::string text = oss.str();
+    CopyPath(state.midiPath, sizeof(state.midiPath), cfg.midiPath);
+    CopyPath(state.wavPath, sizeof(state.wavPath), cfg.wavPath);
+    state.targetChannel = cfg.targetChannel;
+    state.sampleRate = cfg.sampleRate;
+    state.initialSeconds = cfg.initialSeconds;
+    state.bits = cfg.bits;
+    state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
+    state.defaultWave = WaveToIndex(cfg.defaultWave);
 
-    if (auto midi = ReadJsonString(text, "midiPath"))
+    EnsureChannelConfigs(state);
+    EnsureChannelMixStates(state);
+    if (cfg.channelConfigs)
     {
-        CopyPath(state.midiPath, sizeof(state.midiPath), ResolvePathFromPreset(presetPath, *midi));
+        *state.channelConfigs = *cfg.channelConfigs;
     }
-    if (auto wav = ReadJsonString(text, "wavPath"))
+    if (cfg.channelMixStates)
     {
-        CopyPath(state.wavPath, sizeof(state.wavPath), ResolvePathFromPreset(presetPath, *wav));
+        *state.channelMixStates = *cfg.channelMixStates;
     }
     return true;
 }
@@ -703,6 +743,21 @@ bool LoadGuiStateFile(GuiState& state, std::string& err)
     if (auto v = ReadJsonInt(text, "selectedDrumNote")) state.selectedDrumNote = *v;
     if (auto v = ReadJsonString(text, "presetName")) strncpy_s(state.presetName, sizeof(state.presetName), v->c_str(), _TRUNCATE);
     if (auto v = ReadJsonString(text, "lastPresetPath")) state.lastPresetPath = *v;
+    EnsureChannelMixStates(state);
+    for (int ch = 0; ch < 16; ch++)
+    {
+        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        const std::string kMute = "mixCh" + std::to_string(ch) + "Mute";
+        const std::string kSolo = "mixCh" + std::to_string(ch) + "Solo";
+        const std::string kLevel = "mixCh" + std::to_string(ch) + "Level";
+        const std::string kPan = "mixCh" + std::to_string(ch) + "Pan";
+        const std::string kGain = "mixCh" + std::to_string(ch) + "Gain";
+        if (auto v = ReadJsonBool(text, kMute)) mix.mute = *v;
+        if (auto v = ReadJsonBool(text, kSolo)) mix.solo = *v;
+        if (auto v = ReadJsonFloat(text, kLevel)) mix.level = *v;
+        if (auto v = ReadJsonFloat(text, kPan)) mix.pan = *v;
+        if (auto v = ReadJsonFloat(text, kGain)) mix.gain = *v;
+    }
 
     return true;
 }
@@ -734,7 +789,19 @@ bool SaveGuiStateFile(const GuiState& state, std::string& err)
     fout << "  \"selectedChannel\": " << state.selectedChannel << ",\n";
     fout << "  \"selectedDrumNote\": " << state.selectedDrumNote << ",\n";
     fout << "  \"presetName\": \"" << EscapeJson(state.presetName) << "\",\n";
-    fout << "  \"lastPresetPath\": \"" << EscapeJson(state.lastPresetPath) << "\"\n";
+    fout << "  \"lastPresetPath\": \"" << EscapeJson(state.lastPresetPath) << "\",\n";
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const ChannelMixState mix = (state.channelMixStates != nullptr)
+            ? (*state.channelMixStates)[ch]
+            : ChannelMixState{};
+        fout << "  \"mixCh" << ch << "Mute\": " << (mix.mute ? "true" : "false") << ",\n";
+        fout << "  \"mixCh" << ch << "Solo\": " << (mix.solo ? "true" : "false") << ",\n";
+        fout << "  \"mixCh" << ch << "Level\": " << mix.level << ",\n";
+        fout << "  \"mixCh" << ch << "Pan\": " << mix.pan << ",\n";
+        fout << "  \"mixCh" << ch << "Gain\": " << mix.gain;
+        fout << (ch == 15 ? "\n" : ",\n");
+    }
     fout << "}\n";
 
     return true;
@@ -939,9 +1006,35 @@ void RepairGuiStatePathsIfNeeded(GuiState& state)
         state.bits = 16;
         repaired = true;
     }
+    EnsureChannelMixStates(state);
+    for (int ch = 0; ch < 16; ch++)
+    {
+        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        bool mixRepaired = false;
+        if (mix.level < 0.0 || mix.level > 2.0)
+        {
+            mix.level = std::clamp(mix.level, 0.0, 2.0);
+            mixRepaired = true;
+        }
+        if (mix.pan < -1.0 || mix.pan > 1.0)
+        {
+            mix.pan = std::clamp(mix.pan, -1.0, 1.0);
+            mixRepaired = true;
+        }
+        if (mix.gain < 0.0 || mix.gain > 4.0)
+        {
+            mix.gain = std::clamp(mix.gain, 0.0, 4.0);
+            mixRepaired = true;
+        }
+        if (mixRepaired)
+        {
+            repaired = true;
+            AppendGuiLog(state, "[GUI] Invalid mix state detected and clamped: ch" + std::to_string(ch));
+        }
+    }
     if (repaired)
     {
-        AppendGuiLog(state, "[GUI] Detected invalid saved paths. Recovered to default paths.");
+        AppendGuiLog(state, "[GUI] Detected invalid saved state. Recovered to safe defaults.");
     }
 }
 

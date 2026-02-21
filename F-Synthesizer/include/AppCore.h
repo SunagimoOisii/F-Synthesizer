@@ -29,6 +29,7 @@ struct IRunObserver
 
 std::filesystem::path FindProjectRootPath();
 AppConfig DefaultConfig();
+bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
 bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
 int Run(const AppConfig& config);
 int Run(const AppConfig& config, IRunObserver* observer);

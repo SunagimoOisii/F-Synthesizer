@@ -870,7 +870,7 @@ std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, 
     return std::filesystem::weakly_canonical(baseDir / p);
 }
 
-bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
+bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
 {
     const std::string text = ReadTextFile(configPath);
     if (text.empty())
@@ -1140,6 +1140,11 @@ std::filesystem::path FindProjectRootPath()
 AppConfig DefaultConfig()
 {
     return BuildDefaultConfig();
+}
+
+bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
+{
+    return LoadConfigFileInternal(configPath, cfg, err);
 }
 
 bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& config, std::string& err)
