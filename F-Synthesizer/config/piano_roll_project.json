@@ -1,7 +1,7 @@
 {
   "midiPath": "C:\\Users\\sunag_qspg5zm\\OneDrive\\ƒhƒLƒ…ƒƒ“ƒg\\ì‹Æ‘ä\\Dev\\GitHub\\F-Synthesizer\\F-Synthesizer\\assets\\midi\\solstice_intro.mid",
   "ticksPerQuarter": 192,
-  "noteCount": 6711,
+  "noteCount": 6710,
   "note0StartTick": 0,
   "note0EndTick": 192,
   "note0Note": 60,
@@ -33551,10 +33551,5 @@
   "note6709EndTick": 126288,
   "note6709Note": 36,
   "note6709Channel": 9,
-  "note6709Velocity": 92,
-  "note6710StartTick": 1104,
-  "note6710EndTick": 1296,
-  "note6710Note": 60,
-  "note6710Channel": 1,
-  "note6710Velocity": 100
+  "note6709Velocity": 92
 }

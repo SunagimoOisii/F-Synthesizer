@@ -32,6 +32,8 @@ struct NoteStart
 };
 
 void SyncProjectDataFromCurrentNotes(PianoRollState& state);
+void RecomputeMaxTick(PianoRollState& state);
+void PushUndoCommand(PianoRollState& state, const std::vector<PianoRollNote>& before, const std::vector<PianoRollNote>& after);
 
 int ClampChannel(int channel)
 {
@@ -287,6 +289,35 @@ bool AnySelected(const PianoRollState& state)
         }
     }
     return false;
+}
+
+bool DeleteSelectedNotes(PianoRollState& state)
+{
+    EnsureSelectionSize(state);
+    if (!AnySelected(state))
+    {
+        return false;
+    }
+
+    const std::vector<PianoRollNote> before = state.notes;
+    std::vector<PianoRollNote> after;
+    after.reserve(state.notes.size());
+    for (size_t i = 0; i < state.notes.size(); i++)
+    {
+        if (i < state.selected.size() && state.selected[i] != 0)
+        {
+            continue;
+        }
+        after.push_back(state.notes[i]);
+    }
+    state.notes = std::move(after);
+    state.selected.assign(state.notes.size(), 0);
+    state.primarySelectedIndex = -1;
+    PushUndoCommand(state, before, state.notes);
+    TouchNotesVersion(state);
+    RecomputeMaxTick(state);
+    SyncProjectDataFromCurrentNotes(state);
+    return true;
 }
 
 void RecomputeMaxTick(PianoRollState& state)
@@ -1048,7 +1079,7 @@ void DrawPianoRollPanel(
     {
         ImGui::Text("PR StartTick=%d", state.previewStartTick);
     }
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / ルーラD&D=再生範囲 / ルーラ後Ctrl+A=全範囲 / Space=再生停止 / Q,1-4=Snap");
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / ルーラ後Ctrl+A=全範囲 / Space=再生停止 / Q,1-4=Snap");
 
     if (state.hasLoadError)
     {
@@ -1276,6 +1307,17 @@ void DrawPianoRollPanel(
             if (appendLog)
             {
                 appendLog("[PianoRoll] preview range set: full (Ctrl+A)");
+            }
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete, false) || ImGui::IsKeyPressed(ImGuiKey_Backspace, false))
+        {
+            if (DeleteSelectedNotes(state))
+            {
+                BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
+                if (appendLog)
+                {
+                    appendLog("[PianoRoll] selected notes deleted");
+                }
             }
         }
         if (ImGui::IsKeyPressed(ImGuiKey_Q, false))
