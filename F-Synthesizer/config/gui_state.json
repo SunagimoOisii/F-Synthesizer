@@ -8,5 +8,9 @@
   "extraReleaseSec": 0.3,
   "defaultWave": 2,
   "presetIndex": 0,
-  "serialSave": false
+  "serialSave": false,
+  "selectedChannel": 0,
+  "selectedDrumNote": 36,
+  "presetName": "solstice",
+  "lastPresetPath": ""
 }

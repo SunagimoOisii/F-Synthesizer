@@ -90,13 +90,12 @@ std::filesystem::path FindProjectRootInternal()
     return GetExecutableDirectory();
 }
 
-std::shared_ptr<const std::array<ChannelConfig, 16>> BuildFrogThemeChannelConfigs()
+std::shared_ptr<const std::array<ChannelConfig, 16>> BuildDefaultChannelConfigs()
 {
-    auto makeFm = [](WaveType carrierWave, WaveType modWave,
-        double amp, double atk, double dec, double sus, double rel,
-        double carrierRatio, double modRatio, double index, double outLevel)
+    auto makeWave = [](WaveType wave,
+        double amp, double atk, double dec, double sus, double rel)
     {
-        return ChannelConfig{ FmConfig{ carrierWave, modWave, carrierRatio, modRatio, index, outLevel },
+        return ChannelConfig{ WaveformConfig{ wave },
             amp, atk, dec, sus, rel };
     };
     auto makeDrumKitDetail = [](const DrumKitConfig& kit,
@@ -150,22 +149,22 @@ std::shared_ptr<const std::array<ChannelConfig, 16>> BuildFrogThemeChannelConfig
     };
 
     auto table = std::make_shared<std::array<ChannelConfig, 16>>();
-    (*table)[0] = makeFm(WaveType::Sine, WaveType::Triangle, 0.40, 0.04, 0.22, 0.90, 0.35, 1.0, 2.01, 1.45, 0.9);
-    (*table)[1] = makeFm(WaveType::Sine, WaveType::Triangle, 0.38, 0.04, 0.22, 0.90, 0.35, 1.0, 2.015, 1.45, 0.9);
-    (*table)[2] = makeFm(WaveType::Saw, WaveType::Triangle, 0.45, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15);
-    (*table)[3] = makeFm(WaveType::Saw, WaveType::Square, 0.48, 0.0025, 0.18, 0.68, 0.18, 1.0, 0.9965, 1.3, 1.15);
-    (*table)[4] = makeFm(WaveType::Sine, WaveType::Triangle, 0.30, 0.08, 0.40, 0.80, 0.55, 1.0, 1.01, 1.4, 1.0);
-    (*table)[5] = makeFm(WaveType::Triangle, WaveType::Sine, 0.26, 0.06, 0.32, 0.72, 0.45, 1.0, 1.01, 1.4, 1.0);
-    (*table)[6] = makeFm(WaveType::Triangle, WaveType::Sine, 0.5, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05);
-    (*table)[7] = makeFm(WaveType::Triangle, WaveType::Sine, 0.47, 0.006, 0.14, 0.62, 0.2, 0.5, 0.9975, 1.0, 1.05);
-    (*table)[8] = makeFm(WaveType::Square, WaveType::Square, 0.22, 0.01, 0.1, 0.75, 0.2, 1.0, 1.0, 0.9975, 1.0);
+    (*table)[0] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[1] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[2] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[3] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[4] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[5] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[6] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[7] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[8] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
     (*table)[9] = makeDrumKitDetail(makeGmDrumKit(), 10.0, 0.001, 0.15, 0.1, 0.3);
-    (*table)[10] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
-    (*table)[11] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
-    (*table)[12] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
-    (*table)[13] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
-    (*table)[14] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
-    (*table)[15] = makeFm(WaveType::Triangle, WaveType::Triangle, 0.25, 0.02, 0.1, 0.7, 0.2, 1.0, 1.0, 0.0, 1.0);
+    (*table)[10] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[11] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[12] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[13] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[14] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
+    (*table)[15] = makeWave(WaveType::Saw, 0.25, 0.01, 0.15, 0.75, 0.20);
     return table;
 }
 
@@ -182,7 +181,7 @@ AppConfig BuildDefaultConfig()
     config->bits = 16;
     config->sampleRate = 44100;
     config->extraReleaseSec = 0.3;
-    config->channelConfigs = BuildFrogThemeChannelConfigs();
+    config->channelConfigs = BuildDefaultChannelConfigs();
     return *config;
 }
 
@@ -508,7 +507,7 @@ bool ParseTopLevelObjectEntries(const std::string& objText,
 std::shared_ptr<std::array<ChannelConfig, 16>> MakeMutableChannelConfigs(const AppConfig& cfg)
 {
     auto table = std::make_shared<std::array<ChannelConfig, 16>>();
-    const auto fallback = BuildFrogThemeChannelConfigs();
+    const auto fallback = BuildDefaultChannelConfigs();
     const auto& src = cfg.channelConfigs ? *cfg.channelConfigs : *fallback;
     *table = src;
     return table;
@@ -1048,7 +1047,7 @@ bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& co
     out << "  \"extraReleaseSec\": " << config.extraReleaseSec << ",\n";
     out << "  \"channels\": {\n";
 
-    const auto fallback = BuildFrogThemeChannelConfigs();
+    const auto fallback = BuildDefaultChannelConfigs();
     const auto& channels = config.channelConfigs ? *config.channelConfigs : *fallback;
     for (int ch = 0; ch < 16; ch++)
     {
@@ -1298,7 +1297,7 @@ int Run(const AppConfig& config, IRunObserver* observer)
     }
 
     // Channel config (default preset)
-    const auto fallbackChannelConfigs = BuildFrogThemeChannelConfigs();
+    const auto fallbackChannelConfigs = BuildDefaultChannelConfigs();
     const auto& channelConfigs = config.channelConfigs ? *config.channelConfigs : *fallbackChannelConfigs;
 
     // Resize output buffer
