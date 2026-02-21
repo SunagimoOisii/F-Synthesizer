@@ -15,6 +15,7 @@ void AnalyzeRenderPeakFromLogs(GUIState& state);
 void ActivateSoloPreview(GUIState& state, int channel);
 void DeactivateSoloPreview(GUIState& state);
 void StartGUIRun(GUIState& state, bool previewSelected);
+void PlayOrReplayPreview(GUIState& state, bool forceRerender);
 void StopGUIRunAndPreview(GUIState& state);
 bool TryFinalizeCompletedRun(GUIState& state);
 } // namespace gui

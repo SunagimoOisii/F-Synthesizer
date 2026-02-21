@@ -367,6 +367,27 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         });
 }
 
+void PlayOrReplayPreview(GUIState& state, bool forceRerender)
+{
+    if (state.running)
+    {
+        return;
+    }
+
+    if (!forceRerender && state.previewAudioReady && state.previewRenderedSound)
+    {
+        std::string err;
+        if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
+        {
+            AppendGUILog(state, "[GUI] Preview replay started");
+            return;
+        }
+        AppendGUILog(state, "[GUI] Preview replay failed: " + err + " (fallback to rerender)");
+    }
+
+    StartGUIRun(state, true);
+}
+
 void StopGUIRunAndPreview(GUIState& state)
 {
     // Stop後にRun完了通知が到着しても、自動再生を再開しないようにする。

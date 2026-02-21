@@ -41,6 +41,7 @@ using gui::ApplySelectedPresetPaths;
 using gui::SavePresetDiffFromState;
 using gui::AnalyzeRenderPeakFromLogs;
 using gui::StartGUIRun;
+using gui::PlayOrReplayPreview;
 using gui::StopGUIRunAndPreview;
 using gui::TryFinalizeCompletedRun;
 using gui::LoadGUIStateFile;
@@ -230,25 +231,11 @@ int RunGUIApp()
         ImGui::SameLine();
         if (ImGui::Button("Play Preview (Selected ch)"))
         {
-            StartGUIRun(state, true);
+            const bool forceRerender = ImGui::GetIO().KeyCtrl;
+            PlayOrReplayPreview(state, forceRerender);
         }
         ImGui::SameLine();
         ImGui::Checkbox("Loop Preview", &state.previewLoop);
-        ImGui::EndDisabled();
-        ImGui::SameLine();
-        ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
-        if (ImGui::Button("Replay Preview"))
-        {
-            std::string err;
-            if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
-            {
-                AppendGUILog(state, "[GUI] Preview replay started");
-            }
-            else
-            {
-                AppendGUILog(state, "[GUI] Preview replay failed: " + err);
-            }
-        }
         ImGui::EndDisabled();
         ImGui::SameLine();
         // Stopは「レンダ中」または「プレビュー再生中」のどちらでも有効。
@@ -266,7 +253,7 @@ int RunGUIApp()
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
         ImGui::EndDisabled();
-        ImGui::TextDisabled("Play: export full run / Play Preview: selected channel memory preview");
+        ImGui::TextDisabled("Play: export full run / Play Preview: replay if ready, Ctrl+Click to rerender");
         ImGui::Separator();
 
         const float availY = ImGui::GetContentRegionAvail().y;
