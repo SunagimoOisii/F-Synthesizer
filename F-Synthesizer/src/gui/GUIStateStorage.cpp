@@ -112,6 +112,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
 {
     if (!std::filesystem::exists(path))
     {
+        // 初回起動はファイル未存在を正常系として扱う。
         return true;
     }
 
@@ -146,6 +147,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
 
     for (int ch = 0; ch < 16; ch++)
     {
+        // mix状態はキーごとに保持し、部分更新時も既存値を保持する。
         ChannelMixState& mix = data.channelMixStates[ch];
         const std::string kMute = "mixCh" + std::to_string(ch) + "Mute";
         const std::string kSolo = "mixCh" + std::to_string(ch) + "Solo";
@@ -174,6 +176,7 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
         return false;
     }
 
+    // 読込側のregex実装と対応させるため、入れ子を使わないJSONキー構造で保存する。
     fout << "{\n";
     fout << "  \"midiPath\": \"" << EscapeJson(data.midiPath) << "\",\n";
     fout << "  \"wavPath\": \"" << EscapeJson(data.wavPath) << "\",\n";

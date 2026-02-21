@@ -56,6 +56,7 @@ void SetupImGuiFont()
         "C:\\Windows\\Fonts\\msgothic.ttc"
     };
 
+    // 日本語表示を崩さないため、Windows既定フォント候補を順に試す。
     for (const char* fontPath : candidates)
     {
         std::error_code ec;
@@ -164,6 +165,7 @@ int RunGUIApp()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
     GUIState state{};
+    // 起動時に「既定値 -> 保存状態の復元 -> 不正値修復」の順で状態を確定する。
     InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
 
     {
@@ -185,6 +187,7 @@ int RunGUIApp()
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        // 非同期Runの完了を毎フレーム先頭で回収し、UI遷移を遅延させない。
         TryFinalizeCompletedRun(state);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -246,6 +249,7 @@ int RunGUIApp()
         }
         ImGui::EndDisabled();
         ImGui::SameLine();
+        // Stopは「レンダ中」または「プレビュー再生中」のどちらでも有効。
         const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
         ImGui::BeginDisabled(!canStop);
         if (ImGui::Button("Stop"))

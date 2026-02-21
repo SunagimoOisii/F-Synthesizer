@@ -4,6 +4,8 @@
 #include <string>
 #include <string_view>
 
+// path と文字列を相互変換する共通入口。
+// WindowsのUTF-16と、設定/ログのUTF-8表現を往復させる。
 std::string PathToUtf8(const std::filesystem::path& path);
 std::filesystem::path Utf8ToPath(std::string_view utf8);
 std::wstring Utf8ToWide(std::string_view utf8);

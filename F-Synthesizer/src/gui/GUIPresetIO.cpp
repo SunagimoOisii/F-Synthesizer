@@ -34,6 +34,7 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     out << "\",\n";
     out << "  \"channels\": {\n";
 
+    // 既定値との差分のみを書き出し、presetファイルの保守コストを抑える。
     bool first = true;
     for (int ch = 0; ch < 16; ch++)
     {
@@ -101,6 +102,7 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     }
 
     std::sort(names.begin(), names.end());
+    // 既定の操作の流れを分かりやすくするため、basic_wave を先頭に寄せる。
     const auto it = std::find(names.begin(), names.end(), "basic_wave");
     if (it != names.end() && it != names.begin())
     {
@@ -118,6 +120,7 @@ bool LoadPresetConfig(
     const std::filesystem::path basePath = projectRoot / "config" / "base.json";
     const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (presetName + ".json");
 
+    // base -> preset の順で後から読んだ値を優先し、CLI経路と同じ合成規則にする。
     cfg = DefaultConfig();
     if (std::filesystem::exists(basePath))
     {

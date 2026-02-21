@@ -33,6 +33,7 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
     {
         return false;
     }
+    // variant型比較は型一致を先に確認してから分岐し、比較漏れを防ぐ。
     return std::visit([&](const auto& av) -> bool
         {
             using T = std::decay_t<decltype(av)>;

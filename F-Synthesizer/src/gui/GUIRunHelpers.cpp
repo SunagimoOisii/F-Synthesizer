@@ -17,6 +17,7 @@ bool ValidateRunSettings(
     int bits,
     std::string& err)
 {
+    // GUI入力の最終ガード。Run呼び出し前に即時失敗できる条件をここで弾く。
     if (midiPathUtf8.empty())
     {
         err = "MIDI Path is empty.";
@@ -76,6 +77,7 @@ std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
     std::error_code ec;
     std::filesystem::create_directories(basePath.parent_path(), ec);
 
+    // 連番保存は timestamp を基準にし、同じ秒で衝突したときだけ suffix を付ける。
     auto now = std::chrono::system_clock::now();
     std::time_t tt = std::chrono::system_clock::to_time_t(now);
     std::tm tmLocal{};

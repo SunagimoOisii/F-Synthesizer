@@ -10,6 +10,7 @@ namespace
 {
 GUIStateStorageData BuildStateStorageData(const GUIState& state)
 {
+    // GUI実行状態から、永続化対象だけを中間形式へ変換する。
     GUIStateStorageData data{};
     data.midiPath = state.midiPath;
     data.wavPath = state.wavPath;
@@ -39,6 +40,7 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
 
 void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
 {
+    // 復元は storage -> GUIState の一方向適用に限定し、初期化責務を混ぜない。
     strncpy_s(state.midiPath, sizeof(state.midiPath), data.midiPath.c_str(), _TRUNCATE);
     strncpy_s(state.wavPath, sizeof(state.wavPath), data.wavPath.c_str(), _TRUNCATE);
     state.targetChannel = data.targetChannel;
@@ -74,6 +76,7 @@ std::filesystem::path GUIStatePath()
 
 bool LoadGUIStateFile(GUIState& state, std::string& err)
 {
+    // 読込は現在値を初期値として渡し、不足キーは既定値を維持する。
     GUIStateStorageData data = BuildStateStorageData(state);
     if (!LoadGUIStateStorageFile(GUIStatePath(), data, err))
     {

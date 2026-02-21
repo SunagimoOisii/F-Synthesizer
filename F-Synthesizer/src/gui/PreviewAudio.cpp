@@ -21,6 +21,7 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
         : static_cast<ma_uint64>(playback->pcm.size() / channels);
 
     ma_uint32 written = 0;
+    // コールバックスレッドではロックを持たず、frameCursorの原子的更新で追従する。
     while (written < frameCount)
     {
         ma_uint64 cursor = playback->frameCursor.load(std::memory_order_relaxed);
@@ -59,6 +60,7 @@ bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, st
         return false;
     }
 
+    // sampleRate変更時はデバイスを作り直し、再生ピッチずれを防ぐ。
     if (playback.deviceReady && playback.sampleRate != static_cast<ma_uint32>(sampleRate))
     {
         ma_device_uninit(&playback.device);
@@ -121,6 +123,7 @@ bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bo
         return false;
     }
 
+    // PCM書き換え中だけロックし、コールバック側は読み取り専用で動かす。
     std::lock_guard<std::mutex> lock(playback.mutex);
     playback.pcm.resize(sound.data.size());
     for (size_t i = 0; i < sound.data.size(); i++)

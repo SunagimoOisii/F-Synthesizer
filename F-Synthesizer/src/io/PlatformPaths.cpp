@@ -5,6 +5,7 @@
 
 std::string PathToUtf8(const std::filesystem::path& path)
 {
+    // std::filesystem::path の内部表現差異を隠蔽し、ログ/JSONはUTF-8で統一する。
     const auto u8 = path.u8string();
     return std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
 }
@@ -36,6 +37,7 @@ std::filesystem::path NormalizePath(const std::filesystem::path& path)
     }
 
     std::error_code ec;
+    // 可能なら絶対パス化して返し、失敗時も lexically_normal だけは適用する。
     const std::filesystem::path abs = std::filesystem::absolute(path, ec);
     if (!ec)
     {
@@ -46,6 +48,7 @@ std::filesystem::path NormalizePath(const std::filesystem::path& path)
 
 std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, const std::string& value)
 {
+    // Configの相対パスは「設定ファイル配置ディレクトリ基準」で解決する。
     const std::filesystem::path path = Utf8ToPath(value);
     if (path.is_absolute())
     {
@@ -81,6 +84,7 @@ std::string FormatPathDiagnostic(
     const std::string& cause,
     const std::string& hint)
 {
+    // 診断文字列を固定フォーマット化し、GUI/CLIで同一の見え方にそろえる。
     std::ostringstream oss;
     oss << "[IO] op=" << operation
         << " path=\"" << PathToUtf8(path) << "\""

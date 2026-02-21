@@ -16,6 +16,7 @@ void EnsureChannelConfigs(GUIState& state)
     {
         return;
     }
+    // GUI状態が欠けているときは既定Configから埋め、nullの分岐を残さない。
     AppConfig cfg = DefaultConfig();
     state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
     if (cfg.channelConfigs)
@@ -40,6 +41,7 @@ void EnsureChannelMixStates(GUIState& state)
 
 AppConfig BuildConfigFromGUI(const GUIState& state)
 {
+    // GUI入力をRun境界のAppConfig形式にそろえる唯一の変換点。
     AppConfig cfg = DefaultConfig();
     cfg.midiPath = Utf8ToPath(state.midiPath);
     cfg.wavPath = Utf8ToPath(state.wavPath);
@@ -129,6 +131,7 @@ void RepairGUIStatePaths(
     const std::filesystem::path midi = Utf8ToPath(state.midiPath);
     const std::filesystem::path wav = Utf8ToPath(state.wavPath);
 
+    // 保存状態の破損/旧形式を想定し、実行可能な範囲に丸めて復旧する。
     bool repaired = false;
     if (!std::filesystem::exists(midi))
     {

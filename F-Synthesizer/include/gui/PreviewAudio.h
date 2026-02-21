@@ -8,6 +8,8 @@
 #include "AudioBuffer.h"
 #include "third_party/miniaudio.h"
 
+// GUIプレビュー再生のデバイス/PCM状態を保持する。
+// Render完了後のSoundDataをPCM化して、コールバックスレッドから読み出す。
 struct PreviewPlaybackState
 {
     ma_device device{};

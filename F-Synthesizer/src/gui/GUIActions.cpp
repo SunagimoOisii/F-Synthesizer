@@ -52,6 +52,7 @@ void AppendGUILog(GUIState& state, const std::string& line)
 
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
+    // preset一覧は毎回ファイル一覧を読み直し、追加/削除を再起動なしで反映する。
     state.presetItems = CollectPresetItems(FindProjectRootPath());
     if (state.presetItems.empty())
     {
@@ -81,6 +82,7 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
 
     const std::string& presetName = state.presetItems[state.presetIndex];
     strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
+    // GUIの編集状態をいったんAppConfig形式にそろえてから反映し、CLI経路と整合させる。
     AppConfig cfg{};
     if (!LoadPresetConfig(FindProjectRootPath(), presetName, cfg, err))
     {
@@ -167,6 +169,7 @@ void ActivateSoloPreview(GUIState& state, int channel)
     {
         state.soloPreviewBackup = *state.channelMixStates;
     }
+    // Preview時は対象chのみsolo化し、完了時にbackupから復元する。
     for (int ch = 0; ch < 16; ch++)
     {
         ChannelMixState& mix = (*state.channelMixStates)[ch];
@@ -214,6 +217,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
+    // GUI編集値 -> AppConfig 変換をここに集約し、実行コア側でGUI依存を持たせない。
     AppConfig cfg = BuildConfigFromGUI(state);
     RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
     if (!previewSelected && state.serialSave)
@@ -272,6 +276,7 @@ bool TryFinalizeCompletedRun(GUIState& state)
     AppendGUILog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
     if (state.runIsPreview)
     {
+        // Preview成功時のみメモリバッファを再生可能状態に切り替える。
         if (state.lastRunExitCode == 0 &&
             state.runOutputBuffer != nullptr &&
             !state.runOutputBuffer->data.empty())

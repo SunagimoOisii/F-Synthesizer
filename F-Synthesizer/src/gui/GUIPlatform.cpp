@@ -18,6 +18,7 @@ bool BrowseOpenPath(const std::string& initialPathUtf8, const wchar_t* filter, s
         wcsncpy_s(fileBuf, initial.c_str(), _TRUNCATE);
     }
 
+    // Win32ファイルダイアログはワイド文字APIを使い、UTF-8とはここで相互変換する。
     OPENFILENAMEW ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = nullptr;
@@ -70,6 +71,7 @@ std::string CompactPathForUi(const std::string& path, size_t maxChars)
     {
         return path;
     }
+    // 先頭と末尾を残して省略し、ファイル名側の視認性を優先する。
     const size_t head = maxChars / 2 - 3;
     const size_t tail = maxChars - head - 3;
     return path.substr(0, head) + "..." + path.substr(path.size() - tail);
