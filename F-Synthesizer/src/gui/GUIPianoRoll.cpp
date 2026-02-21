@@ -177,6 +177,7 @@ void ResetInteractionState(PianoRollState& state)
     state.isRangeSelecting = false;
     state.isDraggingMove = false;
     state.isDraggingResize = false;
+    state.isCreatingNote = false;
     state.dragTargetIndex = -1;
     state.dragSnapshot.clear();
 }
@@ -841,6 +842,44 @@ void UpdateResizeDrag(PianoRollState& state, int currentMouseTick, int snapStep)
     RecomputeMaxTick(state);
 }
 
+void DrawCreatingNotePreview(
+    const PianoRollState& state,
+    ImDrawList* drawList,
+    const ImVec2& canvasMin,
+    const ImVec2& canvasMax,
+    float pianoWidth,
+    float rowHeight,
+    float pxPerTick)
+{
+    if (!state.isCreatingNote)
+    {
+        return;
+    }
+
+    const int drawStartTick = (std::max)(0, state.tickOffset);
+    int tick0 = (std::min)(state.createStartTick, state.createCurrentTick);
+    int tick1 = (std::max)(state.createStartTick, state.createCurrentTick);
+    if (tick1 <= tick0)
+    {
+        tick1 = tick0 + 1;
+    }
+
+    const int noteHigh = (std::min)(127, state.noteOffset + state.visibleNoteCount - 1);
+    const int row = noteHigh - ClampNote(state.createNote);
+    if (row < 0 || row >= state.visibleNoteCount)
+    {
+        return;
+    }
+
+    const float x0 = canvasMin.x + pianoWidth + static_cast<float>(tick0 - drawStartTick) * pxPerTick;
+    const float x1 = canvasMin.x + pianoWidth + static_cast<float>(tick1 - drawStartTick) * pxPerTick;
+    const float y0 = canvasMin.y + row * rowHeight;
+    const float y1 = y0 + rowHeight;
+
+    drawList->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(130, 220, 255, 100), 2.0f);
+    drawList->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(120, 220, 255, 220), 2.0f);
+}
+
 void DrawNotes(
     const PianoRollState& state,
     ImDrawList* drawList,
@@ -998,12 +1037,24 @@ void DrawPianoRollPanel(
         }
         else
         {
-            ClearSelection(state);
-            state.isRangeSelecting = true;
-            state.rangeStartX = mousePos.x;
-            state.rangeStartY = mousePos.y;
-            state.rangeEndX = mousePos.x;
-            state.rangeEndY = mousePos.y;
+            if (ImGui::GetIO().KeyShift)
+            {
+                ClearSelection(state);
+                state.isRangeSelecting = true;
+                state.rangeStartX = mousePos.x;
+                state.rangeStartY = mousePos.y;
+                state.rangeEndX = mousePos.x;
+                state.rangeEndY = mousePos.y;
+            }
+            else
+            {
+                // 空白ドラッグでノート作成。Shift時のみ範囲選択へ切替える。
+                ClearSelection(state);
+                state.isCreatingNote = true;
+                state.createStartTick = SnapTick(mouseTick, snapStep);
+                state.createCurrentTick = state.createStartTick + (std::max)(1, snapStep);
+                state.createNote = ClampNote(mouseNote);
+            }
         }
     }
 
@@ -1061,9 +1112,45 @@ void DrawPianoRollPanel(
             state.dragTargetIndex = -1;
         }
     }
+    else if (state.isCreatingNote)
+    {
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            state.createCurrentTick = SnapTick(mouseTick, snapStep);
+            state.createNote = ClampNote(mouseNote);
+        }
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            const std::vector<PianoRollNote> before = state.notes;
+            int startTick = (std::min)(state.createStartTick, state.createCurrentTick);
+            int endTick = (std::max)(state.createStartTick, state.createCurrentTick);
+            if (endTick <= startTick)
+            {
+                endTick = startTick + (std::max)(1, snapStep);
+            }
+
+            PianoRollNote created{};
+            created.startTick = (std::max)(0, startTick);
+            created.endTick = (std::max)(created.startTick + 1, endTick);
+            created.note = ClampNote(state.createNote);
+            created.channel = ClampChannel(state.displayChannel);
+            created.velocity = 100;
+            state.notes.push_back(created);
+
+            EnsureSelectionSize(state);
+            SelectSingle(state, static_cast<int>(state.notes.size()) - 1);
+            PushUndoCommand(state, before, state.notes);
+            TouchNotesVersion(state);
+            RecomputeMaxTick(state);
+            SyncProjectDataFromCurrentNotes(state);
+
+            state.isCreatingNote = false;
+        }
+    }
 
     drawList->PushClipRect(ImVec2(canvasMin.x + pianoWidth, canvasMin.y), canvasMax, true);
     DrawNotes(state, drawList, visibleNotes);
+    DrawCreatingNotePreview(state, drawList, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick);
 
     if (playback != nullptr && playback->playing.load(std::memory_order_relaxed))
     {

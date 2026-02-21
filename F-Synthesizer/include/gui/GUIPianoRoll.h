@@ -66,9 +66,13 @@ struct PianoRollState
 
     bool isDraggingMove = false;
     bool isDraggingResize = false;
+    bool isCreatingNote = false;
     int dragTargetIndex = -1;
     int dragStartMouseTick = 0;
     int dragStartMouseNote = 60;
+    int createStartTick = 0;
+    int createCurrentTick = 0;
+    int createNote = 60;
     std::vector<PianoRollNote> dragSnapshot{};
 
     std::vector<int> pendingSelectedIndices{};
