@@ -55,6 +55,7 @@ struct GuiState
     {
         std::mutex* logMutex = nullptr;
         std::vector<std::string>* logs = nullptr;
+        std::atomic<bool>* cancelRequested = nullptr;
 
         void OnLogLine(const std::string& line) override
         {
@@ -64,6 +65,11 @@ struct GuiState
             }
             std::lock_guard<std::mutex> lock(*logMutex);
             logs->push_back(line);
+        }
+
+        bool ShouldCancel() override
+        {
+            return cancelRequested != nullptr && cancelRequested->load(std::memory_order_relaxed);
         }
     };
 
@@ -79,7 +85,7 @@ struct GuiState
     int lastRunExitCode = 0;
     bool hasRun = false;
     bool running = false;
-    bool stopRequested = false;
+    std::atomic<bool> stopRequested{ false };
     bool serialSave = false;
     int selectedChannel = 0;
     int selectedDrumNote = 36;
@@ -1083,7 +1089,7 @@ void InitGuiState(GuiState& state)
     state.selectedDrumNote = 36;
     strncpy_s(state.presetName, sizeof(state.presetName), "basic_wave", _TRUNCATE);
     state.running = false;
-    state.stopRequested = false;
+    state.stopRequested.store(false, std::memory_order_relaxed);
     state.hasRun = false;
     state.lastRunExitCode = 0;
     state.serialSave = false;
@@ -1103,6 +1109,7 @@ void InitGuiState(GuiState& state)
     state.runOutputBuffer.reset();
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
+    state.observer.cancelRequested = &state.stopRequested;
     RefreshPresetItems(state, state.presetName);
 
     state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
@@ -1678,6 +1685,11 @@ int RunGuiApp()
                 {
                     ActivateSoloPreview(state, state.selectedChannel);
                 }
+                if (state.playback.playing.load(std::memory_order_relaxed))
+                {
+                    StopPreviewAudio(state.playback);
+                    AppendGuiLog(state, "[GUI] Previous preview playback stopped for new run");
+                }
                 AppConfig cfg = BuildConfigFromGui(state);
                 RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
                 if (!previewSelected && state.serialSave)
@@ -1701,7 +1713,7 @@ int RunGuiApp()
                 AppendGuiLog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
                 AppendGuiLog(state, "[GUI] Effective Output: " + state.lastOutputPath);
                 state.hasRun = false;
-                state.stopRequested = false;
+                state.stopRequested.store(false, std::memory_order_relaxed);
                 state.running = true;
                 state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
                     return Run(cfg, options, &state.observer, outBuffer.get());
@@ -1747,17 +1759,19 @@ int RunGuiApp()
             }
             if (state.running)
             {
-                state.stopRequested = true;
-                AppendGuiLog(state, "[GUI] Stop requested (render cancellation is not implemented yet)");
+                state.stopRequested.store(true, std::memory_order_relaxed);
+                AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
             }
         }
         ImGui::EndDisabled();
 
         ImGui::SameLine();
+        ImGui::BeginDisabled(state.running);
         if (ImGui::Button("Close"))
         {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+        ImGui::EndDisabled();
 
         ImGui::BeginDisabled(state.running);
         ImGui::Checkbox("Loop Preview", &state.previewLoop);
@@ -1795,6 +1809,10 @@ int RunGuiApp()
             if (state.lastRunExitCode == 0)
             {
                 ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "Last Run: Success");
+            }
+            else if (state.lastRunExitCode == 2)
+            {
+                ImGui::TextColored(ImVec4(0.9f, 0.7f, 0.2f, 1.0f), "Last Run: Canceled");
             }
             else
             {
@@ -1848,6 +1866,7 @@ int RunGuiApp()
 
     if (state.running && state.runFuture.valid())
     {
+        state.stopRequested.store(true, std::memory_order_relaxed);
         state.lastRunExitCode = state.runFuture.get();
         state.hasRun = true;
         state.running = false;

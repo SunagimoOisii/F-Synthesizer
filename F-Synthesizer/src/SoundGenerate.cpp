@@ -1587,7 +1587,21 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     }
 
     // Render
-    RenderMIDIEvents(sound, events, channelConfigs, channelMixStates);
+    bool canceled = false;
+    auto shouldCancel = [&]() -> bool
+    {
+        if (!options.allowCancel || observer == nullptr)
+        {
+            return false;
+        }
+        return observer->ShouldCancel();
+    };
+    RenderMIDIEvents(sound, events, channelConfigs, channelMixStates, shouldCancel, &canceled);
+    if (canceled)
+    {
+        LogLine(observer, "[Run] Canceled by request.");
+        return 2;
+    }
     {
         double peak = 0.0;
         double sumSq = 0.0;

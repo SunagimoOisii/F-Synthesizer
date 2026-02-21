@@ -41,6 +41,7 @@ struct IRunObserver
 {
     virtual ~IRunObserver() = default;
     virtual void OnLogLine(const std::string& line) = 0;
+    virtual bool ShouldCancel() { return false; }
 };
 
 std::filesystem::path FindProjectRootPath();

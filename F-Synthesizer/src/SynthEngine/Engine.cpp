@@ -44,8 +44,15 @@ void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs,
-    const std::array<ChannelMixState, 16>& channelMixStates)
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
 {
+    if (canceled != nullptr)
+    {
+        *canceled = false;
+    }
+
     RenderState state;
     for (int i = 0; i < 16; i++)
     {
@@ -65,6 +72,15 @@ void RenderMIDIEvents(
     const int cleanupInterval = 256;
     for (int i = 0; i < sound.length; i++)
     {
+        if (shouldCancel && ((i % cleanupInterval) == 0) && shouldCancel())
+        {
+            if (canceled != nullptr)
+            {
+                *canceled = true;
+            }
+            break;
+        }
+
         ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
         sound.data[i] = RenderVoices(state, sound);
 
