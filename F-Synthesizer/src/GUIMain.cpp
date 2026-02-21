@@ -1477,7 +1477,7 @@ bool DrawChannelEditor(GuiState& state)
 
             ImGui::TableSetColumnIndex(1);
             bool selected = (state.selectedChannel == ch);
-            if (ImGui::Selectable("Edit", selected, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, 0)))
+            if (ImGui::Selectable("Edit", selected))
             {
                 state.selectedChannel = ch;
             }
@@ -1735,7 +1735,20 @@ int RunGuiApp()
         ImGui::NewFrame();
         ImGui::GetIO().FontGlobalScale = UiScaleFromIndex(state.uiScaleIndex);
 
-        ImGui::Begin("F-Synthesizer GUI");
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        const ImGuiWindowFlags rootFlags =
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoSavedSettings;
+        ImGui::Begin("F-SynthesizerRoot", nullptr, rootFlags);
+
+        ImGui::TextUnformatted("F-Synthesizer GUI");
+        ImGui::Separator();
         DrawStatusBadge(state);
         ImGui::SameLine();
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16.0f);
