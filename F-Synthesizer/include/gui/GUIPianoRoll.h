@@ -98,5 +98,7 @@ void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,
     const PreviewPlaybackState* playback,
-    const std::function<void(const std::string&)>& appendLog);
+    const std::function<void(const std::string&)>& appendLog,
+    const std::function<void()>& requestPreviewPlay,
+    const std::function<void()>& requestPreviewStop);
 } // namespace gui

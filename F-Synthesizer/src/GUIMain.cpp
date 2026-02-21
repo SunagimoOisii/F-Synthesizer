@@ -583,7 +583,16 @@ int RunGUIApp()
                 state.pianoRoll,
                 state.midiPath,
                 &state.playback,
-                [&](const std::string& line) { AppendGUILog(state, line); });
+                [&](const std::string& line) { AppendGUILog(state, line); },
+                [&]()
+                {
+                    state.selectedChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                    StartGUIRun(state, true);
+                },
+                [&]()
+                {
+                    StopGUIRunAndPreview(state);
+                });
         }
         ImGui::EndChild();
 

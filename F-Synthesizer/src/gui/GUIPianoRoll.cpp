@@ -566,6 +566,7 @@ void DrawPianoGrid(
     const ImVec2& canvasMin,
     const ImVec2& canvasMax,
     float pianoWidth,
+    float rulerHeight,
     float rowHeight,
     float pxPerTick)
 {
@@ -578,16 +579,27 @@ void DrawPianoGrid(
     const int snapStep = SnapStepTicks(state.snapIndex, tpq);
 
     const float gridMinX = canvasMin.x + pianoWidth;
+    const float noteAreaMinY = canvasMin.y + rulerHeight;
     const ImU32 laneDark = IM_COL32(30, 30, 34, 255);
     const ImU32 laneLight = IM_COL32(36, 36, 40, 255);
     const ImU32 laneC = IM_COL32(42, 46, 56, 255);
     const ImU32 keyDark = IM_COL32(24, 24, 28, 255);
     const ImU32 keyLight = IM_COL32(44, 44, 48, 255);
+    const ImU32 rulerBg = IM_COL32(22, 24, 30, 255);
+
+    drawList->AddRectFilled(
+        ImVec2(gridMinX, canvasMin.y),
+        ImVec2(canvasMax.x, noteAreaMinY),
+        rulerBg);
+    drawList->AddRectFilled(
+        ImVec2(canvasMin.x, canvasMin.y),
+        ImVec2(gridMinX, noteAreaMinY),
+        keyLight);
 
     for (int row = 0; row < visibleCount; row++)
     {
         const int note = noteHigh - row;
-        const float y0 = canvasMin.y + row * rowHeight;
+        const float y0 = noteAreaMinY + row * rowHeight;
         const float y1 = y0 + rowHeight;
         ImU32 laneColor = (row % 2 == 0) ? laneDark : laneLight;
         if ((note % 12) == 0)
@@ -611,9 +623,17 @@ void DrawPianoGrid(
         const float x = gridMinX + (tick - startTick) * pxPerTick;
         const bool beatLine = (tick % tpq) == 0;
         const ImU32 col = beatLine ? IM_COL32(120, 130, 150, 180) : IM_COL32(90, 95, 110, 90);
-        drawList->AddLine(ImVec2(x, canvasMin.y), ImVec2(x, canvasMax.y), col);
+        drawList->AddLine(ImVec2(x, noteAreaMinY), ImVec2(x, canvasMax.y), col);
+        if (beatLine)
+        {
+            const int beat = tick / tpq;
+            const std::string beatText = std::to_string(beat);
+            drawList->AddText(ImVec2(x + 2.0f, canvasMin.y + 1.0f), IM_COL32(185, 190, 205, 255), beatText.c_str());
+            drawList->AddLine(ImVec2(x, canvasMin.y), ImVec2(x, noteAreaMinY), IM_COL32(120, 130, 150, 180), 1.0f);
+        }
     }
 
+    drawList->AddLine(ImVec2(canvasMin.x, noteAreaMinY), ImVec2(canvasMax.x, noteAreaMinY), IM_COL32(120, 125, 140, 180), 1.0f);
     drawList->AddLine(ImVec2(gridMinX, canvasMin.y), ImVec2(gridMinX, canvasMax.y), IM_COL32(180, 180, 190, 180), 1.0f);
 }
 
@@ -671,6 +691,7 @@ void BuildVisibleDrawNotes(
     const ImVec2& canvasMin,
     const ImVec2& canvasMax,
     float pianoWidth,
+    float rulerHeight,
     float rowHeight,
     float pxPerTick,
     std::vector<DrawNoteInfo>& out)
@@ -683,6 +704,7 @@ void BuildVisibleDrawNotes(
     const int startTick = (std::max)(0, state.tickOffset);
     const int endTick = startTick + static_cast<int>((canvasMax.x - canvasMin.x - pianoWidth) / pxPerTick) + 1;
     const float gridMinX = canvasMin.x + pianoWidth;
+    const float noteAreaMinY = canvasMin.y + rulerHeight;
 
     EnsureVisibleNoteIndexCache(state, noteLow, noteHigh, startTick, endTick);
     out.reserve(state.visibleNoteIndexCache.size());
@@ -694,7 +716,7 @@ void BuildVisibleDrawNotes(
         }
         const auto& n = state.notes[static_cast<size_t>(idx)];
         const int row = noteHigh - n.note;
-        const float y0 = canvasMin.y + row * rowHeight + 1.0f;
+        const float y0 = noteAreaMinY + row * rowHeight + 1.0f;
         const float y1 = y0 + rowHeight - 2.0f;
         const float x0 = gridMinX + (n.startTick - startTick) * pxPerTick;
         const float x1 = gridMinX + (n.endTick - startTick) * pxPerTick;
@@ -913,7 +935,9 @@ void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,
     const PreviewPlaybackState* playback,
-    const std::function<void(const std::string&)>& appendLog)
+    const std::function<void(const std::string&)>& appendLog,
+    const std::function<void()>& requestPreviewPlay,
+    const std::function<void()>& requestPreviewStop)
 {
     const std::filesystem::path midiPath = (midiPathUtf8 != nullptr) ? Utf8ToPath(midiPathUtf8) : std::filesystem::path{};
     EnsureModelLoaded(state, midiPath, appendLog);
@@ -972,8 +996,9 @@ void DrawPianoRollPanel(
     }
 
     const float rowHeight = (std::max)(12.0f, ImGui::GetTextLineHeight() + 4.0f);
+    const float rulerHeight = (std::max)(14.0f, ImGui::GetTextLineHeight() + 2.0f);
     const float pianoWidth = (std::max)(56.0f, ImGui::CalcTextSize("127").x + 12.0f);
-    const float panelHeight = std::clamp(state.visibleNoteCount * rowHeight + 4.0f, 180.0f, 460.0f);
+    const float panelHeight = std::clamp(rulerHeight + state.visibleNoteCount * rowHeight + 4.0f, 180.0f, 460.0f);
     const ImVec2 canvasSize((std::max)(120.0f, ImGui::GetContentRegionAvail().x - 4.0f), panelHeight);
     ImGui::InvisibleButton("piano_roll_canvas", canvasSize);
 
@@ -987,7 +1012,7 @@ void DrawPianoRollPanel(
     const float tpq = static_cast<float>((std::max)(1, state.ticksPerQuarter));
     const float pxPerTick = (std::max)(0.01f, state.pixelsPerQuarter / tpq);
     const int snapStep = SnapStepTicks(state.snapIndex, state.ticksPerQuarter);
-    DrawPianoGrid(state, drawList, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick);
+    DrawPianoGrid(state, drawList, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick);
 
     if (state.hasLoadError || state.notes.empty())
     {
@@ -996,15 +1021,18 @@ void DrawPianoRollPanel(
     }
 
     std::vector<DrawNoteInfo> visibleNotes;
-    BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+    BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
 
     const bool hovered = ImGui::IsItemHovered();
-    const bool mouseInGrid = hovered && ImGui::GetIO().MousePos.x >= gridMinX;
-    const bool panelFocused = hovered || ImGui::IsItemActive();
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
+    const bool mouseInGrid = hovered && mousePos.x >= gridMinX;
+    const float noteAreaMinY = canvasMin.y + rulerHeight;
+    const bool mouseInRuler = mouseInGrid && mousePos.y >= canvasMin.y && mousePos.y < noteAreaMinY;
+    const bool mouseInNoteArea = mouseInGrid && mousePos.y >= noteAreaMinY;
+    const bool panelFocused = hovered || ImGui::IsItemActive();
     const int noteHigh = (std::min)(127, state.noteOffset + state.visibleNoteCount - 1);
     const int mouseTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
-    const int mouseNote = MouseToNote(mousePos.y, canvasMin.y, rowHeight, noteHigh);
+    const int mouseNote = MouseToNote(mousePos.y, noteAreaMinY, rowHeight, noteHigh);
 
     if (hovered)
     {
@@ -1047,7 +1075,7 @@ void DrawPianoRollPanel(
         }
     }
 
-    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && mouseInGrid)
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInRuler)
     {
         state.previewStartTick = SnapTick(mouseTick, snapStep);
         if (appendLog)
@@ -1056,18 +1084,37 @@ void DrawPianoRollPanel(
         }
     }
 
+    if (panelFocused && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Space, false))
+    {
+        const bool playing = (playback != nullptr) && playback->playing.load(std::memory_order_relaxed);
+        if (playing)
+        {
+            if (requestPreviewStop)
+            {
+                requestPreviewStop();
+            }
+        }
+        else
+        {
+            if (requestPreviewPlay)
+            {
+                requestPreviewPlay();
+            }
+        }
+    }
+
     if (panelFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
     {
         ExecuteUndo(state);
-        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
     }
     if (panelFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false))
     {
         ExecuteRedo(state);
-        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
     }
 
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInGrid)
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInNoteArea)
     {
         int hitIndex = -1;
         bool onResize = false;
@@ -1124,7 +1171,7 @@ void DrawPianoRollPanel(
         if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
         {
             UpdateMoveDrag(state, mouseTick, mouseNote, snapStep);
-            BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+            BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
         }
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
@@ -1141,7 +1188,7 @@ void DrawPianoRollPanel(
         if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
         {
             UpdateResizeDrag(state, mouseTick, snapStep);
-            BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+            BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick, visibleNotes);
         }
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
@@ -1191,7 +1238,7 @@ void DrawPianoRollPanel(
 
     drawList->PushClipRect(ImVec2(canvasMin.x + pianoWidth, canvasMin.y), canvasMax, true);
     DrawNotes(state, drawList, visibleNotes);
-    DrawCreatingNotePreview(state, drawList, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick);
+    DrawCreatingNotePreview(state, drawList, ImVec2(canvasMin.x, noteAreaMinY), canvasMax, pianoWidth, rowHeight, pxPerTick);
 
     if (playback != nullptr && playback->playing.load(std::memory_order_relaxed))
     {
