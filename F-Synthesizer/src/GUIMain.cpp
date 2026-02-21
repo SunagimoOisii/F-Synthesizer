@@ -15,10 +15,13 @@
 #include <cmath>
 #include <cctype>
 #include <type_traits>
+#include <cwchar>
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "third_party/miniaudio.h"
 
+#include <windows.h>
+#include <commdlg.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -136,6 +139,82 @@ std::filesystem::path Utf8ToPath(const std::string& s)
     u8.assign(reinterpret_cast<const char8_t*>(s.data()),
         reinterpret_cast<const char8_t*>(s.data() + s.size()));
     return std::filesystem::path(u8);
+}
+
+std::wstring Utf8ToWide(const std::string& s)
+{
+    return Utf8ToPath(s).wstring();
+}
+
+std::string WideToUtf8(const std::wstring& w)
+{
+    return PathToUtf8(std::filesystem::path(w));
+}
+
+bool BrowseOpenPath(const std::string& initialPathUtf8, const wchar_t* filter, std::string& outPathUtf8)
+{
+    wchar_t fileBuf[2048]{};
+    if (!initialPathUtf8.empty())
+    {
+        std::wstring initial = Utf8ToWide(initialPathUtf8);
+        wcsncpy_s(fileBuf, initial.c_str(), _TRUNCATE);
+    }
+
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = nullptr;
+    ofn.lpstrFile = fileBuf;
+    ofn.nMaxFile = static_cast<DWORD>(std::size(fileBuf));
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+
+    if (!GetOpenFileNameW(&ofn))
+    {
+        return false;
+    }
+
+    outPathUtf8 = WideToUtf8(fileBuf);
+    return true;
+}
+
+bool BrowseSavePath(const std::string& initialPathUtf8, const wchar_t* filter, const wchar_t* defExt, std::string& outPathUtf8)
+{
+    wchar_t fileBuf[2048]{};
+    if (!initialPathUtf8.empty())
+    {
+        std::wstring initial = Utf8ToWide(initialPathUtf8);
+        wcsncpy_s(fileBuf, initial.c_str(), _TRUNCATE);
+    }
+
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = nullptr;
+    ofn.lpstrFile = fileBuf;
+    ofn.nMaxFile = static_cast<DWORD>(std::size(fileBuf));
+    ofn.lpstrFilter = filter;
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = defExt;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (!GetSaveFileNameW(&ofn))
+    {
+        return false;
+    }
+
+    outPathUtf8 = WideToUtf8(fileBuf);
+    return true;
+}
+
+std::string CompactPathForUi(const std::string& s, size_t maxChars = 72)
+{
+    if (s.size() <= maxChars)
+    {
+        return s;
+    }
+    const size_t head = maxChars / 2 - 3;
+    const size_t tail = maxChars - head - 3;
+    return s.substr(0, head) + "..." + s.substr(s.size() - tail);
 }
 
 void SetupImGuiFont()
@@ -1688,6 +1767,62 @@ int RunGuiApp()
                     });
             }
         };
+
+        ImGui::BeginDisabled(state.running);
+        if (ImGui::Button("Play"))
+        {
+            startRun(false);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Play Preview (Selected ch)"))
+        {
+            startRun(true);
+        }
+        ImGui::SameLine();
+        ImGui::Checkbox("Loop Preview", &state.previewLoop);
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
+        if (ImGui::Button("Replay Preview"))
+        {
+            std::string err;
+            if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
+            {
+                AppendGuiLog(state, "[GUI] Preview replay started");
+            }
+            else
+            {
+                AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
+            }
+        }
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
+        ImGui::BeginDisabled(!canStop);
+        if (ImGui::Button("Stop"))
+        {
+            if (state.playback.playing.load(std::memory_order_relaxed))
+            {
+                StopPreviewAudio(state.playback);
+                AppendGuiLog(state, "[GUI] Preview playback stopped");
+            }
+            if (state.running)
+            {
+                state.stopRequested.store(true, std::memory_order_relaxed);
+                AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
+            }
+        }
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        ImGui::BeginDisabled(state.running);
+        if (ImGui::Button("Close"))
+        {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+        ImGui::EndDisabled();
+        ImGui::TextDisabled("Play: export full run / Play Preview: selected channel memory preview");
+        ImGui::Separator();
+
         const float availY = ImGui::GetContentRegionAvail().y;
         const float reserveForLog = state.logPanelHeight + ImGui::GetFrameHeightWithSpacing() + 12.0f;
         const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
@@ -1810,7 +1945,56 @@ int RunGuiApp()
             }
 
             state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse MIDI..."))
+            {
+                std::string selected;
+                const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
+                if (BrowseOpenPath(state.midiPath, midiFilter, selected))
+                {
+                    strncpy_s(state.midiPath, sizeof(state.midiPath), selected.c_str(), _TRUNCATE);
+                    state.presetDirty = true;
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Copy MIDI"))
+            {
+                ImGui::SetClipboardText(state.midiPath);
+            }
+            {
+                const std::string compact = CompactPathForUi(state.midiPath);
+                ImGui::TextDisabled("%s", compact.c_str());
+                if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
+                {
+                    ImGui::SetTooltip("%s", state.midiPath);
+                }
+            }
+
             state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+            ImGui::SameLine();
+            if (ImGui::Button("Browse Output..."))
+            {
+                std::string selected;
+                const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
+                if (BrowseSavePath(state.wavPath, wavFilter, L"wav", selected))
+                {
+                    strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
+                    state.presetDirty = true;
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Copy Output"))
+            {
+                ImGui::SetClipboardText(state.wavPath);
+            }
+            {
+                const std::string compact = CompactPathForUi(state.wavPath);
+                ImGui::TextDisabled("%s", compact.c_str());
+                if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
+                {
+                    ImGui::SetTooltip("%s", state.wavPath);
+                }
+            }
             state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
             state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
             state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
@@ -1821,63 +2005,9 @@ int RunGuiApp()
             state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
             ImGui::EndDisabled();
 
-            ImGui::Separator();
-            ImGui::BeginDisabled(state.running);
-            if (ImGui::Button("Play"))
-            {
-                startRun(false);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Play Preview (Selected ch)"))
-            {
-                startRun(true);
-            }
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(state.running || !state.previewAudioReady || !state.previewRenderedSound);
-            if (ImGui::Button("Replay Preview"))
-            {
-                std::string err;
-                if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, err))
-                {
-                    AppendGuiLog(state, "[GUI] Preview replay started");
-                }
-                else
-                {
-                    AppendGuiLog(state, "[GUI] Preview replay failed: " + err);
-                }
-            }
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
-            ImGui::BeginDisabled(!canStop);
-            if (ImGui::Button("Stop"))
-            {
-                if (state.playback.playing.load(std::memory_order_relaxed))
-                {
-                    StopPreviewAudio(state.playback);
-                    AppendGuiLog(state, "[GUI] Preview playback stopped");
-                }
-                if (state.running)
-                {
-                    state.stopRequested.store(true, std::memory_order_relaxed);
-                    AppendGuiLog(state, "[GUI] Stop requested (render cancellation signal sent)");
-                }
-            }
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::BeginDisabled(state.running);
-            if (ImGui::Button("Close"))
-            {
-                glfwSetWindowShouldClose(window, GLFW_TRUE);
-            }
-            ImGui::EndDisabled();
-
             ImGui::TableSetColumnIndex(1);
             state.presetDirty |= DrawChannelEditor(state);
             ImGui::BeginDisabled(state.running);
-            ImGui::Checkbox("Loop Preview", &state.previewLoop);
-            ImGui::SameLine();
             if (state.soloPreviewActive)
             {
                 if (ImGui::Button("Solo Preview Off"))
