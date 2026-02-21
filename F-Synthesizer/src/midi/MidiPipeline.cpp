@@ -91,6 +91,37 @@ std::vector<MIDIEvent> BuildWindowedEvents(
     prefix.insert(prefix.end(), out.begin(), out.end());
     return prefix;
 }
+
+std::vector<MIDIEventTick> ReplaceNoteTicks(
+    const std::vector<MIDIEventTick>& baseTicks,
+    const std::vector<MIDIEventTick>& overrideNoteTicks,
+    int targetChannel)
+{
+    std::vector<MIDIEventTick> merged;
+    merged.reserve(baseTicks.size() + overrideNoteTicks.size());
+
+    // Note以外は元MIDIを維持し、Noteのみ編集バッファで差し替える。
+    for (const auto& e : baseTicks)
+    {
+        if (e.type != MIDIEventType::Note)
+        {
+            merged.push_back(e);
+        }
+    }
+    for (const auto& e : overrideNoteTicks)
+    {
+        if (e.type != MIDIEventType::Note)
+        {
+            continue;
+        }
+        if (targetChannel >= 0 && e.channel != targetChannel)
+        {
+            continue;
+        }
+        merged.push_back(e);
+    }
+    return merged;
+}
 } // namespace
 
 bool BuildMidiPipeline(
@@ -100,6 +131,8 @@ bool BuildMidiPipeline(
     WaveType defaultWave,
     double startSec,
     double durationSec,
+    const std::vector<MIDIEventTick>* overrideNoteTicks,
+    int overrideTicksPerQuarter,
     MidiBuildOutput& out,
     std::string& err)
 {
@@ -108,6 +141,15 @@ bool BuildMidiPipeline(
     {
         err = "failed to load MIDI";
         return false;
+    }
+
+    if (overrideNoteTicks != nullptr && !overrideNoteTicks->empty())
+    {
+        out.ticks = ReplaceNoteTicks(out.ticks, *overrideNoteTicks, targetChannel);
+        if (overrideTicksPerQuarter > 0)
+        {
+            out.ticksPerQuarter = overrideTicksPerQuarter;
+        }
     }
 
     BuildSampleEvents(out.ticks, out.tempoEvents, out.ticksPerQuarter, sampleRate, defaultWave, out.events);

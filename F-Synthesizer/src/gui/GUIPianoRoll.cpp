@@ -25,6 +25,14 @@ struct DrawNoteInfo
     float y1 = 0.0f;
 };
 
+struct NoteStart
+{
+    int tick = 0;
+    int velocity = 100;
+};
+
+void SyncProjectDataFromCurrentNotes(PianoRollState& state);
+
 int ClampChannel(int channel)
 {
     return (channel >= 0 && channel < 16) ? channel : 0;
@@ -142,6 +150,120 @@ void RecomputeMaxTick(PianoRollState& state)
     }
 }
 
+bool NotesEqual(const std::vector<PianoRollNote>& a, const std::vector<PianoRollNote>& b)
+{
+    if (a.size() != b.size())
+    {
+        return false;
+    }
+    for (size_t i = 0; i < a.size(); i++)
+    {
+        const auto& x = a[i];
+        const auto& y = b[i];
+        if (x.startTick != y.startTick || x.endTick != y.endTick ||
+            x.note != y.note || x.channel != y.channel || x.velocity != y.velocity)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+void PushUndoCommand(PianoRollState& state, const std::vector<PianoRollNote>& before, const std::vector<PianoRollNote>& after)
+{
+    if (NotesEqual(before, after))
+    {
+        return;
+    }
+
+    PianoRollEditCommand cmd{};
+    cmd.before = before;
+    cmd.after = after;
+    state.undoStack.push_back(std::move(cmd));
+    if (static_cast<int>(state.undoStack.size()) > state.maxUndoCommands)
+    {
+        state.undoStack.erase(state.undoStack.begin());
+    }
+    state.redoStack.clear();
+}
+
+bool ExecuteUndo(PianoRollState& state)
+{
+    if (state.undoStack.empty())
+    {
+        return false;
+    }
+    PianoRollEditCommand cmd = std::move(state.undoStack.back());
+    state.undoStack.pop_back();
+    state.notes = cmd.before;
+    RecomputeMaxTick(state);
+    SyncProjectDataFromCurrentNotes(state);
+    state.redoStack.push_back(std::move(cmd));
+    if (state.selected.size() != state.notes.size())
+    {
+        state.selected.assign(state.notes.size(), 0);
+        state.primarySelectedIndex = -1;
+    }
+    return true;
+}
+
+bool ExecuteRedo(PianoRollState& state)
+{
+    if (state.redoStack.empty())
+    {
+        return false;
+    }
+    PianoRollEditCommand cmd = std::move(state.redoStack.back());
+    state.redoStack.pop_back();
+    state.notes = cmd.after;
+    RecomputeMaxTick(state);
+    SyncProjectDataFromCurrentNotes(state);
+    state.undoStack.push_back(std::move(cmd));
+    if (state.selected.size() != state.notes.size())
+    {
+        state.selected.assign(state.notes.size(), 0);
+        state.primarySelectedIndex = -1;
+    }
+    return true;
+}
+
+void ApplyPendingSelection(PianoRollState& state)
+{
+    if (state.pendingSelectedIndices.empty())
+    {
+        return;
+    }
+    EnsureSelectionSize(state);
+    std::fill(state.selected.begin(), state.selected.end(), static_cast<uint8_t>(0));
+    int first = -1;
+    for (int idx : state.pendingSelectedIndices)
+    {
+        if (idx < 0 || idx >= static_cast<int>(state.selected.size()))
+        {
+            continue;
+        }
+        state.selected[static_cast<size_t>(idx)] = 1;
+        if (first < 0)
+        {
+            first = idx;
+        }
+    }
+    state.primarySelectedIndex = first;
+    state.pendingSelectedIndices.clear();
+}
+
+void SyncProjectDataFromCurrentNotes(PianoRollState& state)
+{
+    if (state.loadedMidiPath.empty())
+    {
+        return;
+    }
+    state.projectMidiPath = state.loadedMidiPath;
+    state.projectTicksPerQuarter = state.ticksPerQuarter;
+    state.projectNotes = state.notes;
+    state.hasProjectData = !state.projectNotes.empty();
+}
+
 int MouseToTick(float mouseX, float gridMinX, int startTick, float pxPerTick)
 {
     const float local = (mouseX - gridMinX) / (std::max)(0.0001f, pxPerTick);
@@ -177,6 +299,8 @@ void ClearModel(PianoRollState& state)
     state.ticksPerQuarter = 480;
     state.selected.clear();
     state.primarySelectedIndex = -1;
+    state.undoStack.clear();
+    state.redoStack.clear();
     ResetInteractionState(state);
 }
 
@@ -192,7 +316,7 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
     });
 
     constexpr size_t kSlots = 16 * 128;
-    std::vector<std::vector<int>> noteOnQueues(kSlots);
+    std::vector<std::vector<NoteStart>> noteOnQueues(kSlots);
     std::array<size_t, kSlots> queueHeads{};
 
     state.notes.reserve(sorted.size() / 2);
@@ -211,7 +335,10 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
 
         if (e.isNoteOn)
         {
-            noteOnQueues[slot].push_back(e.tick);
+            NoteStart st{};
+            st.tick = e.tick;
+            st.velocity = std::clamp(e.velocity, 1, 127);
+            noteOnQueues[slot].push_back(st);
             continue;
         }
 
@@ -220,11 +347,12 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
         if (head < q.size())
         {
             PianoRollNote n{};
-            n.startTick = q[head++];
+            const NoteStart st = q[head++];
+            n.startTick = st.tick;
             n.endTick = (std::max)(n.startTick + 1, e.tick);
             n.note = note;
             n.channel = ch;
-            n.velocity = e.velocity;
+            n.velocity = st.velocity;
             state.notes.push_back(n);
         }
     }
@@ -240,11 +368,12 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
             while (head < q.size())
             {
                 PianoRollNote n{};
-                n.startTick = q[head++];
+                const NoteStart st = q[head++];
+                n.startTick = st.tick;
                 n.endTick = (std::max)(n.startTick + 1, fallbackEndTick);
                 n.note = note;
                 n.channel = ch;
-                n.velocity = 0;
+                n.velocity = st.velocity;
                 state.notes.push_back(n);
             }
         }
@@ -294,6 +423,25 @@ void EnsureModelLoaded(
     }
 
     BuildNotesFromTicks(ticks, ticksPerQuarter, state);
+    bool appliedProjectData = false;
+    if (state.hasProjectData && state.projectMidiPath == midiPath && !state.projectNotes.empty())
+    {
+        // 専用project JSONがある場合は、MIDI由来ノートより編集済みノートを優先する。
+        state.notes = state.projectNotes;
+        state.ticksPerQuarter = (state.projectTicksPerQuarter > 0) ? state.projectTicksPerQuarter : state.ticksPerQuarter;
+        state.selected.assign(state.notes.size(), 0);
+        state.primarySelectedIndex = -1;
+        RecomputeMaxTick(state);
+        appliedProjectData = true;
+    }
+    if (!appliedProjectData)
+    {
+        state.hasProjectData = false;
+        state.projectMidiPath.clear();
+        state.projectNotes.clear();
+        state.projectTicksPerQuarter = 0;
+    }
+    ApplyPendingSelection(state);
     state.loadedMidiPath = midiPath;
     state.loadedWriteTime = std::filesystem::last_write_time(midiPath, ec);
     state.hasLoadError = false;
@@ -611,6 +759,20 @@ void DrawPianoRollPanel(
             hasSelection ? "yes" : "no",
             state.ticksPerQuarter,
             state.maxTick);
+        ImGui::SameLine();
+        ImGui::BeginDisabled(state.undoStack.empty());
+        if (ImGui::SmallButton("Undo"))
+        {
+            ExecuteUndo(state);
+        }
+        ImGui::EndDisabled();
+        ImGui::SameLine();
+        ImGui::BeginDisabled(state.redoStack.empty());
+        if (ImGui::SmallButton("Redo"))
+        {
+            ExecuteRedo(state);
+        }
+        ImGui::EndDisabled();
     }
 
     const float rowHeight = 12.0f;
@@ -642,10 +804,22 @@ void DrawPianoRollPanel(
 
     const bool hovered = ImGui::IsItemHovered();
     const bool mouseInGrid = hovered && ImGui::GetIO().MousePos.x >= gridMinX;
+    const bool panelFocused = hovered || ImGui::IsItemActive();
     const ImVec2 mousePos = ImGui::GetIO().MousePos;
     const int noteHigh = (std::min)(127, state.noteOffset + state.visibleNoteCount - 1);
     const int mouseTick = MouseToTick(mousePos.x, gridMinX, (std::max)(0, state.tickOffset), pxPerTick);
     const int mouseNote = MouseToNote(mousePos.y, canvasMin.y, rowHeight, noteHigh);
+
+    if (panelFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z, false))
+    {
+        ExecuteUndo(state);
+        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+    }
+    if (panelFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y, false))
+    {
+        ExecuteRedo(state);
+        BuildVisibleDrawNotes(state, canvasMin, canvasMax, pianoWidth, rowHeight, pxPerTick, visibleNotes);
+    }
 
     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mouseInGrid)
     {
@@ -696,6 +870,8 @@ void DrawPianoRollPanel(
         }
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
+            PushUndoCommand(state, state.dragSnapshot, state.notes);
+            SyncProjectDataFromCurrentNotes(state);
             state.isDraggingMove = false;
             state.dragSnapshot.clear();
             state.dragTargetIndex = -1;
@@ -710,6 +886,8 @@ void DrawPianoRollPanel(
         }
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
+            PushUndoCommand(state, state.dragSnapshot, state.notes);
+            SyncProjectDataFromCurrentNotes(state);
             state.isDraggingResize = false;
             state.dragSnapshot.clear();
             state.dragTargetIndex = -1;

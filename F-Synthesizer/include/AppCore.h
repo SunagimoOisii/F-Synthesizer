@@ -4,8 +4,10 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "AudioBuffer.h"
+#include "MIDIParser.h"
 #include "SynthEngine/SynthEngine.h"
 
 enum class RunMode
@@ -41,6 +43,9 @@ struct AppConfig
     double extraReleaseSec;
     std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
     std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
+    // GUI編集のNoteイベント差し替え用（nullならMIDIファイルのNoteをそのまま使用）。
+    std::shared_ptr<const std::vector<MIDIEventTick>> overrideNoteTicks;
+    int overrideTicksPerQuarter = 0;
 };
 
 // Run実行の進捗通知と停止要求を受け持つ観測I/F。

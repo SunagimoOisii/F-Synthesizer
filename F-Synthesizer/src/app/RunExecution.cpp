@@ -41,6 +41,8 @@ int RunMain(
         config.defaultWave,
         options.startSec,
         options.durationSec,
+        config.overrideNoteTicks.get(),
+        config.overrideTicksPerQuarter,
         midiOut,
         midiErr))
     {

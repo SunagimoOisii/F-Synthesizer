@@ -101,6 +101,7 @@ void InitializeGUIState(
     state.autoPlayPreviewOnRunComplete = false;
     state.previewRenderedSound.reset();
     state.runOutputBuffer.reset();
+    state.pianoRoll = gui::PianoRollState{};
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.logs;
     state.observer.cancelRequested = &state.stopRequested;
@@ -186,6 +187,36 @@ void RepairGUIStatePaths(
     if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)
     {
         state.logPanelHeight = std::clamp(state.logPanelHeight, 140.0f, 520.0f);
+        repaired = true;
+    }
+    if (state.pianoRoll.displayChannel < 0 || state.pianoRoll.displayChannel > 15)
+    {
+        state.pianoRoll.displayChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+        repaired = true;
+    }
+    if (state.pianoRoll.snapIndex < 0 || state.pianoRoll.snapIndex > 4)
+    {
+        state.pianoRoll.snapIndex = std::clamp(state.pianoRoll.snapIndex, 0, 4);
+        repaired = true;
+    }
+    if (state.pianoRoll.pixelsPerQuarter < 16.0f || state.pianoRoll.pixelsPerQuarter > 240.0f)
+    {
+        state.pianoRoll.pixelsPerQuarter = std::clamp(state.pianoRoll.pixelsPerQuarter, 16.0f, 240.0f);
+        repaired = true;
+    }
+    if (state.pianoRoll.tickOffset < 0)
+    {
+        state.pianoRoll.tickOffset = 0;
+        repaired = true;
+    }
+    if (state.pianoRoll.noteOffset < 0 || state.pianoRoll.noteOffset > 116)
+    {
+        state.pianoRoll.noteOffset = std::clamp(state.pianoRoll.noteOffset, 0, 116);
+        repaired = true;
+    }
+    if (state.pianoRoll.visibleNoteCount < 12 || state.pianoRoll.visibleNoteCount > 72)
+    {
+        state.pianoRoll.visibleNoteCount = std::clamp(state.pianoRoll.visibleNoteCount, 12, 72);
         repaired = true;
     }
 

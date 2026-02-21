@@ -17,8 +17,14 @@ struct PianoRollNote
     int velocity = 0;
 };
 
+struct PianoRollEditCommand
+{
+    std::vector<PianoRollNote> before{};
+    std::vector<PianoRollNote> after{};
+};
+
 // ピアノロール表示/編集のUI状態。
-// Phase2では Note の選択・移動・長さ変更までを扱う。
+// Phase4では選択/編集に加えて Undo/Redo と永続化用の中間状態も保持する。
 struct PianoRollState
 {
     int displayChannel = 0;
@@ -49,6 +55,16 @@ struct PianoRollState
     int dragStartMouseTick = 0;
     int dragStartMouseNote = 60;
     std::vector<PianoRollNote> dragSnapshot{};
+
+    std::vector<int> pendingSelectedIndices{};
+    std::vector<PianoRollEditCommand> undoStack{};
+    std::vector<PianoRollEditCommand> redoStack{};
+    int maxUndoCommands = 64;
+
+    std::filesystem::path projectMidiPath{};
+    int projectTicksPerQuarter = 0;
+    std::vector<PianoRollNote> projectNotes{};
+    bool hasProjectData = false;
 
     bool hasLoadError = false;
     std::string lastError{};

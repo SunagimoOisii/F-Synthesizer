@@ -17,6 +17,63 @@
 
 namespace
 {
+std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPianoRoll(
+    const GUIState& state,
+    int& outTicksPerQuarter)
+{
+    outTicksPerQuarter = 0;
+    const auto& pr = state.pianoRoll;
+    if (pr.hasLoadError || pr.notes.empty() || pr.ticksPerQuarter <= 0)
+    {
+        return nullptr;
+    }
+    const std::filesystem::path currentMidiPath = Utf8ToPath(state.midiPath);
+    if (currentMidiPath.empty() || pr.loadedMidiPath != currentMidiPath)
+    {
+        return nullptr;
+    }
+
+    auto ticks = std::make_shared<std::vector<MIDIEventTick>>();
+    ticks->reserve(pr.notes.size() * 2);
+
+    int order = 0;
+    for (const auto& n : pr.notes)
+    {
+        const int startTick = (std::max)(0, n.startTick);
+        const int endTick = (std::max)(startTick + 1, n.endTick);
+        const int channel = std::clamp(n.channel, 0, 15);
+        const int note = std::clamp(n.note, 0, 127);
+        const int velocity = std::clamp(n.velocity, 1, 127);
+
+        MIDIEventTick on{};
+        on.type = MIDIEventType::Note;
+        on.tick = startTick;
+        on.noteNumber = note;
+        on.velocity = velocity;
+        on.channel = channel;
+        on.controller = 0;
+        on.value = 0;
+        on.order = order++;
+        on.isNoteOn = true;
+        ticks->push_back(on);
+
+        MIDIEventTick off{};
+        off.type = MIDIEventType::Note;
+        off.tick = endTick;
+        off.noteNumber = note;
+        off.velocity = 0;
+        off.channel = channel;
+        off.controller = 0;
+        off.value = 0;
+        off.order = order++;
+        off.isNoteOn = false;
+        ticks->push_back(off);
+    }
+
+    outTicksPerQuarter = pr.ticksPerQuarter;
+    return ticks;
+}
+
 int FindPresetIndex(const GUIState& state, const std::string& name)
 {
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
@@ -219,6 +276,9 @@ void StartGUIRun(GUIState& state, bool previewSelected)
 
     // GUI編集値 -> AppConfig 変換をここに集約し、実行コア側でGUI依存を持たせない。
     AppConfig cfg = BuildConfigFromGUI(state);
+    int overrideTicksPerQuarter = 0;
+    cfg.overrideNoteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);
+    cfg.overrideTicksPerQuarter = overrideTicksPerQuarter;
     RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
     if (!previewSelected && state.serialSave)
     {
@@ -238,6 +298,11 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.runIsPreview = previewSelected;
     state.autoPlayPreviewOnRunComplete = previewSelected;
     AppendGUILog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Play started");
+    if (cfg.overrideNoteTicks != nullptr)
+    {
+        AppendGUILog(state, "[GUI] PianoRoll edited notes applied: count=" +
+            std::to_string(cfg.overrideNoteTicks->size() / 2));
+    }
     AppendGUILog(state, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);

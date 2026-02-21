@@ -24,5 +24,7 @@ bool BuildMidiPipeline(
     WaveType defaultWave,
     double startSec,
     double durationSec,
+    const std::vector<MIDIEventTick>* overrideNoteTicks,
+    int overrideTicksPerQuarter,
     MidiBuildOutput& out,
     std::string& err);

@@ -8,6 +8,11 @@
 
 namespace
 {
+std::filesystem::path PianoRollProjectPath()
+{
+    return FindProjectRootPath() / "config" / "piano_roll_project.json";
+}
+
 GUIStateStorageData BuildStateStorageData(const GUIState& state)
 {
     // GUI実行状態から、永続化対象だけを中間形式へ変換する。
@@ -29,6 +34,21 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.selectedDrumNote = state.selectedDrumNote;
     data.presetName = state.presetName;
     data.lastPresetPath = state.lastPresetPath;
+    data.prDisplayChannel = state.pianoRoll.displayChannel;
+    data.prSnapIndex = state.pianoRoll.snapIndex;
+    data.prPixelsPerQuarter = state.pianoRoll.pixelsPerQuarter;
+    data.prTickOffset = state.pianoRoll.tickOffset;
+    data.prNoteOffset = state.pianoRoll.noteOffset;
+    data.prVisibleNoteCount = state.pianoRoll.visibleNoteCount;
+    data.prDrumNameMode = state.pianoRoll.drumNameMode;
+    data.prSelectedIndices.clear();
+    for (int i = 0; i < static_cast<int>(state.pianoRoll.selected.size()); i++)
+    {
+        if (state.pianoRoll.selected[static_cast<size_t>(i)] != 0)
+        {
+            data.prSelectedIndices.push_back(i);
+        }
+    }
     for (int ch = 0; ch < 16; ch++)
     {
         data.channelMixStates[ch] = (state.channelMixStates != nullptr)
@@ -58,12 +78,72 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.selectedDrumNote = data.selectedDrumNote;
     strncpy_s(state.presetName, sizeof(state.presetName), data.presetName.c_str(), _TRUNCATE);
     state.lastPresetPath = data.lastPresetPath;
+    state.pianoRoll.displayChannel = data.prDisplayChannel;
+    state.pianoRoll.snapIndex = data.prSnapIndex;
+    state.pianoRoll.pixelsPerQuarter = data.prPixelsPerQuarter;
+    state.pianoRoll.tickOffset = data.prTickOffset;
+    state.pianoRoll.noteOffset = data.prNoteOffset;
+    state.pianoRoll.visibleNoteCount = data.prVisibleNoteCount;
+    state.pianoRoll.drumNameMode = data.prDrumNameMode;
+    state.pianoRoll.pendingSelectedIndices = data.prSelectedIndices;
 
     gui::EnsureChannelMixStates(state);
     for (int ch = 0; ch < 16; ch++)
     {
         (*state.channelMixStates)[ch] = data.channelMixStates[ch];
     }
+}
+
+PianoRollProjectStorageData BuildPianoRollProjectStorageData(const GUIState& state)
+{
+    PianoRollProjectStorageData data{};
+    if (!state.pianoRoll.hasProjectData || state.pianoRoll.loadedMidiPath.empty() || state.pianoRoll.notes.empty())
+    {
+        return data;
+    }
+
+    data.midiPath = state.pianoRoll.loadedMidiPath.string();
+    data.ticksPerQuarter = (state.pianoRoll.ticksPerQuarter > 0) ? state.pianoRoll.ticksPerQuarter : 480;
+    data.notes.reserve(state.pianoRoll.notes.size());
+    for (const auto& n : state.pianoRoll.notes)
+    {
+        PianoRollProjectStorageNote out{};
+        out.startTick = n.startTick;
+        out.endTick = n.endTick;
+        out.note = n.note;
+        out.channel = n.channel;
+        out.velocity = n.velocity;
+        data.notes.push_back(out);
+    }
+    return data;
+}
+
+void ApplyPianoRollProjectStorageData(GUIState& state, const PianoRollProjectStorageData& data)
+{
+    if (data.midiPath.empty() || data.notes.empty())
+    {
+        state.pianoRoll.hasProjectData = false;
+        state.pianoRoll.projectMidiPath.clear();
+        state.pianoRoll.projectNotes.clear();
+        state.pianoRoll.projectTicksPerQuarter = 0;
+        return;
+    }
+
+    state.pianoRoll.projectMidiPath = std::filesystem::path(data.midiPath);
+    state.pianoRoll.projectTicksPerQuarter = (data.ticksPerQuarter > 0) ? data.ticksPerQuarter : 480;
+    state.pianoRoll.projectNotes.clear();
+    state.pianoRoll.projectNotes.reserve(data.notes.size());
+    for (const auto& n : data.notes)
+    {
+        gui::PianoRollNote out{};
+        out.startTick = n.startTick;
+        out.endTick = n.endTick;
+        out.note = n.note;
+        out.channel = n.channel;
+        out.velocity = n.velocity;
+        state.pianoRoll.projectNotes.push_back(out);
+    }
+    state.pianoRoll.hasProjectData = true;
 }
 } // namespace
 
@@ -83,12 +163,31 @@ bool LoadGUIStateFile(GUIState& state, std::string& err)
         return false;
     }
     ApplyStateStorageData(state, data);
+
+    PianoRollProjectStorageData projectData{};
+    std::string projectErr;
+    if (!LoadPianoRollProjectStorageFile(PianoRollProjectPath(), projectData, projectErr))
+    {
+        err = projectErr;
+        return false;
+    }
+    ApplyPianoRollProjectStorageData(state, projectData);
     return true;
 }
 
 bool SaveGUIStateFile(const GUIState& state, std::string& err)
 {
     const GUIStateStorageData data = BuildStateStorageData(state);
-    return SaveGUIStateStorageFile(GUIStatePath(), data, err);
+    if (!SaveGUIStateStorageFile(GUIStatePath(), data, err))
+    {
+        return false;
+    }
+
+    const PianoRollProjectStorageData projectData = BuildPianoRollProjectStorageData(state);
+    if (!SavePianoRollProjectStorageFile(PianoRollProjectPath(), projectData, err))
+    {
+        return false;
+    }
+    return true;
 }
 } // namespace gui
