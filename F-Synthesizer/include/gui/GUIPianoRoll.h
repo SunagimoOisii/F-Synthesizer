@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -16,8 +17,8 @@ struct PianoRollNote
     int velocity = 0;
 };
 
-// ピアノロール表示のUI状態と表示用ノートキャッシュ。
-// 編集機能は次Phaseで拡張し、Phase1では表示と操作基盤に限定する。
+// ピアノロール表示/編集のUI状態。
+// Phase2では Note の選択・移動・長さ変更までを扱う。
 struct PianoRollState
 {
     int displayChannel = 0;
@@ -33,6 +34,21 @@ struct PianoRollState
     int ticksPerQuarter = 480;
     int maxTick = 0;
     std::vector<PianoRollNote> notes{};
+    std::vector<uint8_t> selected{};
+    int primarySelectedIndex = -1;
+
+    bool isRangeSelecting = false;
+    float rangeStartX = 0.0f;
+    float rangeStartY = 0.0f;
+    float rangeEndX = 0.0f;
+    float rangeEndY = 0.0f;
+
+    bool isDraggingMove = false;
+    bool isDraggingResize = false;
+    int dragTargetIndex = -1;
+    int dragStartMouseTick = 0;
+    int dragStartMouseNote = 60;
+    std::vector<PianoRollNote> dragSnapshot{};
 
     bool hasLoadError = false;
     std::string lastError{};
