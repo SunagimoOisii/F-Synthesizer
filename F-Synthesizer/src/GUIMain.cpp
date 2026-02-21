@@ -1,6 +1,7 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -15,6 +16,7 @@
 #include "gui/GUIStateModel.h"
 #include "gui/GUIStatePersistence.h"
 #include "gui/PreviewAudio.h"
+#include "io/PlatformPaths.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")

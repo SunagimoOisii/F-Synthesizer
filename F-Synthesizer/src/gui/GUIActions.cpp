@@ -8,6 +8,7 @@
 
 #include "AppCore.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIPlatform.h"
 #include "gui/GUIPresetIO.h"
 #include "gui/GUIRunHelpers.h"
 #include "gui/GUIStateModel.h"
