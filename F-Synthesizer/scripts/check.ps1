@@ -54,12 +54,12 @@ function Test-DocRules {
         @{
             Name = "Code changes should update STATUS.md"
             Trigger = '^(src|include)/'
-            RequiredFile = "STATUS.md"
+            RequiredFile = "docs/STATUS.md"
         },
         @{
             Name = "SynthEngine changes should update Architecture.md"
             Trigger = '^(src/SynthEngine|include/SynthEngine)/'
-            RequiredFile = "Architecture.md"
+            RequiredFile = "docs/Architecture.md"
         }
     )
 
@@ -135,7 +135,7 @@ function Update-ArchitectureDoc {
         [string]$RepoRoot
     )
 
-    $path = Join-Path $RepoRoot "Architecture.md"
+    $path = Join-Path $RepoRoot "docs/Architecture.md"
     $begin = "<!-- AUTO-GENERATED:BEGIN -->"
     $end = "<!-- AUTO-GENERATED:END -->"
     $section = Get-AutoArchitectureSection -RepoRoot $RepoRoot
@@ -151,7 +151,7 @@ function Update-ArchitectureDoc {
             ""
         ) -join "`r`n"
         Set-Content -Path $path -Value $initial -Encoding utf8
-        Write-Host "Architecture.md created."
+        Write-Host "docs/Architecture.md created."
         return
     }
 
@@ -174,7 +174,7 @@ function Update-ArchitectureDoc {
 
     if ($newContent -ne $content) {
         Set-Content -Path $path -Value $newContent -Encoding utf8
-        Write-Host "Architecture.md auto-updated."
+        Write-Host "docs/Architecture.md auto-updated."
     }
 }
 

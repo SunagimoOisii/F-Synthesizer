@@ -99,6 +99,7 @@ void LogMidiTickSummary(
 
 void LogSampleEventSummary(IRunObserver* observer, const std::vector<MIDIEvent>& events)
 {
+    constexpr size_t kNoteSlots = 16 * 128;
     int noteOnCount = 0;
     int firstNoteOnSample = -1;
     int firstNoteOnVelocity = -1;
@@ -115,7 +116,10 @@ void LogSampleEventSummary(IRunObserver* observer, const std::vector<MIDIEvent>&
     int zeroOrNegativeLengthNotes = 0;
     int minNoteLength = 0;
     int maxNoteLength = 0;
-    std::vector<std::vector<int>> noteOnSamples(16 * 128);
+    // (ch,note) ごとに追記専用キューを持ち、先頭インデックスだけ進める。
+    // 密なMIDIでの erase(begin) の O(n) コストを避けるため。
+    std::vector<std::vector<int>> noteOnSamples(kNoteSlots);
+    std::array<size_t, kNoteSlots> noteOnHeads{};
 
     for (const auto& e : events)
     {
@@ -137,11 +141,12 @@ void LogSampleEventSummary(IRunObserver* observer, const std::vector<MIDIEvent>&
         {
             int chIdx = (e.channel >= 0 && e.channel < 16) ? e.channel : 0;
             int noteIdx = std::clamp(e.noteNumber, 0, 127);
-            auto& starts = noteOnSamples[chIdx * 128 + noteIdx];
-            if (!starts.empty())
+            const size_t slot = static_cast<size_t>(chIdx * 128 + noteIdx);
+            auto& starts = noteOnSamples[slot];
+            size_t& head = noteOnHeads[slot];
+            if (head < starts.size())
             {
-                int startSample = starts.front();
-                starts.erase(starts.begin());
+                int startSample = starts[head++];
                 int len = e.sample - startSample;
                 pairedNotes++;
                 if (len <= 0)

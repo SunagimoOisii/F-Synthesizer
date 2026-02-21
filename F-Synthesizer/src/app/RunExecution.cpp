@@ -13,6 +13,8 @@ int RunMain(
     IRunObserver* observer,
     SoundData* renderedSound)
 {
+    const bool previewMode = (options.mode == RunMode::Preview);
+
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     if (options.writeWav)
     {
@@ -27,16 +29,14 @@ int RunMain(
     LogLine(observer, "Working Directory: " + PathToUtf8(std::filesystem::current_path()));
     LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
     LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
-    LogLine(observer, std::string("Run Mode: ") + (options.mode == RunMode::Preview ? "preview" : "export"));
-
-    SoundData sound(config.initialSeconds * config.sampleRate, config.bits, config.sampleRate);
+    LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));
 
     MidiBuildOutput midiOut{};
     std::string midiErr;
     if (!BuildMidiPipeline(
         config.midiPath,
         config.targetChannel,
-        sound.fs,
+        config.sampleRate,
         config.defaultWave,
         options.startSec,
         options.durationSec,
@@ -65,31 +65,39 @@ int RunMain(
         return 1;
     }
 
-    const auto fallbackChannelConfigs = BuildDefaultChannelConfigs();
-    const auto& channelConfigs = config.channelConfigs ? *config.channelConfigs : *fallbackChannelConfigs;
-    const auto fallbackChannelMixStates = BuildDefaultChannelMixStates();
-    const auto& channelMixStates = config.channelMixStates ? *config.channelMixStates : *fallbackChannelMixStates;
+    const auto* channelConfigs = config.channelConfigs.get();
+    const auto* channelMixStates = config.channelMixStates.get();
+    if (channelConfigs == nullptr)
+    {
+        channelConfigs = BuildDefaultChannelConfigs().get();
+    }
+    if (channelMixStates == nullptr)
+    {
+        channelMixStates = BuildDefaultChannelMixStates().get();
+    }
 
     int lastSample = events.back().sample;
-    int extraRelease = (int)(config.extraReleaseSec * sound.fs);
+    int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
     int neededSamples = lastSample + extraRelease + 1;
-    if (options.mode == RunMode::Preview && options.durationSec >= 0.0)
+    if (previewMode && options.durationSec >= 0.0)
     {
         const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
-        const int previewMax = static_cast<int>(durSec * sound.fs) + extraRelease + 1;
+        const int previewMax = static_cast<int>(durSec * config.sampleRate) + extraRelease + 1;
         if (neededSamples > previewMax)
         {
             neededSamples = previewMax;
         }
     }
-    if (neededSamples > sound.length)
+    int soundLength = config.initialSeconds * config.sampleRate;
+    if (neededSamples > soundLength)
     {
-        sound = SoundData(neededSamples, sound.bits, sound.fs);
+        soundLength = neededSamples;
     }
-    else if (options.mode == RunMode::Preview && neededSamples > 0 && neededSamples < sound.length)
+    else if (previewMode && neededSamples > 0 && neededSamples < soundLength)
     {
-        sound = SoundData(neededSamples, sound.bits, sound.fs);
+        soundLength = neededSamples;
     }
+    SoundData sound(soundLength, config.bits, config.sampleRate);
 
     {
         std::ostringstream oss;
@@ -101,15 +109,18 @@ int RunMain(
     }
 
     bool canceled = false;
-    auto shouldCancel = [&]() -> bool
+    // レンダループ内の分岐を減らすため、キャンセル有無で経路を先に分ける。
+    const bool canCancel = options.allowCancel && observer != nullptr;
+    if (canCancel)
     {
-        if (!options.allowCancel || observer == nullptr)
-        {
-            return false;
-        }
-        return observer->ShouldCancel();
-    };
-    RenderWithEngine(sound, events, channelConfigs, channelMixStates, shouldCancel, &canceled);
+        auto shouldCancelObserver = [&]() -> bool { return observer->ShouldCancel(); };
+        RenderWithEngine(sound, events, *channelConfigs, *channelMixStates, shouldCancelObserver, &canceled);
+    }
+    else
+    {
+        auto neverCancel = []() -> bool { return false; };
+        RenderWithEngine(sound, events, *channelConfigs, *channelMixStates, neverCancel, &canceled);
+    }
     if (canceled)
     {
         LogLine(observer, "[Run] Canceled by request.");
