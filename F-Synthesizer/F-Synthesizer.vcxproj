@@ -142,6 +142,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\\AudioBuffer.cpp" />
+    <ClCompile Include="src\\app\\AppEntry.cpp" />
+    <ClCompile Include="src\\app\\Cli.cpp" />
+    <ClCompile Include="src\\config\\ConfigFileIO.cpp" />
+    <ClCompile Include="src\\config\\ConfigResolver.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
     <ClCompile Include="src\\GUIMain.cpp" />
     <ClCompile Include="src\MIDIParser.cpp" />
@@ -159,6 +163,9 @@
   <ItemGroup>
     <ClInclude Include="include\\AudioBuffer.h" />
     <ClInclude Include="include\\AppCore.h" />
+    <ClInclude Include="include\\app\\AppEntry.h" />
+    <ClInclude Include="include\\app\\Cli.h" />
+    <ClInclude Include="include\\config\\ConfigResolver.h" />
     <ClInclude Include="include\\Envelope.h" />
     <ClInclude Include="include\MIDIParser.h" />
     <ClInclude Include="include\\Oscillator.h" />

@@ -1,0 +1,24 @@
+REFACTOR Phase 1 Move Order (Baseline)
+
+1) Add wrapper entry points
+- Keep current files in place.
+- Introduce thin wrappers in target layers without changing behavior.
+
+2) Switch call sites
+- Route main/config/midi/io/gui callers to new wrapper APIs.
+- Keep old implementations as delegates.
+
+3) Move implementation files
+- Move concrete logic from old files to target directories.
+- Leave temporary forwarding includes/functions where needed.
+
+4) Remove legacy paths
+- Delete forwarding stubs after build and smoke checks pass.
+
+Planned target mapping
+- src/SoundGenerate.cpp -> src/app (CLI arg parse, mode dispatch)
+- Config load/save/preset resolve -> src/config
+- src/MIDIParser.cpp + src/Sequencer.cpp -> src/midi
+- src/Writer.cpp + path/encoding helpers -> src/io
+- src/SynthEngine/* -> src/core/synth (phase 3+)
+- src/GUIMain.cpp -> src/gui (phase 2+ split)
