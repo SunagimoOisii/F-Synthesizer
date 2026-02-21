@@ -24,6 +24,7 @@
 #include "AppCore.h"
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIPlatform.h"
+#include "gui/GUIRunHelpers.h"
 #include "gui/GUIStateStorage.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
@@ -124,6 +125,8 @@ using gui::WaveToIndex;
 using gui::WaveToText;
 using gui::WriteJsonEscaped;
 using gui::WriteSourceJson;
+using gui::BuildPreviewWavPath;
+using gui::BuildSerialWavPath;
 
 void SetupImGuiFont()
 {
@@ -421,36 +424,6 @@ bool SaveGUIStateFile(const GUIState& state, std::string& err)
     return SaveGUIStateStorageFile(GUIStatePath(), data, err);
 }
 
-std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
-{
-    std::error_code ec;
-    std::filesystem::create_directories(basePath.parent_path(), ec);
-
-    auto now = std::chrono::system_clock::now();
-    std::time_t tt = std::chrono::system_clock::to_time_t(now);
-    std::tm tmLocal{};
-    localtime_s(&tmLocal, &tt);
-
-    char stamp[32]{};
-    std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", &tmLocal);
-
-    const std::string stem = basePath.stem().string();
-    const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();
-    std::filesystem::path candidate = basePath.parent_path() / (stem + "_" + stamp + ext);
-    for (int i = 1; i <= 99 && std::filesystem::exists(candidate); i++)
-    {
-        candidate = basePath.parent_path() / (stem + "_" + stamp + "_" + std::to_string(i) + ext);
-    }
-    return candidate;
-}
-
-std::filesystem::path BuildPreviewWavPath(const std::filesystem::path& basePath, int channel)
-{
-    const std::string stem = basePath.stem().string();
-    const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();
-    return basePath.parent_path() / (stem + "_preview_ch" + std::to_string(channel) + ext);
-}
-
 AppConfig BuildConfigFromGUI(const GUIState& state)
 {
     AppConfig cfg = DefaultConfig();
@@ -475,58 +448,14 @@ AppConfig BuildConfigFromGUI(const GUIState& state)
 
 bool ValidateBeforeRun(const GUIState& state, std::string& err)
 {
-    const std::string midi = state.midiPath;
-    const std::string wav = state.wavPath;
-    if (midi.empty())
-    {
-        err = "MIDI Path is empty.";
-        return false;
-    }
-    if (wav.empty())
-    {
-        err = "Output Path is empty.";
-        return false;
-    }
-    const std::filesystem::path wavPath = Utf8ToPath(wav);
-    if (wavPath.has_filename() && !wavPath.extension().empty())
-    {
-        if (std::filesystem::is_directory(wavPath))
-        {
-            err = "Output Path points to a directory, not a .wav file.";
-            return false;
-        }
-    }
-    else
-    {
-        err = "Output Path must include a .wav filename.";
-        return false;
-    }
-    if (!std::filesystem::exists(Utf8ToPath(midi)))
-    {
-        err = "MIDI file not found: " + midi;
-        return false;
-    }
-    if (state.targetChannel < -1 || state.targetChannel > 15)
-    {
-        err = "Target Channel must be -1 or 0..15.";
-        return false;
-    }
-    if (state.sampleRate <= 0)
-    {
-        err = "Sample Rate must be positive.";
-        return false;
-    }
-    if (state.initialSeconds <= 0)
-    {
-        err = "Initial Seconds must be positive.";
-        return false;
-    }
-    if (state.bits != 16)
-    {
-        err = "Bits must be 16 in current implementation.";
-        return false;
-    }
-    return true;
+    return gui::ValidateRunSettings(
+        state.midiPath,
+        state.wavPath,
+        state.targetChannel,
+        state.sampleRate,
+        state.initialSeconds,
+        state.bits,
+        err);
 }
 
 void InitGUIState(GUIState& state)
