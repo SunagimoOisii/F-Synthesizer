@@ -136,19 +136,15 @@ double RenderVoices(RenderState& state, const SoundData& sound)
 
         const double velGain = VelocityToGain(voices.velocity[i]);
         const int ch = voices.channelIndex[i];
-        if (state.channelMute[ch])
-        {
-            continue;
-        }
-        if (state.hasAnySolo && !state.channelSolo[ch])
+        // mute/solo/mixGain 判定は事前計算済みフラグを参照する。
+        // 目的: ホットループの分岐段数を減らし、分岐予測ミスを抑える。
+        // 前提: channel mix 状態は RenderMIDIEvents 実行中に変化しない。
+        // トレードオフ: 判定ロジックが初期化側へ移動し、追跡箇所が分かれる。
+        if (!state.channelRenderable[ch])
         {
             continue;
         }
         const double mixGain = state.channelMixGain[ch];
-        if (mixGain <= 0.0)
-        {
-            continue;
-        }
         const double pitchFactor = state.channelPitch[ch];
         const double ccGain = state.channelCc7[ch] * state.channelCc11[ch];
 

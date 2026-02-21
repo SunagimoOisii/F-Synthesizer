@@ -189,20 +189,20 @@ void VoicesSoA::MarkNoteOff(int ch, int note)
     }
 }
 
-size_t VoicesSoA::CleanupPending()
+size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
 {
     if (empty())
     {
         return 0;
     }
 
-    std::vector<uint8_t> keep(size(), 1);
+    keepScratch.assign(size(), 1);
     size_t removed = 0;
     for (size_t i = 0; i < size(); i++)
     {
         if (pendingRemove[i] != 0)
         {
-            keep[i] = 0;
+            keepScratch[i] = 0;
             removed++;
         }
     }
@@ -212,32 +212,32 @@ size_t VoicesSoA::CleanupPending()
     }
 
     // source 以外も完全に同順で圧縮し、列間のインデックス整合を崩さない。
-    CompactVectorByKeep(source, keep);
-    CompactVectorByKeep(noteNumber, keep);
-    CompactVectorByKeep(velocity, keep);
-    CompactVectorByKeep(channel, keep);
-    CompactVectorByKeep(channelIndex, keep);
-    CompactVectorByKeep(released, keep);
-    CompactVectorByKeep(pendingRemove, keep);
-    CompactVectorByKeep(amp, keep);
-    CompactVectorByKeep(attackSec, keep);
-    CompactVectorByKeep(decaySec, keep);
-    CompactVectorByKeep(sustainLevel, keep);
-    CompactVectorByKeep(releaseSec, keep);
-    CompactVectorByKeep(env, keep);
-    CompactVectorByKeep(phase, keep);
-    CompactVectorByKeep(phaseInc, keep);
-    CompactVectorByKeep(fmCarrierPhase, keep);
-    CompactVectorByKeep(fmModPhase, keep);
-    CompactVectorByKeep(drumTime, keep);
-    CompactVectorByKeep(drumBaseFreq, keep);
-    CompactVectorByKeep(drumPitchDrop, keep);
-    CompactVectorByKeep(drumPitchDecaySec, keep);
-    CompactVectorByKeep(drumNoisePrev, keep);
-    CompactVectorByKeep(drumHpPrev, keep);
-    CompactVectorByKeep(drumHpAlpha, keep);
-    CompactVectorByKeep(drumLpPrev, keep);
-    CompactVectorByKeep(drumLpAlpha, keep);
+    CompactVectorByKeep(source, keepScratch);
+    CompactVectorByKeep(noteNumber, keepScratch);
+    CompactVectorByKeep(velocity, keepScratch);
+    CompactVectorByKeep(channel, keepScratch);
+    CompactVectorByKeep(channelIndex, keepScratch);
+    CompactVectorByKeep(released, keepScratch);
+    CompactVectorByKeep(pendingRemove, keepScratch);
+    CompactVectorByKeep(amp, keepScratch);
+    CompactVectorByKeep(attackSec, keepScratch);
+    CompactVectorByKeep(decaySec, keepScratch);
+    CompactVectorByKeep(sustainLevel, keepScratch);
+    CompactVectorByKeep(releaseSec, keepScratch);
+    CompactVectorByKeep(env, keepScratch);
+    CompactVectorByKeep(phase, keepScratch);
+    CompactVectorByKeep(phaseInc, keepScratch);
+    CompactVectorByKeep(fmCarrierPhase, keepScratch);
+    CompactVectorByKeep(fmModPhase, keepScratch);
+    CompactVectorByKeep(drumTime, keepScratch);
+    CompactVectorByKeep(drumBaseFreq, keepScratch);
+    CompactVectorByKeep(drumPitchDrop, keepScratch);
+    CompactVectorByKeep(drumPitchDecaySec, keepScratch);
+    CompactVectorByKeep(drumNoisePrev, keepScratch);
+    CompactVectorByKeep(drumHpPrev, keepScratch);
+    CompactVectorByKeep(drumHpAlpha, keepScratch);
+    CompactVectorByKeep(drumLpPrev, keepScratch);
+    CompactVectorByKeep(drumLpAlpha, keepScratch);
 
     return removed;
 }

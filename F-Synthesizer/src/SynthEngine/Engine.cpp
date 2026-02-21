@@ -23,7 +23,8 @@ void CleanupVoices(RenderState& state)
         return;
     }
 
-    const size_t removed = state.voices.CleanupPending();
+    // 毎回の一時vector確保を避けるため、RenderState内の作業バッファを再利用する。
+    const size_t removed = state.voices.CleanupPending(state.cleanupKeepScratch);
 
     if (removed > 0)
     {
@@ -48,6 +49,7 @@ void RenderMIDIEvents(
     RenderState state;
     // 初期化時にチャンネル状態を展開して、サンプルループ中の分岐/参照を最小化する。
     state.voices.reserve(256);
+    state.cleanupKeepScratch.reserve(256);
     for (int i = 0; i < 16; i++)
     {
         state.channelCc7[i] = 1.0;
@@ -61,6 +63,12 @@ void RenderMIDIEvents(
             state.hasAnySolo = true;
         }
         state.channelMixGain[i] = mix.level * mix.gain * PanToMonoGain(mix.pan);
+    }
+    // 可聴判定を先に確定し、RenderVoices内の条件分岐を1回にまとめる。
+    for (int i = 0; i < 16; i++)
+    {
+        const bool soloVisible = !state.hasAnySolo || state.channelSolo[i];
+        state.channelRenderable[i] = (!state.channelMute[i]) && soloVisible && (state.channelMixGain[i] > 0.0);
     }
 
     // 目的: 毎サンプルで削除圧縮を走らせず、一定間隔でまとめて掃除して負荷を抑える。

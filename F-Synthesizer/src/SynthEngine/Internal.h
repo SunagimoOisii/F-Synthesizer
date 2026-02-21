@@ -49,7 +49,7 @@ struct VoicesSoA
     void clear();
     void AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate);
     void MarkNoteOff(int channel, int noteNumber);
-    size_t CleanupPending();
+    size_t CleanupPending(std::vector<uint8_t>& keepScratch);
 };
 
 struct RenderState
@@ -64,7 +64,9 @@ struct RenderState
     std::array<double, 16> channelMixGain{};
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};
+    std::array<bool, 16> channelRenderable{};
     bool hasAnySolo = false;
+    std::vector<uint8_t> cleanupKeepScratch{};
 };
 
 inline int ClampChannel(int channel)
