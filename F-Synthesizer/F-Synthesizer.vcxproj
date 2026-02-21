@@ -152,6 +152,7 @@
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
     <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
+    <ClCompile Include="src\\gui\\GUIStateModel.cpp" />
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
@@ -181,6 +182,8 @@
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />
     <ClInclude Include="include\\gui\\GUIRunHelpers.h" />
+    <ClInclude Include="include\\gui\\GUIState.h" />
+    <ClInclude Include="include\\gui\\GUIStateModel.h" />
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="include\\io\\PlatformPaths.h" />

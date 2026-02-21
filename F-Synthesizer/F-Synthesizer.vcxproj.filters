@@ -51,6 +51,9 @@
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIStateModel.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -123,6 +126,12 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIRunHelpers.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\GUIState.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\gui\\GUIStateModel.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIStateStorage.h">

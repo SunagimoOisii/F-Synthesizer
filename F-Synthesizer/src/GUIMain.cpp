@@ -26,6 +26,8 @@
 #include "gui/GUIPlatform.h"
 #include "gui/GUIPresetIO.h"
 #include "gui/GUIRunHelpers.h"
+#include "gui/GUIState.h"
+#include "gui/GUIStateModel.h"
 #include "gui/GUIStateStorage.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
@@ -40,76 +42,6 @@
 
 namespace
 {
-struct GUIState
-{
-    struct GUIRunObserver : IRunObserver
-    {
-        std::mutex* logMutex = nullptr;
-        std::vector<std::string>* logs = nullptr;
-        std::atomic<bool>* cancelRequested = nullptr;
-
-        void OnLogLine(const std::string& line) override
-        {
-            if (logMutex == nullptr || logs == nullptr)
-            {
-                return;
-            }
-            std::lock_guard<std::mutex> lock(*logMutex);
-            logs->push_back(line);
-        }
-
-        bool ShouldCancel() override
-        {
-            return cancelRequested != nullptr && cancelRequested->load(std::memory_order_relaxed);
-        }
-    };
-
-    char midiPath[1024]{};
-    char wavPath[1024]{};
-    int targetChannel = -1;
-    int sampleRate = 44100;
-    int initialSeconds = 6;
-    int bits = 16;
-    float extraReleaseSec = 0.3f;
-    int defaultWave = 2; // saw
-    int uiScaleIndex = 1; // 0=100%, 1=125%, 2=150%
-    float logPanelHeight = 240.0f;
-    int presetIndex = 0;
-    int lastRunExitCode = 0;
-    bool hasRun = false;
-    bool running = false;
-    std::atomic<bool> stopRequested{ false };
-    bool serialSave = false;
-    int selectedChannel = 0;
-    int selectedDrumNote = 36;
-    char presetName[128]{ "custom" };
-    bool presetDirty = false;
-    std::vector<std::string> presetItems{};
-    std::string lastOutputPath{};
-    std::string lastPresetPath{};
-    std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
-    std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
-    double lastPeak = 0.0;
-    bool hasPeak = false;
-    bool soloPreviewActive = false;
-    bool restorePreviewOnRunComplete = false;
-    int soloPreviewChannel = 0;
-    std::array<ChannelMixState, 16> soloPreviewBackup{};
-    bool previewLoop = false;
-    bool previewAudioReady = false;
-    bool runIsPreview = false;
-    bool autoPlayPreviewOnRunComplete = false;
-    std::shared_ptr<SoundData> previewRenderedSound{};
-    std::shared_ptr<SoundData> runOutputBuffer{};
-    PreviewPlaybackState playback{};
-    std::future<int> runFuture{};
-    std::mutex logMutex{};
-    std::vector<std::string> logs{};
-    GUIRunObserver observer{};
-};
-
-void EnsureChannelConfigs(GUIState& state);
-void EnsureChannelMixStates(GUIState& state);
 float UiScaleFromIndex(int idx);
 const char* UiScaleLabelFromIndex(int idx);
 void DrawStatusBadge(const GUIState& state);
@@ -121,7 +53,10 @@ using gui::WaveFromIndex;
 using gui::WaveToIndex;
 using gui::BuildPreviewWavPath;
 using gui::BuildSerialWavPath;
+using gui::BuildConfigFromGUI;
 using gui::CollectPresetItems;
+using gui::EnsureChannelConfigs;
+using gui::EnsureChannelMixStates;
 
 void SetupImGuiFont()
 {
@@ -319,28 +254,6 @@ bool SaveGUIStateFile(const GUIState& state, std::string& err)
     return SaveGUIStateStorageFile(GUIStatePath(), data, err);
 }
 
-AppConfig BuildConfigFromGUI(const GUIState& state)
-{
-    AppConfig cfg = DefaultConfig();
-    cfg.midiPath = Utf8ToPath(state.midiPath);
-    cfg.wavPath = Utf8ToPath(state.wavPath);
-    cfg.targetChannel = state.targetChannel;
-    cfg.sampleRate = state.sampleRate;
-    cfg.initialSeconds = state.initialSeconds;
-    cfg.bits = state.bits;
-    cfg.extraReleaseSec = state.extraReleaseSec;
-    cfg.defaultWave = WaveFromIndex(state.defaultWave);
-    if (state.channelConfigs)
-    {
-        cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(state.channelConfigs);
-    }
-    if (state.channelMixStates)
-    {
-        cfg.channelMixStates = std::static_pointer_cast<const std::array<ChannelMixState, 16>>(state.channelMixStates);
-    }
-    return cfg;
-}
-
 bool ValidateBeforeRun(const GUIState& state, std::string& err)
 {
     return gui::ValidateRunSettings(
@@ -527,34 +440,6 @@ bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
     changed |= ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
     d.noiseType = noiseType;
     return changed;
-}
-
-void EnsureChannelConfigs(GUIState& state)
-{
-    if (state.channelConfigs)
-    {
-        return;
-    }
-    AppConfig cfg = DefaultConfig();
-    state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
-    if (cfg.channelConfigs)
-    {
-        *state.channelConfigs = *cfg.channelConfigs;
-    }
-}
-
-void EnsureChannelMixStates(GUIState& state)
-{
-    if (state.channelMixStates)
-    {
-        return;
-    }
-    AppConfig cfg = DefaultConfig();
-    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
-    if (cfg.channelMixStates)
-    {
-        *state.channelMixStates = *cfg.channelMixStates;
-    }
 }
 
 void AnalyzeRenderPeakFromLogs(GUIState& state)
