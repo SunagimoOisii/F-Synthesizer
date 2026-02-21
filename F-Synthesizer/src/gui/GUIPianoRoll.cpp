@@ -181,6 +181,17 @@ void ResetInteractionState(PianoRollState& state)
     state.dragSnapshot.clear();
 }
 
+void InvalidateVisibleCache(PianoRollState& state)
+{
+    state.visibleNoteIndexCacheValid = false;
+}
+
+void TouchNotesVersion(PianoRollState& state)
+{
+    state.notesVersion++;
+    InvalidateVisibleCache(state);
+}
+
 void ClearSelection(PianoRollState& state)
 {
     state.selected.assign(state.notes.size(), 0);
@@ -283,6 +294,7 @@ bool ExecuteUndo(PianoRollState& state)
     PianoRollEditCommand cmd = std::move(state.undoStack.back());
     state.undoStack.pop_back();
     state.notes = cmd.before;
+    TouchNotesVersion(state);
     RecomputeMaxTick(state);
     SyncProjectDataFromCurrentNotes(state);
     state.redoStack.push_back(std::move(cmd));
@@ -303,6 +315,7 @@ bool ExecuteRedo(PianoRollState& state)
     PianoRollEditCommand cmd = std::move(state.redoStack.back());
     state.redoStack.pop_back();
     state.notes = cmd.after;
+    TouchNotesVersion(state);
     RecomputeMaxTick(state);
     SyncProjectDataFromCurrentNotes(state);
     state.undoStack.push_back(std::move(cmd));
@@ -389,6 +402,7 @@ void ClearModel(PianoRollState& state)
     state.primarySelectedIndex = -1;
     state.undoStack.clear();
     state.redoStack.clear();
+    InvalidateVisibleCache(state);
     ResetInteractionState(state);
 }
 
@@ -469,6 +483,7 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
 
     state.selected.assign(state.notes.size(), 0);
     state.primarySelectedIndex = -1;
+    TouchNotesVersion(state);
 }
 
 void EnsureModelLoaded(
@@ -517,6 +532,7 @@ void EnsureModelLoaded(
     {
         // 専用project JSONがある場合は、MIDI由来ノートより編集済みノートを優先する。
         state.notes = state.projectNotes;
+        TouchNotesVersion(state);
         state.ticksPerQuarter = (state.projectTicksPerQuarter > 0) ? state.projectTicksPerQuarter : state.ticksPerQuarter;
         state.selected.assign(state.notes.size(), 0);
         state.primarySelectedIndex = -1;
@@ -597,8 +613,57 @@ void DrawPianoGrid(
     drawList->AddLine(ImVec2(gridMinX, canvasMin.y), ImVec2(gridMinX, canvasMax.y), IM_COL32(180, 180, 190, 180), 1.0f);
 }
 
+void EnsureVisibleNoteIndexCache(
+    PianoRollState& state,
+    int noteLow,
+    int noteHigh,
+    int startTick,
+    int endTick)
+{
+    const bool cacheHit =
+        state.visibleNoteIndexCacheValid &&
+        state.cacheNotesVersion == state.notesVersion &&
+        state.visibleCacheKey.displayChannel == state.displayChannel &&
+        state.visibleCacheKey.noteLow == noteLow &&
+        state.visibleCacheKey.noteHigh == noteHigh &&
+        state.visibleCacheKey.startTick == startTick &&
+        state.visibleCacheKey.endTick == endTick;
+    if (cacheHit)
+    {
+        return;
+    }
+
+    state.visibleNoteIndexCache.clear();
+    state.visibleNoteIndexCache.reserve(512);
+    for (int i = 0; i < static_cast<int>(state.notes.size()); i++)
+    {
+        const auto& n = state.notes[static_cast<size_t>(i)];
+        if (n.channel != state.displayChannel)
+        {
+            continue;
+        }
+        if (n.note < noteLow || n.note > noteHigh)
+        {
+            continue;
+        }
+        if (n.endTick < startTick || n.startTick > endTick)
+        {
+            continue;
+        }
+        state.visibleNoteIndexCache.push_back(i);
+    }
+
+    state.visibleCacheKey.displayChannel = state.displayChannel;
+    state.visibleCacheKey.noteLow = noteLow;
+    state.visibleCacheKey.noteHigh = noteHigh;
+    state.visibleCacheKey.startTick = startTick;
+    state.visibleCacheKey.endTick = endTick;
+    state.cacheNotesVersion = state.notesVersion;
+    state.visibleNoteIndexCacheValid = true;
+}
+
 void BuildVisibleDrawNotes(
-    const PianoRollState& state,
+    PianoRollState& state,
     const ImVec2& canvasMin,
     const ImVec2& canvasMax,
     float pianoWidth,
@@ -615,22 +680,15 @@ void BuildVisibleDrawNotes(
     const int endTick = startTick + static_cast<int>((canvasMax.x - canvasMin.x - pianoWidth) / pxPerTick) + 1;
     const float gridMinX = canvasMin.x + pianoWidth;
 
-    for (int i = 0; i < static_cast<int>(state.notes.size()); i++)
+    EnsureVisibleNoteIndexCache(state, noteLow, noteHigh, startTick, endTick);
+    out.reserve(state.visibleNoteIndexCache.size());
+    for (int idx : state.visibleNoteIndexCache)
     {
-        const auto& n = state.notes[static_cast<size_t>(i)];
-        if (n.channel != state.displayChannel)
+        if (idx < 0 || idx >= static_cast<int>(state.notes.size()))
         {
             continue;
         }
-        if (n.note < noteLow || n.note > noteHigh)
-        {
-            continue;
-        }
-        if (n.endTick < startTick || n.startTick > endTick)
-        {
-            continue;
-        }
-
+        const auto& n = state.notes[static_cast<size_t>(idx)];
         const int row = noteHigh - n.note;
         const float y0 = canvasMin.y + row * rowHeight + 1.0f;
         const float y1 = y0 + rowHeight - 2.0f;
@@ -639,7 +697,7 @@ void BuildVisibleDrawNotes(
         const float w = (std::max)(x1 - x0, 2.0f);
 
         DrawNoteInfo info{};
-        info.index = i;
+        info.index = idx;
         info.x0 = x0;
         info.y0 = y0;
         info.x1 = x0 + w;
@@ -755,6 +813,7 @@ void UpdateMoveDrag(PianoRollState& state, int currentMouseTick, int currentMous
         dst.channel = base.channel;
         dst.velocity = base.velocity;
     }
+    InvalidateVisibleCache(state);
     RecomputeMaxTick(state);
 }
 
@@ -775,6 +834,7 @@ void UpdateResizeDrag(PianoRollState& state, int currentMouseTick, int snapStep)
     int newEnd = SnapTick(currentMouseTick, snapStep);
     newEnd = (std::max)(newEnd, base.startTick + 1);
     dst.endTick = newEnd;
+    InvalidateVisibleCache(state);
     RecomputeMaxTick(state);
 }
 
@@ -817,7 +877,7 @@ void DrawPianoRollPanel(
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
 
-    ImGui::TextUnformatted("Piano Roll (Phase 2: Selection/Edit)");
+    ImGui::TextUnformatted("Piano Roll (Phase 5: Polish/Perf)");
     ImGui::BeginDisabled();
     ImGui::Checkbox("Drum Name Mode (next phase)", &state.drumNameMode);
     ImGui::EndDisabled();
@@ -974,6 +1034,7 @@ void DrawPianoRollPanel(
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
             PushUndoCommand(state, state.dragSnapshot, state.notes);
+            TouchNotesVersion(state);
             SyncProjectDataFromCurrentNotes(state);
             state.isDraggingMove = false;
             state.dragSnapshot.clear();
@@ -990,6 +1051,7 @@ void DrawPianoRollPanel(
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
         {
             PushUndoCommand(state, state.dragSnapshot, state.notes);
+            TouchNotesVersion(state);
             SyncProjectDataFromCurrentNotes(state);
             state.isDraggingResize = false;
             state.dragSnapshot.clear();

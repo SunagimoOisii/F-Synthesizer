@@ -7,6 +7,7 @@
 #include <Windows.h>
 
 #include "Writer.h"
+#include "io/PlatformPaths.h"
 
 struct Chunk
 {
@@ -44,7 +45,7 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
 
 bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath, WavWriteError* outError)
 {
-    std::cout << "[SaveWavFilePath] begin: " << filePath.string() << std::endl;
+    std::cout << "[SaveWavFilePath] begin: " << PathToUtf8(filePath) << std::endl;
     SetLastError(0);
     errno = 0;
     std::ofstream fout(filePath, std::ios::out | std::ios::binary | std::ios::trunc);

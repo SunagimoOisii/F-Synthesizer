@@ -26,6 +26,15 @@ struct PianoRollEditCommand
     std::vector<PianoRollNote> after{};
 };
 
+struct PianoRollVisibleCacheKey
+{
+    int displayChannel = 0;
+    int noteLow = 0;
+    int noteHigh = 127;
+    int startTick = 0;
+    int endTick = 0;
+};
+
 // ピアノロール表示/編集のUI状態。
 // Phase4では選択/編集に加えて Undo/Redo と永続化用の中間状態も保持する。
 struct PianoRollState
@@ -66,6 +75,11 @@ struct PianoRollState
     std::vector<PianoRollEditCommand> undoStack{};
     std::vector<PianoRollEditCommand> redoStack{};
     int maxUndoCommands = 64;
+    uint64_t notesVersion = 1;
+    uint64_t cacheNotesVersion = 0;
+    bool visibleNoteIndexCacheValid = false;
+    PianoRollVisibleCacheKey visibleCacheKey{};
+    std::vector<int> visibleNoteIndexCache{};
 
     std::filesystem::path projectMidiPath{};
     int projectTicksPerQuarter = 0;

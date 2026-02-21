@@ -178,7 +178,7 @@ int RunGUIApp()
         }
         else
         {
-            AppendGUILog(state, "[GUI] gui_state loaded: " + GUIStatePath().string());
+            AppendGUILog(state, "[GUI] gui_state loaded: " + PathToUtf8(GUIStatePath()));
         }
         RepairGUIStatePaths(
             state,

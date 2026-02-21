@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <string>
 
+#include "io/PlatformPaths.h"
+
 bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outResolved, std::string& err)
 {
     outResolved = ResolvedRuntimeConfig{};
@@ -32,10 +34,10 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
         std::string loadErr;
         if (!LoadConfigFile(outResolved.selectedConfigPath, outResolved.config, loadErr))
         {
-            err = "Failed to load config: " + outResolved.selectedConfigPath.string() + " (" + loadErr + ")";
+            err = "Failed to load config: " + PathToUtf8(outResolved.selectedConfigPath) + " (" + loadErr + ")";
             return false;
         }
-        outResolved.infoLines.push_back("Config Path: " + outResolved.selectedConfigPath.string());
+        outResolved.infoLines.push_back("Config Path: " + PathToUtf8(outResolved.selectedConfigPath));
         return true;
     }
 
@@ -46,30 +48,30 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
         const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (options.presetName + ".json");
         if (!std::filesystem::exists(basePath))
         {
-            err = "Base config not found: " + basePath.string();
+            err = "Base config not found: " + PathToUtf8(basePath);
             return false;
         }
         if (!std::filesystem::exists(presetPath))
         {
-            err = "Preset config not found: " + presetPath.string();
+            err = "Preset config not found: " + PathToUtf8(presetPath);
             return false;
         }
 
         std::string loadErr;
         if (!LoadConfigFile(basePath, outResolved.config, loadErr))
         {
-            err = "Failed to load base config: " + basePath.string() + " (" + loadErr + ")";
+            err = "Failed to load base config: " + PathToUtf8(basePath) + " (" + loadErr + ")";
             return false;
         }
         if (!LoadConfigFile(presetPath, outResolved.config, loadErr))
         {
-            err = "Failed to load preset config: " + presetPath.string() + " (" + loadErr + ")";
+            err = "Failed to load preset config: " + PathToUtf8(presetPath) + " (" + loadErr + ")";
             return false;
         }
 
         outResolved.infoLines.push_back("Preset: " + options.presetName);
-        outResolved.infoLines.push_back("Base Config Path: " + basePath.string());
-        outResolved.infoLines.push_back("Preset Config Path: " + presetPath.string());
+        outResolved.infoLines.push_back("Base Config Path: " + PathToUtf8(basePath));
+        outResolved.infoLines.push_back("Preset Config Path: " + PathToUtf8(presetPath));
         return true;
     }
 
@@ -80,17 +82,17 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
         std::string loadErr;
         if (!LoadConfigFile(basePath, outResolved.config, loadErr))
         {
-            err = "Failed to load base config: " + basePath.string() + " (" + loadErr + ")";
+            err = "Failed to load base config: " + PathToUtf8(basePath) + " (" + loadErr + ")";
             return false;
         }
         if (!LoadConfigFile(fallbackPresetPath, outResolved.config, loadErr))
         {
-            err = "Failed to load preset config: " + fallbackPresetPath.string() + " (" + loadErr + ")";
+            err = "Failed to load preset config: " + PathToUtf8(fallbackPresetPath) + " (" + loadErr + ")";
             return false;
         }
         outResolved.infoLines.push_back("Preset: basic_wave (auto)");
-        outResolved.infoLines.push_back("Base Config Path: " + basePath.string());
-        outResolved.infoLines.push_back("Preset Config Path: " + fallbackPresetPath.string());
+        outResolved.infoLines.push_back("Base Config Path: " + PathToUtf8(basePath));
+        outResolved.infoLines.push_back("Preset Config Path: " + PathToUtf8(fallbackPresetPath));
     }
 
     return true;
