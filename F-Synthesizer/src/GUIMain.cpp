@@ -209,6 +209,16 @@ int RunGUIApp()
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoSavedSettings;
         ImGui::Begin("F-SynthesizerRoot", nullptr, rootFlags);
+        std::string hoverHelp = (state.uiModeTab == 0)
+            ? "Sound: 音色を作り、選択チャンネルをすぐ試聴します。"
+            : "Music: ピアノロールを確認し、試聴またはWAV書き出しを行います。";
+        auto updateHoverHelp = [&](const char* text)
+        {
+            if (ImGui::IsItemHovered())
+            {
+                hoverHelp = text;
+            }
+        };
 
         ImGui::TextUnformatted("F-Synthesizer GUI");
         ImGui::Separator();
@@ -222,6 +232,7 @@ int RunGUIApp()
         {
             AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
         }
+        updateHoverHelp("UI全体の表示倍率を変更します。");
         ImGui::Separator();
         static int syncedTab = -1;
         if (ImGui::BeginTabBar("mode_tabs"))
@@ -236,11 +247,13 @@ int RunGUIApp()
                 state.uiModeTab = 0;
                 ImGui::EndTabItem();
             }
+            updateHoverHelp("Sound: 音作りとチャンネル試聴を行うモードです。");
             if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
             {
                 state.uiModeTab = 1;
                 ImGui::EndTabItem();
             }
+            updateHoverHelp("Music: ピアノロール確認と書き出しを行うモードです。");
             ImGui::EndTabBar();
             syncedTab = state.uiModeTab;
         }
@@ -267,8 +280,10 @@ int RunGUIApp()
             {
                 StartGUIRun(state, true);
             }
+            updateHoverHelp("選択中チャンネルだけを再生成して再生します。");
             ImGui::SameLine();
             ImGui::Checkbox("Loop Preview", &state.previewLoop);
+            updateHoverHelp("Preview終了後に先頭へ戻ってループ再生します。");
         }
         else
         {
@@ -276,14 +291,17 @@ int RunGUIApp()
             {
                 StartGUIRun(state, false);
             }
+            updateHoverHelp("現在設定でWAVを書き出します。");
             ImGui::SameLine();
             if (ImGui::Button("Play Preview (Display ch)"))
             {
                 state.selectedChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
                 StartGUIRun(state, true);
             }
+            updateHoverHelp("ピアノロール表示チャンネルを再生成して再生します。");
             ImGui::SameLine();
             ImGui::Checkbox("Loop Preview", &state.previewLoop);
+            updateHoverHelp("Preview終了後に先頭へ戻ってループ再生します。");
         }
         ImGui::EndDisabled();
         ImGui::SameLine();
@@ -294,6 +312,7 @@ int RunGUIApp()
         {
             StopGUIRunAndPreview(state);
         }
+        updateHoverHelp("実行中のレンダまたは再生中のPreviewを停止します。");
         ImGui::EndDisabled();
         ImGui::SameLine();
         ImGui::BeginDisabled(state.running);
@@ -301,6 +320,7 @@ int RunGUIApp()
         {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+        updateHoverHelp("GUIを終了します。");
         ImGui::EndDisabled();
         ImGui::TextDisabled(
             state.uiModeTab == 0
@@ -558,6 +578,8 @@ int RunGUIApp()
         ImGui::EndChild();
 
         ImGui::Separator();
+        ImGui::TextDisabled("Help: %s", hoverHelp.c_str());
+        ImGui::Separator();
         if (logPanelExpanded)
         {
             ImGui::InvisibleButton("log_splitter", ImVec2(-1.0f, splitterThickness));
@@ -580,7 +602,8 @@ int RunGUIApp()
             ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
             {
                 std::lock_guard<std::mutex> lock(state.logMutex);
-                for (const std::string& line : state.logs)
+                const std::vector<std::string>& visibleLogs = (state.uiModeTab == 1) ? state.musicLogs : state.soundLogs;
+                for (const std::string& line : visibleLogs)
                 {
                     ImGui::TextUnformatted(line.c_str());
                 }

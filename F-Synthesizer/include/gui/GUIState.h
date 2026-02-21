@@ -79,7 +79,9 @@ struct GUIState
     PreviewPlaybackState playback{};
     std::future<int> runFuture{};
     std::mutex logMutex{};
-    std::vector<std::string> logs{};
+    std::vector<std::string> soundLogs{};
+    std::vector<std::string> musicLogs{};
+    int runLogTab = 0;
     GUIRunObserver observer{};
     gui::PianoRollState pianoRoll{};
 };

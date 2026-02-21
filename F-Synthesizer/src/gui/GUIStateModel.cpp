@@ -90,7 +90,9 @@ void InitializeGUIState(
     state.serialSave = false;
     state.lastOutputPath.clear();
     state.lastPresetPath.clear();
-    state.logs.clear();
+    state.soundLogs.clear();
+    state.musicLogs.clear();
+    state.runLogTab = state.uiModeTab;
     state.lastPeak = 0.0;
     state.hasPeak = false;
     state.soloPreviewActive = false;
@@ -104,7 +106,7 @@ void InitializeGUIState(
     state.runOutputBuffer.reset();
     state.pianoRoll = gui::PianoRollState{};
     state.observer.logMutex = &state.logMutex;
-    state.observer.logs = &state.logs;
+    state.observer.logs = &state.soundLogs;
     state.observer.cancelRequested = &state.stopRequested;
     if (refreshPresetItems)
     {

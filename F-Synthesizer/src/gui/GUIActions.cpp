@@ -144,10 +144,28 @@ bool ValidateBeforeRun(const GUIState& state, std::string& err)
 
 namespace gui
 {
-void AppendGUILog(GUIState& state, const std::string& line)
+namespace
+{
+std::vector<std::string>& LogsByTab(GUIState& state, int tab)
+{
+    return (tab == 1) ? state.musicLogs : state.soundLogs;
+}
+
+const std::vector<std::string>& LogsByTab(const GUIState& state, int tab)
+{
+    return (tab == 1) ? state.musicLogs : state.soundLogs;
+}
+
+void AppendGUILogToTab(GUIState& state, int tab, const std::string& line)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
-    state.logs.push_back(line);
+    LogsByTab(state, tab).push_back(line);
+}
+} // namespace
+
+void AppendGUILog(GUIState& state, const std::string& line)
+{
+    AppendGUILogToTab(state, state.uiModeTab, line);
 }
 
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
@@ -229,7 +247,8 @@ bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path&
 void AnalyzeRenderPeakFromLogs(GUIState& state)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
-    for (auto it = state.logs.rbegin(); it != state.logs.rend(); ++it)
+    const std::vector<std::string>& logs = LogsByTab(state, state.uiModeTab);
+    for (auto it = logs.rbegin(); it != logs.rend(); ++it)
     {
         const std::string& line = *it;
         const std::string key = "[RenderStats] peak=";
@@ -341,24 +360,29 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
 
-    state.logs.clear();
+    state.runLogTab = state.uiModeTab;
+    state.observer.logs = &LogsByTab(state, state.runLogTab);
+    {
+        std::lock_guard<std::mutex> lock(state.logMutex);
+        LogsByTab(state, state.runLogTab).clear();
+    }
     state.lastPeak = 0.0;
     state.hasPeak = false;
     state.runOutputBuffer = previewSelected ? std::make_shared<SoundData>() : nullptr;
     state.runIsPreview = previewSelected;
     state.autoPlayPreviewOnRunComplete = previewSelected;
-    AppendGUILog(state, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
+    AppendGUILogToTab(state, state.runLogTab, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
     if (cfg.overrideNoteTicks != nullptr)
     {
-        AppendGUILog(state, "[GUI] PianoRoll edited notes applied: count=" +
+        AppendGUILogToTab(state, state.runLogTab, "[GUI] PianoRoll edited notes applied: count=" +
             std::to_string(cfg.overrideNoteTicks->size() / 2));
     }
     if (previewSelected)
     {
-        AppendGUILog(state, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
+        AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
             " sec=" + std::to_string(options.startSec));
     }
-    AppendGUILog(state, "[GUI] Effective Output: " + state.lastOutputPath);
+    AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.running = true;
@@ -396,7 +420,7 @@ bool TryFinalizeCompletedRun(GUIState& state)
     state.lastRunExitCode = state.runFuture.get();
     state.hasRun = true;
     state.running = false;
-    AppendGUILog(state, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
+    AppendGUILogToTab(state, state.runLogTab, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
     if (state.runIsPreview)
     {
         // Preview成功時のみメモリバッファを再生可能状態に切り替える。
@@ -406,17 +430,17 @@ bool TryFinalizeCompletedRun(GUIState& state)
         {
             state.previewRenderedSound = state.runOutputBuffer;
             state.previewAudioReady = true;
-            AppendGUILog(state, "[GUI] Preview audio buffer ready");
+            AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview audio buffer ready");
             if (state.autoPlayPreviewOnRunComplete)
             {
                 std::string playErr;
                 if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, playErr))
                 {
-                    AppendGUILog(state, "[GUI] Preview playback started");
+                    AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback started");
                 }
                 else
                 {
-                    AppendGUILog(state, "[GUI] Preview playback failed: " + playErr);
+                    AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback failed: " + playErr);
                 }
             }
         }
