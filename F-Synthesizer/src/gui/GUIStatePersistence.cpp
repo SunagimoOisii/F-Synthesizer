@@ -44,6 +44,8 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.prDrumNameMode = state.pianoRoll.drumNameMode;
     data.prFollowPreviewPlayback = state.pianoRoll.followPreviewPlayback;
     data.prPreviewStartTick = state.pianoRoll.previewStartTick;
+    data.channelAssignments = state.channelAssignments;
+    data.drumChannelSpecialHandling = state.drumChannelSpecialHandling;
     data.prSelectedIndices.clear();
     for (int i = 0; i < static_cast<int>(state.pianoRoll.selected.size()); i++)
     {
@@ -92,6 +94,8 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.pianoRoll.followPreviewPlayback = data.prFollowPreviewPlayback;
     state.pianoRoll.previewStartTick = data.prPreviewStartTick;
     state.pianoRoll.pendingSelectedIndices = data.prSelectedIndices;
+    state.channelAssignments = data.channelAssignments;
+    state.drumChannelSpecialHandling = data.drumChannelSpecialHandling;
 
     gui::EnsureChannelMixStates(state);
     for (int ch = 0; ch < 16; ch++)

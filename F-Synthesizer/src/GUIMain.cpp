@@ -1,7 +1,10 @@
 #include <string>
 #include <algorithm>
+#include <array>
+#include <cfloat>
 #include <cmath>
 #include <cstring>
+#include <variant>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -11,6 +14,7 @@
 #include "AppCore.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIChannelEditor.h"
+#include "gui/GUIConfigUtils.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/GUIPlatform.h"
 #include "gui/GUIState.h"
@@ -559,6 +563,9 @@ int RunGUIApp()
         {
             ImGui::TextUnformatted("Music");
             ImGui::Separator();
+            gui::EnsureChannelConfigs(state);
+            gui::EnsureChannelMixStates(state);
+
             ImGui::BeginDisabled(state.running);
             state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
             ImGui::SameLine();
@@ -583,6 +590,139 @@ int RunGUIApp()
                     strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
                     state.presetDirty = true;
                 }
+            }
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Output Target");
+            int outputMode = (state.targetChannel < 0) ? 0 : 1;
+            if (ImGui::RadioButton("All Channels", outputMode == 0))
+            {
+                state.targetChannel = -1;
+                state.presetDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Single Channel", outputMode == 1))
+            {
+                state.targetChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                state.presetDirty = true;
+            }
+            if (state.targetChannel >= 0)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                int singleTarget = std::clamp(state.targetChannel, 0, 15);
+                if (ImGui::SliderInt("Target Ch", &singleTarget, 0, 15))
+                {
+                    state.targetChannel = singleTarget;
+                    state.presetDirty = true;
+                }
+            }
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Music Mixer / Assignment");
+            ImGui::Checkbox("Drum ch10 Special Handling", &state.drumChannelSpecialHandling);
+            ImGui::SameLine();
+            if (ImGui::Button("Auto Setup Drum ch10"))
+            {
+                state.channelAssignments[9] = 9;
+                ChannelConfig& drumCh = (*state.channelConfigs)[9];
+                const bool isDrumSource =
+                    std::holds_alternative<DrumConfig>(drumCh.source) ||
+                    std::holds_alternative<DrumKitConfig>(drumCh.source);
+                if (!isDrumSource)
+                {
+                    drumCh.source = gui::DefaultSourceByType(4);
+                }
+                state.presetDirty = true;
+            }
+
+            if (ImGui::BeginTable("music_mixer_assignment_table", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
+            {
+                ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
+                ImGui::TableSetupColumn("assign", ImGuiTableColumnFlags_WidthFixed, 72.0f);
+                ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 32.0f);
+                ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 32.0f);
+                ImGui::TableSetupColumn("Level");
+                ImGui::TableSetupColumn("Pan");
+                ImGui::TableSetupColumn("Gain");
+                ImGui::TableSetupColumn("Note");
+                ImGui::TableHeadersRow();
+
+                const auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
+                {
+                    float v = static_cast<float>(value);
+                    const bool edited = ImGui::SliderFloat(label, &v, minV, maxV, "%.2f");
+                    if (edited)
+                    {
+                        value = static_cast<double>(v);
+                    }
+                    return edited;
+                };
+
+                for (int ch = 0; ch < 16; ch++)
+                {
+                    ChannelMixState& mix = (*state.channelMixStates)[ch];
+                    ImGui::TableNextRow();
+                    ImGui::PushID(ch);
+
+                    ImGui::TableSetColumnIndex(0);
+                    if (ch == 9 && state.drumChannelSpecialHandling)
+                    {
+                        ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.25f, 1.0f), "ch%d", ch);
+                    }
+                    else
+                    {
+                        ImGui::Text("ch%d", ch);
+                    }
+
+                    ImGui::TableSetColumnIndex(1);
+                    int assigned = std::clamp(state.channelAssignments[ch], 0, 15);
+                    ImGui::SetNextItemWidth(-FLT_MIN);
+                    if (ImGui::SliderInt("##assign", &assigned, 0, 15, "ch%d"))
+                    {
+                        state.channelAssignments[ch] = assigned;
+                        state.presetDirty = true;
+                    }
+
+                    ImGui::TableSetColumnIndex(2);
+                    if (ImGui::Checkbox("##mute", &mix.mute)) state.presetDirty = true;
+
+                    ImGui::TableSetColumnIndex(3);
+                    if (ImGui::Checkbox("##solo", &mix.solo)) state.presetDirty = true;
+
+                    ImGui::TableSetColumnIndex(4);
+                    if (sliderMix("##level", mix.level, 0.0f, 2.0f)) state.presetDirty = true;
+
+                    ImGui::TableSetColumnIndex(5);
+                    if (sliderMix("##pan", mix.pan, -1.0f, 1.0f)) state.presetDirty = true;
+
+                    ImGui::TableSetColumnIndex(6);
+                    if (sliderMix("##gain", mix.gain, 0.0f, 4.0f)) state.presetDirty = true;
+
+                    ImGui::TableSetColumnIndex(7);
+                    if (ch == 9 && state.drumChannelSpecialHandling)
+                    {
+                        const int src = std::clamp(state.channelAssignments[ch], 0, 15);
+                        const SourceConfig& srcCfg = (*state.channelConfigs)[src].source;
+                        const bool mappedToDrum =
+                            std::holds_alternative<DrumConfig>(srcCfg) ||
+                            std::holds_alternative<DrumKitConfig>(srcCfg);
+                        if (mappedToDrum)
+                        {
+                            ImGui::TextUnformatted("Drum OK");
+                        }
+                        else
+                        {
+                            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "Not Drum");
+                        }
+                    }
+                    else
+                    {
+                        ImGui::TextUnformatted("-");
+                    }
+
+                    ImGui::PopID();
+                }
+                ImGui::EndTable();
             }
             ImGui::EndDisabled();
             ImGui::Separator();

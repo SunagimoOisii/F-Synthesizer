@@ -53,7 +53,13 @@ AppConfig BuildConfigFromGUI(const GUIState& state)
     cfg.defaultWave = WaveFromIndex(state.defaultWave);
     if (state.channelConfigs)
     {
-        cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(state.channelConfigs);
+        auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
+        for (int ch = 0; ch < 16; ch++)
+        {
+            const int src = std::clamp(state.channelAssignments[ch], 0, 15);
+            (*remapped)[ch] = (*state.channelConfigs)[src];
+        }
+        cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(remapped);
     }
     if (state.channelMixStates)
     {
@@ -82,6 +88,8 @@ void InitializeGUIState(
     state.presetIndex = 0;
     state.selectedChannel = 0;
     state.selectedDrumNote = 36;
+    state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    state.drumChannelSpecialHandling = true;
     strncpy_s(state.presetName, sizeof(state.presetName), "basic_wave", _TRUNCATE);
     state.running = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
@@ -231,6 +239,14 @@ void RepairGUIStatePaths(
     {
         state.pianoRoll.previewStartTick = 0;
         repaired = true;
+    }
+    for (int ch = 0; ch < 16; ch++)
+    {
+        if (state.channelAssignments[ch] < 0 || state.channelAssignments[ch] > 15)
+        {
+            state.channelAssignments[ch] = std::clamp(state.channelAssignments[ch], 0, 15);
+            repaired = true;
+        }
     }
 
     EnsureChannelMixStates(state);

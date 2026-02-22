@@ -260,6 +260,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJsonBool(text, "prDrumNameMode")) data.prDrumNameMode = *v;
     if (auto v = ReadJsonBool(text, "prFollowPreviewPlayback")) data.prFollowPreviewPlayback = *v;
     if (auto v = ReadJsonInt(text, "prPreviewStartTick")) data.prPreviewStartTick = *v;
+    if (auto v = ReadJsonBool(text, "drumChannelSpecialHandling")) data.drumChannelSpecialHandling = *v;
     if (auto v = ReadJsonInt(text, "prSelectedCount"))
     {
         data.prSelectedIndices.clear();
@@ -288,6 +289,12 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
         if (auto v = ReadJsonFloat(text, kLevel)) mix.level = *v;
         if (auto v = ReadJsonFloat(text, kPan)) mix.pan = *v;
         if (auto v = ReadJsonFloat(text, kGain)) mix.gain = *v;
+
+        const std::string kAssign = "assignCh" + std::to_string(ch);
+        if (auto v = ReadJsonInt(text, kAssign))
+        {
+            data.channelAssignments[ch] = std::clamp(*v, 0, 15);
+        }
     }
 
     return true;
@@ -334,6 +341,7 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"prDrumNameMode\": " << (data.prDrumNameMode ? "true" : "false") << ",\n";
     fout << "  \"prFollowPreviewPlayback\": " << (data.prFollowPreviewPlayback ? "true" : "false") << ",\n";
     fout << "  \"prPreviewStartTick\": " << data.prPreviewStartTick << ",\n";
+    fout << "  \"drumChannelSpecialHandling\": " << (data.drumChannelSpecialHandling ? "true" : "false") << ",\n";
     fout << "  \"prSelectedCount\": " << data.prSelectedIndices.size() << ",\n";
     for (size_t i = 0; i < data.prSelectedIndices.size(); i++)
     {
@@ -346,7 +354,8 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
         fout << "  \"mixCh" << ch << "Solo\": " << (mix.solo ? "true" : "false") << ",\n";
         fout << "  \"mixCh" << ch << "Level\": " << mix.level << ",\n";
         fout << "  \"mixCh" << ch << "Pan\": " << mix.pan << ",\n";
-        fout << "  \"mixCh" << ch << "Gain\": " << mix.gain;
+        fout << "  \"mixCh" << ch << "Gain\": " << mix.gain << ",\n";
+        fout << "  \"assignCh" << ch << "\": " << data.channelAssignments[ch];
         fout << (ch == 15 ? "\n" : ",\n");
     }
     fout << "}\n";
