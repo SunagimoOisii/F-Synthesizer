@@ -19,6 +19,15 @@
 
 namespace
 {
+std::string BuildUserErrorMessage(const std::string& summary, const std::string& detail)
+{
+    if (detail.empty())
+    {
+        return summary;
+    }
+    return summary + " (" + detail + ")";
+}
+
 double SafeBpm(double bpm)
 {
     return (bpm > 1e-3) ? bpm : 120.0;
@@ -446,7 +455,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         AppendGUILog(state, "[GUI] Validation failed: " + validationError);
         const int actionHint = (validationError.find("MIDI") != std::string::npos) ? 1 :
             ((validationError.find("Output") != std::string::npos) ? 2 : 0);
-        RaiseGUIError(state, "Run validation failed: " + validationError, actionHint, true);
+        const std::string summary = (actionHint == 1)
+            ? "Export/Preview を開始できません。MIDI 設定を確認してください。"
+            : ((actionHint == 2)
+                ? "Export/Preview を開始できません。出力先設定を確認してください。"
+                : "Export/Preview を開始できません。入力値を確認してください。");
+        RaiseGUIError(state, BuildUserErrorMessage(summary, validationError), actionHint, true);
         return;
     }
     ClearGUIError(state);
@@ -553,7 +567,11 @@ void StartGUISoundTonePreview(GUIState& state)
         state.hasRun = true;
         state.lastRunExitCode = 1;
         AppendGUILog(state, "[GUI] Sound Tone Preview validation failed: " + validationError);
-        RaiseGUIError(state, "Tone preview validation failed: " + validationError, 3, true);
+        RaiseGUIError(
+            state,
+            BuildUserErrorMessage("Tone Preview を開始できません。Sound 設定を確認してください。", validationError),
+            3,
+            true);
         return;
     }
     ClearGUIError(state);
@@ -672,7 +690,11 @@ bool TryFinalizeCompletedRun(GUIState& state)
                 else
                 {
                     AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback failed: " + playErr);
-                    RaiseGUIError(state, "Preview playback failed: " + playErr, 0, true);
+                    RaiseGUIError(
+                        state,
+                        BuildUserErrorMessage("Preview 再生に失敗しました。設定を確認して再実行してください。", playErr),
+                        0,
+                        true);
                 }
             }
         }

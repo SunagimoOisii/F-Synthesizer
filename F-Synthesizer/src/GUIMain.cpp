@@ -234,7 +234,7 @@ int RunGUIApp()
             if (!SaveGUIStateFile(state, err))
             {
                 AppendGUILog(state, "[GUI] Save workspace failed: " + err);
-                RaiseGUIError(state, "Save workspace failed: " + err, 0, true);
+                RaiseGUIError(state, "Save Project に失敗しました。設定を確認してください。(" + err + ")", 4, true);
                 return false;
             }
             AppendGUILog(state, "[GUI] Workspace saved.");
@@ -259,7 +259,7 @@ int RunGUIApp()
                 if (!SavePresetDiffFromState(state, presetPath, err))
                 {
                     AppendGUILog(state, "[GUI] Save preset failed: " + err);
-                    RaiseGUIError(state, "Save preset failed: " + err, 0, true);
+                    RaiseGUIError(state, "Save All の SoundAsset 保存に失敗しました。(" + err + ")", 3, true);
                     return false;
                 }
                 state.lastPresetPath = PathToUtf8(presetPath);
@@ -285,7 +285,7 @@ int RunGUIApp()
             else
             {
                 AppendGUILog(state, "[GUI] Apply preset failed: " + err);
-                RaiseGUIError(state, "Apply preset failed: " + err, 0, true);
+                RaiseGUIError(state, "Preset 適用に失敗しました。Sound 設定を確認してください。(" + err + ")", 3, true);
             }
         };
 
@@ -369,12 +369,24 @@ int RunGUIApp()
         ImGui::EndDisabled();
         if (state.hasUiError)
         {
+            auto suggestedFix = [&]() -> const char*
+            {
+                switch (state.uiErrorAction)
+                {
+                case 1: return "Suggested Fix: MIDI path を選び直す";
+                case 2: return "Suggested Fix: Output path を選び直す";
+                case 3: return "Suggested Fix: Sound タブで設定を確認する";
+                case 4: return "Suggested Fix: Music タブで設定を確認する";
+                default: return "Suggested Fix: 設定を見直して再実行する";
+                }
+            };
             ImGui::Separator();
-            ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Error: %s", state.uiErrorMessage.c_str());
+            ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Problem: %s", state.uiErrorMessage.c_str());
+            ImGui::TextDisabled("%s", suggestedFix());
             if (state.uiErrorAction == 1)
             {
                 ImGui::SameLine();
-                if (ImGui::Button("Fix: Browse MIDI"))
+                if (ImGui::Button("Recover: Browse MIDI"))
                 {
                     std::string selected;
                     const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
@@ -389,7 +401,7 @@ int RunGUIApp()
             else if (state.uiErrorAction == 2)
             {
                 ImGui::SameLine();
-                if (ImGui::Button("Fix: Browse Output"))
+                if (ImGui::Button("Recover: Browse Output"))
                 {
                     std::string selected;
                     const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
@@ -404,7 +416,7 @@ int RunGUIApp()
             else if (state.uiErrorAction == 3)
             {
                 ImGui::SameLine();
-                if (ImGui::Button("Go Sound Tab"))
+                if (ImGui::Button("Recover: Go Sound Tab"))
                 {
                     state.uiModeTab = 0;
                     ClearGUIError(state);
@@ -413,14 +425,14 @@ int RunGUIApp()
             else if (state.uiErrorAction == 4)
             {
                 ImGui::SameLine();
-                if (ImGui::Button("Go Music Tab"))
+                if (ImGui::Button("Recover: Go Music Tab"))
                 {
                     state.uiModeTab = 1;
                     ClearGUIError(state);
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("Dismiss Error"))
+            if (ImGui::Button("Clear Error"))
             {
                 ClearGUIError(state);
             }
@@ -432,7 +444,15 @@ int RunGUIApp()
         }
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextWrapped("%s", state.uiErrorMessage.c_str());
+            ImGui::TextWrapped("Problem: %s", state.uiErrorMessage.c_str());
+            switch (state.uiErrorAction)
+            {
+            case 1: ImGui::TextDisabled("Suggested Fix: MIDI path を選び直してください。"); break;
+            case 2: ImGui::TextDisabled("Suggested Fix: Output path を選び直してください。"); break;
+            case 3: ImGui::TextDisabled("Suggested Fix: Sound タブの設定を確認してください。"); break;
+            case 4: ImGui::TextDisabled("Suggested Fix: Music タブの設定を確認してください。"); break;
+            default: ImGui::TextDisabled("Suggested Fix: 設定を見直して再実行してください。"); break;
+            }
             if (ImGui::Button("OK"))
             {
                 ImGui::CloseCurrentPopup();
@@ -651,7 +671,7 @@ int RunGUIApp()
                     else
                     {
                         AppendGUILog(state, "[GUI] Preset save failed: " + err);
-                        RaiseGUIError(state, "Preset save failed: " + err, 0, true);
+                        RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
                     }
                 }
                 ImGui::SameLine();
@@ -671,7 +691,7 @@ int RunGUIApp()
                     else
                     {
                         AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
-                        RaiseGUIError(state, "Preset duplicate failed: " + err, 0, true);
+                        RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
                     }
                 }
                 ImGui::SameLine();
