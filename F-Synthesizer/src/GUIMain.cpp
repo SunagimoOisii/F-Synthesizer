@@ -667,65 +667,9 @@ int RunGUIApp()
                     ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
                 }
 
-                state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
-                ImGui::SameLine();
-                if (ImGui::Button("Browse MIDI..."))
-                {
-                    std::string selected;
-                    const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
-                    if (BrowseOpenPath(state.midiPath, midiFilter, selected))
-                    {
-                        strncpy_s(state.midiPath, sizeof(state.midiPath), selected.c_str(), _TRUNCATE);
-                        state.presetDirty = true;
-                    }
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Copy MIDI"))
-                {
-                    ImGui::SetClipboardText(state.midiPath);
-                }
-                {
-                    const std::string compact = CompactPathForUi(state.midiPath);
-                    ImGui::TextDisabled("%s", compact.c_str());
-                    if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
-                    {
-                        ImGui::SetTooltip("%s", state.midiPath);
-                    }
-                }
-
-                state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
-                ImGui::SameLine();
-                if (ImGui::Button("Browse Output..."))
-                {
-                    std::string selected;
-                    const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
-                    if (BrowseSavePath(state.wavPath, wavFilter, L"wav", selected))
-                    {
-                        strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
-                        state.presetDirty = true;
-                    }
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Copy Output"))
-                {
-                    ImGui::SetClipboardText(state.wavPath);
-                }
-                {
-                    const std::string compact = CompactPathForUi(state.wavPath);
-                    ImGui::TextDisabled("%s", compact.c_str());
-                    if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
-                    {
-                        ImGui::SetTooltip("%s", state.wavPath);
-                    }
-                }
-                state.presetDirty |= ImGui::InputInt("Target Channel", &state.targetChannel);
-                state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
-                state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
-                state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
-                state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+                ImGui::TextDisabled("Song export settings are in Music tab.");
                 const char* waves[] = { "sine", "square", "saw", "triangle" };
                 state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
-                state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
                 ImGui::EndDisabled();
 
                 ImGui::TableSetColumnIndex(1);
@@ -769,6 +713,19 @@ int RunGUIApp()
                     state.presetDirty = true;
                 }
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Copy MIDI"))
+            {
+                ImGui::SetClipboardText(state.midiPath);
+            }
+            {
+                const std::string compact = CompactPathForUi(state.midiPath);
+                ImGui::TextDisabled("%s", compact.c_str());
+                if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
+                {
+                    ImGui::SetTooltip("%s", state.midiPath);
+                }
+            }
             state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
             ImGui::SameLine();
             if (ImGui::Button("Browse Output..."))
@@ -779,6 +736,19 @@ int RunGUIApp()
                 {
                     strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
                     state.presetDirty = true;
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Copy Output"))
+            {
+                ImGui::SetClipboardText(state.wavPath);
+            }
+            {
+                const std::string compact = CompactPathForUi(state.wavPath);
+                ImGui::TextDisabled("%s", compact.c_str());
+                if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
+                {
+                    ImGui::SetTooltip("%s", state.wavPath);
                 }
             }
 
@@ -808,7 +778,47 @@ int RunGUIApp()
             }
 
             ImGui::Separator();
+            ImGui::TextUnformatted("Render Settings");
+            state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
+            state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
+            state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
+            state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+            state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+
+            ImGui::Separator();
             ImGui::TextUnformatted("Music Mixer / Assignment");
+            const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+            const int assignedFromPr = std::clamp(state.channelAssignments[prChannel], 0, 15);
+            const bool singleOutput = (state.targetChannel >= 0);
+            ImGui::Text("PR Channel: ch%d  ->  Assigned Source: ch%d", prChannel, assignedFromPr);
+            if (singleOutput)
+            {
+                ImGui::Text("Current Export: Single Channel ch%d", std::clamp(state.targetChannel, 0, 15));
+            }
+            else
+            {
+                ImGui::TextUnformatted("Current Export: All Channels");
+            }
+            if (ImGui::Button("Set PR Assign = Same ch"))
+            {
+                state.channelAssignments[prChannel] = prChannel;
+                state.presetDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Set Output Target = PR ch"))
+            {
+                state.targetChannel = prChannel;
+                state.presetDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset All Assign = Same ch"))
+            {
+                for (int ch = 0; ch < 16; ch++)
+                {
+                    state.channelAssignments[ch] = ch;
+                }
+                state.presetDirty = true;
+            }
             ImGui::Checkbox("Drum ch10 Special Handling", &state.drumChannelSpecialHandling);
             ImGui::SameLine();
             if (ImGui::Button("Auto Setup Drum ch10"))
@@ -825,16 +835,19 @@ int RunGUIApp()
                 state.presetDirty = true;
             }
 
-            if (ImGui::BeginTable("music_mixer_assignment_table", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
+            if (ImGui::BeginTable("music_mixer_assignment_table", 8,
+                    ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY,
+                    ImVec2(0.0f, 290.0f)))
             {
                 ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
-                ImGui::TableSetupColumn("assign", ImGuiTableColumnFlags_WidthFixed, 72.0f);
+                ImGui::TableSetupColumn("assign", ImGuiTableColumnFlags_WidthFixed, 78.0f);
                 ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 32.0f);
                 ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 32.0f);
-                ImGui::TableSetupColumn("Level");
-                ImGui::TableSetupColumn("Pan");
-                ImGui::TableSetupColumn("Gain");
-                ImGui::TableSetupColumn("Note");
+                ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.36f);
+                ImGui::TableSetupColumn("Pan", ImGuiTableColumnFlags_WidthStretch, 0.32f);
+                ImGui::TableSetupColumn("Gain", ImGuiTableColumnFlags_WidthStretch, 0.32f);
+                ImGui::TableSetupColumn("Note", ImGuiTableColumnFlags_WidthFixed, 92.0f);
+                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableHeadersRow();
 
                 const auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
@@ -853,6 +866,14 @@ int RunGUIApp()
                     ChannelMixState& mix = (*state.channelMixStates)[ch];
                     ImGui::TableNextRow();
                     ImGui::PushID(ch);
+                    if (ch == prChannel)
+                    {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(36, 56, 96, 64));
+                    }
+                    else if (singleOutput && ch == std::clamp(state.targetChannel, 0, 15))
+                    {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(36, 96, 56, 64));
+                    }
 
                     ImGui::TableSetColumnIndex(0);
                     if (ch == 9 && state.drumChannelSpecialHandling)
