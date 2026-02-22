@@ -14,6 +14,8 @@ bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path&
 void AnalyzeRenderPeakFromLogs(GUIState& state);
 void ActivateSoloPreview(GUIState& state, int channel);
 void DeactivateSoloPreview(GUIState& state);
+void RaiseGUIError(GUIState& state, const std::string& message, int actionHint, bool showDialog);
+void ClearGUIError(GUIState& state);
 void StartGUIRun(GUIState& state, bool previewSelected);
 void StartGUISoundTonePreview(GUIState& state);
 void StopGUIRunAndPreview(GUIState& state);

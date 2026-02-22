@@ -48,6 +48,8 @@ using gui::StartGUIRun;
 using gui::StartGUISoundTonePreview;
 using gui::StopGUIRunAndPreview;
 using gui::TryFinalizeCompletedRun;
+using gui::RaiseGUIError;
+using gui::ClearGUIError;
 using gui::LoadGUIStateFile;
 using gui::SaveGUIStateFile;
 using gui::GUIStatePath;
@@ -191,6 +193,8 @@ int RunGUIApp()
             [&](const std::string& line) { AppendGUILog(state, line); });
     }
     int lastFrameTab = state.uiModeTab;
+    int pendingPresetIndex = -1;
+    bool pendingCloseRequest = false;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -222,6 +226,55 @@ int RunGUIApp()
             if (ImGui::IsItemHovered())
             {
                 hoverHelp = text;
+            }
+        };
+        auto saveWorkspaceAndPreset = [&]() -> bool
+        {
+            std::string err;
+            if (!SaveGUIStateFile(state, err))
+            {
+                AppendGUILog(state, "[GUI] Save workspace failed: " + err);
+                RaiseGUIError(state, "Save workspace failed: " + err, 0, true);
+                return false;
+            }
+            if (state.presetDirty)
+            {
+                std::string presetName = state.presetName;
+                if (presetName.empty())
+                {
+                    presetName = "custom";
+                }
+                const std::filesystem::path presetPath =
+                    FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
+                if (!SavePresetDiffFromState(state, presetPath, err))
+                {
+                    AppendGUILog(state, "[GUI] Save preset failed: " + err);
+                    RaiseGUIError(state, "Save preset failed: " + err, 0, true);
+                    return false;
+                }
+                state.lastPresetPath = PathToUtf8(presetPath);
+                RefreshPresetItems(state, presetName);
+                AppendGUILog(state, "[GUI] Preset saved by guardrail: " + state.lastPresetPath);
+                state.presetDirty = false;
+            }
+            return true;
+        };
+        auto applyPresetByIndex = [&](int idx)
+        {
+            if (idx < 0 || idx >= static_cast<int>(state.presetItems.size()))
+            {
+                return;
+            }
+            state.presetIndex = idx;
+            std::string err;
+            if (ApplySelectedPresetPaths(state, err))
+            {
+                state.presetDirty = true;
+            }
+            else
+            {
+                AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                RaiseGUIError(state, "Apply preset failed: " + err, 0, true);
             }
         };
 
@@ -284,6 +337,86 @@ int RunGUIApp()
             lastFrameTab = state.uiModeTab;
         }
         ImGui::Separator();
+        ImGui::TextDisabled("Save Targets: SoundAsset(Preset) / MusicProject(GUI+PianoRoll) / Workspace(UI state)");
+        if (state.hasUiError)
+        {
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Error: %s", state.uiErrorMessage.c_str());
+            if (state.uiErrorAction == 1)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Fix: Browse MIDI"))
+                {
+                    std::string selected;
+                    const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
+                    if (BrowseOpenPath(state.midiPath, midiFilter, selected))
+                    {
+                        strncpy_s(state.midiPath, sizeof(state.midiPath), selected.c_str(), _TRUNCATE);
+                        state.presetDirty = true;
+                        ClearGUIError(state);
+                    }
+                }
+            }
+            else if (state.uiErrorAction == 2)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Fix: Browse Output"))
+                {
+                    std::string selected;
+                    const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
+                    if (BrowseSavePath(state.wavPath, wavFilter, L"wav", selected))
+                    {
+                        strncpy_s(state.wavPath, sizeof(state.wavPath), selected.c_str(), _TRUNCATE);
+                        state.presetDirty = true;
+                        ClearGUIError(state);
+                    }
+                }
+            }
+            else if (state.uiErrorAction == 3)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Go Sound Tab"))
+                {
+                    state.uiModeTab = 0;
+                    ClearGUIError(state);
+                }
+            }
+            else if (state.uiErrorAction == 4)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("Go Music Tab"))
+                {
+                    state.uiModeTab = 1;
+                    ClearGUIError(state);
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Dismiss Error"))
+            {
+                ClearGUIError(state);
+            }
+        }
+        if (state.showErrorDialog)
+        {
+            ImGui::OpenPopup("Error");
+            state.showErrorDialog = false;
+        }
+        if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextWrapped("%s", state.uiErrorMessage.c_str());
+            if (ImGui::Button("OK"))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Dismiss"))
+            {
+                ClearGUIError(state);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::Separator();
         ImGui::BeginDisabled(state.running);
         if (state.uiModeTab == 0)
         {
@@ -335,7 +468,15 @@ int RunGUIApp()
         ImGui::BeginDisabled(state.running);
         if (ImGui::Button("Close"))
         {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
+            if (state.presetDirty)
+            {
+                pendingCloseRequest = true;
+                ImGui::OpenPopup("Unsaved Changes");
+            }
+            else
+            {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
         }
         updateHoverHelp("GUIを終了します。");
         ImGui::EndDisabled();
@@ -348,6 +489,50 @@ int RunGUIApp()
         }
         ImGui::TextDisabled("%s", helpLine.c_str());
         ImGui::Separator();
+        if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextUnformatted("変更が未保存です。どうしますか？");
+            if (ImGui::Button("保存して続行"))
+            {
+                if (saveWorkspaceAndPreset())
+                {
+                    if (pendingCloseRequest)
+                    {
+                        glfwSetWindowShouldClose(window, GLFW_TRUE);
+                    }
+                    else if (pendingPresetIndex >= 0)
+                    {
+                        applyPresetByIndex(pendingPresetIndex);
+                    }
+                }
+                pendingCloseRequest = false;
+                pendingPresetIndex = -1;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("保存せず続行"))
+            {
+                if (pendingCloseRequest)
+                {
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                }
+                else if (pendingPresetIndex >= 0)
+                {
+                    applyPresetByIndex(pendingPresetIndex);
+                }
+                pendingCloseRequest = false;
+                pendingPresetIndex = -1;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("キャンセル"))
+            {
+                pendingCloseRequest = false;
+                pendingPresetIndex = -1;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
 
         static bool logPanelExpanded = false;
         const float availY = ImGui::GetContentRegionAvail().y;
@@ -386,34 +571,37 @@ int RunGUIApp()
                     *outText = (*items)[idx].c_str();
                     return true;
                 };
+                const int beforePresetIndex = state.presetIndex;
                 if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
                 {
-                    std::string err;
-                    if (ApplySelectedPresetPaths(state, err))
+                    if (state.presetDirty)
                     {
-                        state.presetDirty = true;
+                        pendingPresetIndex = state.presetIndex;
+                        state.presetIndex = beforePresetIndex;
+                        ImGui::OpenPopup("Unsaved Changes");
                     }
                     else
                     {
-                        AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                        applyPresetByIndex(state.presetIndex);
                     }
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Apply Preset Paths"))
                 {
-                    std::string err;
-                    if (ApplySelectedPresetPaths(state, err))
+                    if (state.presetDirty)
                     {
-                        state.presetDirty = true;
+                        pendingPresetIndex = state.presetIndex;
+                        ImGui::OpenPopup("Unsaved Changes");
                     }
                     else
                     {
-                        AppendGUILog(state, "[GUI] Apply preset failed: " + err);
+                        applyPresetByIndex(state.presetIndex);
                     }
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Reset Defaults"))
                 {
+                    ClearGUIError(state);
                     InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
                     state.presetDirty = false;
                 }
@@ -434,6 +622,7 @@ int RunGUIApp()
                     else
                     {
                         AppendGUILog(state, "[GUI] Preset save failed: " + err);
+                        RaiseGUIError(state, "Preset save failed: " + err, 0, true);
                     }
                 }
                 ImGui::SameLine();
@@ -453,6 +642,7 @@ int RunGUIApp()
                     else
                     {
                         AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
+                        RaiseGUIError(state, "Preset duplicate failed: " + err, 0, true);
                     }
                 }
                 ImGui::SameLine();

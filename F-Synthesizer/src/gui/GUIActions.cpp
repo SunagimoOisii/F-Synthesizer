@@ -420,6 +420,22 @@ void DeactivateSoloPreview(GUIState& state)
     state.restorePreviewOnRunComplete = false;
 }
 
+void RaiseGUIError(GUIState& state, const std::string& message, int actionHint, bool showDialog)
+{
+    state.hasUiError = true;
+    state.uiErrorMessage = message;
+    state.uiErrorAction = std::clamp(actionHint, 0, 4);
+    state.showErrorDialog = showDialog;
+}
+
+void ClearGUIError(GUIState& state)
+{
+    state.hasUiError = false;
+    state.showErrorDialog = false;
+    state.uiErrorAction = 0;
+    state.uiErrorMessage.clear();
+}
+
 void StartGUIRun(GUIState& state, bool previewSelected)
 {
     std::string validationError;
@@ -428,8 +444,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         state.hasRun = true;
         state.lastRunExitCode = 1;
         AppendGUILog(state, "[GUI] Validation failed: " + validationError);
+        const int actionHint = (validationError.find("MIDI") != std::string::npos) ? 1 :
+            ((validationError.find("Output") != std::string::npos) ? 2 : 0);
+        RaiseGUIError(state, "Run validation failed: " + validationError, actionHint, true);
         return;
     }
+    ClearGUIError(state);
 
     if (previewSelected)
     {
@@ -533,8 +553,10 @@ void StartGUISoundTonePreview(GUIState& state)
         state.hasRun = true;
         state.lastRunExitCode = 1;
         AppendGUILog(state, "[GUI] Sound Tone Preview validation failed: " + validationError);
+        RaiseGUIError(state, "Tone preview validation failed: " + validationError, 3, true);
         return;
     }
+    ClearGUIError(state);
 
     const int previewChannel = std::clamp(state.selectedChannel, 0, 15);
     ActivateSoloPreview(state, previewChannel);
@@ -650,6 +672,7 @@ bool TryFinalizeCompletedRun(GUIState& state)
                 else
                 {
                     AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback failed: " + playErr);
+                    RaiseGUIError(state, "Preview playback failed: " + playErr, 0, true);
                 }
             }
         }
