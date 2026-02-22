@@ -240,27 +240,6 @@ int RunGUIApp()
             AppendGUILog(state, "[GUI] Workspace saved.");
             return true;
         };
-        auto saveSoundAssetOnly = [&]() -> bool
-        {
-            std::string err;
-            std::string presetName = state.presetName;
-            if (presetName.empty())
-            {
-                presetName = "custom";
-            }
-            const std::filesystem::path presetPath =
-                FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
-            if (!SavePresetDiffFromState(state, presetPath, err))
-            {
-                AppendGUILog(state, "[GUI] Save preset failed: " + err);
-                RaiseGUIError(state, "Save preset failed: " + err, 0, true);
-                return false;
-            }
-            state.lastPresetPath = PathToUtf8(presetPath);
-            RefreshPresetItems(state, presetName);
-            AppendGUILog(state, "[GUI] SoundAsset saved: " + state.lastPresetPath);
-            return true;
-        };
         auto saveAll = [&]() -> bool
         {
             if (!saveWorkspaceOnly())
@@ -269,10 +248,23 @@ int RunGUIApp()
             }
             if (state.presetDirty)
             {
-                if (!saveSoundAssetOnly())
+                std::string err;
+                std::string presetName = state.presetName;
+                if (presetName.empty())
                 {
+                    presetName = "custom";
+                }
+                const std::filesystem::path presetPath =
+                    FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
+                if (!SavePresetDiffFromState(state, presetPath, err))
+                {
+                    AppendGUILog(state, "[GUI] Save preset failed: " + err);
+                    RaiseGUIError(state, "Save preset failed: " + err, 0, true);
                     return false;
                 }
+                state.lastPresetPath = PathToUtf8(presetPath);
+                RefreshPresetItems(state, presetName);
+                AppendGUILog(state, "[GUI] Preset saved by Save All: " + state.lastPresetPath);
             }
             state.presetDirty = false;
             AppendGUILog(state, "[GUI] Save All completed.");
@@ -368,15 +360,6 @@ int RunGUIApp()
             }
         }
         updateHoverHelp("MusicProject(GUI+PianoRoll) と Workspace(UI state) を保存します。");
-        ImGui::SameLine();
-        if (ImGui::Button("Save SoundAsset"))
-        {
-            if (saveSoundAssetOnly())
-            {
-                AppendGUILog(state, "[GUI] Save SoundAsset: Preset");
-            }
-        }
-        updateHoverHelp("現在の音色設定を SoundAsset(Preset) として保存します。");
         ImGui::SameLine();
         if (ImGui::Button("Save All"))
         {
@@ -865,6 +848,7 @@ int RunGUIApp()
 
             ImGui::Separator();
             ImGui::TextUnformatted("Music Mixer / Assignment");
+            constexpr int drumMidiChannel = 9; // MIDI ch10 (0-based index)
             const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
             const int assignedFromPr = std::clamp(state.channelAssignments[prChannel], 0, 15);
             const bool singleOutput = (state.targetChannel >= 0);
@@ -897,12 +881,11 @@ int RunGUIApp()
                 }
                 state.presetDirty = true;
             }
-            ImGui::Checkbox("Drum ch10 Special Handling", &state.drumChannelSpecialHandling);
-            ImGui::SameLine();
-            if (ImGui::Button("Auto Setup Drum ch10"))
+
+            auto applyDrumCh10Setup = [&]()
             {
-                state.channelAssignments[9] = 9;
-                ChannelConfig& drumCh = (*state.channelConfigs)[9];
+                state.channelAssignments[drumMidiChannel] = drumMidiChannel;
+                ChannelConfig& drumCh = (*state.channelConfigs)[drumMidiChannel];
                 const bool isDrumSource =
                     std::holds_alternative<DrumConfig>(drumCh.source) ||
                     std::holds_alternative<DrumKitConfig>(drumCh.source);
@@ -911,6 +894,21 @@ int RunGUIApp()
                     drumCh.source = gui::DefaultSourceByType(4);
                 }
                 state.presetDirty = true;
+            };
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Drum (MIDI ch10) Quick Setup");
+            ImGui::TextDisabled("Use this when ch10 should behave as percussion.");
+            ImGui::Checkbox("Enable ch10 Drum Guard", &state.drumChannelSpecialHandling);
+            ImGui::SameLine();
+            if (ImGui::Button("Auto Setup ch10 Drum"))
+            {
+                applyDrumCh10Setup();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Focus PR ch10"))
+            {
+                state.pianoRoll.displayChannel = drumMidiChannel;
             }
 
             if (ImGui::BeginTable("music_mixer_assignment_table", 8,
@@ -952,9 +950,13 @@ int RunGUIApp()
                     {
                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(36, 96, 56, 64));
                     }
+                    if (state.drumChannelSpecialHandling && ch == drumMidiChannel)
+                    {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(120, 86, 20, 68));
+                    }
 
                     ImGui::TableSetColumnIndex(0);
-                    if (ch == 9 && state.drumChannelSpecialHandling)
+                    if (ch == drumMidiChannel && state.drumChannelSpecialHandling)
                     {
                         ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.25f, 1.0f), "ch%d", ch);
                     }
@@ -988,7 +990,7 @@ int RunGUIApp()
                     if (sliderMix("##gain", mix.gain, 0.0f, 4.0f)) state.presetDirty = true;
 
                     ImGui::TableSetColumnIndex(7);
-                    if (ch == 9 && state.drumChannelSpecialHandling)
+                    if (ch == drumMidiChannel && state.drumChannelSpecialHandling)
                     {
                         const int src = std::clamp(state.channelAssignments[ch], 0, 15);
                         const SourceConfig& srcCfg = (*state.channelConfigs)[src].source;
@@ -997,11 +999,11 @@ int RunGUIApp()
                             std::holds_alternative<DrumKitConfig>(srcCfg);
                         if (mappedToDrum)
                         {
-                            ImGui::TextUnformatted("Drum OK");
+                            ImGui::TextUnformatted("Drum Ready");
                         }
                         else
                         {
-                            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "Not Drum");
+                            ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "Needs Drum Source");
                         }
                     }
                     else
