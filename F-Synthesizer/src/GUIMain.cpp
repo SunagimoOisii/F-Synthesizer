@@ -228,7 +228,7 @@ int RunGUIApp()
                 hoverHelp = text;
             }
         };
-        auto saveWorkspaceAndPreset = [&]() -> bool
+        auto saveWorkspaceOnly = [&]() -> bool
         {
             std::string err;
             if (!SaveGUIStateFile(state, err))
@@ -237,26 +237,45 @@ int RunGUIApp()
                 RaiseGUIError(state, "Save workspace failed: " + err, 0, true);
                 return false;
             }
+            AppendGUILog(state, "[GUI] Workspace saved.");
+            return true;
+        };
+        auto saveSoundAssetOnly = [&]() -> bool
+        {
+            std::string err;
+            std::string presetName = state.presetName;
+            if (presetName.empty())
+            {
+                presetName = "custom";
+            }
+            const std::filesystem::path presetPath =
+                FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
+            if (!SavePresetDiffFromState(state, presetPath, err))
+            {
+                AppendGUILog(state, "[GUI] Save preset failed: " + err);
+                RaiseGUIError(state, "Save preset failed: " + err, 0, true);
+                return false;
+            }
+            state.lastPresetPath = PathToUtf8(presetPath);
+            RefreshPresetItems(state, presetName);
+            AppendGUILog(state, "[GUI] SoundAsset saved: " + state.lastPresetPath);
+            return true;
+        };
+        auto saveAll = [&]() -> bool
+        {
+            if (!saveWorkspaceOnly())
+            {
+                return false;
+            }
             if (state.presetDirty)
             {
-                std::string presetName = state.presetName;
-                if (presetName.empty())
+                if (!saveSoundAssetOnly())
                 {
-                    presetName = "custom";
-                }
-                const std::filesystem::path presetPath =
-                    FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
-                if (!SavePresetDiffFromState(state, presetPath, err))
-                {
-                    AppendGUILog(state, "[GUI] Save preset failed: " + err);
-                    RaiseGUIError(state, "Save preset failed: " + err, 0, true);
                     return false;
                 }
-                state.lastPresetPath = PathToUtf8(presetPath);
-                RefreshPresetItems(state, presetName);
-                AppendGUILog(state, "[GUI] Preset saved by guardrail: " + state.lastPresetPath);
-                state.presetDirty = false;
             }
+            state.presetDirty = false;
+            AppendGUILog(state, "[GUI] Save All completed.");
             return true;
         };
         auto applyPresetByIndex = [&](int idx)
@@ -338,6 +357,33 @@ int RunGUIApp()
         }
         ImGui::Separator();
         ImGui::TextDisabled("Save Targets: SoundAsset(Preset) / MusicProject(GUI+PianoRoll) / Workspace(UI state)");
+        ImGui::SameLine();
+        ImGui::BeginDisabled(state.running);
+        if (ImGui::Button("Save Project"))
+        {
+            // MusicProject + Workspace を保存。SoundAsset は含めない。
+            if (saveWorkspaceOnly())
+            {
+                AppendGUILog(state, "[GUI] Save Project: MusicProject + Workspace");
+            }
+        }
+        updateHoverHelp("MusicProject(GUI+PianoRoll) と Workspace(UI state) を保存します。");
+        ImGui::SameLine();
+        if (ImGui::Button("Save SoundAsset"))
+        {
+            if (saveSoundAssetOnly())
+            {
+                AppendGUILog(state, "[GUI] Save SoundAsset: Preset");
+            }
+        }
+        updateHoverHelp("現在の音色設定を SoundAsset(Preset) として保存します。");
+        ImGui::SameLine();
+        if (ImGui::Button("Save All"))
+        {
+            saveAll();
+        }
+        updateHoverHelp("SoundAsset + MusicProject + Workspace をまとめて保存します。");
+        ImGui::EndDisabled();
         if (state.hasUiError)
         {
             ImGui::Separator();
@@ -494,7 +540,7 @@ int RunGUIApp()
             ImGui::TextUnformatted("変更が未保存です。どうしますか？");
             if (ImGui::Button("保存して続行"))
             {
-                if (saveWorkspaceAndPreset())
+                if (saveAll())
                 {
                     if (pendingCloseRequest)
                     {
@@ -750,6 +796,38 @@ int RunGUIApp()
                 {
                     ImGui::SetTooltip("%s", state.wavPath);
                 }
+            }
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Sound Reference");
+            if (ImGui::RadioButton("Snapshot (Recommended)", state.assetReferenceMode == 0))
+            {
+                state.assetReferenceMode = 0;
+                state.presetDirty = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Link (Advanced)", state.assetReferenceMode == 1))
+            {
+                state.assetReferenceMode = 1;
+                state.presetDirty = true;
+            }
+            if (state.assetReferenceMode == 0)
+            {
+                ImGui::TextDisabled("Snapshot keeps export reproducible.");
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.25f, 1.0f), "Link may change export result after sound edits.");
+            }
+            if (ImGui::CollapsingHeader("Reference Mode Details"))
+            {
+                state.showReferenceAdvanced = true;
+                ImGui::TextWrapped("Snapshot: prioritize reproducibility for beginners.");
+                ImGui::TextWrapped("Link: follow latest SoundAsset edits for iterative sound design.");
+            }
+            else
+            {
+                state.showReferenceAdvanced = false;
             }
 
             ImGui::Separator();

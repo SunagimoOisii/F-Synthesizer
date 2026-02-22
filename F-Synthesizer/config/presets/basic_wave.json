@@ -1,24 +1,20 @@
 {
-  "midiPath": "../../assets/midi/solstice_intro.mid",
-  "wavPath": "../../output/basic_wave.wav",
+  "midiPath": "C:\\Users\\sunag_qspg5zm\\OneDrive\\ドキュメント\\作業台\\Dev\\GitHub\\F-Synthesizer\\F-Synthesizer\\assets\\midi\\test3.mid",
+  "wavPath": "C:\\Users\\sunag_qspg5zm\\OneDrive\\ドキュメント\\作業台\\Dev\\GitHub\\F-Synthesizer\\F-Synthesizer\\output\\test2.wav",
   "channels": {
     "0": {
-      "source": {
-        "type": "waveform",
-        "wave": "saw"
-      }
-    },
-    "1": {
-      "source": {
-        "type": "waveform",
-        "wave": "saw"
-      }
-    },
-    "2": {
+      "amp": 0.25,
+      "attackSec": 0.01,
+      "decaySec": 0.15,
+      "sustainLevel": 0.75,
+      "releaseSec": 0.2,
       "source": {
         "type": "waveform",
         "wave": "triangle"
       }
     }
+  },
+  "channelMix": {
+
   }
 }

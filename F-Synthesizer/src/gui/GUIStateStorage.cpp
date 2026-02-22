@@ -236,6 +236,8 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJsonString(text, "midiPath")) data.midiPath = *v;
     if (auto v = ReadJsonString(text, "wavPath")) data.wavPath = *v;
     if (auto v = ReadJsonInt(text, "targetChannel")) data.targetChannel = *v;
+    if (auto v = ReadJsonInt(text, "assetReferenceMode")) data.assetReferenceMode = *v;
+    if (auto v = ReadJsonBool(text, "showReferenceAdvanced")) data.showReferenceAdvanced = *v;
     if (auto v = ReadJsonInt(text, "sampleRate")) data.sampleRate = *v;
     if (auto v = ReadJsonInt(text, "initialSeconds")) data.initialSeconds = *v;
     if (auto v = ReadJsonInt(text, "bits")) data.bits = *v;
@@ -317,6 +319,8 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"midiPath\": \"" << EscapeJson(data.midiPath) << "\",\n";
     fout << "  \"wavPath\": \"" << EscapeJson(data.wavPath) << "\",\n";
     fout << "  \"targetChannel\": " << data.targetChannel << ",\n";
+    fout << "  \"assetReferenceMode\": " << data.assetReferenceMode << ",\n";
+    fout << "  \"showReferenceAdvanced\": " << (data.showReferenceAdvanced ? "true" : "false") << ",\n";
     fout << "  \"sampleRate\": " << data.sampleRate << ",\n";
     fout << "  \"initialSeconds\": " << data.initialSeconds << ",\n";
     fout << "  \"bits\": " << data.bits << ",\n";
