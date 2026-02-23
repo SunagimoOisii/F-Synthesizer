@@ -11,6 +11,13 @@
 
 namespace
 {
+constexpr config::SourceKind kGuiSourceKinds[] = {
+    config::SourceKind::Waveform,
+    config::SourceKind::Noise,
+    config::SourceKind::Fm,
+    config::SourceKind::DrumKit,
+};
+
 bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d)
 {
     bool changed = false;
@@ -86,19 +93,42 @@ bool DrawChannelEditor(GUIState& state)
 
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        int srcType = SourceTypeIndex(chCfg.source);
-        const config::SourceKind selectedKind = config::SourceKindFromIndex(srcType);
-        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(selectedKind)))
+        if (auto* legacyDrum = std::get_if<DrumConfig>(&chCfg.source))
         {
-            for (int i = 0; i < config::kSourceKindCount; i++)
+            // Soundタブでは drumkit を正規運用とし、旧 drum 設定は自動移行する。
+            DrumKitConfig kit{};
+            for (auto& d : kit.map)
             {
-                const config::SourceKind candidate = config::SourceKindFromIndex(i);
+                d.type = DrumType::None;
+            }
+            const int dstNote = std::clamp(state.selectedDrumNote, 0, 127);
+            kit.map[dstNote] = *legacyDrum;
+            chCfg.source = kit;
+            changed = true;
+            ImGui::TextDisabled("Legacy drum source was converted to drumkit (note %d).", dstNote);
+        }
+
+        const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
+        int srcType = 0;
+        for (int i = 0; i < IM_ARRAYSIZE(kGuiSourceKinds); i++)
+        {
+            if (kGuiSourceKinds[i] == selectedKind)
+            {
+                srcType = i;
+                break;
+            }
+        }
+        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(kGuiSourceKinds[srcType])))
+        {
+            for (int i = 0; i < IM_ARRAYSIZE(kGuiSourceKinds); i++)
+            {
+                const config::SourceKind candidate = kGuiSourceKinds[i];
                 const bool selected = (srcType == i);
                 if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
                 {
                     srcType = i;
                     changed = true;
-                    chCfg.source = DefaultSourceByType(srcType);
+                    chCfg.source = DefaultSourceByType(config::SourceKindToIndex(candidate));
                 }
                 if (selected)
                 {

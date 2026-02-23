@@ -255,6 +255,47 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     return ticks;
 }
 
+int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
+{
+    if (!state.channelConfigs)
+    {
+        return 60;
+    }
+
+    slot = std::clamp(slot, 0, 15);
+    const SourceConfig& src = (*state.channelConfigs)[slot].source;
+    if (const auto* kit = std::get_if<DrumKitConfig>(&src))
+    {
+        const int preferred = std::clamp(state.selectedDrumNote, 0, 127);
+        if (kit->map[preferred].type != DrumType::None)
+        {
+            return preferred;
+        }
+
+        constexpr int kPreferredNotes[] = { 36, 38, 42 };
+        for (int n : kPreferredNotes)
+        {
+            if (kit->map[n].type != DrumType::None)
+            {
+                return n;
+            }
+        }
+        for (int n = 0; n < 128; n++)
+        {
+            if (kit->map[n].type != DrumType::None)
+            {
+                return n;
+            }
+        }
+        return 36;
+    }
+    if (std::holds_alternative<DrumConfig>(src))
+    {
+        return std::clamp(state.selectedDrumNote, 0, 127);
+    }
+    return 60;
+}
+
 void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, AppConfig& cfg)
 {
     if (!state.channelConfigs)
@@ -635,9 +676,10 @@ void StartGUISoundTonePreview(GUIState& state)
     AppConfig cfg = BuildConfigFromGUI(state);
     cfg.targetChannel = previewChannel;
     OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
+    const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
     cfg.midiPath.clear();
     cfg.overrideTicksPerQuarter = 480;
-    cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, 60, 110, cfg.overrideTicksPerQuarter);
+    cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, previewNote, 110, cfg.overrideTicksPerQuarter);
 
     RenderOptions options = DefaultPreviewRenderOptions();
     options.writeWav = false;
@@ -660,7 +702,7 @@ void StartGUISoundTonePreview(GUIState& state)
     state.runOutputBuffer = std::make_shared<SoundData>();
     state.runIsPreview = true;
     state.autoPlayPreviewOnRunComplete = true;
-    AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (C4)");
+    AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (note=" + std::to_string(previewNote) + ")");
     AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
