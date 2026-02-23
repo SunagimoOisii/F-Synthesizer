@@ -5,21 +5,64 @@
 
 const double kPi = std::acos(-1.0);
 
-double SampleWavePhase(WaveType type, double phase)
+namespace
 {
+double NormalizePhase(double phase)
+{
+    phase -= std::floor(phase);
+    if (phase < 0.0)
+    {
+        phase += 1.0;
+    }
+    return phase;
+}
+
+double PolyBlep(double t, double dt)
+{
+    if (dt <= 0.0 || dt >= 1.0)
+    {
+        return 0.0;
+    }
+    if (t < dt)
+    {
+        const double x = t / dt;
+        return x + x - x * x - 1.0;
+    }
+    if (t > 1.0 - dt)
+    {
+        const double x = (t - 1.0) / dt;
+        return x * x + x + x + 1.0;
+    }
+    return 0.0;
+}
+} // namespace
+
+double SampleWavePhase(WaveType type, double phase, double phaseInc)
+{
+    const double p = NormalizePhase(phase);
+    const double dt = std::fabs(phaseInc);
+
     switch (type)
     {
     case WaveType::Sine:
-        return std::sin(2.0 * kPi * phase);
+        return std::sin(2.0 * kPi * p);
 
     case WaveType::Square:
-        return (phase < 0.5) ? 1.0 : -1.0;
+    {
+        double w = (p < 0.5) ? 1.0 : -1.0;
+        w += PolyBlep(p, dt);
+        w -= PolyBlep(NormalizePhase(p + 0.5), dt);
+        return w;
+    }
         
     case WaveType::Saw:
-        return 2.0 * phase - 1.0;
+    {
+        const double w = 2.0 * p - 1.0;
+        return w - PolyBlep(p, dt);
+    }
 
     case WaveType::Triangle:
-        return 1.0 - 4.0 * std::fabs(phase - 0.5);
+        return 1.0 - 4.0 * std::fabs(p - 0.5);
 
     default:
         return 0.0;

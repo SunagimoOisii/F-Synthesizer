@@ -17,7 +17,10 @@ enum class NoiseType
     Blue
 };
 
-double SampleWavePhase(WaveType type, double phase);
+double SampleWavePhase(
+    WaveType type,
+    double phase,
+    double phaseInc = 0.0);
 double SampleFmPhase(WaveType carrierWave, WaveType modWave, double carrierPhase, double modPhase, double modIndex);
 double SampleNoise(NoiseType type);
 

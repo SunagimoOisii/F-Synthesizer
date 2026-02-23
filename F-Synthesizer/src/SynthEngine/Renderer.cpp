@@ -154,10 +154,11 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             using T = std::decay_t<decltype(src)>;
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
-                w = SampleWavePhase(src.wave, voices.phase[i]);
+                const double phaseInc = voices.phaseInc[i] * pitchFactor;
+                w = SampleWavePhase(src.wave, voices.phase[i], phaseInc);
                 sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain;
 
-                voices.phase[i] += voices.phaseInc[i] * pitchFactor;
+                voices.phase[i] += phaseInc;
                 if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)
