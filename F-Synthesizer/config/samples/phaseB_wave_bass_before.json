@@ -1,0 +1,27 @@
+{
+  "midiPath": "../../assets/midi/smoothing_phaseF_ab.mid",
+  "wavPath": "../../output/phaseB_bass_before.wav",
+  "targetChannel": 0,
+  "defaultWave": "saw",
+  "initialSeconds": 10,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.5,
+  "channels": {
+    "0": {
+      "amp": 0.23,
+      "attackSec": 0.003,
+      "decaySec": 0.12,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "waveform",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 3.5,
+        "unisonSpread": 0.1,
+        "subOscLevel": 1.2
+      }
+    }
+  }
+}

@@ -1,26 +1,64 @@
 {
-  "midiPath": "../../assets/midi/phaseC_wave_preset_lead.mid",
-  "wavPath": "../../output/phaseC_preset_wave_lead_soft.wav",
+  "midiPath": "../../assets/midi/smoothing_phaseF_ab.mid",
+  "wavPath": "../../output/wave_lead_soft_v2.wav",
   "targetChannel": 0,
   "defaultWave": "triangle",
-  "initialSeconds": 6,
+  "initialSeconds": 10,
   "bits": 16,
   "sampleRate": 44100,
-  "extraReleaseSec": 0.35,
+  "extraReleaseSec": 0.45,
   "channels": {
     "0": {
-      "amp": 0.2,
-      "attackSec": 0.012,
-      "decaySec": 0.16,
-      "sustainLevel": 0.76,
-      "releaseSec": 0.2,
+      "amp": 0.18,
+      "attackSec": 0.014,
+      "decaySec": 0.18,
+      "sustainLevel": 0.78,
+      "releaseSec": 0.24,
       "source": {
         "type": "waveform",
         "wave": "triangle",
-        "unisonVoices": 3,
-        "unisonDetuneCents": 5.0,
-        "unisonSpread": 0.18,
-        "subOscLevel": 0.0
+        "unisonVoices": 2,
+        "unisonDetuneCents": 3.2,
+        "unisonSpread": 0.1,
+        "subOscLevel": 0.08,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 5200.0,
+        "filterResonance": 0.85,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 3.5,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 12.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 4.2,
+            "depth": 0.28,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.002,
+            "decaySec": 0.1,
+            "sustainLevel": 0.86,
+            "releaseSec": 0.12
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoff",
+              "amount": 0.18,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "pitch",
+              "amount": 0.03,
+              "enabled": true
+            }
+          }
+        }
       }
     }
   }

@@ -1,26 +1,64 @@
 {
-  "midiPath": "../../assets/midi/phaseC_wave_preset_bass.mid",
-  "wavPath": "../../output/phaseC_preset_wave_bass_solid.wav",
+  "midiPath": "../../assets/midi/smoothing_phaseF_ab.mid",
+  "wavPath": "../../output/wave_bass_solid_v2.wav",
   "targetChannel": 0,
   "defaultWave": "saw",
-  "initialSeconds": 6,
+  "initialSeconds": 10,
   "bits": 16,
   "sampleRate": 44100,
-  "extraReleaseSec": 0.4,
+  "extraReleaseSec": 0.5,
   "channels": {
     "0": {
-      "amp": 0.23,
-      "attackSec": 0.003,
-      "decaySec": 0.12,
-      "sustainLevel": 0.72,
-      "releaseSec": 0.1,
+      "amp": 0.2,
+      "attackSec": 0.004,
+      "decaySec": 0.11,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.14,
       "source": {
         "type": "waveform",
         "wave": "saw",
         "unisonVoices": 2,
-        "unisonDetuneCents": 3.5,
-        "unisonSpread": 0.1,
-        "subOscLevel": 1.2
+        "unisonDetuneCents": 2.8,
+        "unisonSpread": 0.08,
+        "subOscLevel": 0.95,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 2800.0,
+        "filterResonance": 0.9,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 12.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 4.5,
+            "depth": 0.35,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.001,
+            "decaySec": 0.09,
+            "sustainLevel": 0.9,
+            "releaseSec": 0.08
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoff",
+              "amount": 0.28,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.12,
+              "enabled": true
+            }
+          }
+        }
       }
     }
   }
