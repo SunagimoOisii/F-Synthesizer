@@ -184,6 +184,7 @@
     <ClCompile Include="src\\SynthEngine\\Filter.cpp" />
     <ClCompile Include="src\\SynthEngine\\Modulation.cpp" />
     <ClCompile Include="src\\SynthEngine\\Renderer.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Smoothing.cpp" />
     <ClCompile Include="src\\SynthEngine\\Voices.cpp" />
     <ClCompile Include="src\\Writer.cpp">
       <CompileAs>CompileAsCpp</CompileAs>
@@ -220,6 +221,7 @@
     <ClInclude Include="include\\midi\\MidiPipeline.h" />
     <ClInclude Include="include\\SynthEngine\\Filter.h" />
     <ClInclude Include="include\\SynthEngine\\Modulation.h" />
+    <ClInclude Include="include\\SynthEngine\\Smoothing.h" />
     <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
     <ClInclude Include="include\\Writer.h" />
     <ClInclude Include="src\\SynthEngine\\Internal.h" />
