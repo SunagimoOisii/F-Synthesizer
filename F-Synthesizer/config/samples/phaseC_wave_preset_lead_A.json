@@ -1,0 +1,27 @@
+{
+  "midiPath": "../../assets/midi/phaseC_wave_preset_lead.mid",
+  "wavPath": "../../output/phaseC_wave_preset_lead_A.wav",
+  "targetChannel": 0,
+  "defaultWave": "saw",
+  "initialSeconds": 6,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.35,
+  "channels": {
+    "0": {
+      "amp": 0.19,
+      "attackSec": 0.008,
+      "decaySec": 0.1,
+      "sustainLevel": 0.66,
+      "releaseSec": 0.14,
+      "source": {
+        "type": "waveform",
+        "wave": "saw",
+        "unisonVoices": 4,
+        "unisonDetuneCents": 12.0,
+        "unisonSpread": 0.3,
+        "subOscLevel": 0.2
+      }
+    }
+  }
+}

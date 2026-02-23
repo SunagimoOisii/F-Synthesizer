@@ -1,0 +1,27 @@
+{
+  "midiPath": "../../assets/midi/phaseC_wave_preset_lead.mid",
+  "wavPath": "../../output/phaseC_wave_preset_lead_B.wav",
+  "targetChannel": 0,
+  "defaultWave": "triangle",
+  "initialSeconds": 6,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.35,
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.012,
+      "decaySec": 0.16,
+      "sustainLevel": 0.76,
+      "releaseSec": 0.2,
+      "source": {
+        "type": "waveform",
+        "wave": "triangle",
+        "unisonVoices": 3,
+        "unisonDetuneCents": 5.0,
+        "unisonSpread": 0.18,
+        "subOscLevel": 0.0
+      }
+    }
+  }
+}
