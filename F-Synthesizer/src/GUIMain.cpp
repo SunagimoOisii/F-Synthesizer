@@ -281,7 +281,7 @@ int RunGUIApp()
             std::string err;
             if (ApplySelectedPresetPaths(state, err))
             {
-                state.presetDirty = true;
+                state.presetDirty = false;
             }
             else
             {

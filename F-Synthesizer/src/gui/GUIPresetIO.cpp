@@ -8,10 +8,25 @@
 
 namespace gui
 {
+namespace
+{
+const char* WaveToPresetString(WaveType wave)
+{
+    switch (wave)
+    {
+    case WaveType::Sine: return "sine";
+    case WaveType::Square: return "square";
+    case WaveType::Saw: return "saw";
+    case WaveType::Triangle: return "triangle";
+    }
+    return "saw";
+}
+} // namespace
+
 bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem::path& presetPath, std::string& err)
 {
     AppConfig base = DefaultConfig();
-    if (!base.channelConfigs || !base.channelMixStates)
+    if (!base.channelConfigs)
     {
         err = "default channel configs are not initialized";
         return false;
@@ -27,12 +42,7 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     }
 
     out << "{\n";
-    out << "  \"midiPath\": \"";
-    WriteJsonEscaped(out, snapshot.midiPathUtf8);
-    out << "\",\n";
-    out << "  \"wavPath\": \"";
-    WriteJsonEscaped(out, snapshot.wavPathUtf8);
-    out << "\",\n";
+    out << "  \"defaultWave\": \"" << WaveToPresetString(WaveFromIndex(snapshot.defaultWave)) << "\",\n";
     out << "  \"channels\": {\n";
 
     // 既定値との差分のみを書き出し、presetファイルの保守コストを抑える。
@@ -55,29 +65,6 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
         config::WriteSourceJson(out, cur.source, 6);
         out << "\n    }";
-    }
-
-    out << "\n  },\n";
-    out << "  \"channelMix\": {\n";
-
-    bool firstMix = true;
-    for (int ch = 0; ch < 16; ch++)
-    {
-        const ChannelMixState& cur = snapshot.channelMixStates[ch];
-        const ChannelMixState& def = (*base.channelMixStates)[ch];
-        if (ChannelMixStateEquals(cur, def))
-        {
-            continue;
-        }
-        if (!firstMix) out << ",\n";
-        firstMix = false;
-        out << "    \"" << ch << "\": {\n";
-        out << "      \"mute\": " << (cur.mute ? "true" : "false") << ",\n";
-        out << "      \"solo\": " << (cur.solo ? "true" : "false") << ",\n";
-        out << "      \"level\": " << cur.level << ",\n";
-        out << "      \"pan\": " << cur.pan << ",\n";
-        out << "      \"gain\": " << cur.gain << "\n";
-        out << "    }";
     }
 
     out << "\n  }\n";

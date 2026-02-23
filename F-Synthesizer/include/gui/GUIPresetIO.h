@@ -11,10 +11,8 @@ namespace gui
 {
 struct GUIPresetSnapshot
 {
-    std::string midiPathUtf8;
-    std::string wavPathUtf8;
+    int defaultWave = 2;
     std::array<ChannelConfig, 16> channelConfigs{};
-    std::array<ChannelMixState, 16> channelMixStates{};
 };
 
 bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem::path& presetPath, std::string& err);

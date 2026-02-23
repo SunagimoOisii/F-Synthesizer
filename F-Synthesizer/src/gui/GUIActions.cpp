@@ -348,40 +348,51 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
         return false;
     }
 
-    CopyPath(state.midiPath, sizeof(state.midiPath), cfg.midiPath);
-    CopyPath(state.wavPath, sizeof(state.wavPath), cfg.wavPath);
-    state.targetChannel = cfg.targetChannel;
-    state.sampleRate = cfg.sampleRate;
-    state.initialSeconds = cfg.initialSeconds;
-    state.bits = cfg.bits;
-    state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
+    // Soundタブのpreset適用は「音色資産」に限定し、Music側の実行設定は上書きしない。
     state.defaultWave = WaveToIndex(cfg.defaultWave);
 
     EnsureChannelConfigs(state);
-    EnsureChannelMixStates(state);
     if (cfg.channelConfigs)
     {
-        *state.channelConfigs = *cfg.channelConfigs;
-    }
-    if (cfg.channelMixStates)
-    {
-        *state.channelMixStates = *cfg.channelMixStates;
+        // 1ch差分プリセット（例: drum_*）は保存時のch番号に依存させず、
+        // 現在の Selected Sound Slot に適用して扱えるようにする。
+        AppConfig def = DefaultConfig();
+        std::vector<int> changedChannels;
+        if (def.channelConfigs)
+        {
+            for (int ch = 0; ch < 16; ch++)
+            {
+                if (!ChannelConfigEquals((*cfg.channelConfigs)[ch], (*def.channelConfigs)[ch]))
+                {
+                    changedChannels.push_back(ch);
+                }
+            }
+        }
+
+        if (changedChannels.size() == 1)
+        {
+            const int dstSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+            const int srcCh = changedChannels.front();
+            (*state.channelConfigs)[dstSlot] = (*cfg.channelConfigs)[srcCh];
+        }
+        else
+        {
+            *state.channelConfigs = *cfg.channelConfigs;
+        }
     }
     return true;
 }
 
 bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path& presetPath, std::string& err)
 {
-    if (!state.channelConfigs || !state.channelMixStates)
+    if (!state.channelConfigs)
     {
-        err = "channel configs or mix states are not initialized";
+        err = "channel configs are not initialized";
         return false;
     }
     GUIPresetSnapshot snapshot{};
-    snapshot.midiPathUtf8 = state.midiPath;
-    snapshot.wavPathUtf8 = state.wavPath;
+    snapshot.defaultWave = state.defaultWave;
     snapshot.channelConfigs = *state.channelConfigs;
-    snapshot.channelMixStates = *state.channelMixStates;
     return SavePresetDiffFile(snapshot, presetPath, err);
 }
 
