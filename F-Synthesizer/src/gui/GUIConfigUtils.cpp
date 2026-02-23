@@ -43,7 +43,11 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
             if (bv == nullptr) return false;
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
-                return av.wave == bv->wave;
+                return av.wave == bv->wave &&
+                    av.unisonVoices == bv->unisonVoices &&
+                    NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
+                    NearlyEq(av.unisonSpread, bv->unisonSpread) &&
+                    NearlyEq(av.subOscLevel, bv->subOscLevel);
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)
             {

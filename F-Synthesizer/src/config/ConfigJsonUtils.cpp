@@ -392,7 +392,11 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         if constexpr (std::is_same_v<T, WaveformConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Waveform) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\"\n";
+            WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
+            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << "\n";
         }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {

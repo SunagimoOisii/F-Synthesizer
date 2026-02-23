@@ -13,6 +13,14 @@ struct WaveformConfig
 {
     // 位相サンプルで生成する基本波形。
     WaveType wave;
+    // Unison voice 数（1 で無効）。
+    int unisonVoices = 1;
+    // Unison の最大デチューン幅（cent）。
+    double unisonDetuneCents = 0.0;
+    // Unison ボイス間の位相拡散量（0..1、モノラルでは位相分散として扱う）。
+    double unisonSpread = 0.0;
+    // Sub-osc (-1 octave) の混合量。
+    double subOscLevel = 0.0;
 };
 
 struct NoiseConfig

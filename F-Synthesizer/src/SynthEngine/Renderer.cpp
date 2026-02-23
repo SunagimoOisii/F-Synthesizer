@@ -1,5 +1,6 @@
 #include "Internal.h"
 
+#include <algorithm>
 #include <cmath>
 #include <type_traits>
 
@@ -8,6 +9,16 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
+
+double WrapPhase(double phase)
+{
+    phase -= std::floor(phase);
+    if (phase < 0.0)
+    {
+        phase += 1.0;
+    }
+    return phase;
+}
 
 void EnsureDrumFilters(VoicesSoA& voices, size_t i, double hpCut, double lpCut, int sampleRate)
 {
@@ -155,7 +166,31 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
                 const double phaseInc = voices.phaseInc[i] * pitchFactor;
-                w = SampleWavePhase(src.wave, voices.phase[i], phaseInc);
+                const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
+                const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
+                const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
+                const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+
+                double unisonSum = 0.0;
+                for (int uv = 0; uv < unisonVoices; uv++)
+                {
+                    const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
+                    const double centered = (pos * 2.0) - 1.0;
+                    const double cents = centered * detuneCents;
+                    const double ratio = std::pow(2.0, cents / 1200.0);
+                    const double phaseOffset = centered * spread * 0.08;
+                    const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
+                    const double uvInc = phaseInc * ratio;
+                    unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
+                }
+                double mainWave = unisonSum / unisonVoices;
+                if (subOscLevel > 0.0)
+                {
+                    const double subPhase = WrapPhase(voices.phase[i] * 0.5);
+                    const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
+                    mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+                }
+                w = mainWave;
                 sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain;
 
                 voices.phase[i] += phaseInc;

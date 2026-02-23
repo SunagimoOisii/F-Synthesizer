@@ -83,7 +83,45 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             err = "invalid wave: " + *wave;
             return false;
         }
-        outSource = WaveformConfig{ w };
+        WaveformConfig wf{};
+        wf.wave = w;
+        if (auto v = ReadJsonInt(sourceObjText, "unisonVoices"))
+        {
+            wf.unisonVoices = *v;
+        }
+        if (auto v = ReadJsonDouble(sourceObjText, "unisonDetuneCents"))
+        {
+            wf.unisonDetuneCents = *v;
+        }
+        if (auto v = ReadJsonDouble(sourceObjText, "unisonSpread"))
+        {
+            wf.unisonSpread = *v;
+        }
+        if (auto v = ReadJsonDouble(sourceObjText, "subOscLevel"))
+        {
+            wf.subOscLevel = *v;
+        }
+        if (wf.unisonVoices < 1 || wf.unisonVoices > 8)
+        {
+            err = "waveform.unisonVoices must be in range 1..8";
+            return false;
+        }
+        if (wf.unisonDetuneCents < 0.0 || wf.unisonDetuneCents > 120.0)
+        {
+            err = "waveform.unisonDetuneCents must be in range 0.0..120.0";
+            return false;
+        }
+        if (wf.unisonSpread < 0.0 || wf.unisonSpread > 1.0)
+        {
+            err = "waveform.unisonSpread must be in range 0.0..1.0";
+            return false;
+        }
+        if (wf.subOscLevel < 0.0 || wf.subOscLevel > 2.0)
+        {
+            err = "waveform.subOscLevel must be in range 0.0..2.0";
+            return false;
+        }
+        outSource = wf;
         return true;
     }
     case SourceKind::Noise:

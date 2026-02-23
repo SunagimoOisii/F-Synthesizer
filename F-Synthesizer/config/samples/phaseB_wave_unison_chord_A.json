@@ -1,0 +1,27 @@
+{
+  "midiPath": "../../assets/midi/phaseB_wave_unison_chord.mid",
+  "wavPath": "../../output/phaseB_wave_unison_chord_A.wav",
+  "targetChannel": 0,
+  "defaultWave": "sine",
+  "initialSeconds": 6,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.4,
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.01,
+      "decaySec": 0.12,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.20,
+      "source": {
+        "type": "waveform",
+        "wave": "sine",
+        "unisonVoices": 8,
+        "unisonDetuneCents": 80.0,
+        "unisonSpread": 1.0,
+        "subOscLevel": 0.0
+      }
+    }
+  }
+}
