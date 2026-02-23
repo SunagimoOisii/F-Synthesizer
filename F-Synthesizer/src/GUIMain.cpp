@@ -470,11 +470,11 @@ int RunGUIApp()
         ImGui::BeginDisabled(state.running);
         if (state.uiModeTab == 0)
         {
-            if (ImGui::Button("Play Preview (Selected ch)"))
+            if (ImGui::Button("Play Preview (Selected Sound Slot)"))
             {
                 StartGUIRun(state, true);
             }
-            updateHoverHelp("選択中チャンネルだけを再生成して再生します。");
+            updateHoverHelp("選択中Sound Slotの音色でプレビュー再生します。");
             ImGui::SameLine();
             if (ImGui::Button("Play Tone (C4)"))
             {
@@ -495,7 +495,7 @@ int RunGUIApp()
             ImGui::SameLine();
             if (ImGui::Button("Play Preview (Display ch)"))
             {
-                state.selectedChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                state.selectedSoundSlot = std::clamp(state.pianoRoll.displayChannel, 0, 15);
                 StartGUIRun(state, true);
             }
             updateHoverHelp("ピアノロール表示チャンネルを再生成して再生します。");
@@ -696,20 +696,15 @@ int RunGUIApp()
                     }
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("Reset Channel"))
+                if (ImGui::Button("Reset Sound Slot"))
                 {
                     gui::EnsureChannelConfigs(state);
-                    gui::EnsureChannelMixStates(state);
                     AppConfig def = DefaultConfig();
                     if (def.channelConfigs)
                     {
-                        (*state.channelConfigs)[state.selectedChannel] = (*def.channelConfigs)[state.selectedChannel];
-                        if (def.channelMixStates)
-                        {
-                            (*state.channelMixStates)[state.selectedChannel] = (*def.channelMixStates)[state.selectedChannel];
-                        }
+                        (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
                         state.presetDirty = true;
-                        AppendGUILog(state, "[GUI] Channel reset: ch" + std::to_string(state.selectedChannel));
+                        AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
                     }
                 }
                 if (!state.lastPresetPath.empty())
@@ -873,7 +868,7 @@ int RunGUIApp()
             const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
             const int assignedFromPr = std::clamp(state.channelAssignments[prChannel], 0, 15);
             const bool singleOutput = (state.targetChannel >= 0);
-            ImGui::Text("PR Channel: ch%d  ->  Assigned Source: ch%d", prChannel, assignedFromPr);
+            ImGui::Text("PR Channel: ch%d  ->  Assigned Sound Slot: s%d", prChannel, assignedFromPr);
             if (singleOutput)
             {
                 ImGui::Text("Current Export: Single Channel ch%d", std::clamp(state.targetChannel, 0, 15));
@@ -882,7 +877,7 @@ int RunGUIApp()
             {
                 ImGui::TextUnformatted("Current Export: All Channels");
             }
-            if (ImGui::Button("Set PR Assign = Same ch"))
+            if (ImGui::Button("Set PR Assign = Same slot index"))
             {
                 state.channelAssignments[prChannel] = prChannel;
                 state.presetDirty = true;
@@ -894,7 +889,7 @@ int RunGUIApp()
                 state.presetDirty = true;
             }
             ImGui::SameLine();
-            if (ImGui::Button("Reset All Assign = Same ch"))
+            if (ImGui::Button("Reset All Assign = Same slot index"))
             {
                 for (int ch = 0; ch < 16; ch++)
                 {
@@ -937,7 +932,7 @@ int RunGUIApp()
                     ImVec2(0.0f, 290.0f)))
             {
                 ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
-                ImGui::TableSetupColumn("assign", ImGuiTableColumnFlags_WidthFixed, 78.0f);
+                ImGui::TableSetupColumn("slot", ImGuiTableColumnFlags_WidthFixed, 78.0f);
                 ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 32.0f);
                 ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 32.0f);
                 ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.36f);
@@ -989,7 +984,7 @@ int RunGUIApp()
                     ImGui::TableSetColumnIndex(1);
                     int assigned = std::clamp(state.channelAssignments[ch], 0, 15);
                     ImGui::SetNextItemWidth(-FLT_MIN);
-                    if (ImGui::SliderInt("##assign", &assigned, 0, 15, "ch%d"))
+                    if (ImGui::SliderInt("##assign", &assigned, 0, 15, "s%d"))
                     {
                         state.channelAssignments[ch] = assigned;
                         state.presetDirty = true;
@@ -1045,7 +1040,7 @@ int RunGUIApp()
                 [&](const std::string& line) { AppendGUILog(state, line); },
                 [&]()
                 {
-                    state.selectedChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                    state.selectedSoundSlot = std::clamp(state.pianoRoll.displayChannel, 0, 15);
                     StartGUIRun(state, true);
                 },
                 [&]()

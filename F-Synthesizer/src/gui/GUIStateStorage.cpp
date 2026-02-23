@@ -249,7 +249,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJsonInt(text, "presetIndex")) data.presetIndex = *v;
     if (auto v = ReadJsonBool(text, "serialSave")) data.serialSave = *v;
     if (auto v = ReadJsonBool(text, "previewLoop")) data.previewLoop = *v;
-    if (auto v = ReadJsonInt(text, "selectedChannel")) data.selectedChannel = *v;
+    if (auto v = ReadJsonInt(text, "selectedSoundSlot")) data.selectedSoundSlot = *v;
     if (auto v = ReadJsonInt(text, "selectedDrumNote")) data.selectedDrumNote = *v;
     if (auto v = ReadJsonString(text, "presetName")) data.presetName = *v;
     if (auto v = ReadJsonString(text, "lastPresetPath")) data.lastPresetPath = *v;
@@ -332,7 +332,7 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"presetIndex\": " << data.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (data.serialSave ? "true" : "false") << ",\n";
     fout << "  \"previewLoop\": " << (data.previewLoop ? "true" : "false") << ",\n";
-    fout << "  \"selectedChannel\": " << data.selectedChannel << ",\n";
+    fout << "  \"selectedSoundSlot\": " << data.selectedSoundSlot << ",\n";
     fout << "  \"selectedDrumNote\": " << data.selectedDrumNote << ",\n";
     fout << "  \"presetName\": \"" << EscapeJson(data.presetName) << "\",\n";
     fout << "  \"lastPresetPath\": \"" << EscapeJson(data.lastPresetPath) << "\",\n";

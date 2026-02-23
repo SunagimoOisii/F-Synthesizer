@@ -25,7 +25,7 @@ struct GUIStateStorageData
     int presetIndex = 0;
     bool serialSave = false;
     bool previewLoop = false;
-    int selectedChannel = 0;
+    int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
     std::string presetName = "custom";
     std::string lastPresetPath;

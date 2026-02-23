@@ -57,7 +57,7 @@ struct GUIState
     bool running = false;
     std::atomic<bool> stopRequested{ false };
     bool serialSave = false;
-    int selectedChannel = 0;
+    int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
     char presetName[128]{ "custom" };
     bool presetDirty = false;

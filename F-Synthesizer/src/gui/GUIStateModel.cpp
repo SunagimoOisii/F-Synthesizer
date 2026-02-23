@@ -88,7 +88,7 @@ void InitializeGUIState(
     state.uiModeTab = 0;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
-    state.selectedChannel = 0;
+    state.selectedSoundSlot = 0;
     state.selectedDrumNote = 36;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;

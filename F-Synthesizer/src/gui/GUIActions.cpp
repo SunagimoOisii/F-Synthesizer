@@ -201,9 +201,9 @@ bool ValidatePreviewOnlySettings(const GUIState& state, std::string& err)
         err = "Target Channel must be -1 or 0..15.";
         return false;
     }
-    if (state.selectedChannel < 0 || state.selectedChannel > 15)
+    if (state.selectedSoundSlot < 0 || state.selectedSoundSlot > 15)
     {
-        err = "Selected Channel must be 0..15.";
+        err = "Selected Sound Slot must be 0..15.";
         return false;
     }
     if (state.sampleRate <= 0)
@@ -253,6 +253,33 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     ticks->push_back(off);
 
     return ticks;
+}
+
+void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, AppConfig& cfg)
+{
+    if (!state.channelConfigs)
+    {
+        return;
+    }
+
+    auto previewConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
+    if (cfg.channelConfigs)
+    {
+        *previewConfigs = *cfg.channelConfigs;
+    }
+    else
+    {
+        const AppConfig def = DefaultConfig();
+        if (def.channelConfigs)
+        {
+            *previewConfigs = *def.channelConfigs;
+        }
+    }
+
+    previewChannel = std::clamp(previewChannel, 0, 15);
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    (*previewConfigs)[previewChannel] = (*state.channelConfigs)[slot];
+    cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(previewConfigs);
 }
 } // namespace
 
@@ -465,9 +492,10 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     ClearGUIError(state);
 
+    const int previewChannel = std::clamp(state.selectedSoundSlot, 0, 15);
     if (previewSelected)
     {
-        ActivateSoloPreview(state, state.selectedChannel);
+        ActivateSoloPreview(state, previewChannel);
     }
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
@@ -477,6 +505,11 @@ void StartGUIRun(GUIState& state, bool previewSelected)
 
     // GUI編集値 -> AppConfig 変換をここに集約し、実行コア側でGUI依存を持たせない。
     AppConfig cfg = BuildConfigFromGUI(state);
+    if (previewSelected && state.uiModeTab == 0)
+    {
+        cfg.targetChannel = previewChannel;
+        OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
+    }
     int overrideTicksPerQuarter = 0;
     cfg.overrideNoteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);
     cfg.overrideTicksPerQuarter = overrideTicksPerQuarter;
@@ -576,7 +609,7 @@ void StartGUISoundTonePreview(GUIState& state)
     }
     ClearGUIError(state);
 
-    const int previewChannel = std::clamp(state.selectedChannel, 0, 15);
+    const int previewChannel = std::clamp(state.selectedSoundSlot, 0, 15);
     ActivateSoloPreview(state, previewChannel);
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
@@ -586,6 +619,7 @@ void StartGUISoundTonePreview(GUIState& state)
 
     AppConfig cfg = BuildConfigFromGUI(state);
     cfg.targetChannel = previewChannel;
+    OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
     cfg.midiPath.clear();
     cfg.overrideTicksPerQuarter = 480;
     cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, 60, 110, cfg.overrideTicksPerQuarter);

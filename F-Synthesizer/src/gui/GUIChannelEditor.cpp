@@ -51,23 +51,12 @@ bool DrawChannelEditor(GUIState& state)
 {
     bool changed = false;
     EnsureChannelConfigs(state);
-    EnsureChannelMixStates(state);
-    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
 
-    ImGui::Text("Channel");
-    changed |= ImGui::InputInt("Selected Channel (0-15)", &state.selectedChannel);
-    state.selectedChannel = std::clamp(state.selectedChannel, 0, 15);
+    ImGui::TextUnformatted("Sound Slot");
+    changed |= ImGui::InputInt("Selected Sound Slot (0-15)", &state.selectedSoundSlot);
+    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
 
-    auto sliderMix = [&](const char* label, double& value, float minV, float maxV) -> bool
-    {
-        float v = static_cast<float>(value);
-        bool edited = ImGui::SliderFloat(label, &v, minV, maxV, "%.2f");
-        if (edited)
-        {
-            value = static_cast<double>(v);
-        }
-        return edited;
-    };
     auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
     {
         float v = static_cast<float>(value);
@@ -79,41 +68,28 @@ bool DrawChannelEditor(GUIState& state)
         return edited;
     };
 
-    ImGui::Text("Mix Summary (M/S/L)");
-    ImGui::BeginChild("mix_summary", ImVec2(0, 210), true);
-    if (ImGui::BeginTable("mix_compact_table", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
+    ImGui::TextDisabled("Sound tab edits sound definitions only. Channel mix/assign is in Music tab.");
+    ImGui::BeginChild("sound_slot_summary", ImVec2(0, 210), true);
+    if (ImGui::BeginTable("sound_slot_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
     {
-        ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
-        ImGui::TableSetupColumn("sel", ImGuiTableColumnFlags_WidthFixed, 56.0f);
-        ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 36.0f);
-        ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 36.0f);
-        ImGui::TableSetupColumn("L");
+        ImGui::TableSetupColumn("slot", ImGuiTableColumnFlags_WidthFixed, 58.0f);
+        ImGui::TableSetupColumn("edit");
         ImGui::TableHeadersRow();
 
-        for (int ch = 0; ch < 16; ch++)
+        for (int slot = 0; slot < 16; slot++)
         {
-            ChannelMixState& mix = (*state.channelMixStates)[ch];
             ImGui::TableNextRow();
-            ImGui::PushID(ch);
+            ImGui::PushID(slot);
 
             ImGui::TableSetColumnIndex(0);
-            ImGui::Text("ch%d", ch);
+            ImGui::Text("s%d", slot);
 
             ImGui::TableSetColumnIndex(1);
-            bool selected = (state.selectedChannel == ch);
+            bool selected = (state.selectedSoundSlot == slot);
             if (ImGui::Selectable("Edit", selected))
             {
-                state.selectedChannel = ch;
+                state.selectedSoundSlot = slot;
             }
-
-            ImGui::TableSetColumnIndex(2);
-            changed |= ImGui::Checkbox("##mute", &mix.mute);
-
-            ImGui::TableSetColumnIndex(3);
-            changed |= ImGui::Checkbox("##solo", &mix.solo);
-
-            ImGui::TableSetColumnIndex(4);
-            changed |= sliderMix("##level", mix.level, 0.0f, 2.0f);
 
             ImGui::PopID();
         }
@@ -122,20 +98,9 @@ bool DrawChannelEditor(GUIState& state)
     ImGui::EndChild();
 
     ImGui::Separator();
-    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedChannel];
-    ChannelMixState& chMix = (*state.channelMixStates)[state.selectedChannel];
-    ImGui::Text("Selected ch%d", state.selectedChannel);
-    ImGui::TextDisabled("Audition target: selected channel (use Play Preview)");
-
-    if (ImGui::CollapsingHeader("Mix Details", ImGuiTreeNodeFlags_DefaultOpen))
-    {
-        changed |= ImGui::Checkbox("Mute", &chMix.mute);
-        ImGui::SameLine();
-        changed |= ImGui::Checkbox("Solo", &chMix.solo);
-        changed |= sliderMix("Level", chMix.level, 0.0f, 2.0f);
-        changed |= sliderMix("Pan", chMix.pan, -1.0f, 1.0f);
-        changed |= sliderMix("Gain", chMix.gain, 0.0f, 4.0f);
-    }
+    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];
+    ImGui::Text("Selected s%d", state.selectedSoundSlot);
+    ImGui::TextDisabled("Tone preview uses selected sound slot.");
 
     if (ImGui::CollapsingHeader("Envelope / Gain", ImGuiTreeNodeFlags_DefaultOpen))
     {
