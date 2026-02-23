@@ -165,6 +165,66 @@ bool TryParseFilterMode(const std::string& name, FilterMode& outMode)
     return false;
 }
 
+bool TryParseLfoWave(const std::string& name, LfoWave& outWave)
+{
+    if (name == "sine")
+    {
+        outWave = LfoWave::Sine;
+        return true;
+    }
+    if (name == "triangle")
+    {
+        outWave = LfoWave::Triangle;
+        return true;
+    }
+    return false;
+}
+
+bool TryParseModSource(const std::string& name, ModSource& outSource)
+{
+    if (name == "none")
+    {
+        outSource = ModSource::None;
+        return true;
+    }
+    if (name == "lfo1")
+    {
+        outSource = ModSource::Lfo1;
+        return true;
+    }
+    if (name == "env2")
+    {
+        outSource = ModSource::Env2;
+        return true;
+    }
+    return false;
+}
+
+bool TryParseModDestination(const std::string& name, ModDestination& outDestination)
+{
+    if (name == "none")
+    {
+        outDestination = ModDestination::None;
+        return true;
+    }
+    if (name == "pitch")
+    {
+        outDestination = ModDestination::Pitch;
+        return true;
+    }
+    if (name == "amp")
+    {
+        outDestination = ModDestination::Amp;
+        return true;
+    }
+    if (name == "filterCutoff")
+    {
+        outDestination = ModDestination::FilterCutoff;
+        return true;
+    }
+    return false;
+}
+
 std::string WaveTypeToString(WaveType w)
 {
     switch (w)
@@ -211,6 +271,39 @@ std::string FilterModeToString(FilterMode mode)
     case FilterMode::BandPass: return "bandpass";
     }
     return "bypass";
+}
+
+std::string LfoWaveToString(LfoWave wave)
+{
+    switch (wave)
+    {
+    case LfoWave::Sine: return "sine";
+    case LfoWave::Triangle: return "triangle";
+    }
+    return "sine";
+}
+
+std::string ModSourceToString(ModSource source)
+{
+    switch (source)
+    {
+    case ModSource::None: return "none";
+    case ModSource::Lfo1: return "lfo1";
+    case ModSource::Env2: return "env2";
+    }
+    return "none";
+}
+
+std::string ModDestinationToString(ModDestination destination)
+{
+    switch (destination)
+    {
+    case ModDestination::None: return "none";
+    case ModDestination::Pitch: return "pitch";
+    case ModDestination::Amp: return "amp";
+    case ModDestination::FilterCutoff: return "filterCutoff";
+    }
+    return "none";
 }
 
 std::string EscapeJson(const std::string& src)
@@ -421,6 +514,39 @@ void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent)
     WriteIndent(out, indent); out << "}";
 }
 
+void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int indent)
+{
+    WriteIndent(out, indent); out << "\"modulation\": {\n";
+    WriteIndent(out, indent + 2); out << "\"lfo1\": {\n";
+    WriteIndent(out, indent + 4); out << "\"wave\": \"" << LfoWaveToString(m.lfo1.wave) << "\",\n";
+    WriteIndent(out, indent + 4); out << "\"rateHz\": " << m.lfo1.rateHz << ",\n";
+    WriteIndent(out, indent + 4); out << "\"depth\": " << m.lfo1.depth << ",\n";
+    WriteIndent(out, indent + 4); out << "\"bipolar\": " << (m.lfo1.bipolar ? "true" : "false") << "\n";
+    WriteIndent(out, indent + 2); out << "},\n";
+
+    WriteIndent(out, indent + 2); out << "\"env2\": {\n";
+    WriteIndent(out, indent + 4); out << "\"attackSec\": " << m.env2.attackSec << ",\n";
+    WriteIndent(out, indent + 4); out << "\"decaySec\": " << m.env2.decaySec << ",\n";
+    WriteIndent(out, indent + 4); out << "\"sustainLevel\": " << m.env2.sustainLevel << ",\n";
+    WriteIndent(out, indent + 4); out << "\"releaseSec\": " << m.env2.releaseSec << "\n";
+    WriteIndent(out, indent + 2); out << "},\n";
+
+    WriteIndent(out, indent + 2); out << "\"routes\": {\n";
+    for (int i = 0; i < static_cast<int>(m.matrix.routes.size()); i++)
+    {
+        const ModRoute& r = m.matrix.routes[static_cast<size_t>(i)];
+        WriteIndent(out, indent + 4); out << "\"" << i << "\": {\n";
+        WriteIndent(out, indent + 6); out << "\"source\": \"" << ModSourceToString(r.source) << "\",\n";
+        WriteIndent(out, indent + 6); out << "\"destination\": \"" << ModDestinationToString(r.destination) << "\",\n";
+        WriteIndent(out, indent + 6); out << "\"amount\": " << r.amount << ",\n";
+        WriteIndent(out, indent + 6); out << "\"enabled\": " << (r.enabled ? "true" : "false") << "\n";
+        WriteIndent(out, indent + 4); out << "}";
+        out << ((i + 1 < static_cast<int>(m.matrix.routes.size())) ? ",\n" : "\n");
+    }
+    WriteIndent(out, indent + 2); out << "}\n";
+    WriteIndent(out, indent); out << "}";
+}
+
 void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
 {
     WriteIndent(out, indent); out << "\"source\": {\n";
@@ -436,7 +562,9 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << "\n";
+            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteModulationConfig(out, v.modulation, indent + 2);
+            out << "\n";
         }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {

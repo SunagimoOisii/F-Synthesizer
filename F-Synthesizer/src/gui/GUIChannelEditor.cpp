@@ -121,6 +121,16 @@ bool DrawChannelEditor(GUIState& state)
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
             wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
             wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
+            wf->modulation.lfo1.rateHz = std::clamp(wf->modulation.lfo1.rateHz, 0.0, 100.0);
+            wf->modulation.lfo1.depth = std::clamp(wf->modulation.lfo1.depth, 0.0, 1.0);
+            wf->modulation.env2.attackSec = std::clamp(wf->modulation.env2.attackSec, 0.0, 10.0);
+            wf->modulation.env2.decaySec = std::clamp(wf->modulation.env2.decaySec, 0.0, 10.0);
+            wf->modulation.env2.sustainLevel = std::clamp(wf->modulation.env2.sustainLevel, 0.0, 1.0);
+            wf->modulation.env2.releaseSec = std::clamp(wf->modulation.env2.releaseSec, 0.0, 10.0);
+            for (auto& route : wf->modulation.matrix.routes)
+            {
+                route.amount = std::clamp(route.amount, -1.0, 1.0);
+            }
 
             int unisonVoices = wf->unisonVoices;
             ImGui::SetNextItemWidth(220.0f);
@@ -162,6 +172,89 @@ bool DrawChannelEditor(GUIState& state)
             changed |= sliderWaveParam("Filter Cutoff (Hz)", wf->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", wf->filterResonance, 0.1f, 18.0f, "%.2f");
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Modulation");
+
+            const char* lfoWaves[] = { "sine", "triangle" };
+            int lfoWaveIdx = (wf->modulation.lfo1.wave == LfoWave::Triangle) ? 1 : 0;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("LFO1 Wave", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
+            {
+                wf->modulation.lfo1.wave = (lfoWaveIdx == 1) ? LfoWave::Triangle : LfoWave::Sine;
+                changed = true;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("LFO1 Rate (Hz)", wf->modulation.lfo1.rateHz, 0.0f, 100.0f, "%.2f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("LFO1 Depth", wf->modulation.lfo1.depth, 0.0f, 1.0f, "%.3f");
+            changed |= ImGui::Checkbox("LFO1 Bipolar", &wf->modulation.lfo1.bipolar);
+
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Env2 Attack", wf->modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Env2 Decay", wf->modulation.env2.decaySec, 0.0f, 10.0f, "%.3f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Env2 Sustain", wf->modulation.env2.sustainLevel, 0.0f, 1.0f, "%.3f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Env2 Release", wf->modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
+
+            const char* modSources[] = { "none", "lfo1", "env2" };
+            const char* modDestinations[] = { "none", "pitch", "amp", "filterCutoff" };
+            for (int routeIdx = 0; routeIdx < 4; routeIdx++)
+            {
+                ModRoute& route = wf->modulation.matrix.routes[static_cast<size_t>(routeIdx)];
+                ImGui::PushID(routeIdx);
+                std::string label = "Route " + std::to_string(routeIdx);
+                ImGui::TextUnformatted(label.c_str());
+                changed |= ImGui::Checkbox("Enabled", &route.enabled);
+
+                int srcIdx = 0;
+                switch (route.source)
+                {
+                case ModSource::None: srcIdx = 0; break;
+                case ModSource::Lfo1: srcIdx = 1; break;
+                case ModSource::Env2: srcIdx = 2; break;
+                }
+                ImGui::SetNextItemWidth(220.0f);
+                if (ImGui::Combo("Source", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
+                {
+                    switch (srcIdx)
+                    {
+                    case 0: route.source = ModSource::None; break;
+                    case 1: route.source = ModSource::Lfo1; break;
+                    case 2: route.source = ModSource::Env2; break;
+                    default: route.source = ModSource::None; break;
+                    }
+                    changed = true;
+                }
+
+                int dstIdx = 0;
+                switch (route.destination)
+                {
+                case ModDestination::None: dstIdx = 0; break;
+                case ModDestination::Pitch: dstIdx = 1; break;
+                case ModDestination::Amp: dstIdx = 2; break;
+                case ModDestination::FilterCutoff: dstIdx = 3; break;
+                }
+                ImGui::SetNextItemWidth(220.0f);
+                if (ImGui::Combo("Destination", &dstIdx, modDestinations, IM_ARRAYSIZE(modDestinations)))
+                {
+                    switch (dstIdx)
+                    {
+                    case 0: route.destination = ModDestination::None; break;
+                    case 1: route.destination = ModDestination::Pitch; break;
+                    case 2: route.destination = ModDestination::Amp; break;
+                    case 3: route.destination = ModDestination::FilterCutoff; break;
+                    default: route.destination = ModDestination::None; break;
+                    }
+                    changed = true;
+                }
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Amount", route.amount, -1.0f, 1.0f, "%.3f");
+                ImGui::Separator();
+                ImGui::PopID();
+            }
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {

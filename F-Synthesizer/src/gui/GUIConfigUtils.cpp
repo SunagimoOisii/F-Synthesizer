@@ -1,6 +1,7 @@
 #include "gui/GUIConfigUtils.h"
 
 #include <cmath>
+#include <cstddef>
 #include <type_traits>
 #include <variant>
 
@@ -29,6 +30,37 @@ bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
         a.noiseType == b.noiseType;
 }
 
+bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b)
+{
+    if (a.lfo1.wave != b.lfo1.wave ||
+        !NearlyEq(a.lfo1.rateHz, b.lfo1.rateHz) ||
+        !NearlyEq(a.lfo1.depth, b.lfo1.depth) ||
+        a.lfo1.bipolar != b.lfo1.bipolar)
+    {
+        return false;
+    }
+    if (!NearlyEq(a.env2.attackSec, b.env2.attackSec) ||
+        !NearlyEq(a.env2.decaySec, b.env2.decaySec) ||
+        !NearlyEq(a.env2.sustainLevel, b.env2.sustainLevel) ||
+        !NearlyEq(a.env2.releaseSec, b.env2.releaseSec))
+    {
+        return false;
+    }
+    for (size_t i = 0; i < a.matrix.routes.size(); i++)
+    {
+        const ModRoute& ar = a.matrix.routes[i];
+        const ModRoute& br = b.matrix.routes[i];
+        if (ar.source != br.source ||
+            ar.destination != br.destination ||
+            !NearlyEq(ar.amount, br.amount) ||
+            ar.enabled != br.enabled)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
 {
     if (a.index() != b.index())
@@ -50,7 +82,8 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.subOscLevel, bv->subOscLevel) &&
                     av.filterMode == bv->filterMode &&
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
-                    NearlyEq(av.filterResonance, bv->filterResonance);
+                    NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    ModulationConfigEquals(av.modulation, bv->modulation);
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)
             {

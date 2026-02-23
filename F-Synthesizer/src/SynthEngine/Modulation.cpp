@@ -74,24 +74,50 @@ double StepEnv2Sample(ModulationRuntimeState& state, const ModEnvelopeConfig& en
     return v;
 }
 
+bool IsActiveRoute(const ModRoute& route)
+{
+    return route.enabled &&
+        route.source != ModSource::None &&
+        route.destination != ModDestination::None &&
+        route.amount != 0.0;
+}
+
 ModulationResult EvaluateModulation(
     ModulationRuntimeState& state,
     const ModulationConfig& cfg,
     double deltaTimeSec)
 {
     ModulationResult out{};
-    const double lfo1 = StepLfoSample(state.lfo1Phase, cfg.lfo1, deltaTimeSec);
-    const double env2 = StepEnv2Sample(state, cfg.env2, deltaTimeSec);
+    bool hasActiveRoute = false;
+    bool useLfo1 = false;
+    bool useEnv2 = false;
+    for (const ModRoute& route : cfg.matrix.routes)
+    {
+        if (!IsActiveRoute(route))
+        {
+            continue;
+        }
+        hasActiveRoute = true;
+        useLfo1 = useLfo1 || route.source == ModSource::Lfo1;
+        useEnv2 = useEnv2 || route.source == ModSource::Env2;
+    }
+    if (!hasActiveRoute)
+    {
+        return out;
+    }
+
+    const double lfo1 = useLfo1 ? StepLfoSample(state.lfo1Phase, cfg.lfo1, deltaTimeSec) : 0.0;
+    const double env2 = useEnv2 ? StepEnv2Sample(state, cfg.env2, deltaTimeSec) : 0.0;
 
     for (const ModRoute& route : cfg.matrix.routes)
     {
-        if (!route.enabled || route.source == ModSource::None || route.destination == ModDestination::None)
+        if (!IsActiveRoute(route))
         {
             continue;
         }
         const double srcValue = (route.source == ModSource::Lfo1) ? lfo1 :
             ((route.source == ModSource::Env2) ? env2 : 0.0);
-        const double value = srcValue * route.amount;
+        const double value = srcValue * std::clamp(route.amount, -1.0, 1.0);
         switch (route.destination)
         {
         case ModDestination::Pitch:
