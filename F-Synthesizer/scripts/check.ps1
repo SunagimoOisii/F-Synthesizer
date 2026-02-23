@@ -103,7 +103,7 @@ function Get-AutoArchitectureSection {
         "src/SynthEngine/Events.cpp",
         "src/SynthEngine/Renderer.cpp",
         "src/SynthEngine/Voices.cpp",
-        "src/Writer.cpp",
+        "src/io/Writer.cpp",
         "include/SynthEngine/SynthEngine.h"
     )
 

@@ -9,7 +9,7 @@ source type: `noise`
 - 主なファイル:
   - `include/SynthEngine/SynthEngine.h`
   - `src/SynthEngine/Renderer.cpp`
-  - `src/Oscillator.cpp`
+  - `src/synth/Oscillator.cpp`
 - 実行経路:
   - ノイズサンプル生成
   - ADSR とチャンネルミックスを適用
@@ -49,3 +49,4 @@ source type: `noise`
 
 - ノイズ固有パラメータを増やす場合は、`source.type=noise` の後方互換を維持する
 - GUI と Config の保存形式は共通 writer を使って同期させる
+

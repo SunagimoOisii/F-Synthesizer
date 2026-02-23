@@ -9,7 +9,7 @@ source type: `waveform`
 - 主なファイル:
   - `include/SynthEngine/SynthEngine.h`
   - `src/SynthEngine/Renderer.cpp`
-  - `src/Oscillator.cpp`
+  - `src/synth/Oscillator.cpp`
   - `src/gui/GUIChannelEditor.cpp`
 - 実行経路:
   - ボイスごとに位相を進めて波形サンプルを生成
@@ -140,3 +140,4 @@ source type: `waveform`
 
 - AB手順と記録テンプレートを以下へ固定:
   - `docs/synth-migration/WAVE_DRUM_AB_RUNBOOK.md`
+

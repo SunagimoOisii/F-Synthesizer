@@ -33,7 +33,10 @@ MIDI ファイルを読み込み、サンプル単位で合成して WAV に書�
 - `src/midi/MIDIParser.cpp`: MIDI パース
 - `src/midi/Sequencer.cpp`: tick/sample 変換
 - `src/SynthEngine/`: 合成エンジン本体
-- `src/Writer.cpp`: WAV 書き出し
+- `src/io/Writer.cpp`: WAV 書き出し
+- `src/config/load/`: Config load 分割実装（top-level/channel/source/modulation）
+- `src/gui/main/`: GUIメイン画面の分割実装（TopBar/MainWindow/RunLoop）
+- `src/gui/pianoroll/`: ピアノロール分割実装（Tempo/Edit/Render/Input）
 - `include/`: 公開ヘッダ
 - `docs/Architecture.md`: 設計メモ
 - `docs/PRODUCT_POLICY.md`: プロダクト方針（価値/対象ユーザー/非目標）

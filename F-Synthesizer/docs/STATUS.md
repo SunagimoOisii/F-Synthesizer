@@ -60,6 +60,11 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - Refactor Phase 6: `ConfigFileIO.cpp` を公開I/Fラッパー化し、読込・JSON補助・保存整形を `ConfigLoad/ConfigJsonUtils/ConfigSave` へ分割
   - Refactor Phase 7: `SoundGenerate.cpp` を API ラッパー + `main` へ簡素化し、実行フロー/統計/保存制御を `src/app/Run*` へ分割
   - Refactor Phase 8: `check/gui_smoke` を新構成へ追従し、`docs/archive/migration/migration_refactor.md` を追加（凍結）
+  - Refactor Phase 9: `src/include` 直下の残存ファイルを `core/synth/io/gui/midi` へ再配置し、`vcxproj`/`#include` を追従
+  - Refactor Phase 10: `ConfigLoad.cpp` の解析責務を `src/config/load/*`（top-level/channel/source/modulation）へ分割
+  - Refactor Phase 11: `GUIPianoRoll.cpp` を `src/gui/pianoroll/*`（Tempo/Edit/Render/Input）へ分割
+  - Refactor Phase 12: `GUIMain.cpp` を `src/gui/main/*`（TopBar/MainWindow/RunLoop）へ分割
+  - Refactor Phase 13: ランタイム/生成物の追跡方針を整理し、`.gitignore` と追跡対象（`imgui.ini`/`build/*.i`）を統一
   - Comment Migration Phase 1: `docs/archive/comment-migration/COMMENT_MIGRATION_BASELINE.md` を追加し、対象一覧/優先順位/必須コメント抽出/レビュー判定基準を固定
   - Comment Migration Phase 2: `src/SynthEngine/*` / `src/midi/*` / `include/SynthEngine/*` を中心に、複雑分岐・最適化・型概要の日本語コメントを追加
   - Comment Migration Phase 3: `src/app/*` / `src/config/*` と `include/AppCore.h` を中心に、実行境界・設定読込境界・CLI互換背景の日本語コメントを追加
