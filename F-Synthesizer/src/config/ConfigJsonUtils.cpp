@@ -140,6 +140,31 @@ bool TryParseDrumType(const std::string& name, DrumType& outType)
     return false;
 }
 
+bool TryParseFilterMode(const std::string& name, FilterMode& outMode)
+{
+    if (name == "bypass")
+    {
+        outMode = FilterMode::Bypass;
+        return true;
+    }
+    if (name == "lowpass")
+    {
+        outMode = FilterMode::LowPass;
+        return true;
+    }
+    if (name == "highpass")
+    {
+        outMode = FilterMode::HighPass;
+        return true;
+    }
+    if (name == "bandpass")
+    {
+        outMode = FilterMode::BandPass;
+        return true;
+    }
+    return false;
+}
+
 std::string WaveTypeToString(WaveType w)
 {
     switch (w)
@@ -174,6 +199,18 @@ std::string DrumTypeToString(DrumType d)
     case DrumType::Hat: return "hat";
     }
     return "none";
+}
+
+std::string FilterModeToString(FilterMode mode)
+{
+    switch (mode)
+    {
+    case FilterMode::Bypass: return "bypass";
+    case FilterMode::LowPass: return "lowpass";
+    case FilterMode::HighPass: return "highpass";
+    case FilterMode::BandPass: return "bandpass";
+    }
+    return "bypass";
 }
 
 std::string EscapeJson(const std::string& src)
@@ -396,7 +433,10 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
             WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
             WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
-            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << "\n";
+            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << "\n";
         }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {

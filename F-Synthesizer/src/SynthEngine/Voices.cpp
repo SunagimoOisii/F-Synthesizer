@@ -8,8 +8,6 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
-constexpr double kWaveformFilterCutoffHz = 8000.0;
-constexpr double kWaveformFilterResonance = 0.707;
 
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
@@ -173,13 +171,13 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     {
         InitDrumVoice(*drum, *this, i, sampleRate);
     }
-    if (std::holds_alternative<WaveformConfig>(cfg.source))
+    if (const auto* wave = std::get_if<WaveformConfig>(&cfg.source))
     {
         FilterInstance& filter = waveformFilter[i];
         SetFilterSampleRate(filter, sampleRate);
-        SetFilterMode(filter, FilterMode::LowPass);
-        SetFilterCutoffHz(filter, kWaveformFilterCutoffHz);
-        SetFilterResonance(filter, kWaveformFilterResonance);
+        SetFilterMode(filter, wave->filterMode);
+        SetFilterCutoffHz(filter, wave->filterCutoffHz);
+        SetFilterResonance(filter, wave->filterResonance);
         ResetFilterState(filter);
     }
     else

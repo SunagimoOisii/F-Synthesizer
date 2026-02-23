@@ -119,6 +119,8 @@ bool DrawChannelEditor(GUIState& state)
             wf->unisonDetuneCents = std::clamp(wf->unisonDetuneCents, 0.0, 120.0);
             wf->unisonSpread = std::clamp(wf->unisonSpread, 0.0, 1.0);
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
+            wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
+            wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
 
             int unisonVoices = wf->unisonVoices;
             ImGui::SetNextItemWidth(220.0f);
@@ -133,6 +135,33 @@ bool DrawChannelEditor(GUIState& state)
             changed |= sliderWaveParam("Unison Spread", wf->unisonSpread, 0.0f, 1.0f, "%.2f");
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Sub Osc Level", wf->subOscLevel, 0.0f, 2.0f, "%.2f");
+
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            int filterModeIdx = 0;
+            switch (wf->filterMode)
+            {
+            case FilterMode::Bypass: filterModeIdx = 0; break;
+            case FilterMode::LowPass: filterModeIdx = 1; break;
+            case FilterMode::HighPass: filterModeIdx = 2; break;
+            case FilterMode::BandPass: filterModeIdx = 3; break;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
+            {
+                switch (filterModeIdx)
+                {
+                case 0: wf->filterMode = FilterMode::Bypass; break;
+                case 1: wf->filterMode = FilterMode::LowPass; break;
+                case 2: wf->filterMode = FilterMode::HighPass; break;
+                case 3: wf->filterMode = FilterMode::BandPass; break;
+                default: wf->filterMode = FilterMode::Bypass; break;
+                }
+                changed = true;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Cutoff (Hz)", wf->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Resonance (Q)", wf->filterResonance, 0.1f, 18.0f, "%.2f");
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {

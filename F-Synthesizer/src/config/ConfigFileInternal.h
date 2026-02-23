@@ -22,10 +22,12 @@ std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key
 bool TryParseWaveType(const std::string& name, WaveType& outWave);
 bool TryParseNoiseType(const std::string& name, NoiseType& outNoise);
 bool TryParseDrumType(const std::string& name, DrumType& outType);
+bool TryParseFilterMode(const std::string& name, FilterMode& outMode);
 
 std::string WaveTypeToString(WaveType w);
 std::string NoiseTypeToString(NoiseType n);
 std::string DrumTypeToString(DrumType d);
+std::string FilterModeToString(FilterMode mode);
 std::string EscapeJson(const std::string& src);
 
 bool ExtractObjectAt(const std::string& text, size_t openBracePos, std::string& outObject, std::string& err);

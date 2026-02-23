@@ -5,6 +5,7 @@
 #include <variant>
 #include <vector>
 
+#include "SynthEngine/Filter.h"
 #include "AudioBuffer.h"
 #include "Envelope.h"
 #include "Sequencer.h"
@@ -21,6 +22,10 @@ struct WaveformConfig
     double unisonSpread = 0.0;
     // Sub-osc (-1 octave) の混合量。
     double subOscLevel = 0.0;
+    // 共通Filterレイヤー（Waveform向け初期接続）。
+    FilterMode filterMode = FilterMode::LowPass;
+    double filterCutoffHz = 8000.0;
+    double filterResonance = 0.707;
 };
 
 struct NoiseConfig

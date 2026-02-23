@@ -101,6 +101,24 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.subOscLevel = *v;
         }
+        if (auto v = ReadJsonString(sourceObjText, "filterMode"))
+        {
+            FilterMode mode{};
+            if (!TryParseFilterMode(*v, mode))
+            {
+                err = "invalid waveform.filterMode: " + *v;
+                return false;
+            }
+            wf.filterMode = mode;
+        }
+        if (auto v = ReadJsonDouble(sourceObjText, "filterCutoffHz"))
+        {
+            wf.filterCutoffHz = *v;
+        }
+        if (auto v = ReadJsonDouble(sourceObjText, "filterResonance"))
+        {
+            wf.filterResonance = *v;
+        }
         if (wf.unisonVoices < 1 || wf.unisonVoices > 8)
         {
             err = "waveform.unisonVoices must be in range 1..8";
@@ -119,6 +137,16 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (wf.subOscLevel < 0.0 || wf.subOscLevel > 2.0)
         {
             err = "waveform.subOscLevel must be in range 0.0..2.0";
+            return false;
+        }
+        if (wf.filterCutoffHz < 10.0 || wf.filterCutoffHz > 20000.0)
+        {
+            err = "waveform.filterCutoffHz must be in range 10.0..20000.0";
+            return false;
+        }
+        if (wf.filterResonance < 0.1 || wf.filterResonance > 18.0)
+        {
+            err = "waveform.filterResonance must be in range 0.1..18.0";
             return false;
         }
         outSource = wf;
