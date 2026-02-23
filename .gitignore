@@ -21,7 +21,14 @@
 # Visual Studio キャッシュ
 .vs/
 
-.F-Synthesizer/Result/
+# プロジェクト配下の生成物/実行時出力
+F-Synthesizer/build/
+F-Synthesizer/output/
+F-Synthesizer/result/
+F-Synthesizer/x64/
+F-Synthesizer/imgui.ini
+F-Synthesizer/assets/midi/imgui.ini
+F-Synthesizer/build/*.i
 
 # CMake 関連
 CMakeFiles/
@@ -75,9 +82,6 @@ compile_commands.json
 # 音声・MIDIファイル
 *.wav
 *.mid
-
-# Markdown ドキュメント
-*.md
 
 ############################################################
 # OS / エディタ由来ファイル
