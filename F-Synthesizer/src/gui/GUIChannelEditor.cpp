@@ -69,33 +69,6 @@ bool DrawChannelEditor(GUIState& state)
     };
 
     ImGui::TextDisabled("Sound tab edits sound definitions only. Channel mix/assign is in Music tab.");
-    ImGui::BeginChild("sound_slot_summary", ImVec2(0, 210), true);
-    if (ImGui::BeginTable("sound_slot_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
-    {
-        ImGui::TableSetupColumn("slot", ImGuiTableColumnFlags_WidthFixed, 58.0f);
-        ImGui::TableSetupColumn("edit");
-        ImGui::TableHeadersRow();
-
-        for (int slot = 0; slot < 16; slot++)
-        {
-            ImGui::TableNextRow();
-            ImGui::PushID(slot);
-
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("s%d", slot);
-
-            ImGui::TableSetColumnIndex(1);
-            bool selected = (state.selectedSoundSlot == slot);
-            if (ImGui::Selectable("Edit", selected))
-            {
-                state.selectedSoundSlot = slot;
-            }
-
-            ImGui::PopID();
-        }
-        ImGui::EndTable();
-    }
-    ImGui::EndChild();
 
     ImGui::Separator();
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];

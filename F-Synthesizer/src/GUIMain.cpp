@@ -470,11 +470,11 @@ int RunGUIApp()
         ImGui::BeginDisabled(state.running);
         if (state.uiModeTab == 0)
         {
-            if (ImGui::Button("Play Preview (Selected Sound Slot)"))
+            if (ImGui::Button("Play Preview (PR ch + Selected Sound Slot)"))
             {
                 StartGUIRun(state, true);
             }
-            updateHoverHelp("選択中Sound Slotの音色でプレビュー再生します。");
+            updateHoverHelp("ピアノロール表示chのノートを、選択中Sound Slotの音色でプレビュー再生します。");
             ImGui::SameLine();
             if (ImGui::Button("Play Tone (C4)"))
             {
