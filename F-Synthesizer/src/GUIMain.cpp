@@ -195,7 +195,9 @@ int RunGUIApp()
     }
     int lastFrameTab = state.uiModeTab;
     int pendingPresetIndex = -1;
+    int pendingPresetOriginalIndex = -1;
     bool pendingCloseRequest = false;
+    bool openUnsavedPopupNextFrame = false;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -282,6 +284,8 @@ int RunGUIApp()
             if (ApplySelectedPresetPaths(state, err))
             {
                 state.presetDirty = false;
+                AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[idx] +
+                    " -> slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
             }
             else
             {
@@ -539,6 +543,11 @@ int RunGUIApp()
         }
         ImGui::TextDisabled("%s", helpLine.c_str());
         ImGui::Separator();
+        if (openUnsavedPopupNextFrame)
+        {
+            ImGui::OpenPopup("Unsaved Changes");
+            openUnsavedPopupNextFrame = false;
+        }
         if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
             ImGui::TextUnformatted("変更が未保存です。どうしますか？");
@@ -554,10 +563,11 @@ int RunGUIApp()
                     {
                         applyPresetByIndex(pendingPresetIndex);
                     }
+                    pendingCloseRequest = false;
+                    pendingPresetIndex = -1;
+                    pendingPresetOriginalIndex = -1;
+                    ImGui::CloseCurrentPopup();
                 }
-                pendingCloseRequest = false;
-                pendingPresetIndex = -1;
-                ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
             if (ImGui::Button("保存せず続行"))
@@ -572,13 +582,20 @@ int RunGUIApp()
                 }
                 pendingCloseRequest = false;
                 pendingPresetIndex = -1;
+                pendingPresetOriginalIndex = -1;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
             if (ImGui::Button("キャンセル"))
             {
+                if (pendingPresetOriginalIndex >= 0)
+                {
+                    state.presetIndex = pendingPresetOriginalIndex;
+                }
                 pendingCloseRequest = false;
                 pendingPresetIndex = -1;
+                pendingPresetOriginalIndex = -1;
+                openUnsavedPopupNextFrame = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -626,9 +643,9 @@ int RunGUIApp()
                 {
                     if (state.presetDirty)
                     {
+                        pendingPresetOriginalIndex = beforePresetIndex;
                         pendingPresetIndex = state.presetIndex;
-                        state.presetIndex = beforePresetIndex;
-                        ImGui::OpenPopup("Unsaved Changes");
+                        openUnsavedPopupNextFrame = true;
                     }
                     else
                     {
@@ -640,8 +657,9 @@ int RunGUIApp()
                 {
                     if (state.presetDirty)
                     {
+                        pendingPresetOriginalIndex = state.presetIndex;
                         pendingPresetIndex = state.presetIndex;
-                        ImGui::OpenPopup("Unsaved Changes");
+                        openUnsavedPopupNextFrame = true;
                     }
                     else
                     {
