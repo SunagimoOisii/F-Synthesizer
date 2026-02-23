@@ -61,6 +61,15 @@ bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b
     return true;
 }
 
+bool WaveformSmoothingConfigEquals(const WaveformConfig::SmoothingConfig& a, const WaveformConfig::SmoothingConfig& b)
+{
+    return a.enabled == b.enabled &&
+        a.pitchEnabled == b.pitchEnabled &&
+        NearlyEq(a.ampTimeMs, b.ampTimeMs) &&
+        NearlyEq(a.pitchTimeMs, b.pitchTimeMs) &&
+        NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
+}
+
 bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
 {
     if (a.index() != b.index())
@@ -83,6 +92,7 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     av.filterMode == bv->filterMode &&
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    WaveformSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)

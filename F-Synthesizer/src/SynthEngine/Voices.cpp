@@ -8,9 +8,6 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
-constexpr double kAmpSmoothingMs = 4.0;
-constexpr double kPitchSmoothingMs = 2.0;
-constexpr double kFilterCutoffSmoothingMs = 8.0;
 
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
@@ -184,17 +181,17 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     const size_t i = size() - 1;
     SetSmoothingRange(waveformAmpSmoothing[i], 0.0, 2.0);
     SetSmoothingSampleRate(waveformAmpSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformAmpSmoothing[i], kAmpSmoothingMs);
+    SetSmoothingTimeMs(waveformAmpSmoothing[i], 4.0);
     ResetSmoothedParam(waveformAmpSmoothing[i], 1.0);
 
     SetSmoothingRange(waveformPitchSmoothing[i], 0.25, 4.0);
     SetSmoothingSampleRate(waveformPitchSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformPitchSmoothing[i], kPitchSmoothingMs);
+    SetSmoothingTimeMs(waveformPitchSmoothing[i], 2.0);
     ResetSmoothedParam(waveformPitchSmoothing[i], 1.0);
 
     SetSmoothingRange(waveformFilterCutoffSmoothing[i], 10.0, 20000.0);
     SetSmoothingSampleRate(waveformFilterCutoffSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], kFilterCutoffSmoothingMs);
+    SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], 8.0);
     ResetSmoothedParam(waveformFilterCutoffSmoothing[i], 1200.0);
 
     if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
@@ -209,6 +206,10 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
         SetFilterCutoffHz(filter, wave->filterCutoffHz);
         SetFilterResonance(filter, wave->filterResonance);
         ResetFilterState(filter);
+
+        SetSmoothingTimeMs(waveformAmpSmoothing[i], wave->smoothing.ampTimeMs);
+        SetSmoothingTimeMs(waveformPitchSmoothing[i], wave->smoothing.pitchTimeMs);
+        SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], wave->smoothing.filterCutoffTimeMs);
         ResetSmoothedParam(waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
 
         ResetModulationState(waveformModulation[i]);

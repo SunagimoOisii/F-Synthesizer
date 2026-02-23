@@ -2,8 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <string>
 #include <type_traits>
 
 #include "Oscillator.h"
@@ -11,35 +9,6 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
-
-bool ReadEnvEnabled(const char* key, bool defaultValue)
-{
-    char* buf = nullptr;
-    size_t len = 0;
-    if (_dupenv_s(&buf, &len, key) != 0 || buf == nullptr)
-    {
-        return defaultValue;
-    }
-    const std::string value = buf;
-    free(buf);
-    if (value == "0" || value == "false" || value == "FALSE" || value == "off" || value == "OFF")
-    {
-        return false;
-    }
-    return true;
-}
-
-bool WaveformSmoothingEnabled()
-{
-    static const bool enabled = ReadEnvEnabled("FSYNTH_WAVE_SMOOTHING", true);
-    return enabled;
-}
-
-bool WaveformPitchSmoothingEnabled()
-{
-    static const bool enabled = ReadEnvEnabled("FSYNTH_WAVE_PITCH_SMOOTHING", false);
-    return enabled;
-}
 
 double WrapPhase(double phase)
 {
@@ -203,7 +172,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     src.modulation,
                     dt);
                 double pitchMul = mod.pitchMul;
-                if (WaveformSmoothingEnabled() && WaveformPitchSmoothingEnabled())
+                if (src.smoothing.enabled && src.smoothing.pitchEnabled)
                 {
                     SetSmoothedTarget(voices.waveformPitchSmoothing[i], pitchMul);
                     pitchMul = StepSmoothedParam(voices.waveformPitchSmoothing[i]);
@@ -235,7 +204,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                 }
                 double filterCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
                 double ampMul = mod.ampMul;
-                if (WaveformSmoothingEnabled())
+                if (src.smoothing.enabled)
                 {
                     SetSmoothedTarget(voices.waveformFilterCutoffSmoothing[i], filterCutoffHz);
                     filterCutoffHz = StepSmoothedParam(voices.waveformFilterCutoffSmoothing[i]);

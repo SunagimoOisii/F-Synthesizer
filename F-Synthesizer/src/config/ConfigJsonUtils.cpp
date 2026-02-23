@@ -547,6 +547,17 @@ void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int ind
     WriteIndent(out, indent); out << "}";
 }
 
+void WriteWaveformSmoothingConfig(std::ostream& out, const WaveformConfig::SmoothingConfig& smoothing, int indent)
+{
+    WriteIndent(out, indent); out << "\"smoothing\": {\n";
+    WriteIndent(out, indent + 2); out << "\"enabled\": " << (smoothing.enabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent + 2); out << "\"pitchEnabled\": " << (smoothing.pitchEnabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent + 2); out << "\"ampTimeMs\": " << smoothing.ampTimeMs << ",\n";
+    WriteIndent(out, indent + 2); out << "\"pitchTimeMs\": " << smoothing.pitchTimeMs << ",\n";
+    WriteIndent(out, indent + 2); out << "\"filterCutoffTimeMs\": " << smoothing.filterCutoffTimeMs << "\n";
+    WriteIndent(out, indent); out << "}";
+}
+
 void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
 {
     WriteIndent(out, indent); out << "\"source\": {\n";
@@ -563,6 +574,8 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
+            out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
         }

@@ -170,6 +170,16 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
     return true;
 }
 
+bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing)
+{
+    if (auto v = ReadJsonBool(text, "enabled")) smoothing.enabled = *v;
+    if (auto v = ReadJsonBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
+    if (auto v = ReadJsonDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
+    if (auto v = ReadJsonDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
+    if (auto v = ReadJsonDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
+    return true;
+}
+
 bool ValidateModulation(const ModulationConfig& modulation, std::string& err)
 {
     if (modulation.lfo1.rateHz < 0.0 || modulation.lfo1.rateHz > 100.0)
@@ -200,6 +210,26 @@ bool ValidateModulation(const ModulationConfig& modulation, std::string& err)
             err = "waveform.modulation.routes[" + std::to_string(i) + "].amount must be in range -1.0..1.0";
             return false;
         }
+    }
+    return true;
+}
+
+bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing, std::string& err)
+{
+    if (smoothing.ampTimeMs < 0.0 || smoothing.ampTimeMs > 1000.0)
+    {
+        err = "waveform.smoothing.ampTimeMs must be in range 0.0..1000.0";
+        return false;
+    }
+    if (smoothing.pitchTimeMs < 0.0 || smoothing.pitchTimeMs > 1000.0)
+    {
+        err = "waveform.smoothing.pitchTimeMs must be in range 0.0..1000.0";
+        return false;
+    }
+    if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0)
+    {
+        err = "waveform.smoothing.filterCutoffTimeMs must be in range 0.0..1000.0";
+        return false;
     }
     return true;
 }
@@ -272,6 +302,20 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.filterResonance = *v;
         }
+        std::string smoothingObj;
+        bool foundSmoothing = false;
+        if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
+        {
+            return false;
+        }
+        if (foundSmoothing)
+        {
+            if (!ParseWaveformSmoothingObject(smoothingObj, wf.smoothing))
+            {
+                err = "invalid waveform.smoothing object";
+                return false;
+            }
+        }
         std::string modulationObj;
         bool foundModulation = false;
         if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
@@ -316,6 +360,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             return false;
         }
         if (!ValidateModulation(wf.modulation, err))
+        {
+            return false;
+        }
+        if (!ValidateWaveformSmoothing(wf.smoothing, err))
         {
             return false;
         }

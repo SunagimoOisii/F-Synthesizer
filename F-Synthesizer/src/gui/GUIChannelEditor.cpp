@@ -121,6 +121,9 @@ bool DrawChannelEditor(GUIState& state)
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
             wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
             wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
+            wf->smoothing.ampTimeMs = std::clamp(wf->smoothing.ampTimeMs, 0.0, 1000.0);
+            wf->smoothing.pitchTimeMs = std::clamp(wf->smoothing.pitchTimeMs, 0.0, 1000.0);
+            wf->smoothing.filterCutoffTimeMs = std::clamp(wf->smoothing.filterCutoffTimeMs, 0.0, 1000.0);
             wf->modulation.lfo1.rateHz = std::clamp(wf->modulation.lfo1.rateHz, 0.0, 100.0);
             wf->modulation.lfo1.depth = std::clamp(wf->modulation.lfo1.depth, 0.0, 1.0);
             wf->modulation.env2.attackSec = std::clamp(wf->modulation.env2.attackSec, 0.0, 10.0);
@@ -172,6 +175,17 @@ bool DrawChannelEditor(GUIState& state)
             changed |= sliderWaveParam("Filter Cutoff (Hz)", wf->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", wf->filterResonance, 0.1f, 18.0f, "%.2f");
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Smoothing");
+            changed |= ImGui::Checkbox("Smoothing Enabled", &wf->smoothing.enabled);
+            changed |= ImGui::Checkbox("Pitch Smoothing Enabled", &wf->smoothing.pitchEnabled);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Amp Smoothing (ms)", wf->smoothing.ampTimeMs, 0.0f, 1000.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Pitch Smoothing (ms)", wf->smoothing.pitchTimeMs, 0.0f, 1000.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Smoothing (ms)", wf->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
 
             ImGui::Separator();
             ImGui::TextUnformatted("Modulation");

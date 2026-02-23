@@ -13,6 +13,15 @@
 
 struct WaveformConfig
 {
+    struct SmoothingConfig
+    {
+        bool enabled = true;
+        bool pitchEnabled = false;
+        double ampTimeMs = 4.0;
+        double pitchTimeMs = 2.0;
+        double filterCutoffTimeMs = 8.0;
+    };
+
     // 位相サンプルで生成する基本波形。
     WaveType wave;
     // Unison voice 数（1 で無効）。
@@ -27,6 +36,8 @@ struct WaveformConfig
     FilterMode filterMode = FilterMode::LowPass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    // 共通Smoothingレイヤー（amp/pitch/filterCutoff）。
+    SmoothingConfig smoothing{};
     // 共通Modulationレイヤー（LFO/Env2/Matrix）。
     ModulationConfig modulation{};
 };
