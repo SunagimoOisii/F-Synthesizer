@@ -97,6 +97,7 @@ void VoicesSoA::reserve(size_t n)
     drumLpPrev.reserve(n);
     drumLpAlpha.reserve(n);
     waveformFilter.reserve(n);
+    waveformModulation.reserve(n);
 }
 
 void VoicesSoA::clear()
@@ -128,6 +129,7 @@ void VoicesSoA::clear()
     drumLpPrev.clear();
     drumLpAlpha.clear();
     waveformFilter.clear();
+    waveformModulation.clear();
 }
 
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
@@ -165,6 +167,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     drumLpPrev.push_back(0.0);
     drumLpAlpha.push_back(0.0);
     waveformFilter.emplace_back();
+    waveformModulation.emplace_back();
 
     const size_t i = size() - 1;
     if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
@@ -179,10 +182,14 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
         SetFilterCutoffHz(filter, wave->filterCutoffHz);
         SetFilterResonance(filter, wave->filterResonance);
         ResetFilterState(filter);
+
+        ResetModulationState(waveformModulation[i]);
+        NoteOnModulation(waveformModulation[i]);
     }
     else
     {
         SetFilterMode(waveformFilter[i], FilterMode::Bypass);
+        ResetModulationState(waveformModulation[i]);
     }
 }
 
@@ -199,6 +206,10 @@ void VoicesSoA::MarkNoteOff(int ch, int note)
         if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
         {
             NoteOff(env[i]);
+            if (std::holds_alternative<WaveformConfig>(source[i]))
+            {
+                NoteOffModulation(waveformModulation[i]);
+            }
             released[i] = 1;
             break;
         }
@@ -255,6 +266,7 @@ size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(drumLpPrev, keepScratch);
     CompactVectorByKeep(drumLpAlpha, keepScratch);
     CompactVectorByKeep(waveformFilter, keepScratch);
+    CompactVectorByKeep(waveformModulation, keepScratch);
 
     return removed;
 }

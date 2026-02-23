@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "SynthEngine/Filter.h"
+#include "SynthEngine/Modulation.h"
 #include "AudioBuffer.h"
 #include "Envelope.h"
 #include "Sequencer.h"
@@ -26,6 +27,8 @@ struct WaveformConfig
     FilterMode filterMode = FilterMode::LowPass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    // 共通Modulationレイヤー（LFO/Env2/Matrix）。
+    ModulationConfig modulation{};
 };
 
 struct NoiseConfig

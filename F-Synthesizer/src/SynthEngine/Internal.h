@@ -44,6 +44,7 @@ struct VoicesSoA
     std::vector<double> drumLpPrev;
     std::vector<double> drumLpAlpha;
     std::vector<FilterInstance> waveformFilter;
+    std::vector<ModulationRuntimeState> waveformModulation;
 
     size_t size() const;
     bool empty() const;

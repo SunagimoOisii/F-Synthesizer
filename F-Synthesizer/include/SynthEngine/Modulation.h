@@ -58,7 +58,16 @@ struct ModulationConfig
 {
     LfoConfig lfo1{};
     ModEnvelopeConfig env2{};
-    ModMatrix matrix{};
+    ModMatrix matrix = []() {
+        ModMatrix m{};
+        m.routes[0] = ModRoute{
+            ModSource::Lfo1,
+            ModDestination::FilterCutoff,
+            0.0,
+            false
+        };
+        return m;
+    }();
 };
 
 struct ModulationRuntimeState

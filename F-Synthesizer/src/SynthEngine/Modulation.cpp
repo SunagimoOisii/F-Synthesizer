@@ -52,11 +52,12 @@ double StepLfoSample(double& phase, const LfoConfig& lfo, double deltaTimeSec)
 {
     const double rate = std::clamp(lfo.rateHz, 0.0, 100.0);
     phase = WrapPhase(phase + (rate * deltaTimeSec));
-    double raw = SampleLfoWave(lfo.wave, phase) * std::clamp(lfo.depth, 0.0, 1.0);
+    double raw = SampleLfoWave(lfo.wave, phase);
     if (!lfo.bipolar)
     {
         raw = (raw * 0.5) + 0.5;
     }
+    raw *= std::clamp(lfo.depth, 0.0, 1.0);
     return raw;
 }
 

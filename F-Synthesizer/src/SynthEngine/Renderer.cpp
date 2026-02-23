@@ -167,7 +167,11 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             using T = std::decay_t<decltype(src)>;
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
-                const double phaseInc = voices.phaseInc[i] * pitchFactor;
+                ModulationResult mod = EvaluateModulation(
+                    voices.waveformModulation[i],
+                    src.modulation,
+                    dt);
+                const double phaseInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul;
                 const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
                 const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
                 const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
@@ -192,8 +196,11 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
                     mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
                 }
+                SetFilterCutoffHz(
+                    voices.waveformFilter[i],
+                    src.filterCutoffHz * mod.filterCutoffMul);
                 w = ProcessFilterSample(voices.waveformFilter[i], mainWave);
-                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain;
+                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain * mod.ampMul;
 
                 voices.phase[i] += phaseInc;
                 if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
