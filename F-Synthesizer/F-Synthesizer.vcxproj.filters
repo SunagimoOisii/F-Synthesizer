@@ -227,6 +227,15 @@
     <ClInclude Include="include\\gui\\PreviewAudio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\\gui\\main\\MainWindow.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\main\\RunLoop.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\main\\TopBar.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
