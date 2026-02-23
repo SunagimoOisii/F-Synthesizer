@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "AudioBuffer.h"
-#include "MIDIParser.h"
+#include "core/AudioBuffer.h"
+#include "midi/MIDIParser.h"
 #include "SynthEngine/SynthEngine.h"
 
 enum class RunMode

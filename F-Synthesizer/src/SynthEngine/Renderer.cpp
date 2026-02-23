@@ -4,7 +4,7 @@
 #include <cmath>
 #include <type_traits>
 
-#include "Oscillator.h"
+#include "synth/Oscillator.h"
 
 namespace
 {

@@ -145,7 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\\AudioBuffer.cpp" />
+    <ClCompile Include="src\\core\\AudioBuffer.cpp" />
     <ClCompile Include="src\\app\\AppEntry.cpp" />
     <ClCompile Include="src\\app\\Cli.cpp" />
     <ClCompile Include="src\\app\\RunDefaults.cpp" />
@@ -159,8 +159,8 @@
     <ClCompile Include="src\\config\\SourceRegistry.cpp" />
     <ClCompile Include="src\\config\\ConfigSave.cpp" />
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
-    <ClCompile Include="src\\Envelope.cpp" />
-    <ClCompile Include="src\\GUIMain.cpp" />
+    <ClCompile Include="src\\synth\\Envelope.cpp" />
+    <ClCompile Include="src\\gui\\GUIMain.cpp" />
     <ClCompile Include="src\\gui\\GUIActions.cpp" />
     <ClCompile Include="src\\gui\\GUIChannelEditor.cpp" />
     <ClCompile Include="src\\gui\\GUIPianoRoll.cpp" />
@@ -175,7 +175,7 @@
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
     <ClCompile Include="src\\midi\\MidiPipeline.cpp" />
-    <ClCompile Include="src\\Oscillator.cpp" />
+    <ClCompile Include="src\\synth\\Oscillator.cpp" />
     <ClCompile Include="src\\midi\\Sequencer.cpp" />
     <ClCompile Include="src\\SoundGenerate.cpp" />
     <ClCompile Include="src\\core\\RenderGateway.cpp" />
@@ -186,12 +186,12 @@
     <ClCompile Include="src\\SynthEngine\\Renderer.cpp" />
     <ClCompile Include="src\\SynthEngine\\Smoothing.cpp" />
     <ClCompile Include="src\\SynthEngine\\Voices.cpp" />
-    <ClCompile Include="src\\Writer.cpp">
+    <ClCompile Include="src\\io\\Writer.cpp">
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\\AudioBuffer.h" />
+    <ClInclude Include="include\\core\\AudioBuffer.h" />
     <ClInclude Include="include\\AppCore.h" />
     <ClInclude Include="include\\app\\AppEntry.h" />
     <ClInclude Include="include\\app\\Cli.h" />
@@ -201,7 +201,7 @@
     <ClInclude Include="include\\config\\SourceJson.h" />
     <ClInclude Include="include\\config\\SourceRegistry.h" />
     <ClInclude Include="src\\config\\ConfigFileInternal.h" />
-    <ClInclude Include="include\\Envelope.h" />
+    <ClInclude Include="include\\synth\\Envelope.h" />
     <ClInclude Include="include\\gui\\GUIChannelEditor.h" />
     <ClInclude Include="include\\gui\\GUIPianoRoll.h" />
     <ClInclude Include="include\\gui\\GUIActions.h" />
@@ -215,15 +215,15 @@
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="include\\io\\PlatformPaths.h" />
-    <ClInclude Include="include\MIDIParser.h" />
-    <ClInclude Include="include\\Oscillator.h" />
-    <ClInclude Include="include\\Sequencer.h" />
+    <ClInclude Include="include\\midi\\MIDIParser.h" />
+    <ClInclude Include="include\\synth\\Oscillator.h" />
+    <ClInclude Include="include\\midi\\Sequencer.h" />
     <ClInclude Include="include\\midi\\MidiPipeline.h" />
     <ClInclude Include="include\\SynthEngine\\Filter.h" />
     <ClInclude Include="include\\SynthEngine\\Modulation.h" />
     <ClInclude Include="include\\SynthEngine\\Smoothing.h" />
     <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
-    <ClInclude Include="include\\Writer.h" />
+    <ClInclude Include="include\\io\\Writer.h" />
     <ClInclude Include="src\\SynthEngine\\Internal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "MIDIParser.h"
-#include "Sequencer.h"
+#include "midi/MIDIParser.h"
+#include "midi/Sequencer.h"
 
 struct MidiBuildOutput
 {

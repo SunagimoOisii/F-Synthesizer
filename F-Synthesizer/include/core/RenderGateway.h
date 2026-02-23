@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "AppCore.h"
-#include "Sequencer.h"
+#include "midi/Sequencer.h"
 
 // app 層から core(SynthEngine) への実行境界。
 // 呼び出し点を固定して依存方向を保つ。

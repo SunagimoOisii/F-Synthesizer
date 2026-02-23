@@ -1,6 +1,6 @@
-﻿#include <algorithm>
+#include <algorithm>
 
-#include "Sequencer.h"
+#include "midi/Sequencer.h"
 
 int PriorityValue(const MIDIEventTick& e);
 

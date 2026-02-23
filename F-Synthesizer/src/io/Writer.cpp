@@ -6,7 +6,7 @@
 #include <vector>
 #include <Windows.h>
 
-#include "Writer.h"
+#include "io/Writer.h"
 #include "io/PlatformPaths.h"
 
 struct Chunk

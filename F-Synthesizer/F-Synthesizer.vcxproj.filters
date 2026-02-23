@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\\AudioBuffer.cpp">
+    <ClCompile Include="src\\core\\AudioBuffer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\app\\AppEntry.cpp">
@@ -60,10 +60,10 @@
     <ClCompile Include="src\\core\\RenderGateway.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\Envelope.cpp">
+    <ClCompile Include="src\\synth\\Envelope.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\GUIMain.cpp">
+    <ClCompile Include="src\\gui\\GUIMain.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\gui\\GUIActions.cpp">
@@ -108,7 +108,7 @@
     <ClCompile Include="src\\midi\\MIDIParser.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\Oscillator.cpp">
+    <ClCompile Include="src\\synth\\Oscillator.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\midi\\Sequencer.cpp">
@@ -138,12 +138,12 @@
     <ClCompile Include="src\\SynthEngine\\Voices.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\Writer.cpp">
+    <ClCompile Include="src\\io\\Writer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\\AudioBuffer.h">
+    <ClInclude Include="include\\core\\AudioBuffer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\AppCore.h">
@@ -173,7 +173,7 @@
     <ClInclude Include="src\\config\\ConfigFileInternal.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\Envelope.h">
+    <ClInclude Include="include\\synth\\Envelope.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIChannelEditor.h">
@@ -215,13 +215,13 @@
     <ClInclude Include="include\\io\\PlatformPaths.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\MIDIParser.h">
+    <ClInclude Include="include\\midi\\MIDIParser.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\Oscillator.h">
+    <ClInclude Include="include\\synth\\Oscillator.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\Sequencer.h">
+    <ClInclude Include="include\\midi\\Sequencer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\midi\\MidiPipeline.h">
@@ -242,7 +242,7 @@
     <ClInclude Include="src\\SynthEngine\\Internal.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\Writer.h">
+    <ClInclude Include="include\\io\\Writer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,7 +9,7 @@
 
 #include <imgui.h>
 
-#include "MIDIParser.h"
+#include "midi/MIDIParser.h"
 #include "io/PlatformPaths.h"
 
 namespace gui

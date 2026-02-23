@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "Writer.h"
+#include "io/Writer.h"
 #include "io/PlatformPaths.h"
 
 namespace app::run

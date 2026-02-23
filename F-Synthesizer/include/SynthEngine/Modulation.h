@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "Envelope.h"
+#include "synth/Envelope.h"
 
 enum class LfoWave
 {

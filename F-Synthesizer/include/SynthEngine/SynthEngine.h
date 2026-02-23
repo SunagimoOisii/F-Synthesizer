@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <array>
 #include <functional>
@@ -7,9 +7,9 @@
 
 #include "SynthEngine/Filter.h"
 #include "SynthEngine/Modulation.h"
-#include "AudioBuffer.h"
-#include "Envelope.h"
-#include "Sequencer.h"
+#include "core/AudioBuffer.h"
+#include "synth/Envelope.h"
+#include "midi/Sequencer.h"
 
 struct WaveformConfig
 {

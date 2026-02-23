@@ -3,7 +3,7 @@
 #include <cmath>
 #include <utility>
 
-#include "Oscillator.h"
+#include "synth/Oscillator.h"
 
 namespace
 {

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "AudioBuffer.h"
+#include "core/AudioBuffer.h"
 #include "third_party/miniaudio.h"
 
 // GUIプレビュー再生のデバイス/PCM状態を保持する。

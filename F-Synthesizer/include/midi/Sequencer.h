@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "MIDIParser.h"
-#include "Oscillator.h"
+#include "midi/MIDIParser.h"
+#include "synth/Oscillator.h"
 
 struct MIDIEvent
 {

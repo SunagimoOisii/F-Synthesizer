@@ -1,4 +1,4 @@
-#include "Oscillator.h"
+#include "synth/Oscillator.h"
 
 #include <cmath>
 #include <random>

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "MIDIParser.h"
+#include "midi/MIDIParser.h"
 #include "gui/PreviewAudio.h"
 
 namespace gui
