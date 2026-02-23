@@ -227,6 +227,18 @@
     <ClInclude Include="include\\gui\\PreviewAudio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollInput.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollRender.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollTempo.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\io\\PlatformPaths.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

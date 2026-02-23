@@ -219,6 +219,10 @@
     <ClInclude Include="include\\gui\\GUIStatePersistence.h" />
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl" />
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollInput.inl" />
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollRender.inl" />
+    <ClInclude Include="src\\gui\\pianoroll\\PianoRollTempo.inl" />
     <ClInclude Include="include\\io\\PlatformPaths.h" />
     <ClInclude Include="include\\midi\\MIDIParser.h" />
     <ClInclude Include="include\\synth\\Oscillator.h" />
