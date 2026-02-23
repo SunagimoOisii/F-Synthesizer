@@ -181,6 +181,7 @@
     <ClCompile Include="src\\core\\RenderGateway.cpp" />
     <ClCompile Include="src\\SynthEngine\\Engine.cpp" />
     <ClCompile Include="src\\SynthEngine\\Events.cpp" />
+    <ClCompile Include="src\\SynthEngine\\Filter.cpp" />
     <ClCompile Include="src\\SynthEngine\\Renderer.cpp" />
     <ClCompile Include="src\\SynthEngine\\Voices.cpp" />
     <ClCompile Include="src\\Writer.cpp">
@@ -216,6 +217,7 @@
     <ClInclude Include="include\\Oscillator.h" />
     <ClInclude Include="include\\Sequencer.h" />
     <ClInclude Include="include\\midi\\MidiPipeline.h" />
+    <ClInclude Include="include\\SynthEngine\\Filter.h" />
     <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
     <ClInclude Include="include\\Writer.h" />
     <ClInclude Include="src\\SynthEngine\\Internal.h" />
