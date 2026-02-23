@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "SynthEngine/Filter.h"
 #include "SynthEngine/SynthEngine.h"
 
 struct VoicesSoA
@@ -42,6 +43,7 @@ struct VoicesSoA
     std::vector<double> drumHpAlpha;
     std::vector<double> drumLpPrev;
     std::vector<double> drumLpAlpha;
+    std::vector<FilterInstance> waveformFilter;
 
     size_t size() const;
     bool empty() const;

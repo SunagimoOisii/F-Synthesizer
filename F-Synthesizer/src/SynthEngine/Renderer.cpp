@@ -192,7 +192,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
                     mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
                 }
-                w = mainWave;
+                w = ProcessFilterSample(voices.waveformFilter[i], mainWave);
                 sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain;
 
                 voices.phase[i] += phaseInc;

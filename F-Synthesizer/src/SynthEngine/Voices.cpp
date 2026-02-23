@@ -8,6 +8,8 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
+constexpr double kWaveformFilterCutoffHz = 8000.0;
+constexpr double kWaveformFilterResonance = 0.707;
 
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
@@ -96,6 +98,7 @@ void VoicesSoA::reserve(size_t n)
     drumHpAlpha.reserve(n);
     drumLpPrev.reserve(n);
     drumLpAlpha.reserve(n);
+    waveformFilter.reserve(n);
 }
 
 void VoicesSoA::clear()
@@ -126,6 +129,7 @@ void VoicesSoA::clear()
     drumHpAlpha.clear();
     drumLpPrev.clear();
     drumLpAlpha.clear();
+    waveformFilter.clear();
 }
 
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
@@ -162,11 +166,25 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     drumHpAlpha.push_back(0.0);
     drumLpPrev.push_back(0.0);
     drumLpAlpha.push_back(0.0);
+    waveformFilter.emplace_back();
 
     const size_t i = size() - 1;
     if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
     {
         InitDrumVoice(*drum, *this, i, sampleRate);
+    }
+    if (std::holds_alternative<WaveformConfig>(cfg.source))
+    {
+        FilterInstance& filter = waveformFilter[i];
+        SetFilterSampleRate(filter, sampleRate);
+        SetFilterMode(filter, FilterMode::LowPass);
+        SetFilterCutoffHz(filter, kWaveformFilterCutoffHz);
+        SetFilterResonance(filter, kWaveformFilterResonance);
+        ResetFilterState(filter);
+    }
+    else
+    {
+        SetFilterMode(waveformFilter[i], FilterMode::Bypass);
     }
 }
 
@@ -238,6 +256,7 @@ size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(drumHpAlpha, keepScratch);
     CompactVectorByKeep(drumLpPrev, keepScratch);
     CompactVectorByKeep(drumLpAlpha, keepScratch);
+    CompactVectorByKeep(waveformFilter, keepScratch);
 
     return removed;
 }
