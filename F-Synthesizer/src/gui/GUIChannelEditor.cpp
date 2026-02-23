@@ -5,6 +5,7 @@
 
 #include <imgui.h>
 
+#include "config/SourceRegistry.h"
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIStateModel.h"
 
@@ -138,11 +139,25 @@ bool DrawChannelEditor(GUIState& state)
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
         int srcType = SourceTypeIndex(chCfg.source);
-        const char* sourceTypes[] = { "waveform", "noise", "fm", "drum", "drumkit" };
-        if (ImGui::Combo("Source Type", &srcType, sourceTypes, IM_ARRAYSIZE(sourceTypes)))
+        const config::SourceKind selectedKind = config::SourceKindFromIndex(srcType);
+        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(selectedKind)))
         {
-            changed = true;
-            chCfg.source = DefaultSourceByType(srcType);
+            for (int i = 0; i < config::kSourceKindCount; i++)
+            {
+                const config::SourceKind candidate = config::SourceKindFromIndex(i);
+                const bool selected = (srcType == i);
+                if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                {
+                    srcType = i;
+                    changed = true;
+                    chCfg.source = DefaultSourceByType(srcType);
+                }
+                if (selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
 
         if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))

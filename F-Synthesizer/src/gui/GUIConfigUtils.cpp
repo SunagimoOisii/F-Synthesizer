@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <variant>
 
+#include "config/SourceRegistry.h"
+
 namespace
 {
 bool NearlyEq(double a, double b, double eps = 1e-9)
@@ -125,31 +127,12 @@ int NoiseToIndex(NoiseType n)
 
 int SourceTypeIndex(const SourceConfig& src)
 {
-    if (std::holds_alternative<WaveformConfig>(src)) return 0;
-    if (std::holds_alternative<NoiseConfig>(src)) return 1;
-    if (std::holds_alternative<FmConfig>(src)) return 2;
-    if (std::holds_alternative<DrumConfig>(src)) return 3;
-    if (std::holds_alternative<DrumKitConfig>(src)) return 4;
-    return 0;
+    return config::SourceKindToIndex(config::SourceConfigKind(src));
 }
 
 SourceConfig DefaultSourceByType(int idx)
 {
-    switch (idx)
-    {
-    case 0: return WaveformConfig{ WaveType::Saw };
-    case 1: return NoiseConfig{ NoiseType::White };
-    case 2: return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0 };
-    case 3: return DrumConfig{ DrumType::Kick };
-    case 4:
-    {
-        DrumKitConfig kit{};
-        for (auto& d : kit.map) d.type = DrumType::None;
-        kit.map[36] = DrumConfig{ DrumType::Kick };
-        return kit;
-    }
-    default: return WaveformConfig{ WaveType::Saw };
-    }
+    return config::DefaultSourceConfig(config::SourceKindFromIndex(idx));
 }
 
 bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
@@ -182,105 +165,4 @@ void WriteJsonEscaped(std::ostream& out, const std::string& s)
     }
 }
 
-std::string WaveToText(WaveType w)
-{
-    switch (w)
-    {
-    case WaveType::Sine: return "sine";
-    case WaveType::Square: return "square";
-    case WaveType::Saw: return "saw";
-    case WaveType::Triangle: return "triangle";
-    }
-    return "saw";
-}
-
-std::string NoiseToText(NoiseType n)
-{
-    switch (n)
-    {
-    case NoiseType::White: return "white";
-    case NoiseType::Pink: return "pink";
-    case NoiseType::Brown: return "brown";
-    case NoiseType::Blue: return "blue";
-    }
-    return "white";
-}
-
-std::string DrumTypeToText(DrumType d)
-{
-    switch (d)
-    {
-    case DrumType::None: return "none";
-    case DrumType::Kick: return "kick";
-    case DrumType::Snare: return "snare";
-    case DrumType::Hat: return "hat";
-    }
-    return "none";
-}
-
-void WriteSourceJson(std::ostream& out, const SourceConfig& src, int indent)
-{
-    const std::string sp(indent, ' ');
-    out << sp << "\"source\": {\n";
-    std::visit([&](const auto& v)
-        {
-            using T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v<T, WaveformConfig>)
-            {
-                out << sp << "  \"type\": \"waveform\",\n";
-                out << sp << "  \"wave\": \"" << WaveToText(v.wave) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, NoiseConfig>)
-            {
-                out << sp << "  \"type\": \"noise\",\n";
-                out << sp << "  \"noise\": \"" << NoiseToText(v.noise) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, FmConfig>)
-            {
-                out << sp << "  \"type\": \"fm\",\n";
-                out << sp << "  \"carrierWave\": \"" << WaveToText(v.carrierWave) << "\",\n";
-                out << sp << "  \"modWave\": \"" << WaveToText(v.modWave) << "\",\n";
-                out << sp << "  \"carrierRatio\": " << v.carrierRatio << ",\n";
-                out << sp << "  \"modRatio\": " << v.modRatio << ",\n";
-                out << sp << "  \"index\": " << v.index << ",\n";
-                out << sp << "  \"outLevel\": " << v.outLevel << "\n";
-            }
-            else if constexpr (std::is_same_v<T, DrumConfig>)
-            {
-                out << sp << "  \"type\": \"drum\",\n";
-                out << sp << "  \"drumType\": \"" << DrumTypeToText(v.type) << "\",\n";
-                out << sp << "  \"gain\": " << v.gain << ",\n";
-                out << sp << "  \"baseFreq\": " << v.baseFreq << ",\n";
-                out << sp << "  \"pitchDrop\": " << v.pitchDrop << ",\n";
-                out << sp << "  \"pitchDecaySec\": " << v.pitchDecaySec << ",\n";
-                out << sp << "  \"toneFreq\": " << v.toneFreq << ",\n";
-                out << sp << "  \"toneLevel\": " << v.toneLevel << ",\n";
-                out << sp << "  \"noiseLevel\": " << v.noiseLevel << ",\n";
-                out << sp << "  \"hpCut\": " << v.hpCut << ",\n";
-                out << sp << "  \"lpCut\": " << v.lpCut << ",\n";
-                out << sp << "  \"toneWave\": \"" << WaveToText((WaveType)v.toneWave) << "\",\n";
-                out << sp << "  \"noiseType\": \"" << NoiseToText((NoiseType)v.noiseType) << "\"\n";
-            }
-            else if constexpr (std::is_same_v<T, DrumKitConfig>)
-            {
-                out << sp << "  \"type\": \"drumkit\",\n";
-                out << sp << "  \"map\": {\n";
-                bool first = true;
-                for (int note = 0; note < 128; note++)
-                {
-                    const auto& d = v.map[note];
-                    if (d.type == DrumType::None) continue;
-                    if (!first) out << ",\n";
-                    first = false;
-                    out << sp << "    \"" << note << "\": {\n";
-                    out << sp << "      \"drumType\": \"" << DrumTypeToText(d.type) << "\",\n";
-                    out << sp << "      \"gain\": " << d.gain << ",\n";
-                    out << sp << "      \"baseFreq\": " << d.baseFreq << "\n";
-                    out << sp << "    }";
-                }
-                out << "\n" << sp << "  }\n";
-            }
-        }, src);
-    out << sp << "}";
-}
 } // namespace gui

@@ -5,6 +5,8 @@
 #include <sstream>
 #include <type_traits>
 
+#include "config/SourceRegistry.h"
+
 namespace config::internal
 {
 std::string ReadTextFile(const std::filesystem::path& filePath)
@@ -389,17 +391,17 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, WaveformConfig>)
         {
-            WriteIndent(out, indent + 2); out << "\"type\": \"waveform\",\n";
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Waveform) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\"\n";
         }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {
-            WriteIndent(out, indent + 2); out << "\"type\": \"noise\",\n";
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Noise) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"noise\": \"" << NoiseTypeToString(v.noise) << "\"\n";
         }
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
-            WriteIndent(out, indent + 2); out << "\"type\": \"fm\",\n";
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Fm) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"carrierWave\": \"" << WaveTypeToString(v.carrierWave) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"modWave\": \"" << WaveTypeToString(v.modWave) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"carrierRatio\": " << v.carrierRatio << ",\n";
@@ -409,7 +411,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         }
         else if constexpr (std::is_same_v<T, DrumConfig>)
         {
-            WriteIndent(out, indent + 2); out << "\"type\": \"drum\",\n";
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Drum) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"drumType\": \"" << DrumTypeToString(v.type) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"gain\": " << v.gain << ",\n";
             WriteIndent(out, indent + 2); out << "\"baseFreq\": " << v.baseFreq << ",\n";
@@ -425,7 +427,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         }
         else if constexpr (std::is_same_v<T, DrumKitConfig>)
         {
-            WriteIndent(out, indent + 2); out << "\"type\": \"drumkit\",\n";
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::DrumKit) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"map\": {\n";
             bool first = true;
             for (int note = 0; note < 128; note++)

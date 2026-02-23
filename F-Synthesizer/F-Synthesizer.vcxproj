@@ -155,6 +155,8 @@
     <ClCompile Include="src\\config\\ConfigFileIO.cpp" />
     <ClCompile Include="src\\config\\ConfigJsonUtils.cpp" />
     <ClCompile Include="src\\config\\ConfigLoad.cpp" />
+    <ClCompile Include="src\\config\\SourceJson.cpp" />
+    <ClCompile Include="src\\config\\SourceRegistry.cpp" />
     <ClCompile Include="src\\config\\ConfigSave.cpp" />
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
     <ClCompile Include="src\\Envelope.cpp" />
@@ -193,6 +195,8 @@
     <ClInclude Include="src\\app\\RunInternal.h" />
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
+    <ClInclude Include="include\\config\\SourceJson.h" />
+    <ClInclude Include="include\\config\\SourceRegistry.h" />
     <ClInclude Include="src\\config\\ConfigFileInternal.h" />
     <ClInclude Include="include\\Envelope.h" />
     <ClInclude Include="include\\gui\\GUIChannelEditor.h" />

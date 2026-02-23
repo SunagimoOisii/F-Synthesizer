@@ -1,6 +1,7 @@
 #include "ConfigFileInternal.h"
 
 #include "io/PlatformPaths.h"
+#include "config/SourceRegistry.h"
 
 namespace config::internal
 {
@@ -59,7 +60,16 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         return false;
     }
 
-    if (*type == "waveform")
+    SourceKind sourceKind{};
+    if (!TryParseSourceKind(*type, sourceKind))
+    {
+        err = "unknown source.type: " + *type;
+        return false;
+    }
+
+    switch (sourceKind)
+    {
+    case SourceKind::Waveform:
     {
         auto wave = ReadJsonString(sourceObjText, "wave");
         if (!wave)
@@ -76,7 +86,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         outSource = WaveformConfig{ w };
         return true;
     }
-    if (*type == "noise")
+    case SourceKind::Noise:
     {
         auto noise = ReadJsonString(sourceObjText, "noise");
         if (!noise)
@@ -93,7 +103,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         outSource = NoiseConfig{ n };
         return true;
     }
-    if (*type == "fm")
+    case SourceKind::Fm:
     {
         auto carrier = ReadJsonString(sourceObjText, "carrierWave");
         auto mod = ReadJsonString(sourceObjText, "modWave");
@@ -115,7 +125,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         outSource = FmConfig{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel };
         return true;
     }
-    if (*type == "drum")
+    case SourceKind::Drum:
     {
         DrumConfig drum{};
         if (!ParseDrumConfigObject(sourceObjText, drum, err))
@@ -125,7 +135,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         outSource = drum;
         return true;
     }
-    if (*type == "drumkit")
+    case SourceKind::DrumKit:
     {
         // drumkit は差分上書き前提のため、未指定noteは None 初期値を維持する。
         DrumKitConfig kit{};
@@ -171,6 +181,9 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         }
         outSource = kit;
         return true;
+    }
+    case SourceKind::Count:
+        break;
     }
 
     err = "unknown source.type: " + *type;

@@ -12,6 +12,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include "AppCore.h"
+#include "config/SourceRegistry.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIChannelEditor.h"
 #include "gui/GUIConfigUtils.h"
@@ -911,7 +912,7 @@ int RunGUIApp()
                     std::holds_alternative<DrumKitConfig>(drumCh.source);
                 if (!isDrumSource)
                 {
-                    drumCh.source = gui::DefaultSourceByType(4);
+                    drumCh.source = gui::DefaultSourceByType(config::SourceKindToIndex(config::SourceKind::DrumKit));
                 }
                 state.presetDirty = true;
             };

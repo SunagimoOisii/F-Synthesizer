@@ -162,7 +162,7 @@ else {
 }
 
 Write-Host "[15/15] acceptance handoff note"
-Write-Host "Manual acceptance for v7 Sound/Music flow and Save/Error UX: docs/GUI_V7_ACCEPTANCE_TEST.md"
+Write-Host "Manual acceptance for v8 Sound/Music flow and Save/Error UX: docs/GUI_V8_ACCEPTANCE_TEST.md"
 
 Write-Host "GUI smoke test completed."
 
