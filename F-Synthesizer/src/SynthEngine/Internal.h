@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "SynthEngine/Filter.h"
+#include "SynthEngine/Smoothing.h"
 #include "SynthEngine/SynthEngine.h"
 
 struct VoicesSoA
@@ -45,6 +46,9 @@ struct VoicesSoA
     std::vector<double> drumLpAlpha;
     std::vector<FilterInstance> waveformFilter;
     std::vector<ModulationRuntimeState> waveformModulation;
+    std::vector<SmoothedParam> waveformAmpSmoothing;
+    std::vector<SmoothedParam> waveformPitchSmoothing;
+    std::vector<SmoothedParam> waveformFilterCutoffSmoothing;
 
     size_t size() const;
     bool empty() const;

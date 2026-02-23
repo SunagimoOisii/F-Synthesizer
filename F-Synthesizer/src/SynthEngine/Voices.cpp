@@ -8,6 +8,9 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
+constexpr double kAmpSmoothingMs = 4.0;
+constexpr double kPitchSmoothingMs = 2.0;
+constexpr double kFilterCutoffSmoothingMs = 8.0;
 
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
@@ -98,6 +101,9 @@ void VoicesSoA::reserve(size_t n)
     drumLpAlpha.reserve(n);
     waveformFilter.reserve(n);
     waveformModulation.reserve(n);
+    waveformAmpSmoothing.reserve(n);
+    waveformPitchSmoothing.reserve(n);
+    waveformFilterCutoffSmoothing.reserve(n);
 }
 
 void VoicesSoA::clear()
@@ -130,6 +136,9 @@ void VoicesSoA::clear()
     drumLpAlpha.clear();
     waveformFilter.clear();
     waveformModulation.clear();
+    waveformAmpSmoothing.clear();
+    waveformPitchSmoothing.clear();
+    waveformFilterCutoffSmoothing.clear();
 }
 
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
@@ -168,8 +177,26 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     drumLpAlpha.push_back(0.0);
     waveformFilter.emplace_back();
     waveformModulation.emplace_back();
+    waveformAmpSmoothing.emplace_back();
+    waveformPitchSmoothing.emplace_back();
+    waveformFilterCutoffSmoothing.emplace_back();
 
     const size_t i = size() - 1;
+    SetSmoothingRange(waveformAmpSmoothing[i], 0.0, 2.0);
+    SetSmoothingSampleRate(waveformAmpSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(waveformAmpSmoothing[i], kAmpSmoothingMs);
+    ResetSmoothedParam(waveformAmpSmoothing[i], 1.0);
+
+    SetSmoothingRange(waveformPitchSmoothing[i], 0.25, 4.0);
+    SetSmoothingSampleRate(waveformPitchSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(waveformPitchSmoothing[i], kPitchSmoothingMs);
+    ResetSmoothedParam(waveformPitchSmoothing[i], 1.0);
+
+    SetSmoothingRange(waveformFilterCutoffSmoothing[i], 10.0, 20000.0);
+    SetSmoothingSampleRate(waveformFilterCutoffSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], kFilterCutoffSmoothingMs);
+    ResetSmoothedParam(waveformFilterCutoffSmoothing[i], 1200.0);
+
     if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
     {
         InitDrumVoice(*drum, *this, i, sampleRate);
@@ -182,6 +209,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
         SetFilterCutoffHz(filter, wave->filterCutoffHz);
         SetFilterResonance(filter, wave->filterResonance);
         ResetFilterState(filter);
+        ResetSmoothedParam(waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
 
         ResetModulationState(waveformModulation[i]);
         NoteOnModulation(waveformModulation[i]);
@@ -267,6 +295,9 @@ size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(drumLpAlpha, keepScratch);
     CompactVectorByKeep(waveformFilter, keepScratch);
     CompactVectorByKeep(waveformModulation, keepScratch);
+    CompactVectorByKeep(waveformAmpSmoothing, keepScratch);
+    CompactVectorByKeep(waveformPitchSmoothing, keepScratch);
+    CompactVectorByKeep(waveformFilterCutoffSmoothing, keepScratch);
 
     return removed;
 }

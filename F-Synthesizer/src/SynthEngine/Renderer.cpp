@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <string>
 #include <type_traits>
 
 #include "Oscillator.h"
@@ -9,6 +11,35 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
+
+bool ReadEnvEnabled(const char* key, bool defaultValue)
+{
+    char* buf = nullptr;
+    size_t len = 0;
+    if (_dupenv_s(&buf, &len, key) != 0 || buf == nullptr)
+    {
+        return defaultValue;
+    }
+    const std::string value = buf;
+    free(buf);
+    if (value == "0" || value == "false" || value == "FALSE" || value == "off" || value == "OFF")
+    {
+        return false;
+    }
+    return true;
+}
+
+bool WaveformSmoothingEnabled()
+{
+    static const bool enabled = ReadEnvEnabled("FSYNTH_WAVE_SMOOTHING", true);
+    return enabled;
+}
+
+bool WaveformPitchSmoothingEnabled()
+{
+    static const bool enabled = ReadEnvEnabled("FSYNTH_WAVE_PITCH_SMOOTHING", false);
+    return enabled;
+}
 
 double WrapPhase(double phase)
 {
@@ -171,7 +202,13 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     voices.waveformModulation[i],
                     src.modulation,
                     dt);
-                const double phaseInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul;
+                double pitchMul = mod.pitchMul;
+                if (WaveformSmoothingEnabled() && WaveformPitchSmoothingEnabled())
+                {
+                    SetSmoothedTarget(voices.waveformPitchSmoothing[i], pitchMul);
+                    pitchMul = StepSmoothedParam(voices.waveformPitchSmoothing[i]);
+                }
+                const double phaseInc = voices.phaseInc[i] * pitchFactor * pitchMul;
                 const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
                 const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
                 const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
@@ -196,11 +233,18 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
                     mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
                 }
-                SetFilterCutoffHz(
-                    voices.waveformFilter[i],
-                    src.filterCutoffHz * mod.filterCutoffMul);
+                double filterCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
+                double ampMul = mod.ampMul;
+                if (WaveformSmoothingEnabled())
+                {
+                    SetSmoothedTarget(voices.waveformFilterCutoffSmoothing[i], filterCutoffHz);
+                    filterCutoffHz = StepSmoothedParam(voices.waveformFilterCutoffSmoothing[i]);
+                    SetSmoothedTarget(voices.waveformAmpSmoothing[i], ampMul);
+                    ampMul = StepSmoothedParam(voices.waveformAmpSmoothing[i]);
+                }
+                SetFilterCutoffHz(voices.waveformFilter[i], filterCutoffHz);
                 w = ProcessFilterSample(voices.waveformFilter[i], mainWave);
-                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain * mod.ampMul;
+                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain * ampMul;
 
                 voices.phase[i] += phaseInc;
                 if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
