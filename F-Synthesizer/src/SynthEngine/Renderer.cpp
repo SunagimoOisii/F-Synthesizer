@@ -65,7 +65,8 @@ double RenderSnareSample(const DrumConfig& src, VoicesSoA& voices, size_t i, int
     EnsureDrumFilters(voices, i, hpCut, lpCut, sampleRate);
     voices.phase[i] += voices.drumBaseFreq[i] / sampleRate;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
-    const double tone = SampleWavePhase(toneWave, voices.phase[i]);
+    const double toneInc = voices.drumBaseFreq[i] / sampleRate;
+    const double tone = SampleWavePhase(toneWave, voices.phase[i], toneInc);
     const double noise = SampleNoise(noiseType);
     const double hp = voices.drumHpAlpha[i] * (voices.drumHpPrev[i] + noise - voices.drumNoisePrev[i]);
     const double lp = (1.0 - voices.drumLpAlpha[i]) * hp + voices.drumLpAlpha[i] * voices.drumLpPrev[i];
@@ -93,7 +94,8 @@ double RenderHatSample(const DrumConfig& src, VoicesSoA& voices, size_t i, int s
     voices.drumLpPrev[i] = lp;
     voices.phase[i] += toneFreq / sampleRate;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
-    const double tone = SampleWavePhase(toneWave, voices.phase[i]);
+    const double toneInc = toneFreq / sampleRate;
+    const double tone = SampleWavePhase(toneWave, voices.phase[i], toneInc);
     return noiseLevel * lp + toneLevel * tone;
 }
 
@@ -203,12 +205,21 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             }
             else if constexpr (std::is_same_v<T, FmConfig>)
             {
-                w = SampleFmPhase(src.carrierWave, src.modWave, voices.fmCarrierPhase[i], voices.fmModPhase[i], src.index);
+                const double carrierInc = voices.phaseInc[i] * pitchFactor * src.carrierRatio;
+                const double modInc = voices.phaseInc[i] * pitchFactor * src.modRatio;
+                w = SampleFmPhase(
+                    src.carrierWave,
+                    src.modWave,
+                    voices.fmCarrierPhase[i],
+                    voices.fmModPhase[i],
+                    carrierInc,
+                    modInc,
+                    src.index);
                 sum += mixGain * voices.amp[i] * src.outLevel * ccGain * velGain * w * envGain;
 
-                voices.fmCarrierPhase[i] += voices.phaseInc[i] * pitchFactor * src.carrierRatio;
+                voices.fmCarrierPhase[i] += carrierInc;
                 if (voices.fmCarrierPhase[i] >= 1.0) voices.fmCarrierPhase[i] -= 1.0;
-                voices.fmModPhase[i] += voices.phaseInc[i] * pitchFactor * src.modRatio;
+                voices.fmModPhase[i] += modInc;
                 if (voices.fmModPhase[i] >= 1.0) voices.fmModPhase[i] -= 1.0;
             }
             else if constexpr (std::is_same_v<T, DrumConfig>)

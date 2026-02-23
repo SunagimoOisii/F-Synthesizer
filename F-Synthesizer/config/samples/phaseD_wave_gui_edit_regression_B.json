@@ -1,0 +1,28 @@
+{
+  "targetChannel": 0,
+  "defaultWave": "saw",
+  "sampleRate": 44100,
+  "initialSeconds": 6,
+  "bits": 16,
+  "extraReleaseSec": 0.4,
+  "midiPath": "../../assets/midi/phaseD_wave_gui_edit_regression.mid",
+  "wavPath": "../../output/phaseD_wave_gui_edit_regression_B.wav",
+  "channels": {
+    "0": {
+      "source": {
+        "type": "waveform",
+        "wave": "saw",
+        "unisonDetuneCents": 10.0,
+        "subOscLevel": 0.55,
+        "unisonSpread": 0.28,
+        "unisonVoices": 4
+      },
+      "releaseSec": 0.16,
+      "sustainLevel": 0.72,
+      "decaySec": 0.14,
+      "attackSec": 0.006,
+      "amp": 0.2
+    }
+  },
+  "channelMix": {}
+}

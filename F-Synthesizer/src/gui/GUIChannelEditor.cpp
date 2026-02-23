@@ -68,6 +68,16 @@ bool DrawChannelEditor(GUIState& state)
         }
         return edited;
     };
+    auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
+    {
+        float v = static_cast<float>(value);
+        bool edited = ImGui::SliderFloat(label, &v, minV, maxV, fmt);
+        if (edited)
+        {
+            value = static_cast<double>(v);
+        }
+        return edited;
+    };
 
     ImGui::Text("Mix Summary (M/S/L)");
     ImGui::BeginChild("mix_summary", ImVec2(0, 210), true);
@@ -166,6 +176,25 @@ bool DrawChannelEditor(GUIState& state)
             const char* waves[] = { "sine", "square", "saw", "triangle" };
             changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
             wf->wave = WaveFromIndex(idx);
+
+            wf->unisonVoices = std::clamp(wf->unisonVoices, 1, 8);
+            wf->unisonDetuneCents = std::clamp(wf->unisonDetuneCents, 0.0, 120.0);
+            wf->unisonSpread = std::clamp(wf->unisonSpread, 0.0, 1.0);
+            wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
+
+            int unisonVoices = wf->unisonVoices;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Unison Voices", &unisonVoices, 1, 8))
+            {
+                wf->unisonVoices = unisonVoices;
+                changed = true;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Unison Detune (cent)", wf->unisonDetuneCents, 0.0f, 120.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Unison Spread", wf->unisonSpread, 0.0f, 1.0f, "%.2f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Sub Osc Level", wf->subOscLevel, 0.0f, 2.0f, "%.2f");
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {
