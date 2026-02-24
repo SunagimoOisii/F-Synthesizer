@@ -203,7 +203,6 @@ try {
     if ($DocRules -ne "off") {
         $violations = @(Test-DocRules -ChangedFiles $changedFiles)
     }
-
     if ($AllowDocMismatch -and $DocRules -eq "error") {
         Write-Warning "-AllowDocMismatch is set. Downgrading DocRules from 'error' to 'warn'."
         $DocRules = "warn"

@@ -73,9 +73,27 @@ flowchart LR
 
 - 現在、特記すべき例外なし。
 
+
+#### 2026-02-24: TODO (auto-generated)
+- カテゴリ: 依存方向・責務境界
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/SynthEngine/Smoothing.h, src/SynthEngine/Modulation.cpp, src/SynthEngine/Smoothing.cpp
+
 ### 音響アルゴリズム上の制約
 
 - 現在、特記すべき制約整理なし（必要時は `docs/synth-methods/` 参照と合わせて記録）。
+
+
+#### 2026-02-24: TODO (auto-generated)
+- カテゴリ: 音響アルゴリズム上の制約
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/SynthEngine/Smoothing.h, src/SynthEngine/Modulation.cpp, src/SynthEngine/Smoothing.cpp
 
 ### ADR Card (Template)
 

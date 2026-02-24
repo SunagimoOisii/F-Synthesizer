@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+// Modulation matrix の実行部。
+// 呼び出し経路: Voices初期化/NoteOn・NoteOff -> Renderer内で EvaluateModulation を1sampleごとに評価。
+// 責務境界: 設定値の妥当性検証は上位層、実行時の値生成と合成はSynthEngine側で担当する。
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
@@ -55,6 +58,7 @@ double StepLfoSample(double& phase, const LfoConfig& lfo, double deltaTimeSec)
     double raw = SampleLfoWave(lfo.wave, phase);
     if (!lfo.bipolar)
     {
+        // unipolar 指定では -1..1 を 0..1 へ変換してから depth を適用する。
         raw = (raw * 0.5) + 0.5;
     }
     raw *= std::clamp(lfo.depth, 0.0, 1.0);
@@ -91,6 +95,10 @@ ModulationResult EvaluateModulation(
     bool hasActiveRoute = false;
     bool useLfo1 = false;
     bool useEnv2 = false;
+
+    // 目的: 未使用ソースのStep計算を省いて、1sampleあたりの固定コストを減らす。
+    // 前提: route有効判定はこの関数呼び出し中に変化しない。
+    // トレードオフ: route探索が2パスになるが、未使用ソースの評価は避けられる。
     for (const ModRoute& route : cfg.matrix.routes)
     {
         if (!IsActiveRoute(route))
@@ -121,7 +129,7 @@ ModulationResult EvaluateModulation(
         switch (route.destination)
         {
         case ModDestination::Pitch:
-            // 1.0 = no change, 12 semitones per +1.0 amount.
+            // value をオクターブ比へ変換し、Pitchへ乗算で合成する。
             out.pitchMul *= std::pow(2.0, value);
             break;
         case ModDestination::Amp:
