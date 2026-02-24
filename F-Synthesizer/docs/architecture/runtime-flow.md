@@ -1,6 +1,6 @@
 # Runtime Flow
 
-最終更新: 2026-02-23
+最終更新: 2026-02-24
 
 ## End-to-End
 
@@ -43,6 +43,25 @@ sequenceDiagram
     end
 ```
 
+## Mode Branch
+
+```mermaid
+flowchart TD
+    Start[Run Start]
+    Mode{RenderOptions.mode}
+    Export[Export: Save WAV]
+    Preview[Preview: Return Buffer]
+    Cancel{ShouldCancel}
+    Stop[Cancel/End]
+
+    Start --> Mode
+    Mode --> Export
+    Mode --> Preview
+    Export --> Cancel
+    Preview --> Cancel
+    Cancel --> Stop
+```
+
 ## Run Boundary
 
 | 項目 | 位置 |
@@ -53,21 +72,53 @@ sequenceDiagram
 | 既定値適用 | `src/app/RunDefaults.cpp` |
 | 統計処理 | `src/app/RunStats.cpp` |
 
-## Preview / Export
+## Before / After (Execution Path)
 
-| Mode | 振る舞い |
-|---|---|
-| `Export` | WAV保存を伴う通常実行 |
-| `Preview` | GUI内プレビュー用実行 |
-
-キャンセルは `IRunObserver::ShouldCancel()` を介してレンダ中断する。
+| 観点 | Before | After |
+|---|---|---|
+| 実行経路 | GUI/CLI説明が分離しやすい | 共通Run経路として説明統一 |
+| モード説明 | 文だけで分かりにくい | `Mode Branch` 図で可視化 |
+| 中断仕様 | 注釈中心 | `ShouldCancel` を明示 |
 
 ## MIDI Pipeline
 
-- `src/midi/MIDIParser.cpp`: MIDIイベント解析
-- `src/midi/Sequencer.cpp`: tick/sample変換
-- `src/midi/MidiPipeline.cpp`: app層向けの統合出力
+| Component | 役割 |
+|---|---|
+| `src/midi/MIDIParser.cpp` | MIDIイベント解析 |
+| `src/midi/Sequencer.cpp` | tick/sample変換 |
+| `src/midi/MidiPipeline.cpp` | app層向けの統合出力 |
+
+## Impact Map (When This Changes)
+
+```mermaid
+flowchart LR
+    RT[runtime-flow.md]
+    MM[module-map.md]
+    GUI[gui.md]
+    CIO[config-and-io.md]
+
+    RT --> MM
+    RT --> GUI
+    RT --> CIO
+```
 
 ## Special Notes
 
-この節に、実行順序・中断処理・パフォーマンス最適化などの特殊対応を追記する。
+### 実行フロー/キャンセル
+
+- 現在、特記すべき例外なし。
+
+### MIDI時間変換
+
+- 現在、特記すべき例外なし（tick/sample変換ポリシー変更時に追記）。
+
+### ADR Card (Template)
+
+| 項目 | 内容 |
+|---|---|
+| 背景 | |
+| 判断 | |
+| 代替案 | |
+| 採用理由 | |
+| 影響範囲 | |
+| 関連ファイル | |

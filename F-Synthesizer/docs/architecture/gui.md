@@ -1,6 +1,6 @@
 # GUI Architecture
 
-最終更新: 2026-02-23
+最終更新: 2026-02-24
 
 ## Structure
 
@@ -26,11 +26,18 @@ flowchart TD
     Piano --> Input
 ```
 
-## Entry
+## UI Interaction Map
 
-- `src/gui/GUIMain.cpp`
-  - GUIの統合エントリ
-  - `main/*.inl` を取り込み、RunGUIApp を構成
+```mermaid
+flowchart LR
+    User[User Input]
+    Hit[Hit Test]
+    EditOp[Edit Operation]
+    State[GUIState]
+    Draw[Render]
+
+    User --> Hit --> EditOp --> State --> Draw
+```
 
 ## Main Split
 
@@ -52,15 +59,45 @@ flowchart TD
 
 ## GUI State
 
-- 定義: `include/gui/GUIState.h`
-- 永続化:
-  - `src/gui/GUIStateStorage.cpp`
-  - `src/gui/GUIStatePersistence.cpp`
-- 補助:
-  - `src/gui/GUIActions.cpp`
-  - `src/gui/GUIRunHelpers.cpp`
-  - `src/gui/GUIConfigUtils.cpp`
+| 区分 | File |
+|---|---|
+| 定義 | `include/gui/GUIState.h` |
+| 永続化 | `src/gui/GUIStateStorage.cpp`, `src/gui/GUIStatePersistence.cpp` |
+| 補助 | `src/gui/GUIActions.cpp`, `src/gui/GUIRunHelpers.cpp`, `src/gui/GUIConfigUtils.cpp` |
+
+## Before / After (GUI)
+
+| 観点 | Before | After |
+|---|---|---|
+| 画面責務 | 大きめの単位に集中 | `main` と `pianoroll` で責務分離 |
+| 追跡性 | 関連コードが点在しやすい | 機能単位で参照が明確 |
+| 説明性 | 文章中心 | 構造図 + 役割表で把握可能 |
+
+## Impact Map (When This Changes)
+
+```mermaid
+flowchart LR
+    GUI[gui.md]
+    RT[runtime-flow.md]
+    MM[module-map.md]
+
+    GUI --> RT
+    GUI --> MM
+```
 
 ## Special Notes
 
-この節に、GUI操作体系・状態遷移・描画最適化の特殊対応を追記する。
+### GUI操作・状態管理
+
+- 現在、特記すべき例外なし（操作体系変更時に追記）。
+
+### ADR Card (Template)
+
+| 項目 | 内容 |
+|---|---|
+| 背景 | |
+| 判断 | |
+| 代替案 | |
+| 採用理由 | |
+| 影響範囲 | |
+| 関連ファイル | |

@@ -6,11 +6,12 @@
 
 ```mermaid
 flowchart LR
+    H[HANDBOOK]
     A[module-map]
     B[runtime-flow]
     C[gui]
     D[config-and-io]
-    A --> B --> C --> D
+    H --> A --> B --> C --> D
 ```
 
 ## Scope
@@ -24,19 +25,31 @@ flowchart LR
 
 ## Read Order
 
-1. `docs/architecture/module-map.md`
-2. `docs/architecture/runtime-flow.md`
-3. `docs/architecture/gui.md`
-4. `docs/architecture/config-and-io.md`
+1. `docs/architecture/HANDBOOK.md`
+2. `docs/architecture/module-map.md`
+3. `docs/architecture/runtime-flow.md`
+4. `docs/architecture/gui.md`
+5. `docs/architecture/config-and-io.md`
 
 ## Quick Map
 
 | ファイル | 主題 | 更新タイミング |
 |---|---|---|
+| `HANDBOOK.md` | 全体方針、原則、更新ルール | 方針変更時 |
 | `module-map.md` | レイヤー責務/依存方向 | フォルダ再編・依存変更時 |
 | `runtime-flow.md` | 実行経路・境界 | Run経路/RenderOptions変更時 |
 | `gui.md` | GUI分割・状態管理 | GUI分割/画面責務変更時 |
 | `config-and-io.md` | Config読込/保存・I/O方針 | Config schema/I/O経路変更時 |
+
+## Visual Coverage Map
+
+| ファイル | 主図 | 補助図 |
+|---|---|---|
+| `HANDBOOK.md` | 全体像図 | Reader Navigation, Before/After |
+| `module-map.md` | 依存グラフ | Impact Map |
+| `runtime-flow.md` | End-to-End + Sequence | Mode Branch |
+| `gui.md` | GUI構造図 | UI Interaction Map |
+| `config-and-io.md` | Data Path | Compatibility Matrix + Impact Map |
 
 ## Design Rules
 
@@ -48,6 +61,7 @@ flowchart LR
 ## Documentation Operation Rule
 
 - 特殊な設計判断や実装方法を入れたら、その場で該当mdに追記する
+- 記録カテゴリは `HANDBOOK.md` の定義（5カテゴリ）を使う
 - 追記先は次の対応表に従う
 
 | 事象 | 追記先 |

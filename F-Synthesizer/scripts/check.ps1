@@ -187,6 +187,7 @@ try {
 
     Update-ArchitectureDoc -RepoRoot $repoRoot
     & (Join-Path $PSScriptRoot "update_synth_docs.ps1")
+    & (Join-Path $PSScriptRoot "update_architecture_notes.ps1")
 
     $projectDirName = Split-Path -Leaf $repoRoot
     $changedFiles = @(Get-ChangedFiles -ProjectDirName $projectDirName)

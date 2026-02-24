@@ -1,0 +1,22 @@
+name: Docs AutoSync Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  docs-autosync:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: F-Synthesizer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run docs auto-update scripts
+        run: .\scripts\check.ps1 -SkipBuild -SkipRun -DocRules off

@@ -194,6 +194,28 @@ PowerShell から以下を実行すると、差分確認・md更新ルール確�
 - `.\scripts\check.ps1 -SkipBuild -SkipRun` : md更新ルール確認のみ
 - `.\scripts\check.ps1 -AllowDocMismatch` : md不足を警告のみで継続
 
+## Git Hook (自動ドキュメント更新)
+
+初回のみ:
+
+```powershell
+.\scripts\install_git_hooks.ps1
+```
+
+有効化後は `git commit` 時に以下が自動更新され、コミットへ自動追加されます。
+
+- `docs/Architecture.md`（Auto-Generated ブロック）
+- `docs/synth-methods/integration-playbook.md`（Auto-Generated ブロック）
+- `docs/architecture/*.md` の `Special Notes`（関連カテゴリの雛形）
+
+対象カテゴリ（変更ファイルに応じて雛形追記）:
+- GUI操作・状態管理
+- 実行フロー/キャンセル
+- MIDI時間変換
+- Config互換性
+- 音響アルゴリズム上の制約
+- 依存方向・責務境界
+
 ## GUI Minimal Test
 
 ```powershell

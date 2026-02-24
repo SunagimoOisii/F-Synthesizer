@@ -1,6 +1,6 @@
 # Module Map
 
-最終更新: 2026-02-23
+最終更新: 2026-02-24
 
 ## Dependency Graph
 
@@ -24,7 +24,7 @@ flowchart LR
     CORE --> ENG
 ```
 
-## Layers
+## Layer Cards
 
 | Layer | Path | Responsibility |
 |---|---|---|
@@ -37,30 +37,53 @@ flowchart LR
 | IO | `src/io`, `include/io` | パス変換、WAV保存 |
 | SYNTH HELPERS | `src/synth`, `include/synth` | 波形・エンベロープなど合成補助 |
 
-## Dependency Direction
+## Dependency Rule Signal
 
-| 区分 | ルール |
-|---|---|
-| 許可 | `gui -> app`, `app -> core`, `app -> config/midi/io/synth`, `core -> SynthEngine` |
-| 非推奨 | `core -> gui`, `SynthEngine -> gui` |
+| Signal | ルール | 例 |
+|---|---|---|
+| `OK` | 許可 | `gui -> app`, `app -> core`, `core -> SynthEngine` |
+| `WARN` | 非推奨 | `core -> gui` |
+| `NG` | 禁止 | `SynthEngine -> gui` |
 
-## Notable Splits (Recent)
+## Before / After (Structure)
 
-- `ConfigLoad` 分割:
-  - `src/config/load/LoadTopLevel.cpp`
-  - `src/config/load/LoadChannel.cpp`
-  - `src/config/load/LoadSource.cpp`
-  - `src/config/load/LoadModulation.cpp`
-- `GUIMain` 分割:
-  - `src/gui/main/TopBar.inl`
-  - `src/gui/main/MainWindow.inl`
-  - `src/gui/main/RunLoop.inl`
-- `GUIPianoRoll` 分割:
-  - `src/gui/pianoroll/PianoRollTempo.inl`
-  - `src/gui/pianoroll/PianoRollEdit.inl`
-  - `src/gui/pianoroll/PianoRollRender.inl`
-  - `src/gui/pianoroll/PianoRollInput.inl`
+| 観点 | Before | After |
+|---|---|---|
+| GUI責務 | エントリ側に集中 | `main/` と `pianoroll/` へ分散 |
+| Config読込 | 単一大きめ実装 | `load/*.cpp` に機能分割 |
+| I/O境界 | パス・保存が散在しやすい | `io/` で明確化 |
+
+## Impact Map (When This Changes)
+
+```mermaid
+flowchart LR
+    MM[module-map.md]
+    RT[runtime-flow.md]
+    GUI[gui.md]
+    CIO[config-and-io.md]
+
+    MM --> RT
+    MM --> GUI
+    MM --> CIO
+```
 
 ## Special Notes
 
-この節に、依存境界の例外や一時的な実装上の折衷を追記する。
+### 依存方向・責務境界
+
+- 現在、特記すべき例外なし。
+
+### 音響アルゴリズム上の制約
+
+- 現在、特記すべき制約整理なし（必要時は `docs/synth-methods/` 参照と合わせて記録）。
+
+### ADR Card (Template)
+
+| 項目 | 内容 |
+|---|---|
+| 背景 | |
+| 判断 | |
+| 代替案 | |
+| 採用理由 | |
+| 影響範囲 | |
+| 関連ファイル | |
