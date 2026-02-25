@@ -1,6 +1,6 @@
 # GUI Architecture
 
-最終更新: 2026-02-24
+最終更新: 2026-02-25
 
 ## Structure
 
@@ -65,39 +65,34 @@ flowchart LR
 | 永続化 | `src/gui/GUIStateStorage.cpp`, `src/gui/GUIStatePersistence.cpp` |
 | 補助 | `src/gui/GUIActions.cpp`, `src/gui/GUIRunHelpers.cpp`, `src/gui/GUIConfigUtils.cpp` |
 
-## Before / After (GUI)
+## GUI Trace Anchors
 
-| 観点 | Before | After |
+| 観点 | 確認点 | 参照 |
 |---|---|---|
-| 画面責務 | 大きめの単位に集中 | `main` と `pianoroll` で責務分離 |
-| 追跡性 | 関連コードが点在しやすい | 機能単位で参照が明確 |
-| 説明性 | 文章中心 | 構造図 + 役割表で把握可能 |
+| 画面責務 | メイン画面は `main/*.inl`、ピアノロールは `pianoroll/*.inl` に分割される | `src/gui/main/`, `src/gui/pianoroll/` |
+| 状態保持 | 状態定義は `GUIState.h`、永続化は `GUIStateStorage/Persistence` が担当する | `include/gui/GUIState.h`, `src/gui/GUIStateStorage.cpp`, `src/gui/GUIStatePersistence.cpp` |
+| 編集履歴 | Undo/Redoは `PianoRollEdit.inl` で管理し、上限は `maxUndoCommands` で制御する | `src/gui/pianoroll/PianoRollEdit.inl`, `include/gui/GUIPianoRoll.h` |
 
-## Impact Map (When This Changes)
-
-```mermaid
-flowchart LR
-    GUI[gui.md]
-    RT[runtime-flow.md]
-    MM[module-map.md]
-
-    GUI --> RT
-    GUI --> MM
-```
+変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 
 ## Special Notes
 
 ### GUI操作・状態管理
 
-- 現在、特記すべき例外なし（操作体系変更時に追記）。
+#### 2026-02-25: Preview再生コールバックはロックレスで進行し、PCM差し替え時のみ排他
+- カテゴリ: GUI操作・状態管理
+- 背景: オーディオコールバック内でロック待ちが発生すると、再生途切れの原因になる。
+- 判断: コールバックでは `frameCursor`/`playing` をatomicで扱い、`PlayPreviewAudio` 側でPCM書換時のみmutexを使用。
+- 代替案: 常時mutex保護して整合性を優先する案。
+- 影響範囲: 低遅延再生時の安定性向上。実装はatomic状態管理を前提に複雑化。
+- 関連ファイル: `src/gui/PreviewAudio.cpp`, `include/gui/PreviewAudio.h`
 
-### ADR Card (Template)
+#### 2026-02-25: Piano Roll Undo履歴を64件に上限化
+- カテゴリ: GUI操作・状態管理
+- 背景: ノート編集履歴を無制限に保持すると、長時間編集でメモリ使用量が増え続ける。
+- 判断: `maxUndoCommands = 64` を既定値として、超過時は最古履歴を破棄。
+- 代替案: 無制限保持または差分圧縮方式の履歴管理。
+- 影響範囲: メモリ増加を抑制。極端に長い操作列では古いUndoが失われる。
+- 関連ファイル: `include/gui/GUIPianoRoll.h`, `src/gui/pianoroll/PianoRollEdit.inl`
 
-| 項目 | 内容 |
-|---|---|
-| 背景 | |
-| 判断 | |
-| 代替案 | |
-| 採用理由 | |
-| 影響範囲 | |
-| 関連ファイル | |
+ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。

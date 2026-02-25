@@ -1,20 +1,12 @@
 # Architecture Handbook
 
-最終更新: 2026-02-24
+最終更新: 2026-02-25
 
-## 1. 目的と読者
+## プロジェクト概要
 
-- 主読者:
-  - 将来の自分/チーム
-  - エンジニア（実装者）
-  - 採用担当（非実装者）
-- 主目的:
-  - 全体像を短時間で伝える
-  - 設計判断の妥当性を示す
-- 公開レベル:
-  - 原則公開（ポートフォリオ利用を想定）
+MIDIファイルを読み込み、複数の合成方式（Waveform / FM / Noise / Drum）でシンセサイズし、WAVファイルを出力する Windows 向けソフトウェアシンセサイザー。GUI / CLI 両対応。
 
-## 1.1 Reader Navigation
+## 1. Reader Navigation
 
 | 読みたい内容 | まず読む | 次に読む |
 |---|---|---|
@@ -37,14 +29,36 @@ flowchart LR
     APP --> AUX
 ```
 
-## 2.1 Before / After (Refactor Summary)
+## 2.1 技術スタック
 
-| 観点 | Before | After |
+| 技術 | 用途 | 選定理由 |
 |---|---|---|
-| 構造の入口 | 単一説明中心 | Handbook + 分割詳細 |
-| GUI責務 | 大きな単位に集中 | `main` / `pianoroll` に分割 |
-| Config読込 | 単一実装寄り | `load/` で責務分割 |
-| 設計判断の保管 | 散在しやすい | `Special Notes` に集約 |
+| C++20 (MSVC v143) | 実装言語 | リアルタイム音声処理に適した低レベル制御 |
+| Dear ImGui | GUI フレームワーク | 即時モード描画で高速プロトタイピング可能 |
+| GLFW | ウィンドウ / 入力管理 | ImGui の標準バックエンド |
+| OpenGL | 描画バックエンド | ImGui + GLFW の標準組み合わせ |
+| miniaudio | 音声再生 | シングルヘッダで導入容易 |
+| 標準ライブラリ `<regex>` | JSON 解析 | 外部依存を最小化するため独自パーサーで対応 |
+
+## 2.2 規模
+
+| 指標 | 値 |
+|---|---|
+| プロジェクトコード | 約 11,700 行（.cpp + .h + .inl） |
+| ソースファイル数 | 84（.cpp: 46、.h: 31、.inl: 7） |
+| 主要モジュール | 8（gui / app / core / SynthEngine / config / midi / io / synth） |
+| 対応合成方式 | 4（Waveform / FM / Noise / Drum） |
+| 外部依存 | 3 ライブラリ（ImGui / GLFW / miniaudio） |
+
+## 2.3 Architecture Evidence
+
+| 観点 | 確認方法 | 参照 |
+|---|---|---|
+| 構造の入口 | 読み順が `README.md` に固定されていることを確認 | `docs/architecture/README.md` |
+| GUI責務分割 | `main` と `pianoroll` の分割表を確認 | `docs/architecture/gui.md` |
+| Config読込分割 | `Config Load Split` 表で `load/*.cpp` 分割を確認 | `docs/architecture/config-and-io.md` |
+| Voiceデータレイアウト | `VoicesSoA` をレンダで使用し、AoSは互換定義として残す方針を確認 | `docs/architecture/module-map.md`, `src/SynthEngine/Internal.h`, `src/SynthEngine/Voices.cpp`, `src/SynthEngine/Renderer.cpp` |
+| 設計判断記録 | `Special Notes` に日付付きADRが存在することを確認 | `docs/architecture/module-map.md`, `docs/architecture/runtime-flow.md`, `docs/architecture/gui.md`, `docs/architecture/config-and-io.md` |
 
 ## 3. レイヤーと依存ルール
 
@@ -54,7 +68,7 @@ flowchart LR
 2. UIとドメインロジックを分離し、相互依存を作らない
 3. 設定・入出力は境界層で吸収し、内部ロジックへ漏らさない
 4. 実行フロー（CLI/GUI）は共通のアプリケーション経路に統合する
-5. 重要な設計判断は `Special Notes` に記録し、変更理由を追跡可能にする
+5. 重要な設計判断は `Special Notes` に `背景/判断/代替案/影響範囲/関連ファイル` を記録する
 
 詳細: `docs/architecture/module-map.md`
 
@@ -117,6 +131,8 @@ flowchart LR
 - 関連ファイル:
 ```
 
+※ 同一テンプレートは `docs/architecture/README.md` の `ADR Card Template` にも掲載。
+
 ## 7. 変更時の更新ルール
 
 1. 依存方向や責務が変わったら `module-map.md` を更新する
@@ -127,9 +143,10 @@ flowchart LR
 
 ## 7.1 Portfolio Readiness Check
 
-| チェック項目 | 期待状態 |
+| チェック項目 | 合格条件 |
 |---|---|
-| 図の整合 | 主要フロー図が壊れていない |
-| 設計原則 | 5原則と実装が矛盾しない |
-| 判断記録 | `Special Notes` が実例で更新されている |
-| 導線 | 読者別ナビゲーションで迷わない |
+| プロジェクト概要 | 本ファイルの 2.1 と 2.2 に技術スタックと規模表がある |
+| 図の整合 | `README.md`, `module-map.md`, `runtime-flow.md`, `gui.md`, `config-and-io.md` に `mermaid` 図がある |
+| 設計原則 | `module-map.md` の依存ルールが `gui -> app -> core` を含む |
+| 判断記録 | 4ファイル（`module-map.md`, `runtime-flow.md`, `gui.md`, `config-and-io.md`）に日付付き `Special Notes` がある |
+| 導線 | `Reader Navigation` と `README.md` の `Read Order` が存在する |

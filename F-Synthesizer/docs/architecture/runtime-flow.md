@@ -1,6 +1,6 @@
 # Runtime Flow
 
-最終更新: 2026-02-24
+最終更新: 2026-02-25
 
 ## End-to-End
 
@@ -72,13 +72,13 @@ flowchart TD
 | 既定値適用 | `src/app/RunDefaults.cpp` |
 | 統計処理 | `src/app/RunStats.cpp` |
 
-## Before / After (Execution Path)
+## Execution Trace Anchors
 
-| 観点 | Before | After |
+| 観点 | 確認点 | 参照 |
 |---|---|---|
-| 実行経路 | GUI/CLI説明が分離しやすい | 共通Run経路として説明統一 |
-| モード説明 | 文だけで分かりにくい | `Mode Branch` 図で可視化 |
-| 中断仕様 | 注釈中心 | `ShouldCancel` を明示 |
+| 実行入口 | `Run(...)` 公開APIが `RunMain` へ集約される | `include/AppCore.h`, `src/SoundGenerate.cpp`, `src/app/RunExecution.cpp` |
+| モード分岐 | `RenderOptions.mode` が Export/Preview を分岐する | `src/app/RunExecution.cpp`, `src/app/RunSave.cpp` |
+| 中断仕様 | `allowCancel && observer` のときだけ `ShouldCancel()` を使う | `src/app/RunExecution.cpp` |
 
 ## MIDI Pipeline
 
@@ -88,37 +88,36 @@ flowchart TD
 | `src/midi/Sequencer.cpp` | tick/sample変換 |
 | `src/midi/MidiPipeline.cpp` | app層向けの統合出力 |
 
-## Impact Map (When This Changes)
-
-```mermaid
-flowchart LR
-    RT[runtime-flow.md]
-    MM[module-map.md]
-    GUI[gui.md]
-    CIO[config-and-io.md]
-
-    RT --> MM
-    RT --> GUI
-    RT --> CIO
-```
+変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 
 ## Special Notes
 
 ### 実行フロー/キャンセル
 
-- 現在、特記すべき例外なし。
+#### 2026-02-25: Preview経路では保存I/Oを完全に分離
+- カテゴリ: 実行フロー/キャンセル
+- 背景: GUIプレビューではレンダ結果の試聴が主目的で、毎回WAV保存を行うとI/O待ちが体感遅延になる。
+- 判断: `RenderOptions.writeWav` で保存有無を切り替え、Previewはメモリ返却のみで完了させる。
+- 代替案: Export/Previewを同一保存経路に統一し、呼び出し側でファイル破棄する案。
+- 影響範囲: Preview時の応答性向上。保存失敗によるPreview失敗を回避。
+- 関連ファイル: `src/app/RunSave.cpp`, `src/SoundGenerate.cpp`, `include/AppCore.h`
+
+#### 2026-02-25: キャンセル可否でレンダ経路を事前分岐
+- カテゴリ: 実行フロー/キャンセル
+- 背景: サンプル単位ループで毎回キャンセル可否を分岐すると、固定コストが増える。
+- 判断: `allowCancel && observer` を先に評価し、`shouldCancelObserver` と `neverCancel` の2経路へ分離。
+- 代替案: 1経路に統一し、レンダ中に毎回observer有無を判定する案。
+- 影響範囲: キャンセル不要ケースの分岐コストを削減し、レンダループを単純化。
+- 関連ファイル: `src/app/RunExecution.cpp`, `include/AppCore.h`
 
 ### MIDI時間変換
 
-- 現在、特記すべき例外なし（tick/sample変換ポリシー変更時に追記）。
+#### 2026-02-25: 同tickイベント順序を Control -> NoteOff -> NoteOn に固定
+- カテゴリ: MIDI時間変換
+- 背景: 同一tickで順序が揺れると、音切れやノート重なりの結果が不安定になる。
+- 判断: tickソート時に優先度を定義し、Control/PitchBendを先行、次にNoteOff、最後にNoteOnで処理。
+- 代替案: 入力順依存のまま処理する案。
+- 影響範囲: 同時刻イベントの再現性を改善し、レンダ結果の揺れを抑制。
+- 関連ファイル: `src/midi/Sequencer.cpp`, `include/midi/Sequencer.h`
 
-### ADR Card (Template)
-
-| 項目 | 内容 |
-|---|---|
-| 背景 | |
-| 判断 | |
-| 代替案 | |
-| 採用理由 | |
-| 影響範囲 | |
-| 関連ファイル | |
+ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。

@@ -1,6 +1,6 @@
 # Module Map
 
-最終更新: 2026-02-24
+最終更新: 2026-02-25
 
 ## Dependency Graph
 
@@ -45,63 +45,54 @@ flowchart LR
 | `WARN` | 非推奨 | `core -> gui` |
 | `NG` | 禁止 | `SynthEngine -> gui` |
 
-## Before / After (Structure)
+## Structure Trace Anchors
 
-| 観点 | Before | After |
+| 観点 | 確認点 | 参照 |
 |---|---|---|
-| GUI責務 | エントリ側に集中 | `main/` と `pianoroll/` へ分散 |
-| Config読込 | 単一大きめ実装 | `load/*.cpp` に機能分割 |
-| I/O境界 | パス・保存が散在しやすい | `io/` で明確化 |
+| GUI層 | GUIコードは `src/gui`, `include/gui` に配置される | `src/gui`, `include/gui` |
+| 実行層 | 実行制御は `src/app`, `include/app` に配置される | `src/app`, `include/app` |
+| 合成層 | 合成本体は `src/SynthEngine`, `include/SynthEngine` に配置される | `src/SynthEngine`, `include/SynthEngine` |
+| Config/IO層 | 設定I/OとWAV保存は `src/config`, `src/io` が担当する | `src/config`, `src/io` |
 
-## Impact Map (When This Changes)
-
-```mermaid
-flowchart LR
-    MM[module-map.md]
-    RT[runtime-flow.md]
-    GUI[gui.md]
-    CIO[config-and-io.md]
-
-    MM --> RT
-    MM --> GUI
-    MM --> CIO
-```
+変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 
 ## Special Notes
 
 ### 依存方向・責務境界
 
-- 現在、特記すべき例外なし。
-
-
-#### 2026-02-24: TODO (auto-generated)
+#### 2026-02-25: MIDI読込〜sampleイベント化はapp層で完結し、core/SynthEngineへは確定イベント列のみ渡す
 - カテゴリ: 依存方向・責務境界
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
-- 関連ファイル: include/SynthEngine/Smoothing.h, src/SynthEngine/Modulation.cpp, src/SynthEngine/Smoothing.cpp
+- 背景: MIDI解析・テンポ変換の仕様を下位層へ混在させると、合成ロジックと境界責務が曖昧になる。
+- 判断: `RunMain` で `BuildMidiPipeline` を完了させ、`RenderWithEngine` には sample軸イベントを渡す。
+- 代替案: SynthEngine内部でMIDI tick処理まで担う案。
+- 影響範囲: 層責務が明確化され、GUI/CLI双方で同一実行経路を再利用しやすい。
+- 関連ファイル: `src/app/RunExecution.cpp`, `src/midi/MidiPipeline.cpp`, `src/core/RenderGateway.cpp`
 
 ### 音響アルゴリズム上の制約
 
-- 現在、特記すべき制約整理なし（必要時は `docs/synth-methods/` 参照と合わせて記録）。
-
-
-#### 2026-02-24: TODO (auto-generated)
+#### 2026-02-25: Voice状態はAoS互換を残しつつ、レンダ経路はSoAを採用
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
-- 関連ファイル: include/SynthEngine/Smoothing.h, src/SynthEngine/Modulation.cpp, src/SynthEngine/Smoothing.cpp
+- 背景: AoS（Voice構造体の配列）だと、1sampleごとの更新で必要フィールドが離散し、ホットパスの参照局所性が落ちやすい。
+- 判断: 実レンダは SoA（`VoicesSoA`）を正規形とし、AoS定義は互換・移行用途に限定する。
+- 代替案: AoSのままレンダする。
+- 影響範囲: `Renderer.cpp` の走査は同種データを連続アクセスできる。代わりに `Voices.cpp` 側で配列の同期追加/圧縮管理が必要。
+- 関連ファイル: `src/SynthEngine/Internal.h`, `src/SynthEngine/Voices.cpp`, `src/SynthEngine/Renderer.cpp`, `include/SynthEngine/SynthEngine.h`
 
-### ADR Card (Template)
+#### 2026-02-25: Smoothingは異常値を入口で正規化し、破綻時は即時反映へフォールバック
+- カテゴリ: 音響アルゴリズム上の制約
+- 背景: GUI/JSON起因のNaN/Infや不正サンプルレートが混入すると、レンダ全体へ異常値が伝播する。
+- 判断: `SanitizeFinite` + `ClampWithRange` で有限値化し、無効時定数や無効sampleRateでは `alpha=1.0` でbypassする。
+- 代替案: 異常入力を例外扱いにしてレンダを中断する案。
+- 影響範囲: 音の破綻・発散を抑制し、設定不整合時も処理継続を優先。
+- 関連ファイル: `src/SynthEngine/Smoothing.cpp`, `include/SynthEngine/Smoothing.h`
 
-| 項目 | 内容 |
-|---|---|
-| 背景 | |
-| 判断 | |
-| 代替案 | |
-| 採用理由 | |
-| 影響範囲 | |
-| 関連ファイル | |
+#### 2026-02-25: Modulationは2パス評価で未使用ソースのstep計算を回避
+- カテゴリ: 音響アルゴリズム上の制約
+- 背景: 1sampleごとの固定コストが増えると、ルート未使用時でもCPU負荷が下がらない。
+- 判断: 1パス目で有効routeと使用sourceを判定し、必要なLFO/Envのみstepした後に2パス目で合成。
+- 代替案: すべてのsourceを毎sample評価してからroute適用する案。
+- 影響範囲: route未使用時の余計な計算を削減。探索2パス化により実装はやや複雑化。
+- 関連ファイル: `src/SynthEngine/Modulation.cpp`, `include/SynthEngine/Modulation.h`
+
+ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
+

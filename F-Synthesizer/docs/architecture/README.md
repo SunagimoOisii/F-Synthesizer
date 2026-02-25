@@ -1,6 +1,6 @@
 # Architecture Overview
 
-最終更新: 2026-02-23
+最終更新: 2026-02-25
 
 ## Big Picture
 
@@ -35,21 +35,11 @@ flowchart LR
 
 | ファイル | 主題 | 更新タイミング |
 |---|---|---|
-| `HANDBOOK.md` | 全体方針、原則、更新ルール | 方針変更時 |
-| `module-map.md` | レイヤー責務/依存方向 | フォルダ再編・依存変更時 |
-| `runtime-flow.md` | 実行経路・境界 | Run経路/RenderOptions変更時 |
-| `gui.md` | GUI分割・状態管理 | GUI分割/画面責務変更時 |
-| `config-and-io.md` | Config読込/保存・I/O方針 | Config schema/I/O経路変更時 |
-
-## Visual Coverage Map
-
-| ファイル | 主図 | 補助図 |
-|---|---|---|
-| `HANDBOOK.md` | 全体像図 | Reader Navigation, Before/After |
-| `module-map.md` | 依存グラフ | Impact Map |
-| `runtime-flow.md` | End-to-End + Sequence | Mode Branch |
-| `gui.md` | GUI構造図 | UI Interaction Map |
-| `config-and-io.md` | Data Path | Compatibility Matrix + Impact Map |
+| `HANDBOOK.md` | 全体方針、原則、更新ルール | 原則・評価基準を変更した時 |
+| `module-map.md` | レイヤー責務/依存方向 | `src/*` の依存方向や責務境界を変更した時 |
+| `runtime-flow.md` | 実行経路・境界 | `src/app/Run*.cpp` や `include/AppCore.h` を変更した時 |
+| `gui.md` | GUI分割・状態管理 | `src/gui/main/*` または `src/gui/pianoroll/*` の責務を変更した時 |
+| `config-and-io.md` | Config読込/保存・I/O方針 | `src/config/*` や `src/io/*` の入出力仕様を変更した時 |
 
 ## Design Rules
 
@@ -58,27 +48,30 @@ flowchart LR
 - Config 解析ロジックは `src/config/load/` に集約する
 - GUI巨大化は `src/gui/main/` と `src/gui/pianoroll/` の責務分割で抑制する
 
+## Impact Map（変更時の影響先）
+
+| 変更対象 | 影響を確認する先 |
+|---|---|
+| `module-map.md` | `runtime-flow.md`, `gui.md`, `config-and-io.md` |
+| `runtime-flow.md` | `module-map.md`, `gui.md`, `config-and-io.md` |
+| `gui.md` | `runtime-flow.md`, `module-map.md` |
+| `config-and-io.md` | `runtime-flow.md`, `module-map.md` |
+
 ## Documentation Operation Rule
 
-- 特殊な設計判断や実装方法を入れたら、その場で該当mdに追記する
-- 記録カテゴリは `HANDBOOK.md` の定義（5カテゴリ）を使う
-- 追記先は次の対応表に従う
+- 記録カテゴリと追記先は `docs/architecture/HANDBOOK.md` の `6. 設計判断ログ導線（Special Notes）` に統一。
+- 詳細の更新判断は本ファイルの `Quick Map` と `Impact Map` に従う。
 
-| 事象 | 追記先 |
-|---|---|
-| 依存方向・責務境界の例外 | `module-map.md` |
-| 実行順序・キャンセル・性能経路の特殊化 | `runtime-flow.md` |
-| GUI操作/状態管理/描画の特殊ロジック | `gui.md` |
-| Config schema互換・JSON解釈・保存方針の特殊化 | `config-and-io.md` |
+## ADR Card Template
 
-- 追記テンプレート:
+Special Notes に設計判断を記録する際のテンプレート:
 
 ```md
-## Special Notes
-
 ### YYYY-MM-DD: タイトル
+- カテゴリ:
 - 背景:
 - 判断:
+- 代替案:
 - 影響範囲:
 - 関連ファイル:
 ```
