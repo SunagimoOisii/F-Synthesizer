@@ -1,8 +1,6 @@
 # GUI_REQUIREMENTS
 
-このドキュメントは、現行GUIの実装契約を定義する。  
-過去要件・移行途中の仕様は `docs/archive/gui-requirements/GUI_REQUIREMENTS_HISTORY.md` を参照する。
-プロダクト全体の価値判断は `docs/PRODUCT_POLICY.md` を優先する。
+現行GUIの実装契約を定義する。過去要件は `docs/archive/gui-requirements/` を参照。
 
 ## 目的
 
@@ -16,13 +14,9 @@
 - `Music`: MIDI編集、演奏調整、楽曲試聴、書き出しを主目的とする
 - ボタン名は目的を直接表す（例: `Export WAV`, `Play Preview`, `Stop`）
 
-## 実装優先順（PRODUCT_POLICY連動）
+## 実装優先順
 
-1. 音の気持ちよさに直結する導線（編集 -> 試聴 -> 納得）
-2. 即時フィードバック（操作直後に音/表示が変わる）
-3. 初心者が迷わない文言とレイアウト（専門語より目的語）
-4. 反復試行の速さ（待ち時間・操作回数の削減）
-5. 高度機能は後回し（非目標: DAW深機能/プロ向け深パラメータ）
+`PRODUCT_POLICY.md` の開発判断ルールを正とする。
 
 ## 操作契約
 
