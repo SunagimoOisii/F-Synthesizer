@@ -65,7 +65,7 @@ flowchart LR
 | 永続化 | `src/gui/GUIStateStorage.cpp`, `src/gui/GUIStatePersistence.cpp` |
 | 補助 | `src/gui/GUIActions.cpp`, `src/gui/GUIRunHelpers.cpp`, `src/gui/GUIConfigUtils.cpp` |
 
-## GUI Trace Anchors
+## GUI実装確認ポイント
 
 | 観点 | 確認点 | 参照 |
 |---|---|---|
@@ -79,7 +79,7 @@ flowchart LR
 
 ### GUI操作・状態管理
 
-#### 2026-02-25: Preview再生コールバックはロックレスで進行し、PCM差し替え時のみ排他
+#### 2026-02-25: Preview再生コールバックはロックなしで進行し、PCM差し替え時のみ排他
 - カテゴリ: GUI操作・状態管理
 - 背景: オーディオコールバック内でロック待ちが発生すると、再生途切れの原因になる。
 - 判断: コールバックでは `frameCursor`/`playing` をatomicで扱い、`PlayPreviewAudio` 側でPCM書換時のみmutexを使用。

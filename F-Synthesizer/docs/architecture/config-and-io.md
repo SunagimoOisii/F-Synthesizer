@@ -53,7 +53,7 @@ flowchart LR
 | パス解決・UTF補助 | `src/io/PlatformPaths.cpp`, `include/io/PlatformPaths.h` |
 | WAV保存 | `src/io/Writer.cpp`, `include/io/Writer.h` |
 
-## Config/IO Trace Anchors
+## Config/IO実装確認ポイント
 
 | 観点 | 確認点 | 参照 |
 |---|---|---|

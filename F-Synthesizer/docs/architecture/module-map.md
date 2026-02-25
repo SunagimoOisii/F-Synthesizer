@@ -37,7 +37,7 @@ flowchart LR
 | IO | `src/io`, `include/io` | パス変換、WAV保存 |
 | SYNTH HELPERS | `src/synth`, `include/synth` | 波形・エンベロープなど合成補助 |
 
-## Dependency Rule Signal
+## 依存ルール記号
 
 | Signal | ルール | 例 |
 |---|---|---|
@@ -45,7 +45,7 @@ flowchart LR
 | `WARN` | 非推奨 | `core -> gui` |
 | `NG` | 禁止 | `SynthEngine -> gui` |
 
-## Structure Trace Anchors
+## 構造の実装確認ポイント
 
 | 観点 | 確認点 | 参照 |
 |---|---|---|
@@ -72,8 +72,8 @@ flowchart LR
 
 #### 2026-02-25: Voice状態はAoS互換を残しつつ、レンダ経路はSoAを採用
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景: AoS（Voice構造体の配列）だと、1sampleごとの更新で必要フィールドが離散し、ホットパスの参照局所性が落ちやすい。
-- 判断: 実レンダは SoA（`VoicesSoA`）を正規形とし、AoS定義は互換・移行用途に限定する。
+- 背景: AoS（Voice構造体の配列）だと、1sampleごとの更新で必要フィールドが離散し、サンプルごとに繰り返す処理で参照局所性が落ちやすい。
+- 判断: 実レンダは SoA（`VoicesSoA`）を標準実装とし、AoS定義は互換・移行用途に限定する。
 - 代替案: AoSのままレンダする。
 - 影響範囲: `Renderer.cpp` の走査は同種データを連続アクセスできる。代わりに `Voices.cpp` 側で配列の同期追加/圧縮管理が必要。
 - 関連ファイル: `src/SynthEngine/Internal.h`, `src/SynthEngine/Voices.cpp`, `src/SynthEngine/Renderer.cpp`, `include/SynthEngine/SynthEngine.h`
@@ -81,7 +81,7 @@ flowchart LR
 #### 2026-02-25: Smoothingは異常値を入口で正規化し、破綻時は即時反映へフォールバック
 - カテゴリ: 音響アルゴリズム上の制約
 - 背景: GUI/JSON起因のNaN/Infや不正サンプルレートが混入すると、レンダ全体へ異常値が伝播する。
-- 判断: `SanitizeFinite` + `ClampWithRange` で有限値化し、無効時定数や無効sampleRateでは `alpha=1.0` でbypassする。
+- 判断: `SanitizeFinite` + `ClampWithRange` で有限値化し、無効時定数や無効sampleRateでは `alpha=1.0` で平滑化を無効化（即時反映）する。
 - 代替案: 異常入力を例外扱いにしてレンダを中断する案。
 - 影響範囲: 音の破綻・発散を抑制し、設定不整合時も処理継続を優先。
 - 関連ファイル: `src/SynthEngine/Smoothing.cpp`, `include/SynthEngine/Smoothing.h`

@@ -72,7 +72,7 @@ flowchart LR
 
 詳細: `docs/architecture/module-map.md`
 
-## 3.1 Rule Signal
+## 3.1 依存ルール記号
 
 | 記号 | 意味 |
 |---|---|
