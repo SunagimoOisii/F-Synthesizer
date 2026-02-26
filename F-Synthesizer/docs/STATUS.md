@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-02-26 (GUI UX #5)
+Last Updated: 2026-02-26 (GUI UX #6)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -29,6 +29,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - Wave/Drum Brushup: preset再調整、ドラムレベル抑制、帯域再配分、AB手順固定
   - GUI UX #3: DrumKit Type 連動パラメータ表示（Kick / Snare・Hat / None で表示切替）
   - GUI UX #5: WaveformConfig FilterMode デフォルトを Bypass に変更、フィルタ有効時の `(active)` インジケーター追加
+  - GUI UX #6: モジュレーションルートを CollapsingHeader 化、ヘッダに "lfo1 -> pitch (+0.50)" 形式のサマリを表示
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）

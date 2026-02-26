@@ -267,8 +267,31 @@ bool DrawChannelEditor(GUIState& state)
             {
                 ModRoute& route = wf->modulation.matrix.routes[static_cast<size_t>(routeIdx)];
                 ImGui::PushID(routeIdx);
-                std::string label = "Route " + std::to_string(routeIdx);
-                ImGui::TextUnformatted(label.c_str());
+
+                std::string summary;
+                bool hasRoute = (route.source != ModSource::None && route.destination != ModDestination::None);
+                if (hasRoute)
+                {
+                    char amtBuf[16];
+                    snprintf(amtBuf, sizeof(amtBuf), "%+.2f", static_cast<float>(route.amount));
+                    summary = "Route " + std::to_string(routeIdx) + ": "
+                        + modSources[static_cast<int>(route.source)]
+                        + " -> "
+                        + modDestinations[static_cast<int>(route.destination)]
+                        + " (" + amtBuf + ")"
+                        + (route.enabled ? "" : " [off]");
+                }
+                else
+                {
+                    summary = "Route " + std::to_string(routeIdx) + ": (empty)";
+                }
+
+                if (!ImGui::CollapsingHeader(summary.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::PopID();
+                    continue;
+                }
+
                 changed |= ImGui::Checkbox("Enabled", &route.enabled);
 
                 int srcIdx = 0;
