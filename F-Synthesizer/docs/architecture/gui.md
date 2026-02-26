@@ -96,3 +96,12 @@ flowchart LR
 - 関連ファイル: `include/gui/GUIPianoRoll.h`, `src/gui/pianoroll/PianoRollEdit.inl`
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
+
+#### 2026-02-26: TODO (auto-generated)
+- カテゴリ: GUI操作・状態管理
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: src/gui/GUIChannelEditor.cpp
+

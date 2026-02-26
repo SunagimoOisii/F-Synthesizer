@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-02-23
+Last Updated: 2026-02-26
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -27,6 +27,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - Modulation基盤: LFO1/Env2/Route の load/save/GUI編集、低コストスキップ
   - Parameter Smoothing: 共通モジュール追加、Waveform経路接続（Noise/FM/Drumは未接続で方針固定）
   - Wave/Drum Brushup: preset再調整、ドラムレベル抑制、帯域再配分、AB手順固定
+  - GUI UX #3: DrumKit Type 連動パラメータ表示（Kick / Snare・Hat / None で表示切替）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）

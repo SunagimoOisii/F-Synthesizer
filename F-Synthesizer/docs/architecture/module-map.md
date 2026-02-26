@@ -68,6 +68,15 @@ flowchart LR
 - 影響範囲: 層責務が明確化され、GUI/CLI双方で同一実行経路を再利用しやすい。
 - 関連ファイル: `src/app/RunExecution.cpp`, `src/midi/MidiPipeline.cpp`, `src/core/RenderGateway.cpp`
 
+
+#### 2026-02-26: TODO (auto-generated)
+- カテゴリ: 依存方向・責務境界
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: src/gui/GUIChannelEditor.cpp
+
 ### 音響アルゴリズム上の制約
 
 #### 2026-02-25: Voice状態はAoS互換を残しつつ、レンダ経路はSoAを採用
