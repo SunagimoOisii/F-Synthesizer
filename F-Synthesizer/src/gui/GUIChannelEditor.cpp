@@ -214,6 +214,11 @@ bool DrawChannelEditor(GUIState& state)
                 }
                 changed = true;
             }
+            if (wf->filterMode != FilterMode::Bypass)
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "(active)");
+            }
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Cutoff (Hz)", wf->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
             ImGui::SetNextItemWidth(220.0f);

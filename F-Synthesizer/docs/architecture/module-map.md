@@ -105,3 +105,12 @@ flowchart LR
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
+
+#### 2026-02-26: TODO (auto-generated)
+- カテゴリ: 音響アルゴリズム上の制約
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/SynthEngine/SynthEngine.h
+

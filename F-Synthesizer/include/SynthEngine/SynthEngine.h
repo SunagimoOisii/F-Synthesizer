@@ -33,7 +33,7 @@ struct WaveformConfig
     // Sub-osc (-1 octave) の混合量。
     double subOscLevel = 0.0;
     // 共通Filterレイヤー（Waveform向け初期接続）。
-    FilterMode filterMode = FilterMode::LowPass;
+    FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
     // 共通Smoothingレイヤー（amp/pitch/filterCutoff）。
