@@ -155,7 +155,7 @@ function Update-ArchitectureDoc {
         return
     }
 
-    $content = Get-Content -Path $path -Raw
+    $content = Get-Content -Path $path -Raw -Encoding UTF8
     $newContent = $content
     $pattern = '(?s)<!-- AUTO-GENERATED:BEGIN -->.*?<!-- AUTO-GENERATED:END -->'
     if ($content -match $pattern) {
@@ -173,7 +173,7 @@ function Update-ArchitectureDoc {
     }
 
     if ($newContent -ne $content) {
-        Set-Content -Path $path -Value $newContent -Encoding utf8
+        [System.IO.File]::WriteAllText($path, $newContent, [System.Text.UTF8Encoding]::new($false))
         Write-Host "docs/Architecture.md auto-updated."
     }
 }
