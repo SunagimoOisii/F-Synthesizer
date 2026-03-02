@@ -34,6 +34,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
+  - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-03）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
 
 ## Priority Issues / Next Actions
@@ -46,8 +47,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 - `feat-infra`: `scripts/midi_regression.ps1` の実行ディレクトリ依存を解消し、`check.ps1` 統合オプションを追加する
 - `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
-- `gui-cleanup`: Sound Slot の意味と使い分けを UI 上に表示する（`Slot N / 16` など）
-- `gui-cleanup`: Sound/Music タブの役割分担を UI 上で明示する（ミックス設定導線）
 - `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
 
 ## Notes

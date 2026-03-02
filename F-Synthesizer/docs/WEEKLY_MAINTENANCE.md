@@ -20,3 +20,4 @@
 ## 実施ログ
 
 - 2026-03-03: 運用手順を導入。次回棚卸しで初回ログを記録する。
+- 2026-03-03: 初回棚卸しを実施。`STATUS` から解消済み `gui-cleanup` 2件を削除し、`ROADMAP` に GUI UX #7 / smoke quick-full 分割完了を反映、`DECISIONS` に smoke運用判断を追記。

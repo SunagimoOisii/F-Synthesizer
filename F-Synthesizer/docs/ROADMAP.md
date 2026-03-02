@@ -11,6 +11,8 @@
 ## 完了した項目
 
 - GUI v8 の主要移行完了（`Sound` 縮退、保存導線整理、エラー導線統一）
+- GUI UX #7 完了（`Channel(ch)` / `Sound Slot(s)` 表記整理、Musicプレビュー時のSlot自動変更廃止）
+- `scripts/gui_smoke.ps1` を `quick/full` プロファイル化（開発時の実行時間短縮）
 
 ## 将来の検討事項
 
