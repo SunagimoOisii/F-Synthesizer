@@ -150,8 +150,8 @@ struct ExampleType
 2. `TODO` / `FIXME`
    - コード内に残すと検索・追跡が困難になり、放置されやすい
    - 改善・拡張の記録は用途に応じて md ドキュメントへ記載する
-     （設計検討 → `NOTES.md`、残タスク → `STATUS.md`）
-   - 運用フローの詳細は `docs/AGENTS.md` を参照
+     （設計検討 → `DECISIONS.md`、残タスク → `STATUS.md`）
+   - 運用フローの詳細は `AGENTS.md` を参照
 
 ## 5. 記述スタイル
 
@@ -235,4 +235,4 @@ void SetSmoothedTarget(SmoothedParam& param, double target);
 
 ## 8. 参照
 
-- 運用手順（優先適用順、PRテンプレ）は `docs/AGENTS.md` 側で管理する
+- 運用手順（優先適用順、PRテンプレ）は `AGENTS.md` 側で管理する

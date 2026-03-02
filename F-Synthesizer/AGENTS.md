@@ -1,13 +1,24 @@
-# AGENTS.md instructions for F-Synthesizer
+# AGENTS.md — F-Synthesizer Entry Point
 
-## Comment Policy (Mandatory)
+このプロジェクトでは本ファイルを正本とする。
 
-- すべてのコメント追加・更新は `docs/COMMENT_GUIDELINE.md` に従うこと。
-- 適用範囲は `src/` と `include/`。
-- この方針は毎回の明示指示がなくても常に適用する。
-- `TODO` / `FIXME` コメントは追加しない。改善案は md ドキュメントで管理する。
+## コンテキスト読み込み順
 
-## Conflict Resolution
+1. `agents/core/AGENT.md`
+2. `agents/core/PRINCIPLES.md`
+3. `agents/core/OUTPUT_RULES.md`
+4. `agents/core/DOC_OPERATIONS.md`
+5. `agents/core/INSTRUCTIONS.md`
+6. `agents/standards/` 配下（存在する場合）
+7. `agents/safety/RISK_POLICY.md`（存在する場合）
 
-- ユーザーが明示的に別ルールを指示した場合のみ、ユーザー指示を優先する。
-- 指示がない場合は本ファイルと `docs/COMMENT_GUIDELINE.md` を優先する。
+## 最低限ルール
+
+- `src/` と `include/` のコメント規約は `agents/standards/COMMENT_GUIDELINE.md` を適用する。
+- 指示が競合した場合は、ユーザーの明示指示を最優先とする。
+- ドキュメントは `agents/core/DOC_OPERATIONS.md` の運用を適用する。
+
+## 運用切替（Phase D）
+
+- 自動更新対象は `docs/Architecture.md` / `docs/STATUS.md` / `docs/ROADMAP.md` / `docs/DECISIONS.md` の 4 ファイルに固定。
+- 上記以外の md 変更は、提案テンプレで承認を取ってから反映する。

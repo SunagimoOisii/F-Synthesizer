@@ -64,7 +64,9 @@ MIDI ファイルを読み込み、サンプル単位で合成して WAV に書�
 - `docs/archive/comment-migration/COMMENT_MIGRATION_PHASES.md`: コメント移行フェーズ定義（凍結）
 - `docs/archive/comment-migration/COMMENT_MIGRATION_TASKS.md`: コメント移行タスクチェックリスト（凍結）
 - `docs/archive/comment-migration/COMMENT_MIGRATION_BASELINE.md`: コメント移行の対象一覧/レビュー基準（凍結）
-- `docs/NOTES.md`: 将来拡張・課題メモ
+- `docs/ROADMAP.md`: 直近優先事項と将来検討
+- `docs/DECISIONS.md`: 設計判断ログ
+- `docs/WEEKLY_MAINTENANCE.md`: 週次運用手順
 - `docs/STATUS.md`: 現在の進捗と次アクション
 
 ## ビルドと実行
