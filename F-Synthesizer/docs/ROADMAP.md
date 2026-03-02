@@ -4,9 +4,9 @@
 
 ## 直近の優先事項
 
-1. `MidiParser` running status 修正の回帰テスト追加
-2. `SynthEngine` 同一ノート重なり時の `NoteOff` 対象ずれ修正
-3. `Writer` 16bit 以外指定時のヘッダ/実データ不整合修正
+1. 
+2. 
+3. 
 
 ## 完了した項目
 

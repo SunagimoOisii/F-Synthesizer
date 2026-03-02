@@ -8,6 +8,18 @@ namespace
 constexpr double kPi = 3.14159265358979323846;
 constexpr double kMinQ = 0.1;
 constexpr double kMaxQ = 18.0;
+constexpr double kLog2 = 0.69314718055994530942;
+constexpr double kCutoffUpdateThresholdCents = 1.0;
+constexpr double kMinCutoffUpdateStepHz = 0.25;
+
+double CalcCutoffUpdateEpsilonHz(double cutoffHz)
+{
+    // 係数再計算は trig を伴うため高コスト。
+    // cutoff 更新を 1 cent 相当未満で間引き、ホットパスの再計算頻度を下げる。
+    const double safeCutoff = (cutoffHz > 0.0) ? cutoffHz : 10.0;
+    const double centsRatio = (kCutoffUpdateThresholdCents * kLog2) / 1200.0;
+    return (std::max)(kMinCutoffUpdateStepHz, safeCutoff * centsRatio);
+}
 
 double ClampCutoffHz(double cutoffHz, int sampleRate)
 {
@@ -51,7 +63,8 @@ void SetFilterMode(FilterInstance& filter, FilterMode mode)
 void SetFilterCutoffHz(FilterInstance& filter, double cutoffHz)
 {
     const double clamped = ClampCutoffHz(cutoffHz, filter.sampleRate);
-    if (std::fabs(filter.params.cutoffHz - clamped) < 1e-12)
+    const double epsilonHz = CalcCutoffUpdateEpsilonHz((std::max)(filter.params.cutoffHz, clamped));
+    if (std::fabs(filter.params.cutoffHz - clamped) < epsilonHz)
     {
         return;
     }
