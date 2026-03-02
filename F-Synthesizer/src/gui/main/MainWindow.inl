@@ -19,7 +19,7 @@ const ImGuiWindowFlags rootFlags =
     ImGuiWindowFlags_NoSavedSettings;
 ImGui::Begin("F-SynthesizerRoot", nullptr, rootFlags);
 std::string hoverHelp = (state.uiModeTab == 0)
-    ? "Sound: 音色を作り、選択チャンネルをすぐ試聴します。"
+    ? "Sound: Sound Slotを編集してすぐ試聴します。"
     : "Music: ピアノロールを確認し、試聴またはWAV書き出しを行います。";
 auto updateHoverHelp = [&](const char* text)
 {
@@ -111,7 +111,7 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             state.uiModeTab = 0;
             ImGui::EndTabItem();
         }
-        updateHoverHelp("Sound: 音作りとチャンネル試聴を行うモードです。");
+        updateHoverHelp("Sound: 音作りとSound Slot試聴を行うモードです。");
         if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
         {
             state.uiModeTab = 1;
@@ -271,7 +271,7 @@ ImGui::Separator();
 ImGui::BeginDisabled(state.running);
 if (state.uiModeTab == 0)
 {
-    if (ImGui::Button("Play Preview (PR ch + Selected Sound Slot)"))
+    if (ImGui::Button("Play Preview (PR Channel using Selected Slot)"))
     {
         StartGUIRun(state, true);
     }
@@ -294,12 +294,11 @@ else
     }
     updateHoverHelp("現在設定でWAVを書き出します。");
     ImGui::SameLine();
-    if (ImGui::Button("Play Preview (Display ch)"))
+    if (ImGui::Button("Play Preview (Display Channel)"))
     {
-        state.selectedSoundSlot = std::clamp(state.pianoRoll.displayChannel, 0, 15);
         StartGUIRun(state, true);
     }
-    updateHoverHelp("ピアノロール表示チャンネルを再生成して再生します。");
+    updateHoverHelp("ピアノロール表示チャンネルを現在の割当/ミックス設定で再生成して再生します。");
     ImGui::SameLine();
     ImGui::Checkbox("Loop Preview", &state.previewLoop);
     updateHoverHelp("Preview終了後に先頭へ戻ってループ再生します。");
@@ -855,7 +854,6 @@ else
         [&](const std::string& line) { AppendGUILog(state, line); },
         [&]()
         {
-            state.selectedSoundSlot = std::clamp(state.pianoRoll.displayChannel, 0, 15);
             StartGUIRun(state, true);
         },
         [&]()

@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-02-26 (GUI UX #6)
+Last Updated: 2026-03-03 (GUI UX #7)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -30,6 +30,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - GUI UX #3: DrumKit Type 連動パラメータ表示（Kick / Snare・Hat / None で表示切替）
   - GUI UX #5: WaveformConfig FilterMode デフォルトを Bypass に変更、フィルタ有効時の `(active)` インジケーター追加
   - GUI UX #6: モジュレーションルートを CollapsingHeader 化、ヘッダに "lfo1 -> pitch (+0.50)" 形式のサマリを表示
+  - GUI UX #7: `Channel(ch)` と `Sound Slot(s)` の表記を整理。Musicプレビュー時に `Selected Sound Slot` が自動変更されないよう挙動を修正
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -59,5 +60,4 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - コメント規約は `COMMENT_GUIDELINE.md`
 - GUIスモークテストは `scripts/gui_smoke.ps1`
 - 再開手順は `AGENTS.md` の Start Here / Useful Commands を参照
-- GUI UX 課題の原本は `archive/integration-setup/GUI_UX_ISSUES.md` を参照
 - 過去バージョン計画・移行記録は `docs/archive/` 配下を参照

@@ -15,4 +15,4 @@
 ## 将来の検討事項
 
 - 合成方式拡張の運用改善（`docs/synth-methods/` の構成統一）
-- GUI UX 改善項目の段階対応（`docs/archive/integration-setup/GUI_UX_ISSUES.md` 参照）
+- GUI UX 改善項目の段階対応（`docs/STATUS.md` の Additional Backlog を参照）

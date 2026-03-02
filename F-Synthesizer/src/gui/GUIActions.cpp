@@ -544,7 +544,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     ClearGUIError(state);
 
-    const int previewChannel = (previewSelected && state.uiModeTab == 0)
+    const int previewChannel = previewSelected
         ? std::clamp(state.pianoRoll.displayChannel, 0, 15)
         : std::clamp(state.selectedSoundSlot, 0, 15);
     if (previewSelected)
@@ -563,8 +563,8 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     {
         cfg.targetChannel = previewChannel;
         OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
-        AppendGUILog(state, "[GUI] Sound Preview route: PR ch" + std::to_string(previewChannel) +
-            " <= Sound Slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
+        AppendGUILog(state, "[GUI] Sound Preview route: PR Channel ch" + std::to_string(previewChannel) +
+            " <= Selected Slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
     }
     int overrideTicksPerQuarter = 0;
     cfg.overrideNoteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);

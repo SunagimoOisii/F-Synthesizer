@@ -76,6 +76,14 @@ bool DrawChannelEditor(GUIState& state)
     ImGui::TextUnformatted("Sound Slot");
     changed |= ImGui::InputInt("Selected Sound Slot (0-15)", &state.selectedSoundSlot);
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+    const int assignedSlot = std::clamp(state.channelAssignments[prChannel], 0, 15);
+    ImGui::TextDisabled("PR Channel ch%d -> Assigned Slot s%d", prChannel, assignedSlot);
+    ImGui::SameLine();
+    if (ImGui::Button("Edit Assigned Slot of PR ch"))
+    {
+        state.selectedSoundSlot = assignedSlot;
+    }
 
     auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
     {
@@ -92,16 +100,16 @@ bool DrawChannelEditor(GUIState& state)
 
     ImGui::Separator();
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];
-    ImGui::Text("Selected s%d", state.selectedSoundSlot);
+    ImGui::Text("Selected Sound Slot: s%d", state.selectedSoundSlot);
     ImGui::TextDisabled("Tone preview uses selected sound slot.");
 
     if (ImGui::CollapsingHeader("Envelope / Gain", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        changed |= ImGui::InputDouble("Ch Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("Ch Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("Ch Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("Ch Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
-        changed |= ImGui::InputDouble("Ch Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Attack", &chCfg.attackSec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Decay", &chCfg.decaySec, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Sustain", &chCfg.sustainLevel, 0.01, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
     }
 
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))

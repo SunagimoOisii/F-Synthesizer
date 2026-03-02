@@ -4,7 +4,7 @@
 
 各チャンネルの **Sound タブ** で調整できるパラメータの一覧と、それぞれが合成音声に与える影響を説明します。
 
-> **Sound Slot について:** Sound タブでは、チャンネルごとに 0〜15 の **Sound Slot** を持ちます。画面上部の "Selected Sound Slot (0-15)" で編集対象の Slot を切り替えてください。このドキュメントは 1 Slot 分のパラメータを説明しています。
+> **Sound Slot について:** Sound タブでは 0〜15 の **Sound Slot**（音色定義）を編集します。MIDI Channel（ch）がどの Slot（s）を使うかは Music タブの Assignment（`ch -> s`）で設定します。画面上部の "Selected Sound Slot (0-15)" で編集対象の Slot を切り替えてください。このドキュメントは 1 Slot 分のパラメータを説明しています。
 
 ---
 
