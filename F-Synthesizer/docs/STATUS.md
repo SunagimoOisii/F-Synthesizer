@@ -36,6 +36,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-03）
+  - `scripts/midi_regression.ps1` 通過（2026-03-03、running status 2件 + overlap same note 1件）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
 
 ## Additional Backlog (migrated from NOTES / GUI_UX_ISSUES)

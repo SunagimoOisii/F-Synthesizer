@@ -44,14 +44,15 @@ function New-MidiFileBytes {
 function Invoke-RunningStatusCase {
     param(
         [string]$CaseName,
-        [byte[]]$TrackData
+        [byte[]]$TrackData,
+        [int]$ExpectedNoteEvents = 1,
+        [int]$ExpectedNoteOnEvents = 1
     )
     $midiRel = "$CaseName.mid"
     $wavRel = "$CaseName.wav"
-    $configRel = "output/regression_midi/$CaseName.json"
     $midiPath = Join-Path $workDir "$CaseName.mid"
     $wavPath = Join-Path $workDir "$CaseName.wav"
-    $configPath = Join-Path $repoRoot $configRel
+    $configPath = Join-Path $workDir "$CaseName.json"
 
     $allBytes = New-MidiFileBytes -TrackData $TrackData
     Write-BytesFile -Path $midiPath -Bytes $allBytes
@@ -71,13 +72,16 @@ function Invoke-RunningStatusCase {
     Set-Content -Path $configPath -Value $configJson -Encoding UTF8
 
     Write-Host "[Case] $CaseName"
-    $output = & $exePath --cli --config $configRel 2>&1 | Out-String
+    $output = & $exePath --cli --config $configPath 2>&1 | Out-String
     $output | Out-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Case '$CaseName' failed with exit code $LASTEXITCODE"
     }
-    if ($output -notmatch "Event Counts: note=1,") {
-        throw "Case '$CaseName' expected note=1 after running status clear."
+    if ($output -notmatch ("Event Counts: note=" + $ExpectedNoteEvents + ",")) {
+        throw "Case '$CaseName' expected note=$ExpectedNoteEvents."
+    }
+    if ($output -notmatch ("noteOn=" + $ExpectedNoteOnEvents)) {
+        throw "Case '$CaseName' expected noteOn=$ExpectedNoteOnEvents."
     }
 }
 
@@ -91,5 +95,10 @@ Invoke-RunningStatusCase -CaseName "running_status_after_meta" -TrackData $track
 # delta0 NoteOn, delta0 SysEx, delta0 raw data bytes, delta0 EOT
 $trackSysEx = [byte[]](0x00,0x90,0x3C,0x64, 0x00,0xF0,0x01,0x7F, 0x00,0x3E,0x00, 0x00,0xFF,0x2F,0x00)
 Invoke-RunningStatusCase -CaseName "running_status_after_sysex" -TrackData $trackSysEx
+
+# delta0 NoteOn(60), delta24 NoteOn(60), delta24 NoteOff(60), delta24 NoteOff(60), delta0 EOT
+# 目的: 同一ch+note重なりの基礎ケースを固定し、NoteOff照合の回帰検出に使う。
+Write-Host "[Case] overlap_same_note"
+Invoke-RunningStatusCase -CaseName "overlap_same_note" -TrackData ([byte[]](0x00,0x90,0x3C,0x64, 0x18,0x90,0x3C,0x64, 0x18,0x80,0x3C,0x00, 0x18,0x80,0x3C,0x00, 0x00,0xFF,0x2F,0x00)) -ExpectedNoteEvents 4 -ExpectedNoteOnEvents 2
 
 Write-Host "MIDI running status regression completed."
