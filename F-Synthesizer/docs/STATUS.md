@@ -31,17 +31,12 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - GUI UX #5: WaveformConfig FilterMode デフォルトを Bypass に変更、フィルタ有効時の `(active)` インジケーター追加
   - GUI UX #6: モジュレーションルートを CollapsingHeader 化、ヘッダに "lfo1 -> pitch (+0.50)" 形式のサマリを表示
   - GUI UX #7: `Channel(ch)` と `Sound Slot(s)` の表記を整理。Musicプレビュー時に `Selected Sound Slot` が自動変更されないよう挙動を修正
+  - SynthEngine #2 基盤: `noteInstanceId` を `MIDIParser -> Sequencer -> VoicesSoA` へ通線（挙動切替前の下準備）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-03）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
-
-## Priority Issues / Next Actions
-
-1. `MidiParser`: running status 修正に対する回帰テスト追加
-2. `SynthEngine`: 同一ノート重なり時の NoteOff 対象ずれ修正
-3. `Writer`: 16bit 以外指定時のヘッダ/実データ不整合修正
 
 ## Additional Backlog (migrated from NOTES / GUI_UX_ISSUES)
 

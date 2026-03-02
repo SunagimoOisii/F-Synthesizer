@@ -110,6 +110,15 @@ flowchart TD
 - 影響範囲: キャンセル不要ケースの分岐コストを削減し、レンダループを単純化。
 - 関連ファイル: `src/app/RunExecution.cpp`, `include/AppCore.h`
 
+
+#### 2026-03-03: TODO (auto-generated)
+- カテゴリ: 実行フロー/キャンセル
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+
 ### MIDI時間変換
 
 #### 2026-02-25: 同tickイベント順序を Control -> NoteOff -> NoteOn に固定
@@ -121,3 +130,12 @@ flowchart TD
 - 関連ファイル: `src/midi/Sequencer.cpp`, `include/midi/Sequencer.h`
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
+
+#### 2026-03-03: TODO (auto-generated)
+- カテゴリ: MIDI時間変換
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+

@@ -133,6 +133,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
     ticks->reserve(pr.notes.size() * 2);
 
     int order = 0;
+    int noteInstanceId = 1;
     for (const auto& n : pr.notes)
     {
         const int startTick = (std::max)(0, n.startTick);
@@ -149,6 +150,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
         on.channel = channel;
         on.controller = 0;
         on.value = 0;
+        on.noteInstanceId = noteInstanceId;
         on.order = order++;
         on.isNoteOn = true;
         ticks->push_back(on);
@@ -161,9 +163,11 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
         off.channel = channel;
         off.controller = 0;
         off.value = 0;
+        off.noteInstanceId = noteInstanceId;
         off.order = order++;
         off.isNoteOn = false;
         ticks->push_back(off);
+        noteInstanceId++;
     }
 
     outTicksPerQuarter = pr.ticksPerQuarter;
@@ -236,6 +240,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     on.channel = std::clamp(channel, 0, 15);
     on.controller = 0;
     on.value = 0;
+    on.noteInstanceId = 1;
     on.order = 0;
     on.isNoteOn = true;
     ticks->push_back(on);
@@ -248,6 +253,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     off.channel = on.channel;
     off.controller = 0;
     off.value = 0;
+    off.noteInstanceId = on.noteInstanceId;
     off.order = 1;
     off.isNoteOn = false;
     ticks->push_back(off);

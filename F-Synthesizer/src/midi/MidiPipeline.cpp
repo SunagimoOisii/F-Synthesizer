@@ -64,6 +64,7 @@ std::vector<MIDIEvent> BuildWindowedEvents(
             e.sample = 0;
             e.type = MIDIEventType::ControlChange;
             e.channel = ch;
+            e.noteInstanceId = -1;
             e.controller = 7;
             e.value = cc7[ch];
             prefix.push_back(e);
@@ -74,6 +75,7 @@ std::vector<MIDIEvent> BuildWindowedEvents(
             e.sample = 0;
             e.type = MIDIEventType::ControlChange;
             e.channel = ch;
+            e.noteInstanceId = -1;
             e.controller = 11;
             e.value = cc11[ch];
             prefix.push_back(e);
@@ -84,6 +86,7 @@ std::vector<MIDIEvent> BuildWindowedEvents(
             e.sample = 0;
             e.type = MIDIEventType::PitchBend;
             e.channel = ch;
+            e.noteInstanceId = -1;
             e.value = pitch[ch];
             prefix.push_back(e);
         }

@@ -1,9 +1,47 @@
 #include "midi/MIDIParser.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <fstream>
 
 namespace {
+constexpr size_t kNoteSlots = 16 * 128;
+
+size_t ToNoteSlot(unsigned char ch, int note)
+{
+    const int clampedCh = std::clamp(static_cast<int>(ch), 0, 15);
+    const int clampedNote = std::clamp(note, 0, 127);
+    return static_cast<size_t>(clampedCh * 128 + clampedNote);
+}
+
+void PushNoteInstanceId(
+    std::array<std::vector<int>, kNoteSlots>& noteOnQueues,
+    unsigned char ch,
+    int note,
+    int noteInstanceId)
+{
+    noteOnQueues[ToNoteSlot(ch, note)].push_back(noteInstanceId);
+}
+
+int PopNoteInstanceId(
+    std::array<std::vector<int>, kNoteSlots>& noteOnQueues,
+    std::array<size_t, kNoteSlots>& noteOnHeads,
+    unsigned char ch,
+    int note)
+{
+    const size_t slot = ToNoteSlot(ch, note);
+    auto& q = noteOnQueues[slot];
+    size_t& head = noteOnHeads[slot];
+    if (head >= q.size())
+    {
+        return -1;
+    }
+    const int noteInstanceId = q[head];
+    head++;
+    return noteInstanceId;
+}
+
 uint32_t ReadBE32(std::ifstream& in)
 {
     unsigned char b[4]{};
@@ -85,6 +123,7 @@ void AppendNoteEvent(std::vector<MIDIEventTick>& outEvents,
     int note,
     int velocity,
     unsigned char channel,
+    int noteInstanceId,
     int& eventOrder,
     bool isNoteOn)
 {
@@ -97,6 +136,7 @@ void AppendNoteEvent(std::vector<MIDIEventTick>& outEvents,
     e.channel = channel;
     e.controller = 0;
     e.value = 0;
+    e.noteInstanceId = noteInstanceId;
     e.order = eventOrder++;
     outEvents.push_back(e);
 }
@@ -117,6 +157,7 @@ void AppendControlChangeEvent(std::vector<MIDIEventTick>& outEvents,
     e.channel = channel;
     e.controller = controller;
     e.value = value;
+    e.noteInstanceId = -1;
     e.order = eventOrder++;
     outEvents.push_back(e);
 }
@@ -136,6 +177,7 @@ void AppendPitchBendEvent(std::vector<MIDIEventTick>& outEvents,
     e.channel = channel;
     e.controller = 0;
     e.value = value;
+    e.noteInstanceId = -1;
     e.order = eventOrder++;
     outEvents.push_back(e);
 }
@@ -192,6 +234,9 @@ bool ParseChannelEvent(unsigned char type,
     size_t& idx,
     int targetChannel,
     uint32_t currentTick,
+    int& nextNoteInstanceId,
+    std::array<std::vector<int>, kNoteSlots>& noteOnQueues,
+    std::array<size_t, kNoteSlots>& noteOnHeads,
     std::vector<MIDIEventTick>& outEvents,
     int& eventOrder,
     MIDIParseStatus& stats)
@@ -205,11 +250,14 @@ bool ParseChannelEvent(unsigned char type,
         {
             if (type == 0x90 && vel > 0)
             {
-                AppendNoteEvent(outEvents, currentTick, note, vel, ch, eventOrder, true);
+                const int noteInstanceId = nextNoteInstanceId++;
+                PushNoteInstanceId(noteOnQueues, ch, note, noteInstanceId);
+                AppendNoteEvent(outEvents, currentTick, note, vel, ch, noteInstanceId, eventOrder, true);
             }
             else
             {
-                AppendNoteEvent(outEvents, currentTick, note, 0, ch, eventOrder, false);
+                const int noteInstanceId = PopNoteInstanceId(noteOnQueues, noteOnHeads, ch, note);
+                AppendNoteEvent(outEvents, currentTick, note, 0, ch, noteInstanceId, eventOrder, false);
             }
         }
         return true;
@@ -252,12 +300,15 @@ bool ParseChannelEvent(unsigned char type,
 
 void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
     std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
-    MIDIParseStatus& stats)
+    MIDIParseStatus& stats,
+    int& nextNoteInstanceId)
 {
     size_t idx = 0;
     uint32_t currentTick = 0;
     unsigned char runningStatus = 0;
     int eventOrder = 0;
+    std::array<std::vector<int>, kNoteSlots> noteOnQueues;
+    std::array<size_t, kNoteSlots> noteOnHeads{};
 
     while (idx < data.size())
     {
@@ -301,7 +352,8 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
 
         unsigned char type = status & 0xF0;
         unsigned char ch = status & 0x0F;
-        if (!ParseChannelEvent(type, ch, data, idx, targetChannel, currentTick, outEvents, eventOrder, stats))
+        if (!ParseChannelEvent(type, ch, data, idx, targetChannel, currentTick, nextNoteInstanceId,
+            noteOnQueues, noteOnHeads, outEvents, eventOrder, stats))
         {
             break;
         }
@@ -321,12 +373,13 @@ bool LoadMIDIBasic(const std::filesystem::path& path, int targetChannel,
     ticksPerQuarter = header.division;
 
     //トラック(MTrk)
+    int nextNoteInstanceId = 1;
     for (uint16_t t = 0; t < header.numTracks; t++)
     {
         std::vector<unsigned char> data;
         if (!ReadTrackChunk(in, data)) return false;
 
-        ParseTrack(data, targetChannel, outEvents, tempoEvents, outStats);
+        ParseTrack(data, targetChannel, outEvents, tempoEvents, outStats, nextNoteInstanceId);
     }
 
     return !outEvents.empty();

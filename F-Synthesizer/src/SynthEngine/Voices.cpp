@@ -75,6 +75,7 @@ void VoicesSoA::reserve(size_t n)
     velocity.reserve(n);
     channel.reserve(n);
     channelIndex.reserve(n);
+    noteInstanceId.reserve(n);
     released.reserve(n);
     pendingRemove.reserve(n);
     amp.reserve(n);
@@ -110,6 +111,7 @@ void VoicesSoA::clear()
     velocity.clear();
     channel.clear();
     channelIndex.clear();
+    noteInstanceId.clear();
     released.clear();
     pendingRemove.clear();
     amp.clear();
@@ -146,6 +148,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     velocity.push_back(e.velocity);
     channel.push_back(e.channel);
     channelIndex.push_back(ClampChannel(e.channel));
+    noteInstanceId.push_back(e.noteInstanceId);
     released.push_back(0);
     pendingRemove.push_back(0);
 
@@ -273,6 +276,7 @@ size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(velocity, keepScratch);
     CompactVectorByKeep(channel, keepScratch);
     CompactVectorByKeep(channelIndex, keepScratch);
+    CompactVectorByKeep(noteInstanceId, keepScratch);
     CompactVectorByKeep(released, keepScratch);
     CompactVectorByKeep(pendingRemove, keepScratch);
     CompactVectorByKeep(amp, keepScratch);

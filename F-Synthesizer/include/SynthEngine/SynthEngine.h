@@ -101,6 +101,7 @@ struct Voice
     int velocity;
     int channel;
     int channelIndex;
+    int noteInstanceId;
     bool released;
     bool pendingRemove;
 
