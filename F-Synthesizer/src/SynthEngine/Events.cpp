@@ -39,7 +39,7 @@ namespace
 
     void HandleNoteOff(const MIDIEvent& e, VoicesSoA& voices)
     {
-        voices.MarkNoteOff(e.channel, e.noteNumber);
+        voices.MarkNoteOff(e.channel, e.noteNumber, e.noteInstanceId);
     }
 }
 

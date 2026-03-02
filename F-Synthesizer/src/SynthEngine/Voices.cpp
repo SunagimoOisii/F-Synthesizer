@@ -225,10 +225,32 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     }
 }
 
-void VoicesSoA::MarkNoteOff(int ch, int note)
+void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceId)
 {
-    // 同一 note の重なりでは最も古い未 release Voice から閉じる方針。
-    // トレードオフ: MPE/voice-id 由来の厳密対応はしていない。
+    // 原則: NoteOn/NoteOff の対応IDで閉じる。
+    // 互換性: IDが無い/不一致の場合は旧ロジック(ch+note)へフォールバックする。
+    if (noteInstanceId >= 0)
+    {
+        for (size_t i = 0; i < size(); i++)
+        {
+            if (std::holds_alternative<DrumConfig>(source[i]))
+            {
+                continue;
+            }
+            if (released[i] == 0 && this->noteInstanceId[i] == noteInstanceId)
+            {
+                NoteOff(env[i]);
+                if (std::holds_alternative<WaveformConfig>(source[i]))
+                {
+                    NoteOffModulation(waveformModulation[i]);
+                }
+                released[i] = 1;
+                return;
+            }
+        }
+    }
+
+    // 旧互換経路: 既存データや異常入力でIDが取れない場合のみ利用。
     for (size_t i = 0; i < size(); i++)
     {
         if (std::holds_alternative<DrumConfig>(source[i]))
