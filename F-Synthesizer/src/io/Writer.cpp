@@ -57,6 +57,7 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
             << " errno=" << errno
             << std::endl;
         const int err = errno;
+        // errno が取れないケースでも、呼び出し側で判別できるよう固定の識別コードを補う。
         const unsigned long lastError = (unsigned long)((err != 0) ? err : 0xE001);
         SetLastError(lastError);
         FillError(
@@ -73,6 +74,7 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
     std::vector<short> wdata(sound.data.size());
     for (int i = 0; i < sound.length; i++)
     {
+        // WAV 16bit PCM の範囲外を書かないため、-1.0..1.0 に丸めてから整数化する。
         double amp = (sound.data[i] > 1.0) ? 1.0 : sound.data[i];
         amp = (amp < -1.0) ? -1.0 : amp;
         wdata[i] = (short)(amp * SHRT_MAX);
@@ -114,6 +116,7 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
             << " wsize=" << wsize
             << std::endl;
         const int err = errno;
+        // 書き込み失敗側の固定の識別コード。open失敗と区別して上位で表示を分ける。
         const unsigned long lastError = (unsigned long)((err != 0) ? err : 0xE002);
         SetLastError(lastError);
         FillError(
