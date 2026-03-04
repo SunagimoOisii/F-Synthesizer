@@ -140,6 +140,7 @@ bool BuildMidiPipeline(
     MidiBuildOutput& out,
     std::string& err)
 {
+    // 失敗時に前回の出力が残らないよう、先頭で out を初期化する。
     out = MidiBuildOutput{};
     const bool hasOverrideNotes = (overrideNoteTicks != nullptr && !overrideNoteTicks->empty());
     bool loadedBaseMidi = false;
@@ -155,6 +156,7 @@ bool BuildMidiPipeline(
     }
     if (!loadedBaseMidi)
     {
+        // 編集バッファのみで再生できるよう、MIDI本体未読込でもパイプラインを継続する。
         out.ticks.clear();
         out.tempoEvents.clear();
         out.ticksPerQuarter = (overrideTicksPerQuarter > 0) ? overrideTicksPerQuarter : 480;
@@ -165,6 +167,7 @@ bool BuildMidiPipeline(
     {
         if (loadedBaseMidi)
         {
+            // GUI編集時は Note だけ差し替え、CC/Tempo は原MIDIを保持して再現性を維持する。
             out.ticks = ReplaceNoteTicks(out.ticks, *overrideNoteTicks, targetChannel);
         }
         else

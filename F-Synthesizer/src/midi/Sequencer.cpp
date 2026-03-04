@@ -160,6 +160,7 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     for (const auto& t : sortedTicks)
     {
         AdvanceToTick(cursor, t.tick, sortedTempo, ticksPerQuarter, sampleRate);
+        // レンダラ側は int sample で受けるため、この層で丸めて型をそろえる。
         int sample = (int)(cursor.currentSample);
         if (t.type == MIDIEventType::ControlChange)
         {
@@ -179,6 +180,7 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     // sample 順で整列
     std::stable_sort(outEvents.begin(), outEvents.end(), [](const MIDIEvent& a, const MIDIEvent& b)
     {
+        // 同sample内の優先順（Control/NoteOff/NoteOn）を保持するため stable_sort を使う。
         return a.sample < b.sample;
     });
 }

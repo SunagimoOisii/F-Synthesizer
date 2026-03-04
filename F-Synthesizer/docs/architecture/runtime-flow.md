@@ -148,3 +148,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 影響範囲:
 - 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
 
+
+#### 2026-03-04: TODO (auto-generated)
+- カテゴリ: MIDI時間変換
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+

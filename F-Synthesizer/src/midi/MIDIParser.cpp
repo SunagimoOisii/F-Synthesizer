@@ -35,6 +35,8 @@ int PopNoteInstanceId(
     size_t& head = noteOnHeads[slot];
     if (head >= q.size())
     {
+        // NoteOff 先行/欠落などの異常系では対応IDが取れない。
+        // 後段の NoteOff 照合で ch+note 経路へ切り替えるため -1 を返す。
         return -1;
     }
     const int noteInstanceId = q[head];
@@ -329,6 +331,7 @@ void ParseTrack(const std::vector<unsigned char>& data, int targetChannel,
             if (runningStatus == 0)
             {
                 // running status 不成立時は壊れた列として安全側でこのトラックを打ち切る。
+                // 以降を読むと別イベントを誤って生成しやすいため、ここで読み取りを止める。
                 break;
             }
             status = runningStatus;
@@ -364,6 +367,8 @@ bool LoadMIDIBasic(const std::filesystem::path& path, int targetChannel,
     std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
     int& ticksPerQuarter, MIDIParseStatus& outStats)
 {
+    // 呼び出し側は false を「読込失敗」扱いするため、
+    // 空イベント列は成功扱いせず false を返す。
     std::ifstream in(path, std::ios::binary);
     if (!in) return false;
 
