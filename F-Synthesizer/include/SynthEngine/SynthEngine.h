@@ -162,5 +162,7 @@ void RenderMIDIEvents(
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs,
     const std::array<ChannelMixState, 16>& channelMixStates,
+    // shouldCancel が true を返した時点でレンダを中断する。
+    // canceled が null でない場合は、中断時のみ true を書き戻す。
     const std::function<bool()>& shouldCancel = {},
     bool* canceled = nullptr);

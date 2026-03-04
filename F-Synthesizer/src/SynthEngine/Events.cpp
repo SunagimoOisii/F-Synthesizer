@@ -15,6 +15,7 @@ namespace
         int v = e.value;
         if (v < 0) v = 0;
         if (v > 127) v = 127;
+        // 範囲外入力は 0..127 に丸めて 0..1 に正規化し、ミックスゲイン計算を安定させる。
         double norm = v / 127.0;
         if (e.controller == 7)
         {
@@ -33,6 +34,7 @@ namespace
         if (v < 0) v = 0;
         if (v > 16383) v = 16383;
         double bend = (v - 8192) / 8192.0;
+        // 現実装は ±2 半音を基準に、ピッチ比へ変換する。
         double bendSemis = bend * 2.0;
         state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
     }
