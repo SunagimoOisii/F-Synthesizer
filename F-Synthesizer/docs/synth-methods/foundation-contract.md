@@ -1,0 +1,106 @@
+# 合成基盤契約（方式横断）
+
+最終更新: 2026-03-05
+状態: Draft（運用開始）
+
+## 1. 目的
+
+- 合成方式の追加前に、方式横断で守る契約を固定する。
+- 実装順序に依存した設計崩れ（場当たり `if (type == ...)`）を防ぐ。
+- Config / GUI / Renderer / Test の更新漏れを減らす。
+
+関連:
+- `docs/SYNTH_METHODS.md`
+- `docs/synth-methods/method-boundaries.md`
+- `docs/synth-methods/integration-playbook.md`
+- `docs/synth-methods/foundation-audit-2026-03-05.md`
+
+## 2. 基盤契約（必須）
+
+### 2.1 Source Capability 契約
+
+- 各方式は capability を宣言する。
+- 最小項目:
+  - `hasPitch`
+  - `hasAmpEnv`
+  - `hasFilterIn`
+  - `hasModTargets`
+  - `supportsPolyphony`
+  - `isOneShot`
+- 用途:
+  - GUIの表示制御
+  - 無効パラメータのロード抑止
+  - Rendererでの適用分岐整理
+
+### 2.2 Parameter Schema 契約
+
+- 方式パラメータは schema で定義する（単一の正とする）。
+- 含める項目:
+  - `id` / `displayName`
+  - `type`（bool/int/float/enum）
+  - `range`（min/max）
+  - `default`
+  - `smoothable`（スムージング対象可否）
+  - `automatable`（将来拡張用）
+- 用途:
+  - Config load/save の一貫性確保
+  - GUI項目の自動整合
+  - バリデーションの共通化
+
+### 2.3 Render Contract 契約
+
+- 1サンプル処理順を固定する。
+- 標準順序:
+  1. voice state 更新
+  2. source render（方式固有）
+  3. shaper（filter / drive など共通処理）
+  4. modulation 適用
+  5. mix / output
+- 例外は方式ドキュメントに明記し、理由を残す。
+
+### 2.4 Modulation Routing 契約
+
+- destination 名と単位を固定する。
+- 最小 destination:
+  - `pitchMul`
+  - `amp`
+  - `filterCutoffHz`
+  - `pan`
+- 方式固有 destination（例: FM `index`）は接頭辞を付ける。
+  - 例: `fm.index`
+- 無効 destination は no-op として安全に無視する。
+
+### 2.5 Voice Lifecycle 契約
+
+- すべての方式で次の状態遷移を定義する。
+  - `noteOn`
+  - `active`
+  - `noteOff`
+  - `release`
+  - `ended`
+- 必須仕様:
+  - retrigger 挙動
+  - voice steal 時の優先順位
+  - one-shot の終了条件
+
+### 2.6 Test Harness 契約
+
+- 新方式追加時の最低確認を固定する。
+- 必須項目:
+  - 無音入力で無音出力
+  - クリップ率上限（閾値は方式別に記録）
+  - 同一入力の再現性（乱数利用時はseed固定）
+  - CPU負荷の基準（poly数を明記）
+- AB比較は耳確認に加え、peak/rms/clip のログを残す。
+
+## 3. 方式追加時チェック
+
+1. `method-boundaries.md` で責務境界を先に確定する。
+2. 本契約の 2.1〜2.6 を埋める（未定義を残さない）。
+3. `integration-playbook.md` の手順に沿って接続する。
+4. `SYNTH_METHODS.md` と方式別 `md` を更新する。
+
+## 4. 非目標
+
+- 方式ごとの詳細アルゴリズム設計を本書で定義しない。
+- UI文言やプリセット方針の全体設計を本書で代替しない。

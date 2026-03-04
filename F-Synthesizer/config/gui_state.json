@@ -7,7 +7,7 @@
   "bits": 16,
   "extraReleaseSec": 0.35,
   "uiScaleIndex": 1,
-  "uiModeTab": 0,
+  "uiModeTab": 1,
   "logPanelHeight": 240,
   "presetIndex": 4,
   "serialSave": false,

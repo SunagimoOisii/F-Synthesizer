@@ -44,7 +44,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - comments Step 7(synth): `src/synth` / `include/synth` を更新（ADSR時間遷移、FM/Noise前提、thread_local状態の境界を注釈）
   - comments Step 8(core): `src/core` / `include/core` を更新（SoundData境界契約、RenderGateway副作用、既定バッファ初期値を注釈）
   - gui-help Phase 2: `MainWindow.inl` のホバー導線を `updateHoverHelp(what, impact, caution)` に統一し、文言順を `何をする -> 影響 -> 注意` へ統一
-  - gui-help Phase 3: Music高リスク領域（Path / Reference / Output Target / Drum / Mixer主要列）へヘルプを追加
+  - gui-help Phase 3: Music高リスク領域（Path / Output Target / Drum / Mixer主要列）へヘルプを追加
   - gui-help Phase 4: Render Settings の意図説明と、Play Preview / Tone Preview / Export WAV / Stop の差分説明を補強
   - gui-help Phase 6: Sound Preset操作/エラー復旧/未保存確認ダイアログへヘルプを追加し、Music補助ボタンの未付与分（Assign/Reset/Focus）を補完
   - gui-help Phase 7: `DrawChannelEditor` へホバー更新導線を接続し、内部の主要編集UI（Envelope/Source/Wave/Filter/Smoothing/Mod/Noise/FM/Drum）へヘルプを追加
@@ -55,6 +55,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - acronym-case: 略称表記を段階的に大文字統一（`MidiPipeline -> MIDIPipeline`, `MIDI/WAV/CLI/JSON` 系の型名・関数名・ファイル名・参照を更新）
   - runtime cleanup: 未使用だった `Default Wave` 導線を廃止（`AppConfig.defaultWave` / `MIDIEvent.typeWave` / GUI `Default Wave` UI / Config保存キー出力）
   - gui cleanup: 未接続だった `Sound Reference (Snapshot/Link)` を廃止（MusicタブUI、`assetReferenceMode/showReferenceAdvanced` 状態、GUI state保存キー）
+  - gui cleanup: Musicタブ補助文言/ヘルプを現行UIへ再整理（Reference廃止後の説明差分を反映）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -70,10 +71,31 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - 実装監査メモ（2026-03-05）: GUIと実データ反映の対応関係を確認
     - `Drum Gain`: `Renderer.cpp` の Drum 経路で `drumGain` として乗算され、プレビュー/書き出し双方へ反映されることを確認
     - `Sound Reference (Snapshot/Link)`: 実行分岐未接続のため、2026-03-05 に機能自体を廃止
+  - 実装監査メモ（2026-03-05 / doc-sync追記）
+    - `MIDI Path` / `Output Path`: `BuildConfigFromGUI` -> `Run` へ反映（`RunExecution.cpp` でMIDI読込 / 出力先利用）
+    - `Output Target (All/Single, Target Ch)`: `state.targetChannel` -> `BuildMIDIPipeline(... targetChannel ...)` に反映
+    - `Render Settings`:
+      - `Sample Rate` / `Bits`: `SoundData(soundLength, bits, sampleRate)` と Previewデバイス初期化に反映
+      - `Initial Seconds` / `Extra Release`: `RunExecution.cpp` の `soundLength` 計算へ反映
+      - `Serial Save`: Export時のみ `BuildSerialWAVPath` へ反映（Previewは非対象）
+    - `Music Mixer / Assignment`:
+      - `assignCh*`: `BuildConfigFromGUI` で `channelConfigs` を再マップして反映
+      - `Mute/Solo/Level/Pan/Gain`: `channelMixStates` として `RenderWithEngine` に反映
+    - `Play Preview` / `Tone Preview`:
+      - `Play Preview`: PianoRoll編集ノートを `overrideNoteTicks` で反映
+      - `Tone Preview`: `selectedSoundSlot` + `selectedDrumNote` から単音ノート列を生成して反映
+    - 表示専用（音データ非反映）:
+      - `UI Scale`, `logPanelHeight`, `runLogTab` はUI表示状態のみを変更
 
 ## Backlog
 
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+- `foundation`: `SourceCapability` を追加し、`SourceKind` ごとの `hasPitch/hasFilterIn/supportsPolyphony/isOneShot` を定義する
+- `foundation`: `ParameterSchema` 最小版（`id/type/range/default`）を追加し、`LoadSource` の range 検証を段階移行する（初回対象: Waveform）
+- `foundation`: modulation destination の命名契約と互換方針を確定する（現行 `Pitch/Amp/FilterCutoff` との差分解消）
+- `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消する
+- `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
+- `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
 
 ## Recurring Checks
 

@@ -656,6 +656,7 @@ if (state.UIModeTab == 0)
 else
 {
     ImGui::TextUnformatted("Music");
+    ImGui::TextDisabled("Music は現在の Sound 設定（割当/ミックス）をそのまま使って Preview/Export します。");
     ImGui::Separator();
     gui::EnsureChannelConfigs(state);
     gui::EnsureChannelMixStates(state);
@@ -701,7 +702,7 @@ else
     updateHoverHelp(
         "WAVの書き出し先パスを指定します。",
         "WAVの出力先が変わります。",
-        "既存ファイル名と重複すると上書きされる場合があります。");
+        "Serial Save が無効だと既存ファイルを上書きする場合があります。");
     ImGui::SameLine();
     if (ImGui::Button("Browse Output..."))
     {
@@ -786,7 +787,8 @@ else
     state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
     updateHoverHelp(
         "出力ビット深度を設定します。",
-        "ダイナミックレンジと互換性が変わります。");
+        "ダイナミックレンジと互換性が変わります。",
+        "現行実装は16bitのみ有効です。");
     state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
     updateHoverHelp(
         "ノート終端後の追加リリース時間を設定します。",
@@ -833,7 +835,8 @@ else
     }
     updateHoverHelp(
         "Output Target を現在のPR chへ合わせます。",
-        "Single Channelの対象を更新します。");
+        "Single Channelの対象を更新します。",
+        "All Channels の場合は Single Channel 選択後に有効になります。");
     ImGui::SameLine();
     if (ImGui::Button("Reset All Assign = Same slot index"))
     {
