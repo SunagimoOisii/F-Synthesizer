@@ -638,7 +638,12 @@ if (state.uiModeTab == 0)
         ImGui::EndDisabled();
 
         ImGui::TableSetColumnIndex(1);
-        state.presetDirty |= DrawChannelEditor(state);
+        state.presetDirty |= DrawChannelEditor(
+            state,
+            [&](const char* what, const char* impact, const char* caution)
+            {
+                updateHoverHelp(what, impact, caution);
+            });
         if (!state.lastOutputPath.empty())
         {
             ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());

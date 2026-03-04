@@ -24,6 +24,9 @@ Owner: `gui-help`
 4. Phase 4: 実装B（残り主要導線）
 5. Phase 5: 検証とドキュメント同期
 6. Phase 6: Sound残項目とエラーダイアログ周辺の補完
+7. Phase 7: `DrawChannelEditor(state)` 内部UIへのヘルプ展開
+8. Phase 8: 手動ホバー受け入れ確認と残件クローズ
+9. Phase 9: `GUI_REQUIREMENTS.md` への昇格と `docs-archive/` への移管
 
 ## Phase 1 Deliverable (Coverage Table)
 
@@ -129,3 +132,52 @@ Priority:
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、Phase 6反映後）
 - 残項目:
   - `DrawChannelEditor(state)` 内部UIのホバー文言は別ファイル側の実装確認が必要
+
+## Phase 7 Plan (Next)
+
+- 対象:
+  - `src/gui/GUIChannelEditor.cpp` の主要操作UI（トグル、スライダ、選択UI）
+- 実装方針:
+  - Phase 2 Rule に従い、各項目描画直後に `updateHoverHelp(what, impact, caution)` を接続
+  - 誤操作時の音色変化が大きい項目を Priority `A` として先行
+- Done Criteria:
+  - `DrawChannelEditor(state)` 内で主要導線のホバー欠落がない
+  - `STATUS_DETAIL.md` の `gui-help` 残タスク記述と整合している
+
+## Phase 7 Progress (2026-03-05)
+
+- 追加実装:
+  - `DrawChannelEditor` にホバー更新コールバックを受け渡すインターフェースを追加
+  - `MainWindow.inl` から共通 `updateHoverHelp` を `DrawChannelEditor` へ接続
+  - `GUIChannelEditor.cpp` の主要UIへホバー文言を追加
+    - Sound Slot選択/PR割当編集ボタン
+    - Envelope/Amp/ADSR
+    - Source Type、Waveform/Filter/Smoothing/Modulation主要項目
+    - Noise/FM/DrumKit主要項目
+- 検証:
+  - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、Phase 7反映後）
+
+## Phase 8 Plan
+
+- 対象:
+  - Sound/Music 両モードの主要クリック導線全体
+- 実施内容:
+  - 実機GUIで手動ホバー確認（文言の誤記、長さ、意図不一致を確認）
+  - 必要な文言微修正と Backlog の更新
+- Done Criteria:
+  - 手動ホバー確認結果をドキュメントへ反映済み
+  - `gui-help` の残件がゼロ、または非対象理由つきで明示されている
+
+## Phase 9 Plan
+
+- 対象:
+  - `docs/GUI_REQUIREMENTS.md`
+  - `docs/gui-help-phase-plan.md`
+  - `docs/STATUS.md`, `docs/STATUS_DETAIL.md`
+- 実施内容:
+  - `gui-help` の運用要点・文言規則・実装手順を `GUI_REQUIREMENTS.md` へ昇格
+  - 本ファイルを `docs-archive/` 配下へ移管
+  - `STATUS` / `STATUS_DETAIL` を `gui-help` 完了状態へ更新
+- Done Criteria:
+  - 昇格内容と移管先がドキュメント上で追跡可能
+  - `gui-help` が Current/Backlog 上でクローズされている

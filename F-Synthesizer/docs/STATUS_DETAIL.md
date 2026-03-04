@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-05 (gui-help Phase 2-5 done)
+Last Updated: 2026-03-05 (gui-help Phase 2-7 done)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -47,12 +47,14 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui-help Phase 3: Music高リスク領域（Path / Reference / Output Target / Drum / Mixer主要列）へヘルプを追加
   - gui-help Phase 4: Render Settings の意図説明と、Play Preview / Tone Preview / Export WAV / Stop の差分説明を補強
   - gui-help Phase 6: Sound Preset操作/エラー復旧/未保存確認ダイアログへヘルプを追加し、Music補助ボタンの未付与分（Assign/Reset/Focus）を補完
+  - gui-help Phase 7: `DrawChannelEditor` へホバー更新導線を接続し、内部の主要編集UI（Envelope/Source/Wave/Filter/Smoothing/Mod/Noise/FM/Drum）へヘルプを追加
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-03）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、gui-help Phase 2-5 反映後）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、gui-help Phase 6 反映後）
+  - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、gui-help Phase 7 反映後）
   - `scripts/midi_regression.ps1` 通過（2026-03-03、running status 2件 + overlap same note 1件）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
   - 手動ホバー確認は GUI 対話操作が必要なため、この実行環境では未実施（要ローカル実機確認）
@@ -62,7 +64,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - `feat-infra`: `scripts/midi_regression.ps1` の実行ディレクトリ依存を解消し、`check.ps1` 統合オプションを追加する
 - `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
 - `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
-- `gui-help`: `DrawChannelEditor(state)` 内部UIのホバーUIヘルプ追加と最終手動ホバー確認（残タスク）
+- `gui-help`: 最終手動ホバー確認（Sound/Music）と `GUI_REQUIREMENTS.md` 昇格 / `docs-archive` 移管（残タスク）
 
 ## Recurring Checks
 
