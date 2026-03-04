@@ -81,6 +81,15 @@
 - ユーザーが次の操作を選べる修正導線（例: パス再選択、設定の見直し）を提供する
 - 画面内エラーは `Problem`（原因）+ `Suggested Fix`（次アクション）+ `Recover:*`（実行ボタン）で統一する
 
+## ホバー補助文言契約（gui-help）
+
+- ホバー補助文言の更新導線は `updateHoverHelp(what, impact, caution)` に統一する
+- UI項目追加時は「項目描画 -> 直後に `updateHoverHelp(...)`」を原則とする
+- `Help` 表示は `影響` を必須とし、高リスク操作のみ `注意` を追加する
+- `what` はラベルだけで意図が読めない場合の補助情報として扱う
+- 主要導線（編集 -> 試聴 -> 書き出し）でホバー文言欠落を作らない
+- 手動受け入れは `docs/gui-help-hover-acceptance-checklist.md` を利用する
+
 ## 永続化
 
 - GUI状態は `config/gui_state.json` に保存/復元する

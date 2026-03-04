@@ -2,6 +2,7 @@
 
 Last Updated: 2026-03-05
 Owner: `gui-help`
+Archive Status: moved from `docs/` to `docs-archive/gui-help/` in Phase 9
 
 ## Goal
 
@@ -182,7 +183,7 @@ Priority:
 
 - 対象:
   - `docs/GUI_REQUIREMENTS.md`
-  - `docs/gui-help-phase-plan.md`
+  - `docs-archive/gui-help/gui-help-phase-plan.md`
   - `docs/STATUS.md`, `docs/STATUS_DETAIL.md`
 - 実施内容:
   - `gui-help` の運用要点・文言規則・実装手順を `GUI_REQUIREMENTS.md` へ昇格
