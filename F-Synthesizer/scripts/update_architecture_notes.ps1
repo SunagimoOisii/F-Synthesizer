@@ -80,12 +80,12 @@ function Update-SpecialNotesTemplate {
         $insert = @(
             "",
             $marker,
-            "- カテゴリ: $Category",
-            "- 背景:",
-            "- 判断:",
-            "- 代替案:",
-            "- 影響範囲:",
-            "- 関連ファイル: $related",
+            "- Category: $Category",
+            "- Background:",
+            "- Decision:",
+            "- Alternatives:",
+            "- Impact:",
+            "- Related Files: $related",
             ""
         )
 
@@ -104,12 +104,12 @@ function Update-SpecialNotesTemplate {
             "### $Category",
             "",
             $marker,
-            "- カテゴリ: $Category",
-            "- 背景:",
-            "- 判断:",
-            "- 代替案:",
-            "- 影響範囲:",
-            "- 関連ファイル: $related",
+            "- Category: $Category",
+            "- Background:",
+            "- Decision:",
+            "- Alternatives:",
+            "- Impact:",
+            "- Related Files: $related",
             ""
         )
 
@@ -135,32 +135,32 @@ try {
         @{
             Pattern = '^(src/gui|include/gui)/'
             Doc = "docs/architecture/gui.md"
-            Category = "GUI操作・状態管理"
+            Category = "GUI Operations and State"
         },
         @{
             Pattern = '^(src/app|include/app|src/core|include/core|src/midi|include/midi|src/SoundGenerate\.cpp|include/AppCore\.h)'
             Doc = "docs/architecture/runtime-flow.md"
-            Category = "実行フロー/キャンセル"
+            Category = "Runtime Flow and Cancellation"
         },
         @{
             Pattern = '^(src/midi|include/midi)/'
             Doc = "docs/architecture/runtime-flow.md"
-            Category = "MIDI時間変換"
+            Category = "MIDI Time Conversion"
         },
         @{
             Pattern = '^(src/config|include/config|src/io|include/io)/'
             Doc = "docs/architecture/config-and-io.md"
-            Category = "Config互換性"
+            Category = "Config Compatibility"
         },
         @{
             Pattern = '^(src/SynthEngine|include/SynthEngine|src/synth|include/synth)/'
             Doc = "docs/architecture/module-map.md"
-            Category = "音響アルゴリズム上の制約"
+            Category = "Audio Algorithm Constraints"
         },
         @{
             Pattern = '^(src|include)/'
             Doc = "docs/architecture/module-map.md"
-            Category = "依存方向・責務境界"
+            Category = "Dependency Direction and Boundaries"
         }
     )
 

@@ -48,8 +48,6 @@ function Invoke-RunningStatusCase {
         [int]$ExpectedNoteEvents = 1,
         [int]$ExpectedNoteOnEvents = 1
     )
-    $midiRel = "$CaseName.mid"
-    $wavRel = "$CaseName.wav"
     $midiPath = Join-Path $workDir "$CaseName.mid"
     $wavPath = Join-Path $workDir "$CaseName.wav"
     $configPath = Join-Path $workDir "$CaseName.json"
@@ -57,18 +55,18 @@ function Invoke-RunningStatusCase {
     $allBytes = New-MidiFileBytes -TrackData $TrackData
     Write-BytesFile -Path $midiPath -Bytes $allBytes
 
-    $configJson = @"
-{
-  "midiPath": "$midiRel",
-  "wavPath": "$wavRel",
-  "targetChannel": -1,
-  "defaultWave": "sine",
-  "initialSeconds": 2,
-  "bits": 16,
-  "sampleRate": 44100,
-  "extraReleaseSec": 0.05
-}
-"@
+    # Avoid CWD dependency by writing absolute midi/wav paths.
+    $configObj = [ordered]@{
+        midiPath = $midiPath
+        wavPath = $wavPath
+        targetChannel = -1
+        defaultWave = "sine"
+        initialSeconds = 2
+        bits = 16
+        sampleRate = 44100
+        extraReleaseSec = 0.05
+    }
+    $configJson = $configObj | ConvertTo-Json -Depth 4
     Set-Content -Path $configPath -Value $configJson -Encoding UTF8
 
     Write-Host "[Case] $CaseName"
@@ -78,10 +76,10 @@ function Invoke-RunningStatusCase {
         throw "Case '$CaseName' failed with exit code $LASTEXITCODE"
     }
     if ($output -notmatch ("Event Counts: note=" + $ExpectedNoteEvents + ",")) {
-        throw "Case '$CaseName' expected note=$ExpectedNoteEvents."
+        throw ("Case '{0}' expected note={1}." -f $CaseName, $ExpectedNoteEvents)
     }
     if ($output -notmatch ("noteOn=" + $ExpectedNoteOnEvents)) {
-        throw "Case '$CaseName' expected noteOn=$ExpectedNoteOnEvents."
+        throw ("Case '{0}' expected noteOn={1}." -f $CaseName, $ExpectedNoteOnEvents)
     }
 }
 
@@ -97,7 +95,7 @@ $trackSysEx = [byte[]](0x00,0x90,0x3C,0x64, 0x00,0xF0,0x01,0x7F, 0x00,0x3E,0x00,
 Invoke-RunningStatusCase -CaseName "running_status_after_sysex" -TrackData $trackSysEx
 
 # delta0 NoteOn(60), delta24 NoteOn(60), delta24 NoteOff(60), delta24 NoteOff(60), delta0 EOT
-# 目的: 同一ch+note重なりの基礎ケースを固定し、NoteOff照合の回帰検出に使う。
+# Purpose: lock overlap-same-note baseline for NoteOff matching regression.
 Write-Host "[Case] overlap_same_note"
 Invoke-RunningStatusCase -CaseName "overlap_same_note" -TrackData ([byte[]](0x00,0x90,0x3C,0x64, 0x18,0x90,0x3C,0x64, 0x18,0x80,0x3C,0x00, 0x18,0x80,0x3C,0x00, 0x00,0xFF,0x2F,0x00)) -ExpectedNoteEvents 4 -ExpectedNoteOnEvents 2
 

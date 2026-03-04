@@ -3,6 +3,7 @@ param(
     [string]$Platform = "x64",
     [switch]$SkipBuild,
     [switch]$SkipRun,
+    [switch]$RunMidiRegression,
     [switch]$AllowDocMismatch,
     [ValidateSet("off", "warn", "error")]
     [string]$DocRules = "warn"
@@ -260,6 +261,18 @@ try {
     }
     else {
         Write-Host "Run step skipped by option."
+    }
+
+    if ($RunMidiRegression) {
+        $midiRegressionScript = Join-Path $PSScriptRoot "midi_regression.ps1"
+        if (-not (Test-Path $midiRegressionScript)) {
+            throw "MIDI regression script not found: $midiRegressionScript"
+        }
+        Write-Host "Running MIDI regression..."
+        & $midiRegressionScript -Configuration $Configuration -Platform $Platform
+    }
+    else {
+        Write-Host "MIDI regression skipped. Use -RunMidiRegression to enable."
     }
 
     if ($docCheckFailed) {
