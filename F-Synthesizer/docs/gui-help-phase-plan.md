@@ -77,8 +77,8 @@ Priority:
 - UI項目追加時は必ず次の順序で実装する
   1. UI項目を描画する
   2. 直後に `updateHoverHelp(what, impact, caution)` を呼ぶ
-- `caution` は必要時のみ指定し、省略時は「何をする / 影響」の2要素で統一する
-- 文言順序は常に `何をする -> 影響 -> 注意` とする
+- `caution` は必要時のみ指定し、省略時は「影響」のみ表示する
+- Help表示は原則 `影響 -> 注意` を使い、`what` は意図がラベルだけで読めない場合の補助情報として扱う
 
 ## Phase 3 Progress (2026-03-05)
 
@@ -167,6 +167,16 @@ Priority:
 - Done Criteria:
   - 手動ホバー確認結果をドキュメントへ反映済み
   - `gui-help` の残件がゼロ、または非対象理由つきで明示されている
+
+## Phase 8 Progress (2026-03-05)
+
+- 実施済み:
+  - 手動確認用チェックリストを追加: `docs/gui-help-hover-acceptance-checklist.md`
+  - Sound/Music/Error/Unsaved のホバー確認対象を網羅して項目化
+- この環境での制約:
+  - 実機GUIの対話ホバー操作は未実施（実行環境制約）
+- 次アクション:
+  - ローカル実機でチェックリストを消化し、結果を本ファイルへ反映
 
 ## Phase 9 Plan
 

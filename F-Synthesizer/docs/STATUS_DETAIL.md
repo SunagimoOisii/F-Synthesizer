@@ -48,6 +48,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui-help Phase 4: Render Settings の意図説明と、Play Preview / Tone Preview / Export WAV / Stop の差分説明を補強
   - gui-help Phase 6: Sound Preset操作/エラー復旧/未保存確認ダイアログへヘルプを追加し、Music補助ボタンの未付与分（Assign/Reset/Focus）を補完
   - gui-help Phase 7: `DrawChannelEditor` へホバー更新導線を接続し、内部の主要編集UI（Envelope/Source/Wave/Filter/Smoothing/Mod/Noise/FM/Drum）へヘルプを追加
+  - gui-help Phase 8: 手動ホバー受け入れ用チェックリスト `docs/gui-help-hover-acceptance-checklist.md` を作成（実機確認項目を網羅）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -64,7 +65,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - `feat-infra`: `scripts/midi_regression.ps1` の実行ディレクトリ依存を解消し、`check.ps1` 統合オプションを追加する
 - `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
 - `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
-- `gui-help`: 最終手動ホバー確認（Sound/Music）と `GUI_REQUIREMENTS.md` 昇格 / `docs-archive` 移管（残タスク）
+- `gui-help`: `docs/gui-help-hover-acceptance-checklist.md` に基づく最終手動ホバー確認実施と、結果反映後の `GUI_REQUIREMENTS.md` 昇格 / `docs-archive` 移管
 
 ## Recurring Checks
 

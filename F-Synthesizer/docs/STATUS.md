@@ -16,7 +16,7 @@ Branch: `main`
 
 1. `feat-infra`: `scripts/midi_regression.ps1` の実行ディレクトリ依存を解消し、`check.ps1` 統合オプションを追加する
 2. `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
-3. `gui-help`: 手動ホバー確認を実施し、`GUI_REQUIREMENTS.md` 昇格/`docs-archive` 移管を完了する
+3. `gui-help`: `docs/gui-help-hover-acceptance-checklist.md` に沿って手動ホバー確認を実施し、`GUI_REQUIREMENTS.md` 昇格/`docs-archive` 移管を完了する
 
 ## Blockers
 
