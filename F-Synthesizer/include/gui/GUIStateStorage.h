@@ -60,7 +60,9 @@ struct PianoRollProjectStorageData
     std::vector<PianoRollProjectStorageNote> notes{};
 };
 
+// path が無い場合は初回起動として true を返し、data は呼び出し前値を維持する。
 bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageData& data, std::string& err);
 bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateStorageData& data, std::string& err);
+// path が無い場合は true を返し、PianoRollプロジェクトは未保存として継続する。
 bool LoadPianoRollProjectStorageFile(const std::filesystem::path& path, PianoRollProjectStorageData& data, std::string& err);
 bool SavePianoRollProjectStorageFile(const std::filesystem::path& path, const PianoRollProjectStorageData& data, std::string& err);

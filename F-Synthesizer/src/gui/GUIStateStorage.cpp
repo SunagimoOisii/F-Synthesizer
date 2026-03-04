@@ -496,6 +496,7 @@ bool LoadPianoRollProjectStorageFile(const std::filesystem::path& path, PianoRol
         auto it = noteMap.find(i);
         if (it == noteMap.end())
         {
+            // 欠番ノートは最小長ノートで補完し、配列インデックス整合を優先する。
             PianoRollProjectStorageNote n{};
             n.endTick = n.startTick + 1;
             data.notes.push_back(n);

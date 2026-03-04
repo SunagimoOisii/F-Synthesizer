@@ -741,6 +741,7 @@ bool TryFinalizeCompletedRun(GUIState& state)
         !state.runFuture.valid() ||
         state.runFuture.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
     {
+        // 非同期Runが未完了の間は状態を書き換えず、呼び出し側の定期確認を継続する。
         return false;
     }
 

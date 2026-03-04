@@ -182,6 +182,7 @@ bool LoadGUIStateFile(GUIState& state, std::string& err)
     std::string projectErr;
     if (!LoadPianoRollProjectStorageFile(PianoRollProjectPath(), projectData, projectErr))
     {
+        // GUI本体とPianoRollプロジェクトの片側だけ復元された状態を避けるため失敗で返す。
         err = projectErr;
         return false;
     }
