@@ -128,6 +128,15 @@ flowchart TD
 - 影響範囲:
 - 関連ファイル: src/core/AudioBuffer.cpp
 
+
+#### 2026-03-05: TODO (auto-generated)
+- カテゴリ: 実行フロー/キャンセル
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/core/AudioBuffer.h, include/core/RenderGateway.h, src/core/AudioBuffer.cpp
+
 ### MIDI時間変換
 
 #### 2026-02-25: 同tickイベント順序を Control -> NoteOff -> NoteOn に固定
