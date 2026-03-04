@@ -1,6 +1,6 @@
 # PARAMETER_SMOOTHING_TASKS
 
-このドキュメントは `docs/foundation-migration/PARAMETER_SMOOTHING_PHASES.md` の実装チェックリストです。
+このドキュメントは `docs-archive/foundation-migration/PARAMETER_SMOOTHING_PHASES.md` の実装チェックリストです。
 
 ## 運用ルール
 
@@ -65,3 +65,4 @@
 2. `Phase C`: Renderer/Voices接続（音が変わる差分）
 3. `Phase D`: Config/GUI接続
 4. `Phase E/F`: 横展開 + AB結果 + ドキュメント更新
+
