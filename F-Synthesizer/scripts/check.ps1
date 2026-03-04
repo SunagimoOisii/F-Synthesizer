@@ -3,7 +3,7 @@ param(
     [string]$Platform = "x64",
     [switch]$SkipBuild,
     [switch]$SkipRun,
-    [switch]$RunMidiRegression,
+    [switch]$RunMIDIRegression,
     [switch]$AllowDocMismatch,
     [ValidateSet("off", "warn", "error")]
     [string]$DocRules = "warn"
@@ -98,7 +98,7 @@ function Get-AutoArchitectureSection {
         "src/app/RunStats.cpp",
         "src/midi/MIDIParser.cpp",
         "src/midi/Sequencer.cpp",
-        "src/midi/MidiPipeline.cpp",
+        "src/midi/MIDIPipeline.cpp",
         "src/core/RenderGateway.cpp",
         "src/SynthEngine/Engine.cpp",
         "src/SynthEngine/Events.cpp",
@@ -263,7 +263,7 @@ try {
         Write-Host "Run step skipped by option."
     }
 
-    if ($RunMidiRegression) {
+    if ($RunMIDIRegression) {
         $midiRegressionScript = Join-Path $PSScriptRoot "midi_regression.ps1"
         if (-not (Test-Path $midiRegressionScript)) {
             throw "MIDI regression script not found: $midiRegressionScript"
@@ -272,7 +272,7 @@ try {
         & $midiRegressionScript -Configuration $Configuration -Platform $Platform
     }
     else {
-        Write-Host "MIDI regression skipped. Use -RunMidiRegression to enable."
+        Write-Host "MIDI regression skipped. Use -RunMIDIRegression to enable."
     }
 
     if ($docCheckFailed) {
@@ -284,3 +284,4 @@ try {
 finally {
     Pop-Location
 }
+

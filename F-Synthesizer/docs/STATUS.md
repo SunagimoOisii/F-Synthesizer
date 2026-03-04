@@ -11,7 +11,7 @@ Branch: `main`
 - 現在の優先は `gui-help` / `feat-infra` / `gui-cleanup`
 - コメント追加フェーズ（Step1-8）は完了
 - `gui-help` Phase 2-9 を実施（共通導線化 + Music/Sound主要導線拡張 + 要件昇格 + 計画移管）
-- `feat-infra` を実施（`midi_regression.ps1` のCWD依存解消 + `check.ps1 -RunMidiRegression` 統合）
+- `feat-infra` を実施（`midi_regression.ps1` のCWD依存解消 + `check.ps1 -RunMIDIRegression` 統合）
 
 ## Next 3
 

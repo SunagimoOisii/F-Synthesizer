@@ -578,12 +578,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
     if (!previewSelected && state.serialSave)
     {
-        cfg.wavPath = BuildSerialWavPath(cfg.wavPath);
+        cfg.wavPath = BuildSerialWAVPath(cfg.wavPath);
     }
     if (previewSelected)
     {
         state.restorePreviewOnRunComplete = true;
-        options.writeWav = false;
+        options.writeWAV = false;
         const double rangeDurationSec = PreviewRangeDurationSec(state);
         if (state.pianoRoll.previewRangeEnabled && rangeDurationSec > 0.0)
         {
@@ -688,7 +688,7 @@ void StartGUISoundTonePreview(GUIState& state)
     cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, previewNote, 110, cfg.overrideTicksPerQuarter);
 
     RenderOptions options = DefaultPreviewRenderOptions();
-    options.writeWav = false;
+    options.writeWAV = false;
     options.startSec = 0.0;
     options.durationSec = 1.5;
 

@@ -13,7 +13,7 @@ int SaveRunOutput(
     const SoundData& sound,
     IRunObserver* observer)
 {
-    if (!options.writeWav)
+    if (!options.writeWAV)
     {
         // Preview経路では保存I/Oを行わず、呼び出し側へ成功を返す。
         LogLine(observer, "Preview render completed (memory only, no WAV write).");
@@ -30,8 +30,8 @@ int SaveRunOutput(
         }
     }
 
-    WavWriteError err{};
-    if (!SaveWavFilePath(sound, config.wavPath, &err))
+    WAVWriteError err{};
+    if (!SaveWAVFilePath(sound, config.wavPath, &err))
     {
         // 保存失敗は path + cause + hint 形式へそろえて上位ログへ返す。
         std::ostringstream cause;

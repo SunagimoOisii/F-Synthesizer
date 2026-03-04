@@ -17,7 +17,7 @@ struct Chunk
 namespace
 {
 void FillError(
-    WavWriteError* outError,
+    WAVWriteError* outError,
     const char* code,
     const std::filesystem::path& path,
     int err,
@@ -38,20 +38,20 @@ void FillError(
 }
 } // namespace
 
-bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath)
+bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePath)
 {
-    return SaveWavFilePath(sound, filePath, nullptr);
+    return SaveWAVFilePath(sound, filePath, nullptr);
 }
 
-bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePath, WavWriteError* outError)
+bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePath, WAVWriteError* outError)
 {
-    std::cout << "[SaveWavFilePath] begin: " << PathToUtf8(filePath) << std::endl;
+    std::cout << "[SaveWAVFilePath] begin: " << PathToUtf8(filePath) << std::endl;
     SetLastError(0);
     errno = 0;
     std::ofstream fout(filePath, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!fout.is_open())
     {
-        std::cout << "[SaveWavFilePath] open failed"
+        std::cout << "[SaveWAVFilePath] open failed"
             << " fail=" << fout.fail()
             << " bad=" << fout.bad()
             << " errno=" << errno
@@ -109,7 +109,7 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
     fout.flush();
     if (!fout.good())
     {
-        std::cout << "[SaveWavFilePath] write failed"
+        std::cout << "[SaveWAVFilePath] write failed"
             << " fail=" << fout.fail()
             << " bad=" << fout.bad()
             << " errno=" << errno
@@ -132,8 +132,8 @@ bool SaveWavFilePath(const SoundData& sound, const std::filesystem::path& filePa
     fout.close();
     if (outError != nullptr)
     {
-        *outError = WavWriteError{};
+        *outError = WAVWriteError{};
     }
-    std::cout << "[SaveWavFilePath] success" << std::endl;
+    std::cout << "[SaveWAVFilePath] success" << std::endl;
     return true;
 }

@@ -16,7 +16,7 @@ int RunMain(
     const bool previewMode = (options.mode == RunMode::Preview);
 
     LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
-    if (options.writeWav)
+    if (options.writeWAV)
     {
         std::string dirErr;
         if (!EnsureDirectoryForFile(config.wavPath, dirErr))
@@ -32,9 +32,9 @@ int RunMain(
     LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));
 
     // app層の責務として、MIDI読込〜sampleイベント化まではここで完結させる。
-    MidiBuildOutput midiOut{};
+    MIDIBuildOutput midiOut{};
     std::string midiErr;
-    if (!BuildMidiPipeline(
+    if (!BuildMIDIPipeline(
         config.midiPath,
         config.targetChannel,
         config.sampleRate,
@@ -57,7 +57,7 @@ int RunMain(
         return 1;
     }
 
-    LogMidiTickSummary(observer, midiOut.ticks, midiOut.tempoEvents, midiOut.ticksPerQuarter, midiOut.stats);
+    LogMIDITickSummary(observer, midiOut.ticks, midiOut.tempoEvents, midiOut.ticksPerQuarter, midiOut.stats);
 
     std::vector<MIDIEvent> events = std::move(midiOut.events);
     LogSampleEventSummary(observer, events);
@@ -142,3 +142,4 @@ int RunMain(
     return SaveRunOutput(config, options, sound, observer);
 }
 } // namespace app::run
+

@@ -20,7 +20,7 @@ void LogLine(IRunObserver* observer, const std::string& line)
     std::cout << line << std::endl;
 }
 
-void LogMidiTickSummary(
+void LogMIDITickSummary(
     IRunObserver* observer,
     const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,

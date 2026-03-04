@@ -27,7 +27,7 @@ RenderOptions DefaultPreviewRenderOptions()
     opt.mode = RunMode::Preview;
     opt.startSec = 0.0;
     opt.durationSec = 8.0;
-    opt.writeWav = false;
+    opt.writeWAV = false;
     opt.allowCancel = true;
     return opt;
 }

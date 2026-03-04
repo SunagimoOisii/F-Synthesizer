@@ -24,7 +24,7 @@ struct RenderOptions
     RunMode mode = RunMode::Export;
     double startSec = 0.0;
     double durationSec = -1.0; // < 0 means full length
-    bool writeWav = true;
+    bool writeWAV = true;
     bool allowCancel = true;
 };
 

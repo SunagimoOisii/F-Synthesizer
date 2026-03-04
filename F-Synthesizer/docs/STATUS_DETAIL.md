@@ -50,7 +50,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui-help Phase 7: `DrawChannelEditor` へホバー更新導線を接続し、内部の主要編集UI（Envelope/Source/Wave/Filter/Smoothing/Mod/Noise/FM/Drum）へヘルプを追加
   - gui-help Phase 8: 手動ホバー受け入れ用チェックリスト `docs/gui-help-hover-acceptance-checklist.md` を作成（実機確認項目を網羅）
   - gui-help Phase 9: ホバー文言契約を `docs/GUI_REQUIREMENTS.md` へ昇格し、計画台帳を `docs-archive/gui-help/gui-help-phase-plan.md` へ移管
-  - feat-infra: `scripts/midi_regression.ps1` を絶対パスconfig化して実行ディレクトリ依存を解消し、`scripts/check.ps1 -RunMidiRegression` を追加
+  - feat-infra: `scripts/midi_regression.ps1` を絶対パスconfig化して実行ディレクトリ依存を解消し、`scripts/check.ps1 -RunMIDIRegression` を追加
   - infra-fix: `scripts/update_architecture_notes.ps1` の文字コード依存で発生するPowerShell 5.1構文崩れを回避（非ASCII文字列をASCII化）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
@@ -60,7 +60,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、gui-help Phase 6 反映後）
   - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、gui-help Phase 7 反映後）
   - `scripts/midi_regression.ps1` 通過（2026-03-05、docs/ 配下から実行してCWD非依存を確認）
-  - `scripts/check.ps1 -SkipBuild -SkipRun -RunMidiRegression` 通過（2026-03-05）
+  - `scripts/check.ps1 -SkipBuild -SkipRun -RunMIDIRegression` 通過（2026-03-05）
   - `scripts/midi_regression.ps1` 通過（2026-03-03、running status 2件 + overlap same note 1件）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
   - 手動ホバー確認は GUI 対話操作が必要なため、この実行環境では未実施（要ローカル実機確認）

@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "AppCore.h"
-#include "midi/MidiPipeline.h"
+#include "midi/MIDIPipeline.h"
 
 namespace app::run
 {
@@ -19,7 +19,7 @@ std::shared_ptr<const std::array<ChannelMixState, 16>> BuildDefaultChannelMixSta
 
 void LogLine(IRunObserver* observer, const std::string& line);
 
-void LogMidiTickSummary(
+void LogMIDITickSummary(
     IRunObserver* observer,
     const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
@@ -44,3 +44,4 @@ int RunMain(
     IRunObserver* observer,
     SoundData* renderedSound);
 } // namespace app::run
+

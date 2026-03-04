@@ -107,3 +107,14 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 影響範囲:
 - 関連ファイル: include/config/ConfigResolver.h, include/config/SourceJson.h, include/config/SourceRegistry.h, src/config/ConfigFileIO.cpp, src/config/ConfigResolver.cpp
 
+
+### Config Compatibility
+
+#### 2026-03-05: TODO (auto-generated)
+- Category: Config Compatibility
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: include/io/Writer.h, src/io/Writer.cpp
+

@@ -178,7 +178,7 @@
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
-    <ClCompile Include="src\\midi\\MidiPipeline.cpp" />
+    <ClCompile Include="src\\midi\\MIDIPipeline.cpp" />
     <ClCompile Include="src\\synth\\Oscillator.cpp" />
     <ClCompile Include="src\\midi\\Sequencer.cpp" />
     <ClCompile Include="src\\SoundGenerate.cpp" />
@@ -230,7 +230,7 @@
     <ClInclude Include="include\\midi\\MIDIParser.h" />
     <ClInclude Include="include\\synth\\Oscillator.h" />
     <ClInclude Include="include\\midi\\Sequencer.h" />
-    <ClInclude Include="include\\midi\\MidiPipeline.h" />
+    <ClInclude Include="include\\midi\\MIDIPipeline.h" />
     <ClInclude Include="include\\SynthEngine\\Filter.h" />
     <ClInclude Include="include\\SynthEngine\\Modulation.h" />
     <ClInclude Include="include\\SynthEngine\\Smoothing.h" />
@@ -242,5 +242,6 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
 
 

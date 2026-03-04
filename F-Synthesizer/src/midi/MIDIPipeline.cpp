@@ -1,4 +1,4 @@
-#include "midi/MidiPipeline.h"
+#include "midi/MIDIPipeline.h"
 
 #include <array>
 #include <cmath>
@@ -128,7 +128,7 @@ std::vector<MIDIEventTick> ReplaceNoteTicks(
 }
 } // namespace
 
-bool BuildMidiPipeline(
+bool BuildMIDIPipeline(
     const std::filesystem::path& midiPath,
     int targetChannel,
     int sampleRate,
@@ -137,11 +137,11 @@ bool BuildMidiPipeline(
     double durationSec,
     const std::vector<MIDIEventTick>* overrideNoteTicks,
     int overrideTicksPerQuarter,
-    MidiBuildOutput& out,
+    MIDIBuildOutput& out,
     std::string& err)
 {
     // 失敗時に前回の出力が残らないよう、先頭で out を初期化する。
-    out = MidiBuildOutput{};
+    out = MIDIBuildOutput{};
     const bool hasOverrideNotes = (overrideNoteTicks != nullptr && !overrideNoteTicks->empty());
     bool loadedBaseMidi = false;
     if (!midiPath.empty())
@@ -217,3 +217,4 @@ bool BuildMidiPipeline(
 
     return true;
 }
+

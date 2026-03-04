@@ -72,7 +72,7 @@ bool ValidateRunSettings(
     return true;
 }
 
-std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
+std::filesystem::path BuildSerialWAVPath(const std::filesystem::path& basePath)
 {
     std::error_code ec;
     std::filesystem::create_directories(basePath.parent_path(), ec);
@@ -96,7 +96,7 @@ std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath)
     return candidate;
 }
 
-std::filesystem::path BuildPreviewWavPath(const std::filesystem::path& basePath, int channel)
+std::filesystem::path BuildPreviewWAVPath(const std::filesystem::path& basePath, int channel)
 {
     const std::string stem = basePath.stem().string();
     const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();

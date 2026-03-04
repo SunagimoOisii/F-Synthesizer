@@ -63,10 +63,10 @@ flowchart LR
 #### 2026-02-25: MIDI読込〜sampleイベント化はapp層で完結し、core/SynthEngineへは確定イベント列のみ渡す
 - カテゴリ: 依存方向・責務境界
 - 背景: MIDI解析・テンポ変換の仕様を下位層へ混在させると、合成ロジックと境界責務が曖昧になる。
-- 判断: `RunMain` で `BuildMidiPipeline` を完了させ、`RenderWithEngine` には sample軸イベントを渡す。
+- 判断: `RunMain` で `BuildMIDIPipeline` を完了させ、`RenderWithEngine` には sample軸イベントを渡す。
 - 代替案: SynthEngine内部でMIDI tick処理まで担う案。
 - 影響範囲: 層責務が明確化され、GUI/CLI双方で同一実行経路を再利用しやすい。
-- 関連ファイル: `src/app/RunExecution.cpp`, `src/midi/MidiPipeline.cpp`, `src/core/RenderGateway.cpp`
+- 関連ファイル: `src/app/RunExecution.cpp`, `src/midi/MIDIPipeline.cpp`, `src/core/RenderGateway.cpp`
 
 
 #### 2026-02-26: TODO (auto-generated)
@@ -167,4 +167,5 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 代替案:
 - 影響範囲:
 - 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
+
 

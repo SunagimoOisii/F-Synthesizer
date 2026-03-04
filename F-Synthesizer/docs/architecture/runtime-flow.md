@@ -9,7 +9,7 @@ flowchart LR
     MIDI[.mid]
     Parser[MIDIParser]
     Seq[Sequencer]
-    Pipe[MidiPipeline]
+    Pipe[MIDIPipeline]
     App[app::run::RunMain]
     Core[RenderGateway]
     Synth[SynthEngine]
@@ -25,7 +25,7 @@ flowchart LR
 sequenceDiagram
     participant U as Caller
     participant R as RunMain
-    participant P as MidiPipeline
+    participant P as MIDIPipeline
     participant G as RenderGateway
     participant S as SynthEngine
     participant W as Writer
@@ -86,7 +86,7 @@ flowchart TD
 |---|---|
 | `src/midi/MIDIParser.cpp` | MIDIイベント解析 |
 | `src/midi/Sequencer.cpp` | tick/sample変換 |
-| `src/midi/MidiPipeline.cpp` | app層向けの統合出力 |
+| `src/midi/MIDIPipeline.cpp` | app層向けの統合出力 |
 
 変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 
@@ -97,7 +97,7 @@ flowchart TD
 #### 2026-02-25: Preview経路では保存I/Oを完全に分離
 - カテゴリ: 実行フロー/キャンセル
 - 背景: GUIプレビューではレンダ結果の試聴が主目的で、毎回WAV保存を行うとI/O待ちが体感遅延になる。
-- 判断: `RenderOptions.writeWav` で保存有無を切り替え、Previewはメモリ返却のみで完了させる。
+- 判断: `RenderOptions.writeWAV` で保存有無を切り替え、Previewはメモリ返却のみで完了させる。
 - 代替案: Export/Previewを同一保存経路に統一し、呼び出し側でファイル破棄する案。
 - 影響範囲: Preview時の応答性向上。保存失敗によるPreview失敗を回避。
 - 関連ファイル: `src/app/RunSave.cpp`, `src/SoundGenerate.cpp`, `include/AppCore.h`
@@ -117,7 +117,7 @@ flowchart TD
 - 判断:
 - 代替案:
 - 影響範囲:
-- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 
 #### 2026-03-04: TODO (auto-generated)
@@ -155,7 +155,7 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 判断:
 - 代替案:
 - 影響範囲:
-- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+- 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 
 #### 2026-03-04: TODO (auto-generated)
@@ -164,5 +164,6 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 判断:
 - 代替案:
 - 影響範囲:
-- 関連ファイル: src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
+- 関連ファイル: src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
+
 

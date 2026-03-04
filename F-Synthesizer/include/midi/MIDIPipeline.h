@@ -7,7 +7,7 @@
 #include "midi/MIDIParser.h"
 #include "midi/Sequencer.h"
 
-struct MidiBuildOutput
+struct MIDIBuildOutput
 {
     // Parse -> tick列 -> sample列 までの中間成果物を一括で返す。
     std::vector<MIDIEventTick> ticks;
@@ -17,7 +17,7 @@ struct MidiBuildOutput
     MIDIParseStatus stats{};
 };
 
-bool BuildMidiPipeline(
+bool BuildMIDIPipeline(
     const std::filesystem::path& midiPath,
     int targetChannel,
     int sampleRate,
@@ -26,5 +26,6 @@ bool BuildMidiPipeline(
     double durationSec,
     const std::vector<MIDIEventTick>* overrideNoteTicks,
     int overrideTicksPerQuarter,
-    MidiBuildOutput& out,
+    MIDIBuildOutput& out,
     std::string& err);
+

@@ -25,11 +25,11 @@
 - `src/SynthEngine/Internal.h`
 - `src/core/RenderGateway.cpp`
 - `src/midi/MIDIParser.cpp`
-- `src/midi/MidiPipeline.cpp`
+- `src/midi/MIDIPipeline.cpp`
 - `src/midi/Sequencer.cpp`
 - `include/SynthEngine/SynthEngine.h`
 - `include/core/RenderGateway.h`
-- `include/midi/MidiPipeline.h`
+- `include/midi/MIDIPipeline.h`
 - `include/MIDIParser.h`
 - `include/Sequencer.h`
 
@@ -119,3 +119,4 @@
 - 対象範囲の必須箇所を第三者が追える
 - 重要分岐・最適化の意図が、実装を1行ずつ追わずに把握できる
 - 規約違反（Fail）が 0 件
+

@@ -23,7 +23,7 @@ function Write-BytesFile {
     [System.IO.File]::WriteAllBytes($Path, $Bytes)
 }
 
-function New-MidiFileBytes {
+function New-MIDIFileBytes {
     param(
         [byte[]]$TrackData
     )
@@ -52,7 +52,7 @@ function Invoke-RunningStatusCase {
     $wavPath = Join-Path $workDir "$CaseName.wav"
     $configPath = Join-Path $workDir "$CaseName.json"
 
-    $allBytes = New-MidiFileBytes -TrackData $TrackData
+    $allBytes = New-MIDIFileBytes -TrackData $TrackData
     Write-BytesFile -Path $midiPath -Bytes $allBytes
 
     # Avoid CWD dependency by writing absolute midi/wav paths.

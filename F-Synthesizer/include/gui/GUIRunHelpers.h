@@ -15,7 +15,7 @@ bool ValidateRunSettings(
     std::string& err);
 
 // basePath の親ディレクトリに "name_YYYYMMDD_HHMMSS[_n].ext" を生成する。
-std::filesystem::path BuildSerialWavPath(const std::filesystem::path& basePath);
+std::filesystem::path BuildSerialWAVPath(const std::filesystem::path& basePath);
 // Preview保存時の一時命名規則。channel は呼び出し側で 0..15 に丸めて渡す前提。
-std::filesystem::path BuildPreviewWavPath(const std::filesystem::path& basePath, int channel);
+std::filesystem::path BuildPreviewWAVPath(const std::filesystem::path& basePath, int channel);
 } // namespace gui
