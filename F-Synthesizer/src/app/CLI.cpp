@@ -1,4 +1,4 @@
-#include "app/Cli.h"
+#include "app/CLI.h"
 
 #include <iostream>
 #include <vector>
@@ -13,9 +13,9 @@
 
 namespace
 {
-bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOptions)
+bool ParseNarrowArgs(const std::vector<std::string>& args, CLIOptions& outOptions)
 {
-    outOptions = CliOptions{};
+    outOptions = CLIOptions{};
     // 既存CLI互換を維持するため、--config/--preset/--cli は明示的にCLI起動へ倒す。
     for (size_t i = 1; i < args.size(); i++)
     {
@@ -27,7 +27,7 @@ bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOption
                 return false;
             }
             outOptions.configPath = std::filesystem::path(args[++i]);
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == "--preset")
         {
@@ -36,16 +36,16 @@ bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOption
                 return false;
             }
             outOptions.presetName = args[++i];
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == "--cli")
         {
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == "--gui")
         {
             // 後に指定されたオプションを優先するため、--cli の後の --gui ではGUI起動を選ぶ。
-            outOptions.startCli = false;
+            outOptions.startCLI = false;
         }
         else if (arg == "--help" || arg == "-h")
         {
@@ -59,7 +59,7 @@ bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOption
 }
 
 #ifdef _WIN32
-bool ParseWideArgs(CliOptions& outOptions)
+bool ParseWideArgs(CLIOptions& outOptions)
 {
     int argc = 0;
     wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -68,7 +68,7 @@ bool ParseWideArgs(CliOptions& outOptions)
         return false;
     }
 
-    outOptions = CliOptions{};
+    outOptions = CLIOptions{};
     // 日本語パスを壊さないため、Windowsではワイド文字引数を優先して解釈する。
     for (int i = 1; i < argc; i++)
     {
@@ -81,7 +81,7 @@ bool ParseWideArgs(CliOptions& outOptions)
                 return false;
             }
             outOptions.configPath = std::filesystem::path(argv[++i]);
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == L"--preset")
         {
@@ -91,16 +91,16 @@ bool ParseWideArgs(CliOptions& outOptions)
                 return false;
             }
             outOptions.presetName = WideToUtf8(argv[++i]);
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == L"--cli")
         {
-            outOptions.startCli = true;
+            outOptions.startCLI = true;
         }
         else if (arg == L"--gui")
         {
             // 後に指定されたオプションを優先するため、--cli の後の --gui ではGUI起動を選ぶ。
-            outOptions.startCli = false;
+            outOptions.startCLI = false;
         }
         else if (arg == L"--help" || arg == L"-h")
         {
@@ -118,7 +118,7 @@ bool ParseWideArgs(CliOptions& outOptions)
 #endif
 } // namespace
 
-bool ParseCliArguments(int argc, char** argv, CliOptions& outOptions)
+bool ParseCLIArguments(int argc, char** argv, CLIOptions& outOptions)
 {
 #ifdef _WIN32
     // ワイド文字解析に成功した場合は通常引数解析へフォールバックしない。

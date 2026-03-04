@@ -6,7 +6,7 @@
 #include "AppCore.h"
 #include "config/ConfigResolver.h"
 
-int RunCliApplication(const CliOptions& options)
+int RunCLIApplication(const CLIOptions& options)
 {
     ResolvedRuntimeConfig resolved{};
     std::string err;

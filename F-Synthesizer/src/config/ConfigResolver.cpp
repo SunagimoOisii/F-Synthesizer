@@ -5,7 +5,7 @@
 
 #include "io/PlatformPaths.h"
 
-bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outResolved, std::string& err)
+bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outResolved, std::string& err)
 {
     outResolved = ResolvedRuntimeConfig{};
     outResolved.config = DefaultConfig();

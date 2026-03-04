@@ -2,7 +2,7 @@
 
 #include "AppCore.h"
 #include "app/AppEntry.h"
-#include "app/Cli.h"
+#include "app/CLI.h"
 #include "app/RunInternal.h"
 
 std::filesystem::path FindProjectRootPath()
@@ -64,8 +64,8 @@ int main(int argc, char** argv)
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    CliOptions cli{};
-    if (!ParseCliArguments(argc, argv, cli))
+    CLIOptions cli{};
+    if (!ParseCLIArguments(argc, argv, cli))
     {
         return 1;
     }
@@ -73,11 +73,11 @@ int main(int argc, char** argv)
     {
         return 0;
     }
-    if (!cli.startCli)
+    if (!cli.startCLI)
     {
-        // 既定はGUI起動。CLI明示時だけ RunCliApplication へ切り替える。
+        // 既定はGUI起動。CLI明示時だけ RunCLIApplication へ切り替える。
         return RunGUIApp();
     }
 
-    return RunCliApplication(cli);
+    return RunCLIApplication(cli);
 }

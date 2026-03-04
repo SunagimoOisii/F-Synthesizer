@@ -21,7 +21,7 @@
     <ClCompile Include="src\\app\\AppEntry.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\app\\Cli.cpp">
+    <ClCompile Include="src\\app\\CLI.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\app\\RunDefaults.cpp">
@@ -164,7 +164,7 @@
     <ClInclude Include="include\\app\\AppEntry.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\app\\Cli.h">
+    <ClInclude Include="include\\app\\CLI.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\\app\\RunInternal.h">

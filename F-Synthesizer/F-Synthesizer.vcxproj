@@ -147,7 +147,7 @@
   <ItemGroup>
     <ClCompile Include="src\\core\\AudioBuffer.cpp" />
     <ClCompile Include="src\\app\\AppEntry.cpp" />
-    <ClCompile Include="src\\app\\Cli.cpp" />
+    <ClCompile Include="src\\app\\CLI.cpp" />
     <ClCompile Include="src\\app\\RunDefaults.cpp" />
     <ClCompile Include="src\\app\\RunExecution.cpp" />
     <ClCompile Include="src\\app\\RunSave.cpp" />
@@ -198,7 +198,7 @@
     <ClInclude Include="include\\core\\AudioBuffer.h" />
     <ClInclude Include="include\\AppCore.h" />
     <ClInclude Include="include\\app\\AppEntry.h" />
-    <ClInclude Include="include\\app\\Cli.h" />
+    <ClInclude Include="include\\app\\CLI.h" />
     <ClInclude Include="src\\app\\RunInternal.h" />
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />

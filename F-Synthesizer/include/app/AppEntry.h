@@ -1,5 +1,5 @@
 #pragma once
 
-#include "app/Cli.h"
+#include "app/CLI.h"
 
-int RunCliApplication(const CliOptions& options);
+int RunCLIApplication(const CLIOptions& options);
