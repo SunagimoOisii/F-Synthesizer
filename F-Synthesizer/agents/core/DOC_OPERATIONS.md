@@ -2,12 +2,11 @@
 
 ## 自動更新対象
 
-AI が直接更新してよいのは次の 4 ファイルのみ。
+AI が直接更新してよいのは次の 3 ファイルのみ。
 
 1. `docs/Architecture.md`
 2. `docs/STATUS.md`
-3. `docs/ROADMAP.md`
-4. `docs/DECISIONS.md`
+3. `docs/DECISIONS.md`
 
 ## STATUS 運用（分割）
 

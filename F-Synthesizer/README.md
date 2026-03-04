@@ -21,7 +21,7 @@ MIDI ファイルを読み込み、サンプル単位で合成して WAV に書�
 - 音色パラメータ詳細: `docs/SOUND_PARAMETERS.md`
 - 合成方式ガイド: `docs/SYNTH_METHODS.md`
 - 設計判断: `docs/DECISIONS.md`
-- 直近計画: `docs/ROADMAP.md`
+- 直近計画: `docs/STATUS.md` の `Next 3`
 - アーカイブ: `docs-archive/`
 
 ## クイックコマンド

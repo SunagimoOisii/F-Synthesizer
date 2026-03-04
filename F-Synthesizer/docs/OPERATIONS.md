@@ -92,3 +92,18 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 プリセット運用:
 - `config/base.json` -> `config/presets/<name>.json`（後勝ち）
 - `--config` 指定時は `--preset` より `--config` を優先
+
+## Weekly Maintenance
+
+週 1 回（10〜20分）で実施する。
+
+手順:
+1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しする
+2. 構造変更があれば `docs/Architecture.md` を更新する
+3. 優先順位の変化を `docs/STATUS.md` の `Next 3` に反映する
+4. 新しい設計判断を `docs/DECISIONS.md` に追記する
+
+完了チェック:
+- 解消済み課題を `STATUS.md` から削除した
+- 優先事項が `STATUS.md` の `Next 3` に反映されている
+- 新しい判断があれば `DECISIONS.md` に残した

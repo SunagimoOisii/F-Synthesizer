@@ -25,7 +25,8 @@
 
 ## 監査記録フォーマット
 
-各フェーズの監査ドキュメント（`docs/cleanup/*-audit.md`）で、以下の表を使用する。
+監査実施時は個別ドキュメントに以下の表を使用し、完了後は
+`docs/cleanup/archive/<batch>/` に移動して保管する。
 
 | Path | Kind | Evidence (ref=0) | Decision | Note |
 |---|---|---|---|---|
@@ -33,11 +34,19 @@
 
 ## Phase 実績
 
-- Phase 1 (`scripts`): `docs/cleanup/scripts-audit.md`
-- Phase 2 (`docs`): `docs/cleanup/docs-audit.md`
-- Phase 3 (`gui`): `docs/cleanup/gui-audit.md`
-- Phase 4 (`midi`): `docs/cleanup/midi-audit.md`
-- Phase 5 (`core`): `docs/cleanup/core-audit.md`
+- Phase 1 (`scripts`): `docs/cleanup/archive/2026-03-phase1-6/scripts-audit.md`
+- Phase 2 (`docs`): `docs/cleanup/archive/2026-03-phase1-6/docs-audit.md`
+- Phase 3 (`gui`): `docs/cleanup/archive/2026-03-phase1-6/gui-audit.md`
+- Phase 4 (`midi`): `docs/cleanup/archive/2026-03-phase1-6/midi-audit.md`
+- Phase 5 (`core`): `docs/cleanup/archive/2026-03-phase1-6/core-audit.md`
+
+## Phase 要約
+
+- Phase 1 (`scripts`): `ref=0` の `scripts/piano_roll_smoke.ps1` を削除。
+- Phase 2 (`docs`): 受け入れ手順参照と Architecture 記述の不整合を修正。
+- Phase 3 (`gui`): 未使用ファイル/到達不能分岐なし（delete なし）。
+- Phase 4 (`midi`): 未参照経路なし、`MarkNoteOff` フォールバックは維持妥当。
+- Phase 5 (`core`): 未使用 `kPi` と冗長初期化ループを削除。
 
 ## 実削除・整理の結果
 
