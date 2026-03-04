@@ -132,7 +132,6 @@ bool BuildMIDIPipeline(
     const std::filesystem::path& midiPath,
     int targetChannel,
     int sampleRate,
-    WaveType defaultWave,
     double startSec,
     double durationSec,
     const std::vector<MIDIEventTick>* overrideNoteTicks,
@@ -192,7 +191,7 @@ bool BuildMIDIPipeline(
         }
     }
 
-    BuildSampleEvents(out.ticks, out.tempoEvents, out.ticksPerQuarter, sampleRate, defaultWave, out.events);
+    BuildSampleEvents(out.ticks, out.tempoEvents, out.ticksPerQuarter, sampleRate, out.events);
     if (startSec > 0.0 || durationSec >= 0.0)
     {
         // 負値入力は 0 扱いにそろえ、呼び出し側の入力ぶれをここで吸収する。

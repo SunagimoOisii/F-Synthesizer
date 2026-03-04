@@ -11,7 +11,6 @@ namespace gui
 {
 struct GUIPresetSnapshot
 {
-    int defaultWave = 2;
     std::array<ChannelConfig, 16> channelConfigs{};
 };
 

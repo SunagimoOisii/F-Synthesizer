@@ -118,3 +118,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Impact: GUI/CLIで同一の失敗理由表示と案内が可能になり、サポート時の再現確認と復旧手順提示が容易になる。
 - Related Files: include/io/Writer.h, src/io/Writer.cpp
 
+
+#### 2026-03-05: TODO (auto-generated)
+- Category: Config Compatibility
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: src/config/ConfigSave.cpp, src/config/load/LoadTopLevel.cpp
+

@@ -176,7 +176,6 @@ AppConfig BuildDefaultConfig()
     config->midiPath = projectRoot / "assets" / "midi" / "solstice_intro.mid";
     config->wavPath = projectRoot / "output" / "test.wav";
     config->targetChannel = -1;
-    config->defaultWave = WaveType::Saw;
     config->initialSeconds = 6;
     config->bits = 16;
     config->sampleRate = 44100;

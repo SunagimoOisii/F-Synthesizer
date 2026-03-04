@@ -86,7 +86,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 ## Config Notes
 
 主なキー:
-- `midiPath`, `wavPath`, `targetChannel`, `defaultWave`
+- `midiPath`, `wavPath`, `targetChannel`
 - `initialSeconds`, `bits`, `sampleRate`, `extraReleaseSec`
 
 プリセット運用:

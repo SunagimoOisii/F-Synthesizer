@@ -167,3 +167,14 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 関連ファイル: src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 
+
+### Runtime Flow and Cancellation
+
+#### 2026-03-05: TODO (auto-generated)
+- Category: Runtime Flow and Cancellation
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: include/AppCore.h, include/midi/MIDIPipeline.h, include/midi/Sequencer.h, src/app/RunDefaults.cpp, src/app/RunExecution.cpp
+

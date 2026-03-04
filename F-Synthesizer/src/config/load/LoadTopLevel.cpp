@@ -40,17 +40,6 @@ bool LoadConfigFromText(
     {
         cfg.extraReleaseSec = *v;
     }
-    if (auto v = ReadJSONString(text, "defaultWave"))
-    {
-        WaveType w{};
-        if (!TryParseWaveType(*v, w))
-        {
-            err = "invalid defaultWave: " + *v;
-            return false;
-        }
-        cfg.defaultWave = w;
-    }
-
     if (cfg.targetChannel < -1 || cfg.targetChannel > 15)
     {
         err = "targetChannel must be -1 or 0..15";

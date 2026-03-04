@@ -50,7 +50,6 @@ AppConfig BuildConfigFromGUI(const GUIState& state)
     cfg.initialSeconds = state.initialSeconds;
     cfg.bits = state.bits;
     cfg.extraReleaseSec = state.extraReleaseSec;
-    cfg.defaultWave = WaveFromIndex(state.defaultWave);
     if (state.channelConfigs)
     {
         auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
@@ -83,7 +82,6 @@ void InitializeGUIState(
     state.initialSeconds = cfg.initialSeconds;
     state.bits = cfg.bits;
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
-    state.defaultWave = 2;
     state.UIScaleIndex = 1;
     state.UIModeTab = 0;
     state.logPanelHeight = 240.0f;

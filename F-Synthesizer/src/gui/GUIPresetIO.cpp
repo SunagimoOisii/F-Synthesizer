@@ -8,21 +8,6 @@
 
 namespace gui
 {
-namespace
-{
-const char* WaveToPresetString(WaveType wave)
-{
-    switch (wave)
-    {
-    case WaveType::Sine: return "sine";
-    case WaveType::Square: return "square";
-    case WaveType::Saw: return "saw";
-    case WaveType::Triangle: return "triangle";
-    }
-    return "saw";
-}
-} // namespace
-
 bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem::path& presetPath, std::string& err)
 {
     AppConfig base = DefaultConfig();
@@ -42,7 +27,6 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     }
 
     out << "{\n";
-    out << "  \"defaultWave\": \"" << WaveToPresetString(WaveFromIndex(snapshot.defaultWave)) << "\",\n";
     out << "  \"channels\": {\n";
 
     // 既定値との差分のみを書き出し、presetファイルの保守コストを抑える。

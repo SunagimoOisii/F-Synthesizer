@@ -91,11 +91,10 @@ int PriorityValue(const MIDIEventTick& e)
     return static_cast<int>(e.isNoteOn ? TickPriority::NoteOn : TickPriority::NoteOff);
 }
 
-MIDIEvent MakeControlChangeEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+MIDIEvent MakeControlChangeEvent(const MIDIEventTick& t, int sample)
 {
     MIDIEvent e{};
     e.type       = MIDIEventType::ControlChange;
-    e.typeWave   = defaultWave;
     e.sample     = sample;
     e.noteNumber = 0;
     e.velocity   = 0;
@@ -107,11 +106,10 @@ MIDIEvent MakeControlChangeEvent(const MIDIEventTick& t, int sample, WaveType de
     return e;
 }
 
-MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample)
 {
     MIDIEvent e{};
     e.type       = MIDIEventType::Note;
-    e.typeWave   = defaultWave;
     e.sample     = sample;
     e.noteNumber = t.noteNumber;
     e.velocity   = t.velocity;
@@ -123,11 +121,10 @@ MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample, WaveType defaultWave
     return e;
 }
 
-MIDIEvent MakePitchBendEvent(const MIDIEventTick& t, int sample, WaveType defaultWave)
+MIDIEvent MakePitchBendEvent(const MIDIEventTick& t, int sample)
 {
     MIDIEvent e{};
     e.type       = MIDIEventType::PitchBend;
-    e.typeWave   = defaultWave;
     e.sample     = sample;
     e.noteNumber = 0;
     e.velocity   = 0;
@@ -143,7 +140,6 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
     int ticksPerQuarter,
     int sampleRate,
-    WaveType defaultWave,
     std::vector<MIDIEvent>& outEvents)
 {
     std::vector<TempoEvent> sortedTempo = NormalizeTempoEvents(tempoEvents);
@@ -164,17 +160,17 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
         int sample = (int)(cursor.currentSample);
         if (t.type == MIDIEventType::ControlChange)
         {
-            outEvents.push_back(MakeControlChangeEvent(t, sample, defaultWave));
+            outEvents.push_back(MakeControlChangeEvent(t, sample));
             continue;
         }
 
         if (t.type == MIDIEventType::PitchBend)
         {
-            outEvents.push_back(MakePitchBendEvent(t, sample, defaultWave));
+            outEvents.push_back(MakePitchBendEvent(t, sample));
             continue;
         }
 
-        outEvents.push_back(MakeNoteEvent(t, sample, defaultWave));
+        outEvents.push_back(MakeNoteEvent(t, sample));
     }
 
     // sample 順で整列

@@ -3,8 +3,6 @@
 #include <vector>
 
 #include "midi/MIDIParser.h"
-#include "synth/Oscillator.h"
-
 struct MIDIEvent
 {
     // sample軸の発火位置
@@ -25,13 +23,10 @@ struct MIDIEvent
     int controller;
     int value;
 
-    // 互換維持用の既定波形情報
-    WaveType typeWave;
 };
 
 void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
     int ticksPerQuarter,
     int sampleRate,
-    WaveType defaultWave,
     std::vector<MIDIEvent>& outEvents);

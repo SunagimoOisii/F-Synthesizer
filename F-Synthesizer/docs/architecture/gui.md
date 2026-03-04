@@ -132,3 +132,14 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 影響範囲: 文言設計の一貫性が向上し、操作ガイドを外部ドキュメントへ転用しやすくなる。
 - 関連ファイル: src/gui/main/MainWindow.inl
 
+
+### GUI Operations and State
+
+#### 2026-03-05: TODO (auto-generated)
+- Category: GUI Operations and State
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: src/gui/GUIChannelEditor.cpp
+

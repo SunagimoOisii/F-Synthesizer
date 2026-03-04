@@ -36,7 +36,6 @@ struct AppConfig
     std::filesystem::path midiPath;
     std::filesystem::path wavPath;
     int targetChannel;
-    WaveType defaultWave;
     int initialSeconds;
     int bits;
     int sampleRate;

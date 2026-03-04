@@ -169,3 +169,14 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
 
 
+
+### Dependency Direction and Boundaries
+
+#### 2026-03-05: TODO (auto-generated)
+- Category: Dependency Direction and Boundaries
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: src/gui/GUIChannelEditor.cpp
+

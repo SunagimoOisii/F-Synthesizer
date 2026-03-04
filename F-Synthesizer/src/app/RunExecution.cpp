@@ -38,7 +38,6 @@ int RunMain(
         config.midiPath,
         config.targetChannel,
         config.sampleRate,
-        config.defaultWave,
         options.startSec,
         options.durationSec,
         config.overrideNoteTicks.get(),

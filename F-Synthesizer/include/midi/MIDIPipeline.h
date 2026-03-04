@@ -21,7 +21,6 @@ bool BuildMIDIPipeline(
     const std::filesystem::path& midiPath,
     int targetChannel,
     int sampleRate,
-    WaveType defaultWave,
     double startSec,
     double durationSec,
     const std::vector<MIDIEventTick>* overrideNoteTicks,

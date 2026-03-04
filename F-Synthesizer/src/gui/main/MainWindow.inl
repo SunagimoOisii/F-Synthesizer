@@ -625,11 +625,6 @@ if (state.UIModeTab == 0)
         }
 
         ImGui::TextDisabled("Song export settings are in Music tab.");
-        const char* waves[] = { "sine", "square", "saw", "triangle" };
-        state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
-        updateHoverHelp(
-            "Default Wave を選択します。",
-            "新規/初期化時に使う基本波形の既定値が変わります。");
         ImGui::EndDisabled();
 
         ImGui::TableSetColumnIndex(1);

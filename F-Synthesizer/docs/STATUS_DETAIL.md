@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-05 (acronym-case JSON done)
+Last Updated: 2026-03-05 (defaultWave removed)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -53,6 +53,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - feat-infra: `scripts/midi_regression.ps1` を絶対パスconfig化して実行ディレクトリ依存を解消し、`scripts/check.ps1 -RunMIDIRegression` を追加
   - infra-fix: `scripts/update_architecture_notes.ps1` の文字コード依存で発生するPowerShell 5.1構文崩れを回避（非ASCII文字列をASCII化）
   - acronym-case: 略称表記を段階的に大文字統一（`MidiPipeline -> MIDIPipeline`, `MIDI/WAV/CLI/JSON` 系の型名・関数名・ファイル名・参照を更新）
+  - runtime cleanup: 未使用だった `Default Wave` 導線を廃止（`AppConfig.defaultWave` / `MIDIEvent.typeWave` / GUI `Default Wave` UI / Config保存キー出力）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -65,11 +66,13 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - `scripts/midi_regression.ps1` 通過（2026-03-03、running status 2件 + overlap same note 1件）
   - Modulation / Smoothing / Waveform / Wave+Drum AB確認済み（2026-02-23、全て clip 0）
   - 手動ホバー確認は GUI 対話操作が必要なため、この実行環境では未実施（要ローカル実機確認）
+  - 実装監査メモ（2026-03-05）: GUIと実データ反映の対応関係を確認
+    - `Drum Gain`: `Renderer.cpp` の Drum 経路で `drumGain` として乗算され、プレビュー/書き出し双方へ反映されることを確認
+    - `Sound Reference (Snapshot/Link)`: UI状態保存はされるが実行分岐で未参照
 
 ## Backlog
 
-- `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
-- `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
+- `gui-cleanup`: `Sound Reference (Snapshot/Link)` を実データ導線へ接続する
 
 ## Recurring Checks
 

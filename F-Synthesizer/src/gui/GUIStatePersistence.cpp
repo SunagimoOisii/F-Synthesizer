@@ -26,7 +26,6 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.initialSeconds = state.initialSeconds;
     data.bits = state.bits;
     data.extraReleaseSec = state.extraReleaseSec;
-    data.defaultWave = state.defaultWave;
     data.UIScaleIndex = state.UIScaleIndex;
     data.UIModeTab = state.UIModeTab;
     data.logPanelHeight = state.logPanelHeight;
@@ -77,7 +76,6 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.initialSeconds = data.initialSeconds;
     state.bits = data.bits;
     state.extraReleaseSec = data.extraReleaseSec;
-    state.defaultWave = data.defaultWave;
     state.UIScaleIndex = data.UIScaleIndex;
     state.UIModeTab = data.UIModeTab;
     state.logPanelHeight = data.logPanelHeight;

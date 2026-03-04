@@ -242,7 +242,6 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJSONInt(text, "initialSeconds")) data.initialSeconds = *v;
     if (auto v = ReadJSONInt(text, "bits")) data.bits = *v;
     if (auto v = ReadJSONFloat(text, "extraReleaseSec")) data.extraReleaseSec = *v;
-    if (auto v = ReadJSONInt(text, "defaultWave")) data.defaultWave = *v;
     if (auto v = ReadJSONInt(text, "UIScaleIndex")) data.UIScaleIndex = *v;
     else if (auto v = ReadJSONInt(text, "uiScaleIndex")) data.UIScaleIndex = *v;
     if (auto v = ReadJSONInt(text, "UIModeTab")) data.UIModeTab = *v;
@@ -327,7 +326,6 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"initialSeconds\": " << data.initialSeconds << ",\n";
     fout << "  \"bits\": " << data.bits << ",\n";
     fout << "  \"extraReleaseSec\": " << data.extraReleaseSec << ",\n";
-    fout << "  \"defaultWave\": " << data.defaultWave << ",\n";
     // 既存stateファイル互換のため、保存キーは従来名を維持する。
     fout << "  \"uiScaleIndex\": " << data.UIScaleIndex << ",\n";
     fout << "  \"uiModeTab\": " << data.UIModeTab << ",\n";

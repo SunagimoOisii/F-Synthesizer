@@ -396,8 +396,6 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
     }
 
     // Soundタブのpreset適用は「音色資産」に限定し、Music側の実行設定は上書きしない。
-    state.defaultWave = WaveToIndex(cfg.defaultWave);
-
     EnsureChannelConfigs(state);
     if (cfg.channelConfigs)
     {
@@ -438,7 +436,6 @@ bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path&
         return false;
     }
     GUIPresetSnapshot snapshot{};
-    snapshot.defaultWave = state.defaultWave;
     snapshot.channelConfigs = *state.channelConfigs;
     return SavePresetDiffFile(snapshot, presetPath, err);
 }
