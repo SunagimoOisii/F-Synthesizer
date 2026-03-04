@@ -95,5 +95,6 @@ bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outR
         outResolved.infoLines.push_back("Preset Config Path: " + PathToUtf8(fallbackPresetPath));
     }
 
+    // base/preset が無い環境でも、DefaultConfig だけで起動可能にして初期セットアップを妨げない。
     return true;
 }

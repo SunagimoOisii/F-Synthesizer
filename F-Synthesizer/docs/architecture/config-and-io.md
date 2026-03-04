@@ -98,3 +98,12 @@ flowchart LR
 - 関連ファイル: `src/gui/GUIStateStorage.cpp`, `src/config/ConfigJsonUtils.cpp`
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
+
+#### 2026-03-04: TODO (auto-generated)
+- カテゴリ: Config互換性
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/config/ConfigResolver.h, include/config/SourceJson.h, include/config/SourceRegistry.h, src/config/ConfigFileIO.cpp, src/config/ConfigResolver.cpp
+

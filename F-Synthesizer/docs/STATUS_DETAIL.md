@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-04 (Comments Step 4 done)
+Last Updated: 2026-03-04 (Comments Step 5 done)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -39,6 +39,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - comments Step 2: `src/SynthEngine` / `include/SynthEngine` を更新（CC/Pitch境界値処理とキャンセル境界の注釈を追加）
   - comments Step 3: `src/app` + `include/AppCore.h` を更新（Run戻り値契約、CLI起動優先順位、プロジェクトルート探索失敗時の境界を注釈）
   - comments Step 4: `src/gui` / `include/gui` を更新（非同期Run状態遷移、GUI状態保存I/O、Preview命名規則の境界を注釈）
+  - comments Step 5: `src/config` / `include/config` を更新（設定解決優先順位、公開I/F契約、種別フォールバックの境界を注釈）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -56,7 +57,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - Step 2: `src/SynthEngine` + `include/SynthEngine`（DONE）
   - Step 3: `src/app` + 境界ヘッダ（`include/AppCore.h` など）（DONE）
   - Step 4: `src/gui` + `include/gui`（DONE）
-  - Step 5: `src/config` + 関連 `include/*`
+  - Step 5: `src/config` + 関連 `include/*`（DONE）
   - Step 6: `src/io` + `include/io`
   - Step 7: `src/synth` + `include/synth`
   - Step 6: `src/core` + `include/core`

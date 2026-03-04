@@ -16,4 +16,7 @@ struct ResolvedRuntimeConfig
     std::vector<std::string> infoLines;
 };
 
+// 目的: CLIオプションから実行設定を解決し、採用元情報を返す。
+// 前提: outResolved は上書きされる。--config と --preset は ResolveRuntimeConfig 側で優先順位を判定する。
+// 副作用: 読み込んだ設定の説明行を infoLines に追記する。失敗時は false と err を返す。
 bool ResolveRuntimeConfig(const CliOptions& options, ResolvedRuntimeConfig& outResolved, std::string& err);
