@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-04 (Comments Step 2 done)
+Last Updated: 2026-03-04 (Comments Step 3 done)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -37,6 +37,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - doc-sync: `ROADMAP.md` を廃止して `STATUS.md` へ一本化。`PIANO_ROLL_CONTROLS.md` は `GUI_REQUIREMENTS.md` へ、`WEEKLY_MAINTENANCE.md` は `OPERATIONS.md` へ統合
   - comments Step 1: `src/midi` / `include/midi` を `COMMENT_GUIDELINE` 準拠で更新（境界条件・失敗時挙動・フォールバック理由の注釈を追加）
   - comments Step 2: `src/SynthEngine` / `include/SynthEngine` を更新（CC/Pitch境界値処理とキャンセル境界の注釈を追加）
+  - comments Step 3: `src/app` + `include/AppCore.h` を更新（Run戻り値契約、CLI起動優先順位、プロジェクトルート探索失敗時の境界を注釈）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -52,7 +53,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - `comments`: 既存ファイルへのコメント追加（`COMMENT_GUIDELINE` 準拠、フォルダ単位で実施）
   - Step 1: `src/midi` + `include/midi`（DONE）
   - Step 2: `src/SynthEngine` + `include/SynthEngine`（DONE）
-  - Step 3: `src/app` + 境界ヘッダ（`include/AppCore.h` など）
+  - Step 3: `src/app` + 境界ヘッダ（`include/AppCore.h` など）（DONE）
   - Step 4: `src/gui` + `include/gui`
   - Step 5: `src/config` + 関連 `include/*`
 - `gui-help`: ホバーUIヘルプ対象を拡大（誤操作が出やすい項目を優先）

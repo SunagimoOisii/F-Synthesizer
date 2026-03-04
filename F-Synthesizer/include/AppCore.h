@@ -67,4 +67,6 @@ int Run(const AppConfig& config);
 int Run(const AppConfig& config, IRunObserver* observer);
 int Run(const AppConfig& config, const RenderOptions& options);
 int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer);
+// 戻り値は 0=成功, 1=失敗, 2=キャンセル要求受理（allowCancel=true かつ observer 経由）で固定。
+// renderedSound が null でなければ、保存成否にかかわらずレンダ結果を書き戻す。
 int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound);

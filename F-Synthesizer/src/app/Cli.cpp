@@ -44,6 +44,7 @@ bool ParseNarrowArgs(const std::vector<std::string>& args, CliOptions& outOption
         }
         else if (arg == "--gui")
         {
+            // 後に指定されたオプションを優先するため、--cli の後の --gui ではGUI起動を選ぶ。
             outOptions.startCli = false;
         }
         else if (arg == "--help" || arg == "-h")
@@ -98,6 +99,7 @@ bool ParseWideArgs(CliOptions& outOptions)
         }
         else if (arg == L"--gui")
         {
+            // 後に指定されたオプションを優先するため、--cli の後の --gui ではGUI起動を選ぶ。
             outOptions.startCli = false;
         }
         else if (arg == L"--help" || arg == L"-h")

@@ -29,6 +29,7 @@ std::filesystem::path FindProjectRootInternal()
     std::filesystem::path cur = std::filesystem::current_path(ec);
     if (ec || cur.empty())
     {
+        // 実行環境で current_path が取得できない場合は実行ファイルの場所を基点に探索する。
         cur = GetExecutableDirectory();
     }
 
@@ -52,6 +53,7 @@ std::filesystem::path FindProjectRootInternal()
     }
 
     cur = GetExecutableDirectory();
+    // current_path 起点で見つからない場合のみ、実行ファイルの場所から再探索する。
     for (int depth = 0; depth < 8; depth++)
     {
         if (hasProjectMarker(cur))

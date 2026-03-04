@@ -23,6 +23,7 @@ RenderOptions DefaultRenderOptions()
 RenderOptions DefaultPreviewRenderOptions()
 {
     RenderOptions opt{};
+    // Preview は短時間試聴向けの既定値に固定し、保存I/Oは無効化する。
     opt.mode = RunMode::Preview;
     opt.startSec = 0.0;
     opt.durationSec = 8.0;
@@ -74,6 +75,7 @@ int main(int argc, char** argv)
     }
     if (!cli.startCli)
     {
+        // 既定はGUI起動。CLI明示時だけ RunCliApplication へ切り替える。
         return RunGUIApp();
     }
 
