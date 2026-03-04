@@ -22,8 +22,8 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     }
 
     out << "{\n";
-    out << "  \"midiPath\": \"" << EscapeJson(PathToUtf8(config.midiPath)) << "\",\n";
-    out << "  \"wavPath\": \"" << EscapeJson(PathToUtf8(config.wavPath)) << "\",\n";
+    out << "  \"midiPath\": \"" << EscapeJSON(PathToUtf8(config.midiPath)) << "\",\n";
+    out << "  \"wavPath\": \"" << EscapeJSON(PathToUtf8(config.wavPath)) << "\",\n";
     out << "  \"targetChannel\": " << config.targetChannel << ",\n";
     out << "  \"defaultWave\": \"" << WaveTypeToString(config.defaultWave) << "\",\n";
     out << "  \"initialSeconds\": " << config.initialSeconds << ",\n";

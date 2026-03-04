@@ -204,7 +204,7 @@ bool ChannelMixStateEquals(const ChannelMixState& a, const ChannelMixState& b)
         NearlyEq(a.gain, b.gain);
 }
 
-void WriteJsonEscaped(std::ostream& out, const std::string& s)
+void WriteJSONEscaped(std::ostream& out, const std::string& s)
 {
     for (char c : s)
     {

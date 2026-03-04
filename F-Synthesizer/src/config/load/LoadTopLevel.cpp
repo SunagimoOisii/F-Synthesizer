@@ -12,35 +12,35 @@ bool LoadConfigFromText(
     AppConfig& cfg,
     std::string& err)
 {
-    if (auto v = ReadJsonString(text, "midiPath"))
+    if (auto v = ReadJSONString(text, "midiPath"))
     {
         cfg.midiPath = ResolvePathFromBase(baseDir, *v);
     }
-    if (auto v = ReadJsonString(text, "wavPath"))
+    if (auto v = ReadJSONString(text, "wavPath"))
     {
         cfg.wavPath = ResolvePathFromBase(baseDir, *v);
     }
-    if (auto v = ReadJsonInt(text, "targetChannel"))
+    if (auto v = ReadJSONInt(text, "targetChannel"))
     {
         cfg.targetChannel = *v;
     }
-    if (auto v = ReadJsonInt(text, "initialSeconds"))
+    if (auto v = ReadJSONInt(text, "initialSeconds"))
     {
         cfg.initialSeconds = *v;
     }
-    if (auto v = ReadJsonInt(text, "bits"))
+    if (auto v = ReadJSONInt(text, "bits"))
     {
         cfg.bits = *v;
     }
-    if (auto v = ReadJsonInt(text, "sampleRate"))
+    if (auto v = ReadJSONInt(text, "sampleRate"))
     {
         cfg.sampleRate = *v;
     }
-    if (auto v = ReadJsonDouble(text, "extraReleaseSec"))
+    if (auto v = ReadJSONDouble(text, "extraReleaseSec"))
     {
         cfg.extraReleaseSec = *v;
     }
-    if (auto v = ReadJsonString(text, "defaultWave"))
+    if (auto v = ReadJSONString(text, "defaultWave"))
     {
         WaveType w{};
         if (!TryParseWaveType(*v, w))

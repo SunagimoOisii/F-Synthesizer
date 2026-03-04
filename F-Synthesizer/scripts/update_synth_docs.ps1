@@ -17,7 +17,7 @@ function Get-AutoPlaybookSection {
         "src/SynthEngine/Renderer.cpp",
         "src/SynthEngine/Voices.cpp",
         "src/config/ConfigLoad.cpp",
-        "src/config/ConfigJsonUtils.cpp",
+        "src/config/ConfigJSONUtils.cpp",
         "src/gui/GUIChannelEditor.cpp",
         "src/gui/GUIConfigUtils.cpp"
     )

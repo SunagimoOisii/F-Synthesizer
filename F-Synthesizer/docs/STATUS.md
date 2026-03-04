@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-05 (feat-infra+infra-fix done)
+Last Updated: 2026-03-05 (acronym-case JSON done)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -12,6 +12,7 @@ Branch: `main`
 - コメント追加フェーズ（Step1-8）は完了
 - `gui-help` Phase 2-9 を実施（共通導線化 + Music/Sound主要導線拡張 + 要件昇格 + 計画移管）
 - `feat-infra` を実施（`midi_regression.ps1` のCWD依存解消 + `check.ps1 -RunMIDIRegression` 統合）
+- 略称大文字統一を継続実施（`MIDI` / `WAV` / `CLI` / `JSON`）
 
 ## Next 3
 

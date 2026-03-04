@@ -14,10 +14,10 @@ namespace config::internal
 {
 std::string ReadTextFile(const std::filesystem::path& filePath);
 
-std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key);
-std::optional<int> ReadJsonInt(const std::string& text, const std::string& key);
-std::optional<double> ReadJsonDouble(const std::string& text, const std::string& key);
-std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key);
+std::optional<std::string> ReadJSONString(const std::string& text, const std::string& key);
+std::optional<int> ReadJSONInt(const std::string& text, const std::string& key);
+std::optional<double> ReadJSONDouble(const std::string& text, const std::string& key);
+std::optional<bool> ReadJSONBool(const std::string& text, const std::string& key);
 
 bool TryParseWaveType(const std::string& name, WaveType& outWave);
 bool TryParseNoiseType(const std::string& name, NoiseType& outNoise);
@@ -34,7 +34,7 @@ std::string FilterModeToString(FilterMode mode);
 std::string LfoWaveToString(LfoWave wave);
 std::string ModSourceToString(ModSource source);
 std::string ModDestinationToString(ModDestination destination);
-std::string EscapeJson(const std::string& src);
+std::string EscapeJSON(const std::string& src);
 
 bool ExtractObjectAt(const std::string& text, size_t openBracePos, std::string& outObject, std::string& err);
 bool ExtractObjectForKey(const std::string& text, const std::string& key, std::string& outObject, bool& found, std::string& err);

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <fstream>
 
-#include "config/SourceJson.h"
+#include "config/SourceJSON.h"
 #include "gui/GUIConfigUtils.h"
 
 namespace gui
@@ -63,7 +63,7 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         out << "      \"decaySec\": " << cur.decaySec << ",\n";
         out << "      \"sustainLevel\": " << cur.sustainLevel << ",\n";
         out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
-        config::WriteSourceJson(out, cur.source, 6);
+        config::WriteSourceJSON(out, cur.source, 6);
         out << "\n    }";
     }
 

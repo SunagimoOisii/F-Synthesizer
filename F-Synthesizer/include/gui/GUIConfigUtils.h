@@ -15,5 +15,5 @@ int SourceTypeIndex(const SourceConfig& src);
 SourceConfig DefaultSourceByType(int idx);
 bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b);
 bool ChannelMixStateEquals(const ChannelMixState& a, const ChannelMixState& b);
-void WriteJsonEscaped(std::ostream& out, const std::string& s);
+void WriteJSONEscaped(std::ostream& out, const std::string& s);
 } // namespace gui

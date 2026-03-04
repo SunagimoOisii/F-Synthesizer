@@ -10,7 +10,7 @@ namespace
 {
 bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::string& err)
 {
-    if (auto t = ReadJsonString(text, "drumType"))
+    if (auto t = ReadJSONString(text, "drumType"))
     {
         DrumType dt{};
         if (!TryParseDrumType(*t, dt))
@@ -20,16 +20,16 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
         }
         drum.type = dt;
     }
-    if (auto v = ReadJsonDouble(text, "gain")) drum.gain = *v;
-    if (auto v = ReadJsonDouble(text, "baseFreq")) drum.baseFreq = *v;
-    if (auto v = ReadJsonDouble(text, "pitchDrop")) drum.pitchDrop = *v;
-    if (auto v = ReadJsonDouble(text, "pitchDecaySec")) drum.pitchDecaySec = *v;
-    if (auto v = ReadJsonDouble(text, "toneFreq")) drum.toneFreq = *v;
-    if (auto v = ReadJsonDouble(text, "toneLevel")) drum.toneLevel = *v;
-    if (auto v = ReadJsonDouble(text, "noiseLevel")) drum.noiseLevel = *v;
-    if (auto v = ReadJsonDouble(text, "hpCut")) drum.hpCut = *v;
-    if (auto v = ReadJsonDouble(text, "lpCut")) drum.lpCut = *v;
-    if (auto v = ReadJsonString(text, "toneWave"))
+    if (auto v = ReadJSONDouble(text, "gain")) drum.gain = *v;
+    if (auto v = ReadJSONDouble(text, "baseFreq")) drum.baseFreq = *v;
+    if (auto v = ReadJSONDouble(text, "pitchDrop")) drum.pitchDrop = *v;
+    if (auto v = ReadJSONDouble(text, "pitchDecaySec")) drum.pitchDecaySec = *v;
+    if (auto v = ReadJSONDouble(text, "toneFreq")) drum.toneFreq = *v;
+    if (auto v = ReadJSONDouble(text, "toneLevel")) drum.toneLevel = *v;
+    if (auto v = ReadJSONDouble(text, "noiseLevel")) drum.noiseLevel = *v;
+    if (auto v = ReadJSONDouble(text, "hpCut")) drum.hpCut = *v;
+    if (auto v = ReadJSONDouble(text, "lpCut")) drum.lpCut = *v;
+    if (auto v = ReadJSONString(text, "toneWave"))
     {
         WaveType w{};
         if (!TryParseWaveType(*v, w))
@@ -39,7 +39,7 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
         }
         drum.toneWave = (int)w;
     }
-    if (auto v = ReadJsonString(text, "noiseType"))
+    if (auto v = ReadJSONString(text, "noiseType"))
     {
         NoiseType n{};
         if (!TryParseNoiseType(*v, n))
@@ -55,7 +55,7 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
-    const auto type = ReadJsonString(sourceObjText, "type");
+    const auto type = ReadJSONString(sourceObjText, "type");
     if (!type)
     {
         err = "source.type is required";
@@ -73,7 +73,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     {
     case SourceKind::Waveform:
     {
-        auto wave = ReadJsonString(sourceObjText, "wave");
+        auto wave = ReadJSONString(sourceObjText, "wave");
         if (!wave)
         {
             err = "waveform source requires 'wave'";
@@ -87,23 +87,23 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         }
         WaveformConfig wf{};
         wf.wave = w;
-        if (auto v = ReadJsonInt(sourceObjText, "unisonVoices"))
+        if (auto v = ReadJSONInt(sourceObjText, "unisonVoices"))
         {
             wf.unisonVoices = *v;
         }
-        if (auto v = ReadJsonDouble(sourceObjText, "unisonDetuneCents"))
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonDetuneCents"))
         {
             wf.unisonDetuneCents = *v;
         }
-        if (auto v = ReadJsonDouble(sourceObjText, "unisonSpread"))
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonSpread"))
         {
             wf.unisonSpread = *v;
         }
-        if (auto v = ReadJsonDouble(sourceObjText, "subOscLevel"))
+        if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel"))
         {
             wf.subOscLevel = *v;
         }
-        if (auto v = ReadJsonString(sourceObjText, "filterMode"))
+        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
         {
             FilterMode mode{};
             if (!TryParseFilterMode(*v, mode))
@@ -113,11 +113,11 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             }
             wf.filterMode = mode;
         }
-        if (auto v = ReadJsonDouble(sourceObjText, "filterCutoffHz"))
+        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
         {
             wf.filterCutoffHz = *v;
         }
-        if (auto v = ReadJsonDouble(sourceObjText, "filterResonance"))
+        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
         {
             wf.filterResonance = *v;
         }
@@ -191,7 +191,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::Noise:
     {
-        auto noise = ReadJsonString(sourceObjText, "noise");
+        auto noise = ReadJSONString(sourceObjText, "noise");
         if (!noise)
         {
             err = "noise source requires 'noise'";
@@ -208,12 +208,12 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::Fm:
     {
-        auto carrier = ReadJsonString(sourceObjText, "carrierWave");
-        auto mod = ReadJsonString(sourceObjText, "modWave");
-        auto carrierRatio = ReadJsonDouble(sourceObjText, "carrierRatio");
-        auto modRatio = ReadJsonDouble(sourceObjText, "modRatio");
-        auto index = ReadJsonDouble(sourceObjText, "index");
-        auto outLevel = ReadJsonDouble(sourceObjText, "outLevel");
+        auto carrier = ReadJSONString(sourceObjText, "carrierWave");
+        auto mod = ReadJSONString(sourceObjText, "modWave");
+        auto carrierRatio = ReadJSONDouble(sourceObjText, "carrierRatio");
+        auto modRatio = ReadJSONDouble(sourceObjText, "modRatio");
+        auto index = ReadJSONDouble(sourceObjText, "index");
+        auto outLevel = ReadJSONDouble(sourceObjText, "outLevel");
         if (!carrier || !mod || !carrierRatio || !modRatio || !index || !outLevel)
         {
             err = "fm source requires carrierWave/modWave/carrierRatio/modRatio/index/outLevel";

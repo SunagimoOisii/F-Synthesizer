@@ -8,11 +8,11 @@ namespace
 {
 bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, std::string& err)
 {
-    if (auto v = ReadJsonDouble(channelObjText, "amp")) cfg.amp = *v;
-    if (auto v = ReadJsonDouble(channelObjText, "attackSec")) cfg.attackSec = *v;
-    if (auto v = ReadJsonDouble(channelObjText, "decaySec")) cfg.decaySec = *v;
-    if (auto v = ReadJsonDouble(channelObjText, "sustainLevel")) cfg.sustainLevel = *v;
-    if (auto v = ReadJsonDouble(channelObjText, "releaseSec")) cfg.releaseSec = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "attackSec")) cfg.attackSec = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "decaySec")) cfg.decaySec = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "sustainLevel")) cfg.sustainLevel = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "releaseSec")) cfg.releaseSec = *v;
 
     std::string sourceObj;
     bool found = false;
@@ -34,11 +34,11 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
 
 bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
 {
-    if (auto v = ReadJsonBool(mixObjText, "mute")) mix.mute = *v;
-    if (auto v = ReadJsonBool(mixObjText, "solo")) mix.solo = *v;
-    if (auto v = ReadJsonDouble(mixObjText, "level")) mix.level = *v;
-    if (auto v = ReadJsonDouble(mixObjText, "pan")) mix.pan = *v;
-    if (auto v = ReadJsonDouble(mixObjText, "gain")) mix.gain = *v;
+    if (auto v = ReadJSONBool(mixObjText, "mute")) mix.mute = *v;
+    if (auto v = ReadJSONBool(mixObjText, "solo")) mix.solo = *v;
+    if (auto v = ReadJSONDouble(mixObjText, "level")) mix.level = *v;
+    if (auto v = ReadJSONDouble(mixObjText, "pan")) mix.pan = *v;
+    if (auto v = ReadJSONDouble(mixObjText, "gain")) mix.gain = *v;
 
     if (mix.level < 0.0 || mix.level > 2.0)
     {

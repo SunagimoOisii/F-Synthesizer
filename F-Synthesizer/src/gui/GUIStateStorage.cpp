@@ -10,7 +10,7 @@
 
 namespace
 {
-std::string EscapeJson(const std::string& src)
+std::string EscapeJSON(const std::string& src)
 {
     std::string out;
     out.reserve(src.size() + 16);
@@ -36,7 +36,7 @@ std::string EscapeJson(const std::string& src)
     return out;
 }
 
-std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key)
+std::optional<std::string> ReadJSONString(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
     std::smatch m;
@@ -77,7 +77,7 @@ std::optional<std::string> ReadJsonString(const std::string& text, const std::st
     return std::nullopt;
 }
 
-std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
+std::optional<int> ReadJSONInt(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+)");
     std::smatch m;
@@ -88,7 +88,7 @@ std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
     return std::nullopt;
 }
 
-std::optional<float> ReadJsonFloat(const std::string& text, const std::string& key)
+std::optional<float> ReadJSONFloat(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
     std::smatch m;
@@ -99,7 +99,7 @@ std::optional<float> ReadJsonFloat(const std::string& text, const std::string& k
     return std::nullopt;
 }
 
-std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key)
+std::optional<bool> ReadJSONBool(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(true|false)");
     std::smatch m;
@@ -125,7 +125,7 @@ std::string Trim(const std::string& s)
     return s.substr(b, e - b);
 }
 
-std::string UnescapeJsonString(const std::string& raw)
+std::string UnescapeJSONString(const std::string& raw)
 {
     std::string out;
     out.reserve(raw.size());
@@ -159,7 +159,7 @@ std::string UnescapeJsonString(const std::string& raw)
     return out;
 }
 
-bool ParseFlatJsonLine(const std::string& line, std::string& outKey, std::string& outValue)
+bool ParseFlatJSONLine(const std::string& line, std::string& outKey, std::string& outValue)
 {
     const size_t k0 = line.find('"');
     if (k0 == std::string::npos)
@@ -205,7 +205,7 @@ std::optional<std::string> ParseStringValue(const std::string& value)
     {
         return std::nullopt;
     }
-    return UnescapeJsonString(value.substr(1, value.size() - 2));
+    return UnescapeJSONString(value.substr(1, value.size() - 2));
 }
 
 bool StartsWith(const std::string& s, const std::string& prefix)
@@ -233,44 +233,44 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     oss << fin.rdbuf();
     const std::string text = oss.str();
 
-    if (auto v = ReadJsonString(text, "midiPath")) data.midiPath = *v;
-    if (auto v = ReadJsonString(text, "wavPath")) data.wavPath = *v;
-    if (auto v = ReadJsonInt(text, "targetChannel")) data.targetChannel = *v;
-    if (auto v = ReadJsonInt(text, "assetReferenceMode")) data.assetReferenceMode = *v;
-    if (auto v = ReadJsonBool(text, "showReferenceAdvanced")) data.showReferenceAdvanced = *v;
-    if (auto v = ReadJsonInt(text, "sampleRate")) data.sampleRate = *v;
-    if (auto v = ReadJsonInt(text, "initialSeconds")) data.initialSeconds = *v;
-    if (auto v = ReadJsonInt(text, "bits")) data.bits = *v;
-    if (auto v = ReadJsonFloat(text, "extraReleaseSec")) data.extraReleaseSec = *v;
-    if (auto v = ReadJsonInt(text, "defaultWave")) data.defaultWave = *v;
-    if (auto v = ReadJsonInt(text, "uiScaleIndex")) data.uiScaleIndex = *v;
-    if (auto v = ReadJsonInt(text, "uiModeTab")) data.uiModeTab = *v;
-    if (auto v = ReadJsonFloat(text, "logPanelHeight")) data.logPanelHeight = *v;
-    if (auto v = ReadJsonInt(text, "presetIndex")) data.presetIndex = *v;
-    if (auto v = ReadJsonBool(text, "serialSave")) data.serialSave = *v;
-    if (auto v = ReadJsonBool(text, "previewLoop")) data.previewLoop = *v;
-    if (auto v = ReadJsonInt(text, "selectedSoundSlot")) data.selectedSoundSlot = *v;
-    if (auto v = ReadJsonInt(text, "selectedDrumNote")) data.selectedDrumNote = *v;
-    if (auto v = ReadJsonString(text, "presetName")) data.presetName = *v;
-    if (auto v = ReadJsonString(text, "lastPresetPath")) data.lastPresetPath = *v;
-    if (auto v = ReadJsonInt(text, "prDisplayChannel")) data.prDisplayChannel = *v;
-    if (auto v = ReadJsonInt(text, "prSnapIndex")) data.prSnapIndex = *v;
-    if (auto v = ReadJsonFloat(text, "prPixelsPerQuarter")) data.prPixelsPerQuarter = *v;
-    if (auto v = ReadJsonInt(text, "prTickOffset")) data.prTickOffset = *v;
-    if (auto v = ReadJsonInt(text, "prNoteOffset")) data.prNoteOffset = *v;
-    if (auto v = ReadJsonInt(text, "prVisibleNoteCount")) data.prVisibleNoteCount = *v;
-    if (auto v = ReadJsonBool(text, "prDrumNameMode")) data.prDrumNameMode = *v;
-    if (auto v = ReadJsonBool(text, "prFollowPreviewPlayback")) data.prFollowPreviewPlayback = *v;
-    if (auto v = ReadJsonInt(text, "prPreviewStartTick")) data.prPreviewStartTick = *v;
-    if (auto v = ReadJsonBool(text, "drumChannelSpecialHandling")) data.drumChannelSpecialHandling = *v;
-    if (auto v = ReadJsonInt(text, "prSelectedCount"))
+    if (auto v = ReadJSONString(text, "midiPath")) data.midiPath = *v;
+    if (auto v = ReadJSONString(text, "wavPath")) data.wavPath = *v;
+    if (auto v = ReadJSONInt(text, "targetChannel")) data.targetChannel = *v;
+    if (auto v = ReadJSONInt(text, "assetReferenceMode")) data.assetReferenceMode = *v;
+    if (auto v = ReadJSONBool(text, "showReferenceAdvanced")) data.showReferenceAdvanced = *v;
+    if (auto v = ReadJSONInt(text, "sampleRate")) data.sampleRate = *v;
+    if (auto v = ReadJSONInt(text, "initialSeconds")) data.initialSeconds = *v;
+    if (auto v = ReadJSONInt(text, "bits")) data.bits = *v;
+    if (auto v = ReadJSONFloat(text, "extraReleaseSec")) data.extraReleaseSec = *v;
+    if (auto v = ReadJSONInt(text, "defaultWave")) data.defaultWave = *v;
+    if (auto v = ReadJSONInt(text, "uiScaleIndex")) data.uiScaleIndex = *v;
+    if (auto v = ReadJSONInt(text, "uiModeTab")) data.uiModeTab = *v;
+    if (auto v = ReadJSONFloat(text, "logPanelHeight")) data.logPanelHeight = *v;
+    if (auto v = ReadJSONInt(text, "presetIndex")) data.presetIndex = *v;
+    if (auto v = ReadJSONBool(text, "serialSave")) data.serialSave = *v;
+    if (auto v = ReadJSONBool(text, "previewLoop")) data.previewLoop = *v;
+    if (auto v = ReadJSONInt(text, "selectedSoundSlot")) data.selectedSoundSlot = *v;
+    if (auto v = ReadJSONInt(text, "selectedDrumNote")) data.selectedDrumNote = *v;
+    if (auto v = ReadJSONString(text, "presetName")) data.presetName = *v;
+    if (auto v = ReadJSONString(text, "lastPresetPath")) data.lastPresetPath = *v;
+    if (auto v = ReadJSONInt(text, "prDisplayChannel")) data.prDisplayChannel = *v;
+    if (auto v = ReadJSONInt(text, "prSnapIndex")) data.prSnapIndex = *v;
+    if (auto v = ReadJSONFloat(text, "prPixelsPerQuarter")) data.prPixelsPerQuarter = *v;
+    if (auto v = ReadJSONInt(text, "prTickOffset")) data.prTickOffset = *v;
+    if (auto v = ReadJSONInt(text, "prNoteOffset")) data.prNoteOffset = *v;
+    if (auto v = ReadJSONInt(text, "prVisibleNoteCount")) data.prVisibleNoteCount = *v;
+    if (auto v = ReadJSONBool(text, "prDrumNameMode")) data.prDrumNameMode = *v;
+    if (auto v = ReadJSONBool(text, "prFollowPreviewPlayback")) data.prFollowPreviewPlayback = *v;
+    if (auto v = ReadJSONInt(text, "prPreviewStartTick")) data.prPreviewStartTick = *v;
+    if (auto v = ReadJSONBool(text, "drumChannelSpecialHandling")) data.drumChannelSpecialHandling = *v;
+    if (auto v = ReadJSONInt(text, "prSelectedCount"))
     {
         data.prSelectedIndices.clear();
         const int n = (std::max)(0, *v);
         data.prSelectedIndices.reserve(static_cast<size_t>(n));
         for (int i = 0; i < n; i++)
         {
-            if (auto idx = ReadJsonInt(text, "prSelectedIndex" + std::to_string(i)))
+            if (auto idx = ReadJSONInt(text, "prSelectedIndex" + std::to_string(i)))
             {
                 data.prSelectedIndices.push_back(*idx);
             }
@@ -286,14 +286,14 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
         const std::string kLevel = "mixCh" + std::to_string(ch) + "Level";
         const std::string kPan = "mixCh" + std::to_string(ch) + "Pan";
         const std::string kGain = "mixCh" + std::to_string(ch) + "Gain";
-        if (auto v = ReadJsonBool(text, kMute)) mix.mute = *v;
-        if (auto v = ReadJsonBool(text, kSolo)) mix.solo = *v;
-        if (auto v = ReadJsonFloat(text, kLevel)) mix.level = *v;
-        if (auto v = ReadJsonFloat(text, kPan)) mix.pan = *v;
-        if (auto v = ReadJsonFloat(text, kGain)) mix.gain = *v;
+        if (auto v = ReadJSONBool(text, kMute)) mix.mute = *v;
+        if (auto v = ReadJSONBool(text, kSolo)) mix.solo = *v;
+        if (auto v = ReadJSONFloat(text, kLevel)) mix.level = *v;
+        if (auto v = ReadJSONFloat(text, kPan)) mix.pan = *v;
+        if (auto v = ReadJSONFloat(text, kGain)) mix.gain = *v;
 
         const std::string kAssign = "assignCh" + std::to_string(ch);
-        if (auto v = ReadJsonInt(text, kAssign))
+        if (auto v = ReadJSONInt(text, kAssign))
         {
             data.channelAssignments[ch] = std::clamp(*v, 0, 15);
         }
@@ -316,8 +316,8 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
 
     // 読込側のregex実装と対応させるため、入れ子を使わないJSONキー構造で保存する。
     fout << "{\n";
-    fout << "  \"midiPath\": \"" << EscapeJson(data.midiPath) << "\",\n";
-    fout << "  \"wavPath\": \"" << EscapeJson(data.wavPath) << "\",\n";
+    fout << "  \"midiPath\": \"" << EscapeJSON(data.midiPath) << "\",\n";
+    fout << "  \"wavPath\": \"" << EscapeJSON(data.wavPath) << "\",\n";
     fout << "  \"targetChannel\": " << data.targetChannel << ",\n";
     fout << "  \"assetReferenceMode\": " << data.assetReferenceMode << ",\n";
     fout << "  \"showReferenceAdvanced\": " << (data.showReferenceAdvanced ? "true" : "false") << ",\n";
@@ -334,8 +334,8 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"previewLoop\": " << (data.previewLoop ? "true" : "false") << ",\n";
     fout << "  \"selectedSoundSlot\": " << data.selectedSoundSlot << ",\n";
     fout << "  \"selectedDrumNote\": " << data.selectedDrumNote << ",\n";
-    fout << "  \"presetName\": \"" << EscapeJson(data.presetName) << "\",\n";
-    fout << "  \"lastPresetPath\": \"" << EscapeJson(data.lastPresetPath) << "\",\n";
+    fout << "  \"presetName\": \"" << EscapeJSON(data.presetName) << "\",\n";
+    fout << "  \"lastPresetPath\": \"" << EscapeJSON(data.lastPresetPath) << "\",\n";
     fout << "  \"prDisplayChannel\": " << data.prDisplayChannel << ",\n";
     fout << "  \"prSnapIndex\": " << data.prSnapIndex << ",\n";
     fout << "  \"prPixelsPerQuarter\": " << data.prPixelsPerQuarter << ",\n";
@@ -390,7 +390,7 @@ bool LoadPianoRollProjectStorageFile(const std::filesystem::path& path, PianoRol
     {
         std::string key;
         std::string value;
-        if (!ParseFlatJsonLine(line, key, value))
+        if (!ParseFlatJSONLine(line, key, value))
         {
             continue;
         }
@@ -526,7 +526,7 @@ bool SavePianoRollProjectStorageFile(const std::filesystem::path& path, const Pi
     }
 
     fout << "{\n";
-    fout << "  \"midiPath\": \"" << EscapeJson(data.midiPath) << "\",\n";
+    fout << "  \"midiPath\": \"" << EscapeJSON(data.midiPath) << "\",\n";
     fout << "  \"ticksPerQuarter\": " << data.ticksPerQuarter << ",\n";
     fout << "  \"noteCount\": " << data.notes.size();
     if (!data.notes.empty())

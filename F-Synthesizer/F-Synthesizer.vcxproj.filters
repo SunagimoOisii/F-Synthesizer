@@ -39,7 +39,7 @@
     <ClCompile Include="src\\config\\ConfigFileIO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\config\\ConfigJsonUtils.cpp">
+    <ClCompile Include="src\\config\\ConfigJSONUtils.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\config\\ConfigLoad.cpp">
@@ -57,7 +57,7 @@
     <ClCompile Include="src\\config\\load\\LoadTopLevel.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\config\\SourceJson.cpp">
+    <ClCompile Include="src\\config\\SourceJSON.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="src\\config\\SourceRegistry.cpp">
@@ -176,7 +176,7 @@
     <ClInclude Include="include\\config\\ConfigResolver.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\config\\SourceJson.h">
+    <ClInclude Include="include\\config\\SourceJSON.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\config\\SourceRegistry.h">

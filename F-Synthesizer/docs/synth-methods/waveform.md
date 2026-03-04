@@ -84,8 +84,8 @@ source type: `waveform`
 
 - 方式境界は `docs/synth-methods/method-boundaries.md` の `Waveform` 節を正とする
 - 方式追加時は `source.type` の管理を `SourceRegistry` で一元化する
-- JSON 出力は `config::WriteSourceJson` を利用して重複実装を避ける
-- waveform 拡張時は `ConfigLoad/ConfigJsonUtils/GUIConfigUtils` の3点セット更新を前提にする
+- JSON 出力は `config::WriteSourceJSON` を利用して重複実装を避ける
+- waveform 拡張時は `ConfigLoad/ConfigJSONUtils/GUIConfigUtils` の3点セット更新を前提にする
 
 ## F. AB確認（Modulation ON/OFF）
 

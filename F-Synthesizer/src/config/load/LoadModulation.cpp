@@ -8,7 +8,7 @@ namespace
 {
 bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
 {
-    if (auto v = ReadJsonString(text, "wave"))
+    if (auto v = ReadJSONString(text, "wave"))
     {
         LfoWave wave{};
         if (!TryParseLfoWave(*v, wave))
@@ -18,24 +18,24 @@ bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
         }
         lfo.wave = wave;
     }
-    if (auto v = ReadJsonDouble(text, "rateHz")) lfo.rateHz = *v;
-    if (auto v = ReadJsonDouble(text, "depth")) lfo.depth = *v;
-    if (auto v = ReadJsonBool(text, "bipolar")) lfo.bipolar = *v;
+    if (auto v = ReadJSONDouble(text, "rateHz")) lfo.rateHz = *v;
+    if (auto v = ReadJSONDouble(text, "depth")) lfo.depth = *v;
+    if (auto v = ReadJSONBool(text, "bipolar")) lfo.bipolar = *v;
     return true;
 }
 
 bool ParseEnv2Object(const std::string& text, ModEnvelopeConfig& env2)
 {
-    if (auto v = ReadJsonDouble(text, "attackSec")) env2.attackSec = *v;
-    if (auto v = ReadJsonDouble(text, "decaySec")) env2.decaySec = *v;
-    if (auto v = ReadJsonDouble(text, "sustainLevel")) env2.sustainLevel = *v;
-    if (auto v = ReadJsonDouble(text, "releaseSec")) env2.releaseSec = *v;
+    if (auto v = ReadJSONDouble(text, "attackSec")) env2.attackSec = *v;
+    if (auto v = ReadJSONDouble(text, "decaySec")) env2.decaySec = *v;
+    if (auto v = ReadJSONDouble(text, "sustainLevel")) env2.sustainLevel = *v;
+    if (auto v = ReadJSONDouble(text, "releaseSec")) env2.releaseSec = *v;
     return true;
 }
 
 bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err)
 {
-    if (auto v = ReadJsonString(text, "source"))
+    if (auto v = ReadJSONString(text, "source"))
     {
         ModSource source{};
         if (!TryParseModSource(*v, source))
@@ -45,7 +45,7 @@ bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err
         }
         route.source = source;
     }
-    if (auto v = ReadJsonString(text, "destination"))
+    if (auto v = ReadJSONString(text, "destination"))
     {
         ModDestination destination{};
         if (!TryParseModDestination(*v, destination))
@@ -55,8 +55,8 @@ bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err
         }
         route.destination = destination;
     }
-    if (auto v = ReadJsonDouble(text, "amount")) route.amount = *v;
-    if (auto v = ReadJsonBool(text, "enabled")) route.enabled = *v;
+    if (auto v = ReadJSONDouble(text, "amount")) route.amount = *v;
+    if (auto v = ReadJSONBool(text, "enabled")) route.enabled = *v;
     return true;
 }
 } // namespace
@@ -126,11 +126,11 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
 
 bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing)
 {
-    if (auto v = ReadJsonBool(text, "enabled")) smoothing.enabled = *v;
-    if (auto v = ReadJsonBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
-    if (auto v = ReadJsonDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
-    if (auto v = ReadJsonDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
-    if (auto v = ReadJsonDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
+    if (auto v = ReadJSONBool(text, "enabled")) smoothing.enabled = *v;
+    if (auto v = ReadJSONBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
+    if (auto v = ReadJSONDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
+    if (auto v = ReadJSONDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
+    if (auto v = ReadJSONDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
     return true;
 }
 

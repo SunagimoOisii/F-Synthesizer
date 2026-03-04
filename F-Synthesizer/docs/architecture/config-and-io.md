@@ -42,8 +42,8 @@ flowchart LR
 | File | 役割 |
 |---|---|
 | `src/config/ConfigSave.cpp` | Configの書き出し |
-| `src/config/ConfigJsonUtils.cpp` | JSON補助 |
-| `src/config/SourceJson.cpp` | Source定義のJSON変換 |
+| `src/config/ConfigJSONUtils.cpp` | JSON補助 |
+| `src/config/SourceJSON.cpp` | Source定義のJSON変換 |
 | `src/config/SourceRegistry.cpp` | Source種別解決 |
 
 ## Path / Writer
@@ -95,7 +95,7 @@ flowchart LR
 - 判断: `SaveGUIStateStorageFile` は入れ子を使わないキー構造で保存し、読込実装と対にする。
 - 代替案: 汎用JSONパーサ導入と同時にスキーマを全面改訂する案。
 - 影響範囲: 既存GUI状態ファイルとの互換を維持しつつ、実装複雑度を抑制。
-- 関連ファイル: `src/gui/GUIStateStorage.cpp`, `src/config/ConfigJsonUtils.cpp`
+- 関連ファイル: `src/gui/GUIStateStorage.cpp`, `src/config/ConfigJSONUtils.cpp`
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
@@ -105,7 +105,7 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 判断:
 - 代替案:
 - 影響範囲:
-- 関連ファイル: include/config/ConfigResolver.h, include/config/SourceJson.h, include/config/SourceRegistry.h, src/config/ConfigFileIO.cpp, src/config/ConfigResolver.cpp
+- 関連ファイル: include/config/ConfigResolver.h, include/config/SourceJSON.h, include/config/SourceRegistry.h, src/config/ConfigFileIO.cpp, src/config/ConfigResolver.cpp
 
 
 ### Config Compatibility

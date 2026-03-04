@@ -153,13 +153,13 @@
     <ClCompile Include="src\\app\\RunSave.cpp" />
     <ClCompile Include="src\\app\\RunStats.cpp" />
     <ClCompile Include="src\\config\\ConfigFileIO.cpp" />
-    <ClCompile Include="src\\config\\ConfigJsonUtils.cpp" />
+    <ClCompile Include="src\\config\\ConfigJSONUtils.cpp" />
     <ClCompile Include="src\\config\\ConfigLoad.cpp" />
     <ClCompile Include="src\\config\\load\\LoadChannel.cpp" />
     <ClCompile Include="src\\config\\load\\LoadModulation.cpp" />
     <ClCompile Include="src\\config\\load\\LoadSource.cpp" />
     <ClCompile Include="src\\config\\load\\LoadTopLevel.cpp" />
-    <ClCompile Include="src\\config\\SourceJson.cpp" />
+    <ClCompile Include="src\\config\\SourceJSON.cpp" />
     <ClCompile Include="src\\config\\SourceRegistry.cpp" />
     <ClCompile Include="src\\config\\ConfigSave.cpp" />
     <ClCompile Include="src\\config\\ConfigResolver.cpp" />
@@ -202,7 +202,7 @@
     <ClInclude Include="src\\app\\RunInternal.h" />
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
-    <ClInclude Include="include\\config\\SourceJson.h" />
+    <ClInclude Include="include\\config\\SourceJSON.h" />
     <ClInclude Include="include\\config\\SourceRegistry.h" />
     <ClInclude Include="src\\config\\ConfigFileInternal.h" />
     <ClInclude Include="src\\config\\load\\Internal.h" />

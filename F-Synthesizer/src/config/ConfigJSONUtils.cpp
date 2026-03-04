@@ -21,7 +21,7 @@ std::string ReadTextFile(const std::filesystem::path& filePath)
     return oss.str();
 }
 
-std::optional<std::string> ReadJsonString(const std::string& text, const std::string& key)
+std::optional<std::string> ReadJSONString(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
     std::smatch m;
@@ -32,7 +32,7 @@ std::optional<std::string> ReadJsonString(const std::string& text, const std::st
     return std::nullopt;
 }
 
-std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
+std::optional<int> ReadJSONInt(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+)");
     std::smatch m;
@@ -43,7 +43,7 @@ std::optional<int> ReadJsonInt(const std::string& text, const std::string& key)
     return std::nullopt;
 }
 
-std::optional<double> ReadJsonDouble(const std::string& text, const std::string& key)
+std::optional<double> ReadJSONDouble(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
     std::smatch m;
@@ -54,7 +54,7 @@ std::optional<double> ReadJsonDouble(const std::string& text, const std::string&
     return std::nullopt;
 }
 
-std::optional<bool> ReadJsonBool(const std::string& text, const std::string& key)
+std::optional<bool> ReadJSONBool(const std::string& text, const std::string& key)
 {
     const std::regex pat("\"" + key + "\"\\s*:\\s*(true|false)");
     std::smatch m;
@@ -306,7 +306,7 @@ std::string ModDestinationToString(ModDestination destination)
     return "none";
 }
 
-std::string EscapeJson(const std::string& src)
+std::string EscapeJSON(const std::string& src)
 {
     std::string out;
     out.reserve(src.size() + 16);

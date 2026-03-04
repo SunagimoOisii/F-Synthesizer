@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-05 (feat-infra done: midi_regression/check integration)
+Last Updated: 2026-03-05 (acronym-case JSON done)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -52,6 +52,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui-help Phase 9: ホバー文言契約を `docs/GUI_REQUIREMENTS.md` へ昇格し、計画台帳を `docs-archive/gui-help/gui-help-phase-plan.md` へ移管
   - feat-infra: `scripts/midi_regression.ps1` を絶対パスconfig化して実行ディレクトリ依存を解消し、`scripts/check.ps1 -RunMIDIRegression` を追加
   - infra-fix: `scripts/update_architecture_notes.ps1` の文字コード依存で発生するPowerShell 5.1構文崩れを回避（非ASCII文字列をASCII化）
+  - acronym-case: 略称表記を段階的に大文字統一（`MidiPipeline -> MIDIPipeline`, `MIDI/WAV/CLI/JSON` 系の型名・関数名・ファイル名・参照を更新）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
