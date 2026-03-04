@@ -1,6 +1,6 @@
 # WAVE_DRUM_BRUSHUP_TASKS
 
-このドキュメントは `docs/synth-migration/WAVE_DRUM_BRUSHUP_PHASES.md` の実装チェックリストです。
+このドキュメントは `docs-archive/synth-migration/WAVE_DRUM_BRUSHUP_PHASES.md` の実装チェックリストです。
 
 ## 運用ルール
 
@@ -58,3 +58,4 @@
 3. `Phase C`: drumのみの改善
 4. `Phase D`: 統合チューニング
 5. `Phase E`: 運用固定とドキュメント更新
+

@@ -139,5 +139,6 @@ source type: `waveform`
 ## J. 運用固定（Phase E）
 
 - AB手順と記録テンプレートを以下へ固定:
-  - `docs/synth-migration/WAVE_DRUM_AB_RUNBOOK.md`
+  - `docs-archive/synth-migration/WAVE_DRUM_AB_RUNBOOK.md`
+
 

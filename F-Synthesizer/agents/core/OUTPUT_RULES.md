@@ -14,4 +14,5 @@
 
 ## コメント規約
 
-- `src/` と `include/` のコメントは `agents/standards/COMMENT_GUIDELINE.md` を適用する。
+- `src/` と `include/` のコメントは `agents/standards/COMMENT_GUIDELINE.md`（必須版）を適用する。
+- 詳細規定が必要な場合のみ `agents/standards/COMMENT_GUIDELINE_FULL.md` を参照する。

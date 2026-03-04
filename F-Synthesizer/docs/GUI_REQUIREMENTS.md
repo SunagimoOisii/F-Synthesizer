@@ -1,6 +1,6 @@
 # GUI_REQUIREMENTS
 
-現行GUIの実装契約を定義する。過去要件は `docs/archive/gui-requirements/` を参照。
+現行GUIの実装契約を定義する。過去要件は `docs-archive/gui-requirements/` を参照。
 
 ## 目的
 
@@ -82,3 +82,4 @@
 - 自動回帰は `scripts/gui_smoke.ps1` を利用する
 - 手動受け入れは `docs/GUI_V8_ACCEPTANCE_TEST.md` を利用する
 - v7手順（`docs/GUI_V7_ACCEPTANCE_TEST.md`）は凍結記録として保持する
+

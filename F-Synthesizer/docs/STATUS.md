@@ -50,10 +50,12 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 - 詳細設計は `Architecture.md`
 - プロダクト方針は `PRODUCT_POLICY.md`
-- 設計判断ログは `DECISIONS.md`
+- 設計判断ログは `DECISIONS.md`\n- 音色パラメータ要約は `SOUND_PARAMETERS_SUMMARY.md`（詳細は `SOUND_PARAMETERS.md`）
 - 実行入口は `src/SoundGenerate.cpp`
 - GUI準備要件は `GUI_REQUIREMENTS.md`
-- コメント規約は `COMMENT_GUIDELINE.md`
+- コメント規約は `agents/standards/COMMENT_GUIDELINE.md`
 - GUIスモークテストは `scripts/gui_smoke.ps1`
 - 再開手順は `AGENTS.md` の Start Here / Useful Commands を参照
-- 過去バージョン計画・移行記録は `docs/archive/` 配下を参照
+- 過去バージョン計画・移行記録は `docs-archive/` 配下を参照
+
+
