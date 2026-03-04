@@ -102,8 +102,10 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 2. 構造変更があれば `docs/Architecture.md` を更新する
 3. 優先順位の変化を `docs/STATUS.md` の `Next 3` に反映する
 4. 新しい設計判断を `docs/DECISIONS.md` に追記する
+5. `docs/architecture/*.md` の `Special Notes` で `TODO (auto-generated)` を確認し、対象があれば ADR を記入する（`背景/判断/代替案/影響範囲/関連ファイル`）
 
 完了チェック:
 - 解消済み課題を `STATUS.md` から削除した
 - 優先事項が `STATUS.md` の `Next 3` に反映されている
 - 新しい判断があれば `DECISIONS.md` に残した
+- `docs/architecture/*.md` の `Special Notes` に未記入の `TODO (auto-generated)` が残っていない

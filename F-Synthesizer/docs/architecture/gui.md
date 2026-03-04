@@ -97,38 +97,38 @@ flowchart LR
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
-#### 2026-02-26: TODO (auto-generated)
+#### 2026-02-26: 音源別編集UIを `GUIChannelEditor` に集約
 - カテゴリ: GUI操作・状態管理
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 音源方式ごとの編集項目が複数箇所に分散すると、機能追加時の反映漏れとUX不整合が起きやすい。
+- 判断: Source切替に応じた編集UIは `GUIChannelEditor` に集約し、Sound編集の入口を一本化する。
+- 代替案: Sourceごとに別画面・別編集関数へ分散する案。
+- 影響範囲: 実装変更時の追跡性が向上し、外部デモ時に「編集導線が一貫している」と説明しやすくなる。
 - 関連ファイル: src/gui/GUIChannelEditor.cpp
 
 
-#### 2026-03-03: TODO (auto-generated)
+#### 2026-03-03: 描画と副作用処理の責務を分離
 - カテゴリ: GUI操作・状態管理
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 描画コードに実行/保存/復旧ロジックを混在させると、画面変更時に挙動回帰を招きやすい。
+- 判断: 描画は `MainWindow.inl`、操作副作用は `GUIActions.cpp`、パラメータ編集は `GUIChannelEditor.cpp` へ分離する。
+- 代替案: 1ファイルで描画と操作を一体管理する案。
+- 影響範囲: レビュー時に見た目変更と挙動変更を分離でき、回帰原因の切り分けが容易になる。
 - 関連ファイル: src/gui/GUIActions.cpp, src/gui/GUIChannelEditor.cpp, src/gui/main/MainWindow.inl
 
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: GUI保存・復旧の契約をヘッダ境界で固定
 - カテゴリ: GUI操作・状態管理
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 実行中断・保存失敗・復旧導線の契約が曖昧だと、呼び出し側ごとにエラー処理が分岐して保守負荷が増える。
+- 判断: `GUIActions/GUIRunHelpers/GUIStatePersistence/GUIStateStorage` の公開関数契約を明示し、状態遷移を共通化する。
+- 代替案: 呼び出し側で都度ローカル処理を追加する案。
+- 影響範囲: 運用時の復旧導線（Recover操作）を統一し、将来の機能追加でも例外処理の再利用性が高まる。
 - 関連ファイル: include/gui/GUIActions.h, include/gui/GUIRunHelpers.h, include/gui/GUIStatePersistence.h, include/gui/GUIStateStorage.h, src/gui/GUIActions.cpp
 
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: ホバー説明の表示契約を `影響/注意` 優先に統一
 - カテゴリ: GUI操作・状態管理
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: `Help` 文言がラベル説明と重複すると情報密度が下がり、ユーザーが操作差分を把握しづらい。
+- 判断: `composeHoverHelp/updateHoverHelp` で `影響` と `注意` を主表示にし、Top Controls 全体で同一フォーマットを適用する。
+- 代替案: 各UI要素で自由形式のヘルプ文を維持する案。
+- 影響範囲: 文言設計の一貫性が向上し、操作ガイドを外部ドキュメントへ転用しやすくなる。
 - 関連ファイル: src/gui/main/MainWindow.inl
 

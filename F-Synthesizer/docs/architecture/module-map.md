@@ -69,39 +69,39 @@ flowchart LR
 - 関連ファイル: `src/app/RunExecution.cpp`, `src/midi/MIDIPipeline.cpp`, `src/core/RenderGateway.cpp`
 
 
-#### 2026-02-26: TODO (auto-generated)
+#### 2026-02-26: Source別編集の集約点を `GUIChannelEditor` に固定
 - カテゴリ: 依存方向・責務境界
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 音源方式（Waveform/Noise/FM/DrumKit）ごとの編集UIが分散すると、機能追加時に差分漏れと文言不整合が起きやすい。
+- 判断: Source切替と編集ウィジェットの主要分岐を `GUIChannelEditor` に集約し、GUI上の責務境界を一本化する。
+- 代替案: Sourceごとに別ファイルへ分割し、呼び出し側で都度分岐する案。
+- 影響範囲: 追加実装の入口が明確になり、実装者交代時でも変更点を追いやすい。外部説明時も「編集の中心点」が示しやすくなる。
 - 関連ファイル: src/gui/GUIChannelEditor.cpp
 
 
-#### 2026-03-03: TODO (auto-generated)
+#### 2026-03-03: GUIの副作用処理を `GUIActions` へ分離
 - カテゴリ: 依存方向・責務境界
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: `MainWindow` 側に実行/保存/復旧ロジックが混在すると、描画変更と動作変更が同時発生し回帰追跡が難しくなる。
+- 判断: 描画は `MainWindow.inl`、副作用を伴う操作は `GUIActions.cpp`、パラメータ編集は `GUIChannelEditor.cpp` に分離する。
+- 代替案: 単一ファイル内で描画と操作を維持する案。
+- 影響範囲: UI改修時の影響範囲が狭まり、レビュー時に「見た目変更」と「挙動変更」を分けて検証できる。
 - 関連ファイル: src/gui/GUIActions.cpp, src/gui/GUIChannelEditor.cpp, src/gui/main/MainWindow.inl
 
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: `SoundData` の生成責務を `AudioBuffer` 側に固定
 - カテゴリ: 依存方向・責務境界
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 既定サンプルレート/bit深度の初期化が呼び出し側に散在すると、WAV出力条件の不整合が起きやすい。
+- 判断: `AudioBuffer.cpp` のコンストラクタで有効な既定値（44.1kHz/16bit）を保証し、初期化責務を境界側へ集約する。
+- 代替案: すべての呼び出し側で毎回初期値を指定する案。
+- 影響範囲: 実行経路ごとの差異を減らし、外部利用者に対しても「既定出力仕様が常に一定」と説明しやすくなる。
 - 関連ファイル: src/core/AudioBuffer.cpp
 
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: `synth` を純粋な信号処理ヘルパー層として固定
 - カテゴリ: 依存方向・責務境界
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 波形生成/ADSR進行に実行状態管理を混ぜると、移植や単体検証時に依存が増えて再利用しづらい。
+- 判断: `synth` 層は `Envelope` / `Oscillator` の信号処理APIに限定し、実行制御は上位層（SynthEngine/app）で扱う。
+- 代替案: `synth` 側で再生状態や実行コンテキストまで保持する案。
+- 影響範囲: 関数単位のテスト容易性が上がり、将来の別ランタイム/別UIへの再利用説明がしやすい。
 - 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
 
 ### 音響アルゴリズム上の制約
@@ -133,39 +133,39 @@ flowchart LR
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
 
-#### 2026-02-26: TODO (auto-generated)
+#### 2026-02-26: Drum系パラメータの未指定表現を構造体契約で統一
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: Drum方式は typeごとに利用パラメータが異なり、未使用値の扱いが曖昧だと保存/読込/GUIで不一致が発生する。
+- 判断: `DrumConfig` で「未使用値は 0 または負値で未指定」を契約化し、レンダ側で内部デフォルトにフォールバックする。
+- 代替案: typeごとに別構造体へ分割する案。
+- 影響範囲: 設定互換を維持しつつUI/JSON/レンダの意味を揃えられる。外部説明でも「未指定時の挙動」を明示できる。
 - 関連ファイル: include/SynthEngine/SynthEngine.h
 
 
-#### 2026-03-03: TODO (auto-generated)
+#### 2026-03-03: 重複ノート対応のため `noteInstanceID` を導入
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 同一ch/noteの重なり発音では、`ch+note` だけの照合だと誤った NoteOff が別Voiceを止める可能性がある。
+- 判断: `MIDIParser -> Sequencer -> VoicesSoA` で `noteInstanceID` を通線し、ID優先で NoteOff 対象を照合する。
+- 代替案: 従来どおり `ch+note` のみで照合する案。
+- 影響範囲: オーバーラップノート時の発音安定性が向上し、MIDI互換性の説明材料になる。
 - 関連ファイル: include/SynthEngine/SynthEngine.h, src/SynthEngine/Internal.h, src/SynthEngine/Voices.cpp
 
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: DrumKit は noteごとに `DrumConfig` 展開して処理
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: DrumKit を通常Voice経路と別実装にすると、ミックス/CC/Pitch/エンベロープの挙動差が生じやすい。
+- 判断: `Events.cpp` で note -> `DrumConfig` に展開後、通常 `AddVoice` 経路へ流し込む。
+- 代替案: DrumKit専用レンダ/イベント経路を新設する案。
+- 影響範囲: 単一路線で挙動整合を保ち、追加仕様時の分岐コストを抑えられる。
 - 関連ファイル: include/SynthEngine/SynthEngine.h, src/SynthEngine/Events.cpp
 
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: 波形品質と実時間性のバランスをヘルパー層で担保
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 高域のエイリアシング抑制と低コスト処理の両立が不十分だと、品質と実時間性のどちらかを失いやすい。
+- 判断: `Oscillator` は polyBLEP 補正と軽量ノイズ近似、`Envelope` は境界条件（0秒attack/release）を明示的に処理する。
+- 代替案: 補正なし波形や重い高品位アルゴリズムへ寄せる案。
+- 影響範囲: 実時間動作を維持しつつ、外部デモ時の音質劣化（特に高域の折返し）を抑えやすくなる。
 - 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
 
 

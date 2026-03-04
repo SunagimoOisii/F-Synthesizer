@@ -111,30 +111,30 @@ flowchart TD
 - 関連ファイル: `src/app/RunExecution.cpp`, `include/AppCore.h`
 
 
-#### 2026-03-03: TODO (auto-generated)
+#### 2026-03-03: MIDI解析からsampleイベント生成までをパイプライン化
 - カテゴリ: 実行フロー/キャンセル
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 解析・テンポ処理・sample化を分離せずに扱うと、部分変更時の副作用範囲が読みづらくなる。
+- 判断: `MIDIParser -> Sequencer -> MIDIPipeline` の段階を固定し、app側は統合出力を受けるだけにする。
+- 代替案: app層で個別に解析/変換関数を呼び分ける案。
+- 影響範囲: 実行経路の説明責任が明確になり、回帰テスト対象（parser/sequence/pipeline）を分割管理しやすくなる。
 - 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: 既定 `SoundData` を有効な出力条件で初期化
 - カテゴリ: 実行フロー/キャンセル
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: バッファ初期値が実行経路ごとに異なると、キャンセルや失敗時に下流処理の前提が揺らぐ。
+- 判断: `SoundData` 既定構築時に 44.1kHz/16bit/1秒を保証し、最低限の出力契約を満たす。
+- 代替案: 呼び出し側で毎回初期値を設定する案。
+- 影響範囲: 失敗時や初期状態でもI/O境界の前提が安定し、運用時の再現性を保ちやすい。
 - 関連ファイル: src/core/AudioBuffer.cpp
 
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: app-core境界を `RenderGateway` の単一入口に固定
 - カテゴリ: 実行フロー/キャンセル
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: app層が直接SynthEngine実装へ依存すると、差し替え時に呼び出し側改修が広がる。
+- 判断: `RenderWithEngine` を単一入口として保持し、実行境界の依存方向を固定する。
+- 代替案: app層から `RenderMIDIEvents` を直接呼ぶ案。
+- 影響範囲: 将来の実装差し替え（エンジン変更/テストダブル導入）時も呼び出し側の変更を最小化できる。
 - 関連ファイル: include/core/AudioBuffer.h, include/core/RenderGateway.h, src/core/AudioBuffer.cpp
 
 ### MIDI時間変換
@@ -149,21 +149,21 @@ flowchart TD
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
-#### 2026-03-03: TODO (auto-generated)
+#### 2026-03-03: 重複ノート追跡のため `noteInstanceID` を通線
 - カテゴリ: MIDI時間変換
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 同一ch/noteの重なりで NoteOff 対象が曖昧だと、発音切れや残留音が発生しやすい。
+- 判断: `MIDIParser` でID採番し `Sequencer`/`MIDIPipeline` を通して音源側までIDを引き継ぐ。
+- 代替案: `ch+note` のみでNoteOff照合する案。
+- 影響範囲: 重複ノートの再現性が改善し、MIDI互換性に関する外部説明がしやすくなる。
 - 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: Running Status 異常系を安全側で扱う
 - カテゴリ: MIDI時間変換
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: Running Status が Meta/SysEx 後に不正継続すると、イベント誤解釈で時系列が破綻する。
+- 判断: Meta/SysExでrunning statusを無効化し、不成立時はトラック読み取りを安全側で打ち切る。加えてwindow再生時にCC/Pitchの先頭補完を行う。
+- 代替案: 壊れた入力でも解釈継続を試みる案。
+- 影響範囲: 異常MIDIでの暴走を抑えつつ、部分再生でも制御状態を再現しやすくなる。
 - 関連ファイル: src/midi/MIDIParser.cpp, src/midi/MIDIPipeline.cpp, src/midi/Sequencer.cpp
 
 

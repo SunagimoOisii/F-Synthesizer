@@ -99,22 +99,22 @@ flowchart LR
 
 ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
-#### 2026-03-04: TODO (auto-generated)
+#### 2026-03-04: 実行時設定の解決優先順位を `ConfigResolver` に集約
 - カテゴリ: Config互換性
-- 背景:
-- 判断:
-- 代替案:
-- 影響範囲:
+- 背景: 設定解決の優先順が呼び出し側へ分散すると、CLI/GUIで異なる設定が選ばれ再現性が崩れる。
+- 判断: `ResolveRuntimeConfig` に `--config` / `--preset` / `default.json` / `base+fallback preset` の優先順を固定実装する。
+- 代替案: 起動経路ごとに設定解決を個別実装する案。
+- 影響範囲: 起動方法に依存しない同一挙動を維持しやすくなり、外部ユーザー向けの運用説明が単純化される。
 - 関連ファイル: include/config/ConfigResolver.h, include/config/SourceJSON.h, include/config/SourceRegistry.h, src/config/ConfigFileIO.cpp, src/config/ConfigResolver.cpp
 
 
 ### Config Compatibility
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: WAV書き出し失敗を診断可能な契約で返す
 - Category: Config Compatibility
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: `false` だけ返す失敗契約では、運用時に原因切り分けが難しく復旧導線が作りにくい。
+- Decision: `WAVWriteError` に `code/path/errno/systemError/cause/hint` を持たせ、open失敗とwrite失敗を識別して返す。
+- Alternatives: ログ出力のみで詳細を返さない案。
+- Impact: GUI/CLIで同一の失敗理由表示と案内が可能になり、サポート時の再現確認と復旧手順提示が容易になる。
 - Related Files: include/io/Writer.h, src/io/Writer.cpp
 
