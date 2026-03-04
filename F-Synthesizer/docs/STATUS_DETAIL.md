@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-04 (Split from STATUS)
+Last Updated: 2026-03-04 (Phase 6 + doc-sync)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -33,6 +33,8 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - GUI UX #7: `Channel(ch)` と `Sound Slot(s)` の表記を整理。Musicプレビュー時に `Selected Sound Slot` が自動変更されないよう挙動を修正
   - SynthEngine #2: `noteInstanceId` を `MIDIParser -> Sequencer -> VoicesSoA` へ通線し、`MarkNoteOff` をID優先照合へ切替（不一致時は旧 `ch+note` へフォールバック）
   - SynthEngine #3: Filter cutoff の微小更新を間引き、係数再計算のホットパスCPU負荷を低減（1 cent相当未満をスキップ）
+  - cleanup Phase 1-6: `scripts`/`docs`/`gui`/`midi`/`core` を監査し、削除方針を `docs/cleanup/deletion-policy.md` に確定。`scripts/piano_roll_smoke.ps1` を削除し、`AudioBuffer.cpp` の未使用/冗長処理を整理
+  - doc-sync: `ROADMAP.md` を廃止して `STATUS.md` へ一本化。`PIANO_ROLL_CONTROLS.md` は `GUI_REQUIREMENTS.md` へ、`WEEKLY_MAINTENANCE.md` は `OPERATIONS.md` へ統合
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -47,8 +49,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
 - `comments`: 既存ファイルへのコメント追加（高リスク箇所を優先、`COMMENT_GUIDELINE` 準拠）
 - `gui-help`: ホバーUIヘルプ対象を拡大（誤操作が出やすい項目を優先）
-- `cleanup`: デッドコードを調査し、不要実装を破棄する
-- `doc-sync`: `Architecture.md` / `README.md` / `STATUS.md` の同期実装と運用漏れを確認する
 
 ## Recurring Checks
 
