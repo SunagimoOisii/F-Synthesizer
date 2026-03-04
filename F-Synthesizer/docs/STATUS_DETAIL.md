@@ -48,7 +48,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 - `comments`: 既存ファイルへのコメント追加（高リスク箇所を優先、`COMMENT_GUIDELINE` 準拠）
 - `gui-help`: ホバーUIヘルプ対象を拡大（誤操作が出やすい項目を優先）
 - `cleanup`: デッドコードを調査し、不要実装を破棄する
-- `naming`: `MidiParser` 表記を `MIDIParser` に統一する（ファイル名・参照名）
 - `doc-sync`: `Architecture.md` / `README.md` / `STATUS.md` の同期実装と運用漏れを確認する
 
 ## Recurring Checks
