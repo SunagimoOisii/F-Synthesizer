@@ -34,6 +34,14 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
             "ドラム発音モデル（none/kick/snare/hat）が切り替わります。",
             nullptr);
     }
+    ImGui::TextDisabled("DrumConfig: 0 = 未指定（内部デフォルト）");
+    if (updateHoverHelp)
+    {
+        updateHoverHelp(
+            "DrumConfig の未指定値ルールを確認します。",
+            "数値パラメータを 0 にすると内部デフォルトが使われます。",
+            "明示値に戻す場合は 0 以外の値を入力してください。");
+    }
     d.type = static_cast<DrumType>(drumType);
 
     if (d.type == DrumType::None)

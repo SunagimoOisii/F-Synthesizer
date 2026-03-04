@@ -17,9 +17,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
-2. `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
-3. `gui-help`: `docs/gui-help-hover-acceptance-checklist.md` に沿って最終手動ホバー確認を実施し、`gui-help` をクローズする
+1. 
+2. 
+3. 
 
 ## Blockers
 

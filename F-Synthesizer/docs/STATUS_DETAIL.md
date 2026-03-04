@@ -70,7 +70,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 - `refactor`: `module-map.md` の自動生成 TODO（背景/判断/影響範囲）を記入する
 - `gui-cleanup`: DrumConfig の `0 = 未指定（内部デフォルト）` を UI で明示する
-- `gui-help`: `docs/gui-help-hover-acceptance-checklist.md` に基づく最終手動ホバー確認実施（クローズ条件）
 
 ## Recurring Checks
 
