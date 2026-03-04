@@ -402,13 +402,6 @@ updateHoverHelp(
     "未保存時は確認ダイアログを表示します。");
 ImGui::EndDisabled();
 ImGui::SameLine();
-const std::string helpLine = hoverHelp;
-const float helpX = ImGui::GetWindowContentRegionMax().x - ImGui::CalcTextSize(helpLine.c_str()).x;
-if (helpX > ImGui::GetCursorPosX())
-{
-    ImGui::SetCursorPosX(helpX);
-}
-ImGui::TextDisabled("%s", helpLine.c_str());
 ImGui::Separator();
 if (openUnsavedPopupNextFrame)
 {
@@ -1112,5 +1105,12 @@ if (logPanelExpanded)
     }
     ImGui::EndChild();
 }
+const std::string helpLine = hoverHelp;
+const ImVec2 helpTextSize = ImGui::CalcTextSize(helpLine.c_str());
+const float helpPadding = 8.0f;
+const ImVec2 helpPos = ImVec2(
+    ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x - helpTextSize.x - helpPadding,
+    ImGui::GetWindowPos().y + ImGui::GetWindowContentRegionMax().y - helpTextSize.y - helpPadding);
+ImGui::GetWindowDrawList()->AddText(helpPos, ImGui::GetColorU32(ImGuiCol_TextDisabled), helpLine.c_str());
 ImGui::End();
 }
