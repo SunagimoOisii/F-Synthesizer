@@ -9,6 +9,12 @@ AI が直接更新してよいのは次の 4 ファイルのみ。
 3. `docs/ROADMAP.md`
 4. `docs/DECISIONS.md`
 
+## STATUS 運用（分割）
+
+- `docs/STATUS.md` はダッシュボードとして運用する（`Current` / `Next 3` / `Blockers`）。
+- `docs/STATUS_DETAIL.md` は履歴・詳細ログ専用として運用する。
+- AI は `docs/STATUS.md` 更新時に、必要な差分があれば `docs/STATUS_DETAIL.md` も直接更新してよい。
+
 ## 非自動更新ファイル
 
 - 上記以外は直接変更しない。

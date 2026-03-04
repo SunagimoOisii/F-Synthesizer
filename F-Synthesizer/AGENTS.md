@@ -26,4 +26,6 @@
 ## 運用切替（Phase D）
 
 - 自動更新対象は `docs/Architecture.md` / `docs/STATUS.md` / `docs/ROADMAP.md` / `docs/DECISIONS.md` の 4 ファイルに固定。
+- `docs/STATUS.md` はダッシュボード、`docs/STATUS_DETAIL.md` は履歴・詳細ログとして運用する。
+- `docs/STATUS.md` の更新に伴う詳細追記に限り、`docs/STATUS_DETAIL.md` は直接更新してよい。
 - 上記以外の md 変更は、提案テンプレで承認を取ってから反映する。
