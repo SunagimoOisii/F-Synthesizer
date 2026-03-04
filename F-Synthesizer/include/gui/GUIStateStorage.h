@@ -19,8 +19,8 @@ struct GUIStateStorageData
     int bits = 16;
     float extraReleaseSec = 0.3f;
     int defaultWave = 2;
-    int uiScaleIndex = 1;
-    int uiModeTab = 0;
+    int UIScaleIndex = 1;
+    int UIModeTab = 0;
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
     bool serialSave = false;

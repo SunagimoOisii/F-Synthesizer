@@ -29,7 +29,7 @@ auto composeHoverHelp = [](const char* what, const char* impact, const char* cau
     }
     return line;
 };
-std::string hoverHelp = (state.uiModeTab == 0)
+std::string hoverHelp = (state.UIModeTab == 0)
     ? composeHoverHelp(
         "Soundモードを表示します。",
         "Sound Slot中心に音色編集と試聴を行えます。")
@@ -118,14 +118,14 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     ImGui::TableSetColumnIndex(0);
     if (ImGui::BeginTabBar("mode_tabs"))
     {
-        const bool needSync = (syncedTab != state.uiModeTab);
+        const bool needSync = (syncedTab != state.UIModeTab);
         ImGuiTabItemFlags soundFlags =
-            (needSync && state.uiModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+            (needSync && state.UIModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         ImGuiTabItemFlags musicFlags =
-            (needSync && state.uiModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+            (needSync && state.UIModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
         {
-            state.uiModeTab = 0;
+            state.UIModeTab = 0;
             ImGui::EndTabItem();
         }
         updateHoverHelp(
@@ -133,14 +133,14 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             "Sound編集と試聴の操作を表示します。");
         if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
         {
-            state.uiModeTab = 1;
+            state.UIModeTab = 1;
             ImGui::EndTabItem();
         }
         updateHoverHelp(
             "Musicモードへ切り替えます。",
             "Music編集と書き出しの操作を表示します。");
         ImGui::EndTabBar();
-        syncedTab = state.uiModeTab;
+        syncedTab = state.UIModeTab;
     }
 
     ImGui::TableSetColumnIndex(1);
@@ -152,9 +152,9 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120.0f);
     const char* uiScales[] = { "100%", "125%", "150%" };
-    if (ImGui::Combo("##ui_scale", &state.uiScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
+    if (ImGui::Combo("##ui_scale", &state.UIScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
     {
-        AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UiScaleLabelFromIndex(state.uiScaleIndex));
+        AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UIScaleLabelFromIndex(state.UIScaleIndex));
     }
     updateHoverHelp(
         "UI全体の表示倍率を変更します。",
@@ -162,7 +162,7 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     ImGui::EndTable();
 }
 ImGui::Separator();
-if (state.uiModeTab != lastFrameTab)
+if (state.UIModeTab != lastFrameTab)
 {
     // タブ切替時に再生/実行が残ると意図しない継続再生になるため即停止する。
     if (state.running || state.playback.playing.load(std::memory_order_relaxed))
@@ -170,7 +170,7 @@ if (state.uiModeTab != lastFrameTab)
         StopGUIRunAndPreview(state);
         AppendGUILog(state, "[GUI] Playback stopped by tab switch.");
     }
-    lastFrameTab = state.uiModeTab;
+    lastFrameTab = state.UIModeTab;
 }
 ImGui::Separator();
 ImGui::TextDisabled("Save Targets: SoundAsset(Preset) / MusicProject(GUI+PianoRoll) / Workspace(UI state)");
@@ -197,11 +197,11 @@ updateHoverHelp(
     "Save Allを実行します。",
     "SoundAsset/MusicProject/Workspaceを保存します。");
 ImGui::EndDisabled();
-if (state.hasUiError)
+if (state.hasUIError)
 {
     auto suggestedFix = [&]() -> const char*
     {
-        switch (state.uiErrorAction)
+        switch (state.UIErrorAction)
         {
         case 1: return "Suggested Fix: MIDI path を選び直す";
         case 2: return "Suggested Fix: Output path を選び直す";
@@ -211,9 +211,9 @@ if (state.hasUiError)
         }
     };
     ImGui::Separator();
-    ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Problem: %s", state.uiErrorMessage.c_str());
+    ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Problem: %s", state.UIErrorMessage.c_str());
     ImGui::TextDisabled("%s", suggestedFix());
-    if (state.uiErrorAction == 1)
+    if (state.UIErrorAction == 1)
     {
         ImGui::SameLine();
         if (ImGui::Button("Recover: Browse MIDI"))
@@ -231,7 +231,7 @@ if (state.hasUiError)
             "Recover: Browse MIDI を実行します。",
             "MIDI Pathを再選択して復旧します。");
     }
-    else if (state.uiErrorAction == 2)
+    else if (state.UIErrorAction == 2)
     {
         ImGui::SameLine();
         if (ImGui::Button("Recover: Browse Output"))
@@ -249,24 +249,24 @@ if (state.hasUiError)
             "Recover: Browse Output を実行します。",
             "Output Pathを再選択して復旧します。");
     }
-    else if (state.uiErrorAction == 3)
+    else if (state.UIErrorAction == 3)
     {
         ImGui::SameLine();
         if (ImGui::Button("Recover: Go Sound Tab"))
         {
-            state.uiModeTab = 0;
+            state.UIModeTab = 0;
             ClearGUIError(state);
         }
         updateHoverHelp(
             "Recover: Go Sound Tab を実行します。",
             "Soundタブへ移動します。");
     }
-    else if (state.uiErrorAction == 4)
+    else if (state.UIErrorAction == 4)
     {
         ImGui::SameLine();
         if (ImGui::Button("Recover: Go Music Tab"))
         {
-            state.uiModeTab = 1;
+            state.UIModeTab = 1;
             ClearGUIError(state);
         }
         updateHoverHelp(
@@ -290,8 +290,8 @@ if (state.showErrorDialog)
 }
 if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 {
-    ImGui::TextWrapped("Problem: %s", state.uiErrorMessage.c_str());
-    switch (state.uiErrorAction)
+    ImGui::TextWrapped("Problem: %s", state.UIErrorMessage.c_str());
+    switch (state.UIErrorAction)
     {
     case 1: ImGui::TextDisabled("Suggested Fix: MIDI path を選び直してください。"); break;
     case 2: ImGui::TextDisabled("Suggested Fix: Output path を選び直してください。"); break;
@@ -319,7 +319,7 @@ if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 }
 ImGui::Separator();
 ImGui::BeginDisabled(state.running);
-if (state.uiModeTab == 0)
+if (state.UIModeTab == 0)
 {
     if (ImGui::Button("Play Preview (PR Channel using Selected Slot)"))
     {
@@ -480,7 +480,7 @@ const float reserveForLog = logPanelExpanded
     : (logHeaderReserve + 6.0f);
 const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
 ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true);
-if (state.uiModeTab == 0)
+if (state.UIModeTab == 0)
 {
     if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
     {
@@ -695,7 +695,7 @@ else
         "MIDI Path をコピーします。",
         "パスをクリップボードへコピーします。");
     {
-        const std::string compact = CompactPathForUi(state.midiPath);
+        const std::string compact = CompactPathForUI(state.midiPath);
         ImGui::TextDisabled("%s", compact.c_str());
         if (ImGui::IsItemHovered() && std::strlen(state.midiPath) > 0)
         {
@@ -731,7 +731,7 @@ else
         "Output Path をコピーします。",
         "パスをクリップボードへコピーします。");
     {
-        const std::string compact = CompactPathForUi(state.wavPath);
+        const std::string compact = CompactPathForUI(state.wavPath);
         ImGui::TextDisabled("%s", compact.c_str());
         if (ImGui::IsItemHovered() && std::strlen(state.wavPath) > 0)
         {
@@ -1093,7 +1093,7 @@ if (logPanelExpanded)
     ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
     {
         std::lock_guard<std::mutex> lock(state.logMutex);
-        const std::vector<std::string>& visibleLogs = (state.uiModeTab == 1) ? state.musicLogs : state.soundLogs;
+        const std::vector<std::string>& visibleLogs = (state.UIModeTab == 1) ? state.musicLogs : state.soundLogs;
         for (const std::string& line : visibleLogs)
         {
             ImGui::TextUnformatted(line.c_str());

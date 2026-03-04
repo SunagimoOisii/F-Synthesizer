@@ -75,7 +75,7 @@ void VoicesSoA::reserve(size_t n)
     velocity.reserve(n);
     channel.reserve(n);
     channelIndex.reserve(n);
-    noteInstanceId.reserve(n);
+    noteInstanceID.reserve(n);
     released.reserve(n);
     pendingRemove.reserve(n);
     amp.reserve(n);
@@ -111,7 +111,7 @@ void VoicesSoA::clear()
     velocity.clear();
     channel.clear();
     channelIndex.clear();
-    noteInstanceId.clear();
+    noteInstanceID.clear();
     released.clear();
     pendingRemove.clear();
     amp.clear();
@@ -148,7 +148,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     velocity.push_back(e.velocity);
     channel.push_back(e.channel);
     channelIndex.push_back(ClampChannel(e.channel));
-    noteInstanceId.push_back(e.noteInstanceId);
+    noteInstanceID.push_back(e.noteInstanceID);
     released.push_back(0);
     pendingRemove.push_back(0);
 
@@ -225,11 +225,11 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     }
 }
 
-void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceId)
+void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)
 {
     // 原則: NoteOn/NoteOff の対応IDで閉じる。
     // 互換性: IDが無い/不一致の場合は旧ロジック(ch+note)へフォールバックする。
-    if (noteInstanceId >= 0)
+    if (noteInstanceID >= 0)
     {
         for (size_t i = 0; i < size(); i++)
         {
@@ -237,7 +237,7 @@ void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceId)
             {
                 continue;
             }
-            if (released[i] == 0 && this->noteInstanceId[i] == noteInstanceId)
+            if (released[i] == 0 && this->noteInstanceID[i] == noteInstanceID)
             {
                 NoteOff(env[i]);
                 if (std::holds_alternative<WaveformConfig>(source[i]))
@@ -298,7 +298,7 @@ size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(velocity, keepScratch);
     CompactVectorByKeep(channel, keepScratch);
     CompactVectorByKeep(channelIndex, keepScratch);
-    CompactVectorByKeep(noteInstanceId, keepScratch);
+    CompactVectorByKeep(noteInstanceID, keepScratch);
     CompactVectorByKeep(released, keepScratch);
     CompactVectorByKeep(pendingRemove, keepScratch);
     CompactVectorByKeep(amp, keepScratch);

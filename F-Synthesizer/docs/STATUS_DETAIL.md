@@ -31,7 +31,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - GUI UX #5: WaveformConfig FilterMode デフォルトを Bypass に変更、フィルタ有効時の `(active)` インジケーター追加
   - GUI UX #6: モジュレーションルートを CollapsingHeader 化、ヘッダに "lfo1 -> pitch (+0.50)" 形式のサマリを表示
   - GUI UX #7: `Channel(ch)` と `Sound Slot(s)` の表記を整理。Musicプレビュー時に `Selected Sound Slot` が自動変更されないよう挙動を修正
-  - SynthEngine #2: `noteInstanceId` を `MIDIParser -> Sequencer -> VoicesSoA` へ通線し、`MarkNoteOff` をID優先照合へ切替（不一致時は旧 `ch+note` へフォールバック）
+  - SynthEngine #2: `noteInstanceID` を `MIDIParser -> Sequencer -> VoicesSoA` へ通線し、`MarkNoteOff` をID優先照合へ切替（不一致時は旧 `ch+note` へフォールバック）
   - SynthEngine #3: Filter cutoff の微小更新を間引き、係数再計算のホットパスCPU負荷を低減（1 cent相当未満をスキップ）
   - cleanup Phase 1-6: `scripts`/`docs`/`gui`/`midi`/`core` を監査し、削除方針を `docs/cleanup/deletion-policy.md` に確定。`scripts/piano_roll_smoke.ps1` を削除し、`AudioBuffer.cpp` の未使用/冗長処理を整理
   - doc-sync: `ROADMAP.md` を廃止して `STATUS.md` へ一本化。`PIANO_ROLL_CONTROLS.md` は `GUI_REQUIREMENTS.md` へ、`WEEKLY_MAINTENANCE.md` は `OPERATIONS.md` へ統合

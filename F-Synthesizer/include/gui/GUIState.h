@@ -48,8 +48,8 @@ struct GUIState
     int bits = 16;
     float extraReleaseSec = 0.3f;
     int defaultWave = 2; // saw
-    int uiScaleIndex = 1; // 0=100%, 1=125%, 2=150%
-    int uiModeTab = 0; // 0=Sound, 1=Music
+    int UIScaleIndex = 1; // 0=100%, 1=125%, 2=150%
+    int UIModeTab = 0; // 0=Sound, 1=Music
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
     int lastRunExitCode = 0;
@@ -68,10 +68,10 @@ struct GUIState
     std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
     std::array<int, 16> channelAssignments{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     bool drumChannelSpecialHandling = true;
-    bool hasUiError = false;
+    bool hasUIError = false;
     bool showErrorDialog = false;
-    int uiErrorAction = 0; // 0=None, 1=BrowseMIDI, 2=BrowseOutput, 3=GoSound, 4=GoMusic
-    std::string uiErrorMessage{};
+    int UIErrorAction = 0; // 0=None, 1=BrowseMIDI, 2=BrowseOutput, 3=GoSound, 4=GoMusic
+    std::string UIErrorMessage{};
     double lastPeak = 0.0;
     bool hasPeak = false;
     bool soloPreviewActive = false;

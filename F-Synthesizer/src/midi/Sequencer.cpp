@@ -100,7 +100,7 @@ MIDIEvent MakeControlChangeEvent(const MIDIEventTick& t, int sample, WaveType de
     e.noteNumber = 0;
     e.velocity   = 0;
     e.channel    = t.channel;
-    e.noteInstanceId = -1;
+    e.noteInstanceID = -1;
     e.controller = t.controller;
     e.value      = t.value;
     e.isNoteOn   = false;
@@ -116,7 +116,7 @@ MIDIEvent MakeNoteEvent(const MIDIEventTick& t, int sample, WaveType defaultWave
     e.noteNumber = t.noteNumber;
     e.velocity   = t.velocity;
     e.channel    = t.channel;
-    e.noteInstanceId = t.noteInstanceId;
+    e.noteInstanceID = t.noteInstanceID;
     e.controller = 0;
     e.value      = 0;
     e.isNoteOn   = t.isNoteOn;
@@ -132,7 +132,7 @@ MIDIEvent MakePitchBendEvent(const MIDIEventTick& t, int sample, WaveType defaul
     e.noteNumber = 0;
     e.velocity   = 0;
     e.channel    = t.channel;
-    e.noteInstanceId = -1;
+    e.noteInstanceID = -1;
     e.controller = 0;
     e.value      = t.value;
     e.isNoteOn   = false;

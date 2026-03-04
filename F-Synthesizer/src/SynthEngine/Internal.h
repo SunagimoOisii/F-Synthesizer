@@ -20,7 +20,7 @@ struct VoicesSoA
     std::vector<int> velocity;
     std::vector<int> channel;
     std::vector<int> channelIndex;
-    std::vector<int> noteInstanceId;
+    std::vector<int> noteInstanceID;
     std::vector<uint8_t> released;
     std::vector<uint8_t> pendingRemove;
 
@@ -56,7 +56,7 @@ struct VoicesSoA
     void reserve(size_t n);
     void clear();
     void AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate);
-    void MarkNoteOff(int channel, int noteNumber, int noteInstanceId);
+    void MarkNoteOff(int channel, int noteNumber, int noteInstanceID);
     size_t CleanupPending(std::vector<uint8_t>& keepScratch);
 };
 

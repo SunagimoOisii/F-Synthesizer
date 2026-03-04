@@ -21,7 +21,7 @@ struct MIDIEventTick
     int controller;
     int value;
     // NoteOn/NoteOff 対応付け用ID。Note以外は -1。
-    int noteInstanceId = -1;
+    int noteInstanceID = -1;
     int order;
     bool isNoteOn;
 };

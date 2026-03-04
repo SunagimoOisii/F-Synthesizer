@@ -32,7 +32,7 @@
 | include/midi/MIDIParser.h | file | ref=10 | keep | GUI/app/midi各層が参照 |
 | include/midi/MIDIPipeline.h | file | ref=4 | keep | app実行コアで利用 |
 | include/midi/Sequencer.h | file | ref=9 | keep | midi変換で利用 |
-| src/SynthEngine/Voices.cpp:228 | branch | `noteInstanceId` 優先 + `ch+note` フォールバック | keep | `MIDIParser` 側で `PopNoteInstanceId` が `-1` を返す経路があり、異常/不整合入力への互換保護として必要 |
+| src/SynthEngine/Voices.cpp:228 | branch | `noteInstanceID` 優先 + `ch+note` フォールバック | keep | `MIDIParser` 側で `PopNoteInstanceID` が `-1` を返す経路があり、異常/不整合入力への互換保護として必要 |
 | src/midi/MIDIPipeline.cpp:10 | function | window開始時のCC/Pitch補完 (`BuildWindowedEvents`) | keep | 部分再生で制御状態を再現するため必要 |
 
 ## 重複変換の評価

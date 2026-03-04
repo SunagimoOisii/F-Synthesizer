@@ -243,8 +243,10 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJSONInt(text, "bits")) data.bits = *v;
     if (auto v = ReadJSONFloat(text, "extraReleaseSec")) data.extraReleaseSec = *v;
     if (auto v = ReadJSONInt(text, "defaultWave")) data.defaultWave = *v;
-    if (auto v = ReadJSONInt(text, "uiScaleIndex")) data.uiScaleIndex = *v;
-    if (auto v = ReadJSONInt(text, "uiModeTab")) data.uiModeTab = *v;
+    if (auto v = ReadJSONInt(text, "UIScaleIndex")) data.UIScaleIndex = *v;
+    else if (auto v = ReadJSONInt(text, "uiScaleIndex")) data.UIScaleIndex = *v;
+    if (auto v = ReadJSONInt(text, "UIModeTab")) data.UIModeTab = *v;
+    else if (auto v = ReadJSONInt(text, "uiModeTab")) data.UIModeTab = *v;
     if (auto v = ReadJSONFloat(text, "logPanelHeight")) data.logPanelHeight = *v;
     if (auto v = ReadJSONInt(text, "presetIndex")) data.presetIndex = *v;
     if (auto v = ReadJSONBool(text, "serialSave")) data.serialSave = *v;
@@ -326,8 +328,9 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"bits\": " << data.bits << ",\n";
     fout << "  \"extraReleaseSec\": " << data.extraReleaseSec << ",\n";
     fout << "  \"defaultWave\": " << data.defaultWave << ",\n";
-    fout << "  \"uiScaleIndex\": " << data.uiScaleIndex << ",\n";
-    fout << "  \"uiModeTab\": " << data.uiModeTab << ",\n";
+    // 既存stateファイル互換のため、保存キーは従来名を維持する。
+    fout << "  \"uiScaleIndex\": " << data.UIScaleIndex << ",\n";
+    fout << "  \"uiModeTab\": " << data.UIModeTab << ",\n";
     fout << "  \"logPanelHeight\": " << data.logPanelHeight << ",\n";
     fout << "  \"presetIndex\": " << data.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (data.serialSave ? "true" : "false") << ",\n";

@@ -65,7 +65,7 @@ bool BrowseSavePath(const std::string& initialPathUtf8, const wchar_t* filter, c
     return true;
 }
 
-std::string CompactPathForUi(const std::string& path, size_t maxChars)
+std::string CompactPathForUI(const std::string& path, size_t maxChars)
 {
     if (path.size() <= maxChars)
     {

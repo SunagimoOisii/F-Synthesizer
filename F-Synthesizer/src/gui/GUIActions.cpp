@@ -133,7 +133,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
     ticks->reserve(pr.notes.size() * 2);
 
     int order = 0;
-    int noteInstanceId = 1;
+    int noteInstanceID = 1;
     for (const auto& n : pr.notes)
     {
         const int startTick = (std::max)(0, n.startTick);
@@ -150,7 +150,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
         on.channel = channel;
         on.controller = 0;
         on.value = 0;
-        on.noteInstanceId = noteInstanceId;
+        on.noteInstanceID = noteInstanceID;
         on.order = order++;
         on.isNoteOn = true;
         ticks->push_back(on);
@@ -163,11 +163,11 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
         off.channel = channel;
         off.controller = 0;
         off.value = 0;
-        off.noteInstanceId = noteInstanceId;
+        off.noteInstanceID = noteInstanceID;
         off.order = order++;
         off.isNoteOn = false;
         ticks->push_back(off);
-        noteInstanceId++;
+        noteInstanceID++;
     }
 
     outTicksPerQuarter = pr.ticksPerQuarter;
@@ -240,7 +240,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     on.channel = std::clamp(channel, 0, 15);
     on.controller = 0;
     on.value = 0;
-    on.noteInstanceId = 1;
+    on.noteInstanceID = 1;
     on.order = 0;
     on.isNoteOn = true;
     ticks->push_back(on);
@@ -253,7 +253,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     off.channel = on.channel;
     off.controller = 0;
     off.value = 0;
-    off.noteInstanceId = on.noteInstanceId;
+    off.noteInstanceID = on.noteInstanceID;
     off.order = 1;
     off.isNoteOn = false;
     ticks->push_back(off);
@@ -353,7 +353,7 @@ void AppendGUILogToTab(GUIState& state, int tab, const std::string& line)
 
 void AppendGUILog(GUIState& state, const std::string& line)
 {
-    AppendGUILogToTab(state, state.uiModeTab, line);
+    AppendGUILogToTab(state, state.UIModeTab, line);
 }
 
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
@@ -446,7 +446,7 @@ bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path&
 void AnalyzeRenderPeakFromLogs(GUIState& state)
 {
     std::lock_guard<std::mutex> lock(state.logMutex);
-    const std::vector<std::string>& logs = LogsByTab(state, state.uiModeTab);
+    const std::vector<std::string>& logs = LogsByTab(state, state.UIModeTab);
     for (auto it = logs.rbegin(); it != logs.rend(); ++it)
     {
         const std::string& line = *it;
@@ -516,18 +516,18 @@ void DeactivateSoloPreview(GUIState& state)
 
 void RaiseGUIError(GUIState& state, const std::string& message, int actionHint, bool showDialog)
 {
-    state.hasUiError = true;
-    state.uiErrorMessage = message;
-    state.uiErrorAction = std::clamp(actionHint, 0, 4);
+    state.hasUIError = true;
+    state.UIErrorMessage = message;
+    state.UIErrorAction = std::clamp(actionHint, 0, 4);
     state.showErrorDialog = showDialog;
 }
 
 void ClearGUIError(GUIState& state)
 {
-    state.hasUiError = false;
+    state.hasUIError = false;
     state.showErrorDialog = false;
-    state.uiErrorAction = 0;
-    state.uiErrorMessage.clear();
+    state.UIErrorAction = 0;
+    state.UIErrorMessage.clear();
 }
 
 void StartGUIRun(GUIState& state, bool previewSelected)
@@ -565,7 +565,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
 
     // GUI編集値 -> AppConfig 変換をここに集約し、実行コア側でGUI依存を持たせない。
     AppConfig cfg = BuildConfigFromGUI(state);
-    if (previewSelected && state.uiModeTab == 0)
+    if (previewSelected && state.UIModeTab == 0)
     {
         cfg.targetChannel = previewChannel;
         OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
@@ -612,7 +612,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
 
-    state.runLogTab = state.uiModeTab;
+    state.runLogTab = state.UIModeTab;
     state.observer.logs = &LogsByTab(state, state.runLogTab);
     {
         std::lock_guard<std::mutex> lock(state.logMutex);
@@ -697,7 +697,7 @@ void StartGUISoundTonePreview(GUIState& state)
     state.previewRequestedDurationSec = options.durationSec;
     state.lastOutputPath = "[memory preview]";
 
-    state.runLogTab = state.uiModeTab;
+    state.runLogTab = state.UIModeTab;
     state.observer.logs = &LogsByTab(state, state.runLogTab);
     {
         std::lock_guard<std::mutex> lock(state.logMutex);

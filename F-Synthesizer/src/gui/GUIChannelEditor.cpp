@@ -20,12 +20,12 @@ constexpr config::SourceKind kGuiSourceKinds[] = {
     config::SourceKind::DrumKit,
 };
 
-bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
+bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
 {
     bool changed = false;
     int drumType = static_cast<int>(d.type);
     const char* drumTypes[] = { "none", "kick", "snare", "hat" };
-    std::string key = std::string("Drum Type##") + idPrefix;
+    std::string key = std::string("Drum Type##") + IDPrefix;
     changed |= ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
     if (updateHoverHelp)
     {
@@ -41,7 +41,7 @@ bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d, const HoverHelpFn
         return changed;
     }
 
-    key = std::string("Gain##") + idPrefix;
+    key = std::string("Gain##") + IDPrefix;
     changed |= ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
     if (updateHoverHelp)
     {
@@ -53,36 +53,36 @@ bool DrawDrumConfigEditor(const char* idPrefix, DrumConfig& d, const HoverHelpFn
 
     if (d.type == DrumType::Kick)
     {
-        key = std::string("Base Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
+        key = std::string("Base Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.baseFreq, 1.0, 10.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("Base Freq を調整します。", "キックの基音が変わります。", nullptr);
-        key = std::string("Pitch Drop##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
+        key = std::string("Pitch Drop##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDrop, 0.1, 1.0, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Pitch Drop を調整します。", "キックのピッチ下降量が変わります。", nullptr);
-        key = std::string("Pitch Decay##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
+        key = std::string("Pitch Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Pitch Decay を調整します。", "キックのピッチ変化速度が変わります。", nullptr);
     }
     else // Snare, Hat
     {
-        key = std::string("Tone Freq##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
+        key = std::string("Tone Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneFreq, 10.0, 100.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("Tone Freq を調整します。", "スネア/ハットの有音成分周波数が変わります。", nullptr);
-        key = std::string("Tone Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
+        key = std::string("Tone Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.toneLevel, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Tone Level を調整します。", "有音成分の音量が変わります。", nullptr);
-        key = std::string("Noise Level##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
+        key = std::string("Noise Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Noise Level を調整します。", "ノイズ成分の音量が変わります。", nullptr);
-        key = std::string("HP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
+        key = std::string("HP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("HP Cut を調整します。", "高域寄りに残す帯域が変わります。", nullptr);
-        key = std::string("LP Cut##") + idPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
+        key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("LP Cut を調整します。", "低域寄りに残す帯域が変わります。", nullptr);
 
         int toneWave = d.toneWave >= 0 ? d.toneWave : 0;
         const char* waves[] = { "sine", "square", "saw", "triangle" };
-        key = std::string("Tone Wave##") + idPrefix;
+        key = std::string("Tone Wave##") + IDPrefix;
         changed |= ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
         if (updateHoverHelp) updateHoverHelp("Tone Wave を選択します。", "有音成分の波形キャラクターが変わります。", nullptr);
         d.toneWave = toneWave;
 
         int noiseType = d.noiseType >= 0 ? d.noiseType : 0;
         const char* noises[] = { "white", "pink", "brown", "blue" };
-        key = std::string("Noise Type##") + idPrefix;
+        key = std::string("Noise Type##") + IDPrefix;
         changed |= ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));
         if (updateHoverHelp) updateHoverHelp("Noise Type を選択します。", "ノイズの色（周波数傾向）が変わります。", nullptr);
         d.noiseType = noiseType;

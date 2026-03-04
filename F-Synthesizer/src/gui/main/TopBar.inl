@@ -25,7 +25,7 @@ void SetupImGuiFont()
     }
 }
 
-float UiScaleFromIndex(int idx)
+float UIScaleFromIndex(int idx)
 {
     switch (idx)
     {
@@ -36,7 +36,7 @@ float UiScaleFromIndex(int idx)
     }
 }
 
-const char* UiScaleLabelFromIndex(int idx)
+const char* UIScaleLabelFromIndex(int idx)
 {
     switch (idx)
     {

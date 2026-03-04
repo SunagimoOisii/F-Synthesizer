@@ -84,8 +84,8 @@ void InitializeGUIState(
     state.bits = cfg.bits;
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
     state.defaultWave = 2;
-    state.uiScaleIndex = 1;
-    state.uiModeTab = 0;
+    state.UIScaleIndex = 1;
+    state.UIModeTab = 0;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
     state.selectedSoundSlot = 0;
@@ -102,7 +102,7 @@ void InitializeGUIState(
     state.lastPresetPath.clear();
     state.soundLogs.clear();
     state.musicLogs.clear();
-    state.runLogTab = state.uiModeTab;
+    state.runLogTab = state.UIModeTab;
     state.lastPeak = 0.0;
     state.hasPeak = false;
     state.soloPreviewActive = false;
@@ -197,14 +197,14 @@ void RepairGUIStatePaths(
         state.bits = 16;
         repaired = true;
     }
-    if (state.uiScaleIndex < 0 || state.uiScaleIndex > 2)
+    if (state.UIScaleIndex < 0 || state.UIScaleIndex > 2)
     {
-        state.uiScaleIndex = 1;
+        state.UIScaleIndex = 1;
         repaired = true;
     }
-    if (state.uiModeTab < 0 || state.uiModeTab > 1)
+    if (state.UIModeTab < 0 || state.UIModeTab > 1)
     {
-        state.uiModeTab = 0;
+        state.UIModeTab = 0;
         repaired = true;
     }
     if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)

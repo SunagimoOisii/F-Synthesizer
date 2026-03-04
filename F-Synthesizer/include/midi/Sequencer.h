@@ -19,7 +19,7 @@ struct MIDIEvent
     int velocity;
     int channel;
     // NoteOn/NoteOff 対応付け用ID。Note以外は -1。
-    int noteInstanceId;
+    int noteInstanceID;
 
     // Control Change / Pitch Bend の値
     int controller;

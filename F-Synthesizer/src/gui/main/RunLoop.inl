@@ -47,7 +47,7 @@ int RunGUIApp()
             [&](const std::string& preferName) { RefreshPresetItems(state, preferName); },
             [&](const std::string& line) { AppendGUILog(state, line); });
     }
-    int lastFrameTab = state.uiModeTab;
+    int lastFrameTab = state.UIModeTab;
     int pendingPresetIndex = -1;
     int pendingPresetOriginalIndex = -1;
     bool pendingCloseRequest = false;
@@ -62,7 +62,7 @@ int RunGUIApp()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::GetIO().FontGlobalScale = UiScaleFromIndex(state.uiScaleIndex);
+        ImGui::GetIO().FontGlobalScale = UIScaleFromIndex(state.UIScaleIndex);
         DrawMainWindowFrame(state, window, lastFrameTab, pendingPresetIndex, pendingPresetOriginalIndex, pendingCloseRequest, openUnsavedPopupNextFrame);
 
         ImGui::Render();
