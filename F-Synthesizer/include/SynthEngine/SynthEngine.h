@@ -9,6 +9,7 @@
 #include "SynthEngine/Modulation.h"
 #include "core/AudioBuffer.h"
 #include "synth/Envelope.h"
+#include "synth/Oscillator.h"
 #include "midi/Sequencer.h"
 
 struct WaveformConfig

@@ -41,8 +41,6 @@ struct GUIState
     char midiPath[1024]{};
     char wavPath[1024]{};
     int targetChannel = -1;
-    int assetReferenceMode = 0; // 0=snapshot(recommended), 1=link(advanced)
-    bool showReferenceAdvanced = false;
     int sampleRate = 44100;
     int initialSeconds = 6;
     int bits = 16;

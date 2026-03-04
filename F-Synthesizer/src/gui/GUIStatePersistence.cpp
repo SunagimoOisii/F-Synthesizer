@@ -20,8 +20,6 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.midiPath = state.midiPath;
     data.wavPath = state.wavPath;
     data.targetChannel = state.targetChannel;
-    data.assetReferenceMode = state.assetReferenceMode;
-    data.showReferenceAdvanced = state.showReferenceAdvanced;
     data.sampleRate = state.sampleRate;
     data.initialSeconds = state.initialSeconds;
     data.bits = state.bits;
@@ -70,8 +68,6 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     strncpy_s(state.midiPath, sizeof(state.midiPath), data.midiPath.c_str(), _TRUNCATE);
     strncpy_s(state.wavPath, sizeof(state.wavPath), data.wavPath.c_str(), _TRUNCATE);
     state.targetChannel = data.targetChannel;
-    state.assetReferenceMode = data.assetReferenceMode;
-    state.showReferenceAdvanced = data.showReferenceAdvanced;
     state.sampleRate = data.sampleRate;
     state.initialSeconds = data.initialSeconds;
     state.bits = data.bits;

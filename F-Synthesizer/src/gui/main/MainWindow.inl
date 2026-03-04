@@ -735,45 +735,6 @@ else
     }
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Sound Reference");
-    if (ImGui::RadioButton("Snapshot (Recommended)", state.assetReferenceMode == 0))
-    {
-        state.assetReferenceMode = 0;
-        state.presetDirty = true;
-    }
-    updateHoverHelp(
-        "Sound Reference を Snapshot にします。",
-        "音色設定を固定して再現性を優先します。");
-    ImGui::SameLine();
-    if (ImGui::RadioButton("Link (Advanced)", state.assetReferenceMode == 1))
-    {
-        state.assetReferenceMode = 1;
-        state.presetDirty = true;
-    }
-    updateHoverHelp(
-        "Sound Reference を Link にします。",
-        "最新のSoundAsset編集を参照します。",
-        "後の音色変更で書き出し結果が変わる場合があります。");
-    if (state.assetReferenceMode == 0)
-    {
-        ImGui::TextDisabled("Snapshot keeps export reproducible.");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.25f, 1.0f), "Link may change export result after sound edits.");
-    }
-    if (ImGui::CollapsingHeader("Reference Mode Details"))
-    {
-        state.showReferenceAdvanced = true;
-        ImGui::TextWrapped("Snapshot: prioritize reproducibility for beginners.");
-        ImGui::TextWrapped("Link: follow latest SoundAsset edits for iterative sound design.");
-    }
-    else
-    {
-        state.showReferenceAdvanced = false;
-    }
-
-    ImGui::Separator();
     ImGui::TextUnformatted("Output Target");
     int outputMode = (state.targetChannel < 0) ? 0 : 1;
     if (ImGui::RadioButton("All Channels", outputMode == 0))

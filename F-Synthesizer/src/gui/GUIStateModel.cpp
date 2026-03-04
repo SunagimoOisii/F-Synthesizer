@@ -76,8 +76,6 @@ void InitializeGUIState(
     CopyPath(state.midiPath, sizeof(state.midiPath), cfg.midiPath);
     CopyPath(state.wavPath, sizeof(state.wavPath), cfg.wavPath);
     state.targetChannel = cfg.targetChannel;
-    state.assetReferenceMode = 0;
-    state.showReferenceAdvanced = false;
     state.sampleRate = cfg.sampleRate;
     state.initialSeconds = cfg.initialSeconds;
     state.bits = cfg.bits;
@@ -158,11 +156,6 @@ void RepairGUIStatePaths(
     if (state.targetChannel < -1 || state.targetChannel > 15)
     {
         state.targetChannel = def.targetChannel;
-        repaired = true;
-    }
-    if (state.assetReferenceMode < 0 || state.assetReferenceMode > 1)
-    {
-        state.assetReferenceMode = 0;
         repaired = true;
     }
     if (state.presetItems.empty())

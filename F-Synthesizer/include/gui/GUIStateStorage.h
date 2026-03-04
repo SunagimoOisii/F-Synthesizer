@@ -12,8 +12,6 @@ struct GUIStateStorageData
     std::string midiPath;
     std::string wavPath;
     int targetChannel = -1;
-    int assetReferenceMode = 0;
-    bool showReferenceAdvanced = false;
     int sampleRate = 44100;
     int initialSeconds = 6;
     int bits = 16;
