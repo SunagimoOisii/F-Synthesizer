@@ -123,3 +123,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 影響範囲:
 - 関連ファイル: include/gui/GUIActions.h, include/gui/GUIRunHelpers.h, include/gui/GUIStatePersistence.h, include/gui/GUIStateStorage.h, src/gui/GUIActions.cpp
 
+
+#### 2026-03-05: TODO (auto-generated)
+- カテゴリ: GUI操作・状態管理
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: src/gui/main/MainWindow.inl
+
