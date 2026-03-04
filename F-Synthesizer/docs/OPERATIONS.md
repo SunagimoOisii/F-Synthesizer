@@ -72,7 +72,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 ## GUI Acceptance (Manual)
 
-- `docs/GUI_V8_ACCEPTANCE_TEST.md`
+- `docs-archive/gui-migration/GUI_V8_ACCEPTANCE_TEST.md`
 
 ## GUI Validation Contract
 
