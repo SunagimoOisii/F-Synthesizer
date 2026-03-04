@@ -95,6 +95,15 @@ flowchart LR
 - 影響範囲:
 - 関連ファイル: src/core/AudioBuffer.cpp
 
+
+#### 2026-03-05: TODO (auto-generated)
+- カテゴリ: 依存方向・責務境界
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
+
 ### 音響アルゴリズム上の制約
 
 #### 2026-02-25: Voice状態はAoS互換を残しつつ、レンダ経路はSoAを採用
@@ -149,4 +158,13 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - 代替案:
 - 影響範囲:
 - 関連ファイル: include/SynthEngine/SynthEngine.h, src/SynthEngine/Events.cpp
+
+
+#### 2026-03-05: TODO (auto-generated)
+- カテゴリ: 音響アルゴリズム上の制約
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: include/synth/Envelope.h, include/synth/Oscillator.h, src/synth/Envelope.cpp, src/synth/Oscillator.cpp
 

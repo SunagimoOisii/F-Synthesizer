@@ -21,6 +21,7 @@ double PolyBlep(double t, double dt)
 {
     if (dt <= 0.0 || dt >= 1.0)
     {
+        // 位相増分が無効な条件では補正を無効化し、元波形をそのまま返す。
         return 0.0;
     }
     if (t < dt)
@@ -40,6 +41,7 @@ double PolyBlep(double t, double dt)
 double SampleWavePhase(WaveType type, double phase, double phaseInc)
 {
     const double p = NormalizePhase(phase);
+    // polyBLEP補正は位相増分を0..1の周期比として受け取る想定。
     const double dt = std::fabs(phaseInc);
 
     switch (type)
@@ -87,6 +89,7 @@ double SampleFmPhase(
 
 double SampleNoise(NoiseType type)
 {
+    // ノイズ状態は thread_local に保持し、オーディオ処理の並列化時に状態競合を避ける。
     static thread_local std::mt19937 rng{ std::random_device{}() };
     static thread_local std::uniform_real_distribution<double> dist(-1.0, 1.0);
     static thread_local double pinkState = 0.0;

@@ -14,6 +14,7 @@ namespace
     {
         if (attackSec <= 0.0)
         {
+            // アタック時間が0秒なら瞬時に1.0へ到達させ、次サンプルからディケイへ進める。
             env.stage = ADSRStage::Decay;
             env.level = 1.0;
             env.timeInStage = 0.0;
@@ -63,6 +64,7 @@ namespace
     {
         if (releaseSec <= 0.0)
         {
+            // リリース時間が0秒ならクリック抑制より停止優先とし、即座にOffへ戻す。
             return ResetToOff(env);
         }
         env.timeInStage += deltaTimeSec;
