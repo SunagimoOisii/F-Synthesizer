@@ -225,6 +225,9 @@ if (state.hasUiError)
                 ClearGUIError(state);
             }
         }
+        updateHoverHelp(
+            "Recover: Browse MIDI を実行します。",
+            "MIDI Path を再選択してエラー回復を試みます。");
     }
     else if (state.uiErrorAction == 2)
     {
@@ -240,6 +243,9 @@ if (state.hasUiError)
                 ClearGUIError(state);
             }
         }
+        updateHoverHelp(
+            "Recover: Browse Output を実行します。",
+            "Output Path を再選択してエラー回復を試みます。");
     }
     else if (state.uiErrorAction == 3)
     {
@@ -249,6 +255,9 @@ if (state.hasUiError)
             state.uiModeTab = 0;
             ClearGUIError(state);
         }
+        updateHoverHelp(
+            "Recover: Go Sound Tab を実行します。",
+            "Soundタブへ移動して設定見直しを行います。");
     }
     else if (state.uiErrorAction == 4)
     {
@@ -258,12 +267,19 @@ if (state.hasUiError)
             state.uiModeTab = 1;
             ClearGUIError(state);
         }
+        updateHoverHelp(
+            "Recover: Go Music Tab を実行します。",
+            "Musicタブへ移動して設定見直しを行います。");
     }
     ImGui::SameLine();
     if (ImGui::Button("Clear Error"))
     {
         ClearGUIError(state);
     }
+    updateHoverHelp(
+        "Clear Error を実行します。",
+        "現在のエラー表示をクリアします。",
+        "原因が未解決の場合は再実行時に再発します。");
 }
 if (state.showErrorDialog)
 {
@@ -285,12 +301,18 @@ if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::CloseCurrentPopup();
     }
+    updateHoverHelp(
+        "Errorダイアログを閉じます。",
+        "表示のみ終了し、エラー状態は維持されます。");
     ImGui::SameLine();
     if (ImGui::Button("Dismiss"))
     {
         ClearGUIError(state);
         ImGui::CloseCurrentPopup();
     }
+    updateHoverHelp(
+        "Dismiss を実行します。",
+        "エラー状態をクリアしてダイアログを閉じます。");
     ImGui::EndPopup();
 }
 ImGui::Separator();
@@ -412,6 +434,9 @@ if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAu
             ImGui::CloseCurrentPopup();
         }
     }
+    updateHoverHelp(
+        "変更を保存して続行します。",
+        "保存後に閉じる/プリセット適用の保留操作を再開します。");
     ImGui::SameLine();
     if (ImGui::Button("保存せず続行"))
     {
@@ -428,6 +453,10 @@ if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAu
         pendingPresetOriginalIndex = -1;
         ImGui::CloseCurrentPopup();
     }
+    updateHoverHelp(
+        "保存せず続行します。",
+        "未保存変更を破棄して保留操作を再開します。",
+        "保存していない変更は失われます。");
     ImGui::SameLine();
     if (ImGui::Button("キャンセル"))
     {
@@ -441,6 +470,9 @@ if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAu
         openUnsavedPopupNextFrame = false;
         ImGui::CloseCurrentPopup();
     }
+    updateHoverHelp(
+        "保留操作をキャンセルします。",
+        "未保存確認を閉じ、現在画面に戻ります。");
     ImGui::EndPopup();
 }
 
@@ -495,6 +527,10 @@ if (state.uiModeTab == 0)
                 applyPresetByIndex(state.presetIndex);
             }
         }
+        updateHoverHelp(
+            "読み込むPresetを選択します。",
+            "Sound設定の読み込み対象が変わります。",
+            "未保存変更がある場合は確認ダイアログを表示します。");
         ImGui::SameLine();
         if (ImGui::Button("Apply Preset Paths"))
         {
@@ -509,6 +545,9 @@ if (state.uiModeTab == 0)
                 applyPresetByIndex(state.presetIndex);
             }
         }
+        updateHoverHelp(
+            "選択中Presetを再適用します。",
+            "Preset由来の設定パスを現在状態へ反映します。");
         ImGui::SameLine();
         if (ImGui::Button("Reset Defaults"))
         {
@@ -516,8 +555,15 @@ if (state.uiModeTab == 0)
             InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
             state.presetDirty = false;
         }
+        updateHoverHelp(
+            "設定を既定値へ戻します。",
+            "GUI状態とSound設定を初期化します。",
+            "未保存変更は失われます。");
 
         ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+        updateHoverHelp(
+            "保存時のPreset名を入力します。",
+            "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
         ImGui::SameLine();
         if (ImGui::Button("Save Preset As"))
         {
@@ -536,6 +582,10 @@ if (state.uiModeTab == 0)
                 RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
             }
         }
+        updateHoverHelp(
+            "現在設定をPresetとして保存します。",
+            "Preset Name で指定したJSONファイルへ保存します。",
+            "同名が存在する場合は上書きされます。");
         ImGui::SameLine();
         if (ImGui::Button("Duplicate Preset"))
         {
@@ -556,6 +606,9 @@ if (state.uiModeTab == 0)
                 RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
             }
         }
+        updateHoverHelp(
+            "Presetを複製保存します。",
+            "Preset Name に `_copy` を付けた保存名で複製します。");
         ImGui::SameLine();
         if (ImGui::Button("Reset Sound Slot"))
         {
@@ -568,6 +621,9 @@ if (state.uiModeTab == 0)
                 AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
             }
         }
+        updateHoverHelp(
+            "選択中Sound Slotを初期化します。",
+            "対象スロットの音色設定を既定値へ戻します。");
         if (!state.lastPresetPath.empty())
         {
             ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
@@ -576,6 +632,9 @@ if (state.uiModeTab == 0)
         ImGui::TextDisabled("Song export settings are in Music tab.");
         const char* waves[] = { "sine", "square", "saw", "triangle" };
         state.presetDirty |= ImGui::Combo("Default Wave", &state.defaultWave, waves, IM_ARRAYSIZE(waves));
+        updateHoverHelp(
+            "Default Wave を選択します。",
+            "新規/初期化時に使う基本波形の既定値が変わります。");
         ImGui::EndDisabled();
 
         ImGui::TableSetColumnIndex(1);
@@ -807,6 +866,9 @@ else
         state.channelAssignments[prChannel] = prChannel;
         state.presetDirty = true;
     }
+    updateHoverHelp(
+        "PR表示chの割当を同一番号スロットへ合わせます。",
+        "表示中chの再生音色を把握しやすくします。");
     ImGui::SameLine();
     if (ImGui::Button("Set Output Target = PR ch"))
     {
@@ -825,6 +887,9 @@ else
         }
         state.presetDirty = true;
     }
+    updateHoverHelp(
+        "全chの割当を同一番号スロットへ戻します。",
+        "ch番号とSound Slot番号の対応を初期状態へそろえます。");
 
     auto applyDrumCh10Setup = [&]()
     {
@@ -860,6 +925,9 @@ else
     {
         state.pianoRoll.displayChannel = drumMidiChannel;
     }
+    updateHoverHelp(
+        "PR表示chをch10へ切り替えます。",
+        "ドラムノートの確認/編集にすぐ移動できます。");
 
     if (ImGui::BeginTable("music_mixer_assignment_table", 8,
             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY,

@@ -117,3 +117,15 @@ Priority:
   - Sound/Music の主要クリック導線でホバー文言欠落がない
   - `STATUS_DETAIL.md` の `Backlog` と本ファイルの未対応項目が一致している
   - `scripts/gui_smoke.ps1 -Profile quick` が通過している
+
+## Phase 6 Progress (2026-03-05)
+
+- 追加実装:
+  - Soundタブの Preset 操作（Preset選択/適用/初期化/保存/複製/Sound Slot初期化）
+  - Error表示と Errorダイアログ（Recover系ボタン、`Clear Error`、`OK`/`Dismiss`）
+  - Unsaved Changes ダイアログ（`保存して続行` / `保存せず続行` / `キャンセル`）
+  - Music補助ボタンの未付与分（`Set PR Assign` / `Reset All Assign` / `Focus PR ch10`）
+- 検証:
+  - `scripts/gui_smoke.ps1 -Profile quick` 通過（2026-03-05、Phase 6反映後）
+- 残項目:
+  - `DrawChannelEditor(state)` 内部UIのホバー文言は別ファイル側の実装確認が必要
