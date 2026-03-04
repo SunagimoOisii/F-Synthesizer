@@ -119,6 +119,15 @@ flowchart TD
 - 影響範囲:
 - 関連ファイル: include/midi/MIDIParser.h, include/midi/Sequencer.h, src/midi/MIDIParser.cpp, src/midi/MidiPipeline.cpp, src/midi/Sequencer.cpp
 
+
+#### 2026-03-04: TODO (auto-generated)
+- カテゴリ: 実行フロー/キャンセル
+- 背景:
+- 判断:
+- 代替案:
+- 影響範囲:
+- 関連ファイル: src/core/AudioBuffer.cpp
+
 ### MIDI時間変換
 
 #### 2026-02-25: 同tickイベント順序を Control -> NoteOff -> NoteOn に固定
