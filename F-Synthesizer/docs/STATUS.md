@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: SourceKind -> ParameterSchema[] を Waveform 以外へ拡張)
+Last Updated: 2026-03-08 (foundation: LoadSource の schema 検証を FM/Drum/DrumKit へ段階移行)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -21,10 +21,11 @@ Branch: `main`
 - `ops`: 重い自動ハーネスは導入せず、`check.ps1` + 代表MIDI手動確認の運用を `OPERATIONS.md` へ明記
 - `foundation`: lifecycle 契約（2.5）の最小受け皿として `SourceLifecyclePolicy` と `source.lifecycle` 整合検証を追加
 - `foundation`: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
+- `foundation`: `LoadSource.cpp` の検証を schema 駆動へ移行（Waveform/FM/Drum/DrumKit）
 
 ## Next 3
 
-1. `foundation`: `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）
+1. `foundation`: Noise の enum 系検証を schema 定義とどこまで統合するか方針を確定する
 2. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 3. `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
 

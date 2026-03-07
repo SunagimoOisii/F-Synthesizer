@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation: SourceKind -> ParameterSchema[] を Waveform 以外へ拡張)
+Last Updated: 2026-03-08 (foundation: LoadSource の schema 検証を FM/Drum/DrumKit へ段階移行)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -60,6 +60,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - ops: 重い自動ハーネスを採用せず、`check.ps1` + 代表MIDI手動確認の軽量運用を `OPERATIONS.md` に明記
   - foundation: lifecycle 契約（2.5）の最小受け皿を追加（`SourceLifecyclePolicy` 定義 + `source.lifecycle` 整合検証）
   - foundation: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
+  - foundation: `LoadSource.cpp` の schema 駆動検証を FM/Drum/DrumKit へ段階移行（DrumKit は noteごとに Drum schema を適用）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -93,7 +94,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 ## Backlog
 
-- `foundation`: `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）
+- `foundation`: Noise の enum 系検証を schema 定義とどこまで統合するか方針を確定する
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 - `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
 

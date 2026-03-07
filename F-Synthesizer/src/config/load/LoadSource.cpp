@@ -132,19 +132,95 @@ bool ValidateLifecycleContract(
     return true;
 }
 
+std::string FormatSchemaValue(double value, SourceParameterType type)
+{
+    if (type == SourceParameterType::Int)
+    {
+        return std::to_string(static_cast<int>(value));
+    }
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(1) << value;
+    return oss.str();
+}
+
+bool ValidateSchemaRange(
+    const char* prefix,
+    const SourceParameterSchemaEntry& e,
+    double value,
+    bool optionalWhenNonPositive,
+    std::string& err)
+{
+    if (optionalWhenNonPositive && value <= 0.0)
+    {
+        return true;
+    }
+
+    if (value < e.minValue || value > e.maxValue)
+    {
+        err = std::string(prefix) + "." + std::string(e.id) + " must be in range "
+            + FormatSchemaValue(e.minValue, e.type) + ".." + FormatSchemaValue(e.maxValue, e.type);
+        if (optionalWhenNonPositive)
+        {
+            err += " when specified";
+        }
+        return false;
+    }
+    return true;
+}
+
+bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(wf.unisonVoices); return true; }
+    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = wf.unisonDetuneCents; return true; }
+    if (std::string_view(e.id) == "unisonSpread") { outValue = wf.unisonSpread; return true; }
+    if (std::string_view(e.id) == "subOscLevel") { outValue = wf.subOscLevel; return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = wf.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = wf.filterResonance; return true; }
+    return false;
+}
+
+bool FmSchemaValue(const FmConfig& fm, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "carrierWave") { outValue = static_cast<double>(fm.carrierWave); return true; }
+    if (std::string_view(e.id) == "modWave") { outValue = static_cast<double>(fm.modWave); return true; }
+    if (std::string_view(e.id) == "carrierRatio") { outValue = fm.carrierRatio; return true; }
+    if (std::string_view(e.id) == "modRatio") { outValue = fm.modRatio; return true; }
+    if (std::string_view(e.id) == "index") { outValue = fm.index; return true; }
+    if (std::string_view(e.id) == "outLevel") { outValue = fm.outLevel; return true; }
+    return false;
+}
+
+bool DrumSchemaValue(const DrumConfig& drum, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "drumType") { outValue = static_cast<double>(drum.type); return true; }
+    if (std::string_view(e.id) == "gain") { outValue = drum.gain; return true; }
+    if (std::string_view(e.id) == "baseFreq") { outValue = drum.baseFreq; return true; }
+    if (std::string_view(e.id) == "pitchDrop") { outValue = drum.pitchDrop; return true; }
+    if (std::string_view(e.id) == "pitchDecaySec") { outValue = drum.pitchDecaySec; return true; }
+    if (std::string_view(e.id) == "toneFreq") { outValue = drum.toneFreq; return true; }
+    if (std::string_view(e.id) == "toneLevel") { outValue = drum.toneLevel; return true; }
+    if (std::string_view(e.id) == "noiseLevel") { outValue = drum.noiseLevel; return true; }
+    if (std::string_view(e.id) == "hpCut") { outValue = drum.hpCut; return true; }
+    if (std::string_view(e.id) == "lpCut") { outValue = drum.lpCut; return true; }
+    if (std::string_view(e.id) == "toneWave") { outValue = static_cast<double>(drum.toneWave); return true; }
+    if (std::string_view(e.id) == "noiseType") { outValue = static_cast<double>(drum.noiseType); return true; }
+    return false;
+}
+
+bool IsDrumOptionalWhenNonPositive(std::string_view id)
+{
+    return id == "baseFreq"
+        || id == "pitchDrop"
+        || id == "pitchDecaySec"
+        || id == "toneFreq"
+        || id == "toneLevel"
+        || id == "noiseLevel"
+        || id == "hpCut"
+        || id == "lpCut";
+}
+
 bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
 {
-    const auto formatSchemaValue = [](double value, SourceParameterType type) -> std::string
-    {
-        if (type == SourceParameterType::Int)
-        {
-            return std::to_string(static_cast<int>(value));
-        }
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(1) << value;
-        return oss.str();
-    };
-
     const SourceParameterSchemaEntry* schema = nullptr;
     size_t schemaCount = 0;
     if (!TryGetParameterSchema(SourceKind::Waveform, schema, schemaCount) || schema == nullptr)
@@ -157,42 +233,88 @@ bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
     {
         const SourceParameterSchemaEntry& e = schema[i];
         double value = 0.0;
-        if (std::string_view(e.id) == "unisonVoices")
-        {
-            value = static_cast<double>(wf.unisonVoices);
-        }
-        else if (std::string_view(e.id) == "unisonDetuneCents")
-        {
-            value = wf.unisonDetuneCents;
-        }
-        else if (std::string_view(e.id) == "unisonSpread")
-        {
-            value = wf.unisonSpread;
-        }
-        else if (std::string_view(e.id) == "subOscLevel")
-        {
-            value = wf.subOscLevel;
-        }
-        else if (std::string_view(e.id) == "filterCutoffHz")
-        {
-            value = wf.filterCutoffHz;
-        }
-        else if (std::string_view(e.id) == "filterResonance")
-        {
-            value = wf.filterResonance;
-        }
-        else
+        if (!WaveformSchemaValue(wf, e, value))
         {
             err = "waveform schema has unknown id: " + std::string(e.id);
             return false;
         }
 
-        if (value < e.minValue || value > e.maxValue)
+        if (!ValidateSchemaRange("waveform", e, value, false, err))
         {
-            err = "waveform." + std::string(e.id) + " must be in range " +
-                formatSchemaValue(e.minValue, e.type) + ".." + formatSchemaValue(e.maxValue, e.type);
             return false;
         }
+    }
+    return true;
+}
+
+bool ValidateFmBySchema(const FmConfig& fm, std::string& err)
+{
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Fm, schema, schemaCount) || schema == nullptr)
+    {
+        err = "fm schema is not defined";
+        return false;
+    }
+
+    for (size_t i = 0; i < schemaCount; i++)
+    {
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (!FmSchemaValue(fm, e, value))
+        {
+            err = "fm schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+        if (!ValidateSchemaRange("fm", e, value, false, err))
+        {
+            return false;
+        }
+    }
+
+    // ratio は 0.0 を許容しない（無音化と不正設定の早期検出）。
+    if (fm.carrierRatio <= 0.0)
+    {
+        err = "fm.carrierRatio must be in range 0.0<..32.0";
+        return false;
+    }
+    if (fm.modRatio <= 0.0)
+    {
+        err = "fm.modRatio must be in range 0.0<..32.0";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateDrumBySchema(const DrumConfig& drum, std::string& err)
+{
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Drum, schema, schemaCount) || schema == nullptr)
+    {
+        err = "drum schema is not defined";
+        return false;
+    }
+
+    for (size_t i = 0; i < schemaCount; i++)
+    {
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (!DrumSchemaValue(drum, e, value))
+        {
+            err = "drum schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+        if (!ValidateSchemaRange("drum", e, value, IsDrumOptionalWhenNonPositive(e.id), err))
+        {
+            return false;
+        }
+    }
+
+    if (drum.hpCut > 0.0 && drum.lpCut > 0.0 && drum.hpCut >= drum.lpCut)
+    {
+        err = "drum.hpCut must be less than drum.lpCut when both are specified";
+        return false;
     }
     return true;
 }
@@ -241,89 +363,6 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     return true;
 }
 
-bool ValidateFmConfig(const FmConfig& fm, std::string& err)
-{
-    if (fm.carrierRatio <= 0.0 || fm.carrierRatio > 32.0)
-    {
-        err = "fm.carrierRatio must be in range 0.0<..32.0";
-        return false;
-    }
-    if (fm.modRatio <= 0.0 || fm.modRatio > 32.0)
-    {
-        err = "fm.modRatio must be in range 0.0<..32.0";
-        return false;
-    }
-    if (fm.index < 0.0 || fm.index > 20.0)
-    {
-        err = "fm.index must be in range 0.0..20.0";
-        return false;
-    }
-    if (fm.outLevel < 0.0 || fm.outLevel > 4.0)
-    {
-        err = "fm.outLevel must be in range 0.0..4.0";
-        return false;
-    }
-    return true;
-}
-
-bool ValidateDrumConfig(const DrumConfig& drum, std::string& err)
-{
-    // 0/負値は「未指定」を許可し、正値が指定された項目のみレンジ検証する。
-    if (drum.gain < 0.0 || drum.gain > 4.0)
-    {
-        err = "drum.gain must be in range 0.0..4.0";
-        return false;
-    }
-
-    if (drum.baseFreq > 0.0 && (drum.baseFreq < 20.0 || drum.baseFreq > 20000.0))
-    {
-        err = "drum.baseFreq must be in range 20.0..20000.0 when specified";
-        return false;
-    }
-    if (drum.pitchDrop > 0.0 && (drum.pitchDrop < 0.1 || drum.pitchDrop > 16.0))
-    {
-        err = "drum.pitchDrop must be in range 0.1..16.0 when specified";
-        return false;
-    }
-    if (drum.pitchDecaySec > 0.0 && (drum.pitchDecaySec < 0.001 || drum.pitchDecaySec > 2.0))
-    {
-        err = "drum.pitchDecaySec must be in range 0.001..2.0 when specified";
-        return false;
-    }
-
-    if (drum.toneFreq > 0.0 && (drum.toneFreq < 20.0 || drum.toneFreq > 20000.0))
-    {
-        err = "drum.toneFreq must be in range 20.0..20000.0 when specified";
-        return false;
-    }
-    if (drum.toneLevel > 0.0 && drum.toneLevel > 2.0)
-    {
-        err = "drum.toneLevel must be in range 0.0<..2.0 when specified";
-        return false;
-    }
-    if (drum.noiseLevel > 0.0 && drum.noiseLevel > 2.0)
-    {
-        err = "drum.noiseLevel must be in range 0.0<..2.0 when specified";
-        return false;
-    }
-    if (drum.hpCut > 0.0 && (drum.hpCut < 20.0 || drum.hpCut > 20000.0))
-    {
-        err = "drum.hpCut must be in range 20.0..20000.0 when specified";
-        return false;
-    }
-    if (drum.lpCut > 0.0 && (drum.lpCut < 20.0 || drum.lpCut > 20000.0))
-    {
-        err = "drum.lpCut must be in range 20.0..20000.0 when specified";
-        return false;
-    }
-
-    if (drum.hpCut > 0.0 && drum.lpCut > 0.0 && drum.hpCut >= drum.lpCut)
-    {
-        err = "drum.hpCut must be less than drum.lpCut when both are specified";
-        return false;
-    }
-    return true;
-}
 } // namespace
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
@@ -477,7 +516,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             return false;
         }
         FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel };
-        if (!ValidateFmConfig(fm, err))
+        if (!ValidateFmBySchema(fm, err))
         {
             return false;
         }
@@ -491,7 +530,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             return false;
         }
-        if (!ValidateDrumConfig(drum, err))
+        if (!ValidateDrumBySchema(drum, err))
         {
             return false;
         }
@@ -535,7 +574,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
                 {
                     return false;
                 }
-                if (!ValidateDrumConfig(d, err))
+                if (!ValidateDrumBySchema(d, err))
                 {
                     err = "drumkit note " + k + ": " + err;
                     return false;
