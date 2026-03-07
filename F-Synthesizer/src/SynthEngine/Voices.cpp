@@ -11,6 +11,19 @@ namespace
 constexpr double kPi = 3.14159265358979323846;
 constexpr size_t kMaxVoices = 256;
 
+bool HasSameCapabilityProfile(const SourceConfig& a, const SourceConfig& b)
+{
+    const config::SourceCapability lhs = config::SourceCapabilityOf(a);
+    const config::SourceCapability rhs = config::SourceCapabilityOf(b);
+    return lhs.hasPitch == rhs.hasPitch &&
+        lhs.hasAmpEnv == rhs.hasAmpEnv &&
+        lhs.hasFilterIn == rhs.hasFilterIn &&
+        lhs.hasModTargets == rhs.hasModTargets &&
+        lhs.supportsPolyphony == rhs.supportsPolyphony &&
+        lhs.isOneShot == rhs.isOneShot &&
+        lhs.isPercussion == rhs.isPercussion;
+}
+
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
     if (drum.type == DrumType::Kick)
@@ -137,7 +150,6 @@ bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, con
         return false;
     }
 
-    const config::SourceKind incomingKind = config::SourceConfigKind(cfg.source);
     size_t restartIndex = static_cast<size_t>(-1);
     for (size_t i = 0; i < voices.size(); i++)
     {
@@ -149,7 +161,7 @@ bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, con
         {
             continue;
         }
-        if (config::SourceConfigKind(voices.source[i]) != incomingKind)
+        if (!HasSameCapabilityProfile(voices.source[i], cfg.source))
         {
             continue;
         }
@@ -198,14 +210,13 @@ bool TryHandleVoiceLimitAndSteal(VoicesSoA& voices, const ChannelConfig& cfg, co
 
     size_t victim = static_cast<size_t>(-1);
     // Oldest: まず同一sourceKindの最古voiceを優先して差し替える。
-    const config::SourceKind incomingKind = config::SourceConfigKind(cfg.source);
     for (size_t i = 0; i < voices.size(); i++)
     {
         if (voices.pendingRemove[i] != 0)
         {
             continue;
         }
-        if (config::SourceConfigKind(voices.source[i]) == incomingKind)
+        if (HasSameCapabilityProfile(voices.source[i], cfg.source))
         {
             victim = i;
             break;

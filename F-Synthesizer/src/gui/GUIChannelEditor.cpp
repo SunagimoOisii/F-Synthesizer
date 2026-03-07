@@ -14,12 +14,31 @@ namespace
 {
 using HoverHelpFn = std::function<void(const char* what, const char* impact, const char* caution)>;
 
-constexpr config::SourceKind kGuiSourceKinds[] = {
-    config::SourceKind::Waveform,
-    config::SourceKind::Noise,
-    config::SourceKind::Fm,
-    config::SourceKind::DrumKit,
-};
+std::array<config::SourceKind, config::kSourceKindCount> BuildGuiSourceKindList(size_t& outCount)
+{
+    std::array<config::SourceKind, config::kSourceKindCount> kinds{};
+    outCount = 0;
+    for (int i = 0; i < config::kSourceKindCount; i++)
+    {
+        const config::SourceKind kind = config::SourceKindFromIndex(i);
+        if (kind == config::SourceKind::Count)
+        {
+            continue;
+        }
+
+        const config::SourceCapability capability = config::SourceCapabilityOf(kind);
+        // Soundタブでは one-shot 単発の Drum 直編集を避け、DrumKit を正規導線として残す。
+        if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
+        {
+            kinds[outCount++] = kind;
+        }
+    }
+    if (outCount == 0)
+    {
+        kinds[outCount++] = config::SourceKind::Waveform;
+    }
+    return kinds;
+}
 
 bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
 {
@@ -343,24 +362,26 @@ bool DrawChannelEditor(
         }
 
         const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
+        size_t guiSourceKindCount = 0;
+        const auto guiSourceKinds = BuildGuiSourceKindList(guiSourceKindCount);
         int srcType = 0;
-        for (int i = 0; i < IM_ARRAYSIZE(kGuiSourceKinds); i++)
+        for (size_t i = 0; i < guiSourceKindCount; i++)
         {
-            if (kGuiSourceKinds[i] == selectedKind)
+            if (guiSourceKinds[i] == selectedKind)
             {
-                srcType = i;
+                srcType = static_cast<int>(i);
                 break;
             }
         }
-        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(kGuiSourceKinds[srcType])))
+        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiSourceKinds[static_cast<size_t>(srcType)])))
         {
-            for (int i = 0; i < IM_ARRAYSIZE(kGuiSourceKinds); i++)
+            for (size_t i = 0; i < guiSourceKindCount; i++)
             {
-                const config::SourceKind candidate = kGuiSourceKinds[i];
-                const bool selected = (srcType == i);
+                const config::SourceKind candidate = guiSourceKinds[i];
+                const bool selected = (srcType == static_cast<int>(i));
                 if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
                 {
-                    srcType = i;
+                    srcType = static_cast<int>(i);
                     changed = true;
                     chCfg.source = DefaultSourceByType(config::SourceKindToIndex(candidate));
                 }

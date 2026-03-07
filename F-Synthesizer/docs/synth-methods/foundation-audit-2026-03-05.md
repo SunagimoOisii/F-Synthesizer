@@ -27,8 +27,9 @@
   - source種別の列挙と typeName 解決は `SourceKind` で一元化されている。
   - `DefaultSourceConfig` により種別ごとの既定値を返せる。
   - `SourceCapability` が導入され、GUIのドラム判定に capability 利用が入っている。
+  - Soundタブ source 種別選択と Voices の同種判定（retrigger/steal優先）を capability ベースへ置換済み。
 - 不足:
-  - capability ベース適用は一部のみで、全方式の分岐置換は継続課題。
+  - なし（2.1範囲内）。
 
 ### 2.2 Parameter Schema 契約
 
@@ -134,8 +135,8 @@
 ### 7.1 契約2.1〜2.6タスク
 
 1. `2.1 Source Capability`
-   - 状態: 対応済み（部分適用課題あり）
-   - 残: capability ベース分岐の全面適用
+   - 状態: 対応済み
+   - 残: なし
 2. `2.2 Parameter Schema`
    - 状態: 部分対応
    - 完了: Waveform/Noise/FM/Drum schema、DrumKit特例、LoadSource schema検証移行、Noise enum統合方針
