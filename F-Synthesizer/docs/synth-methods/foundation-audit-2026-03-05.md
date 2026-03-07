@@ -55,8 +55,9 @@
   - `pan` は現時点で非採用とし、ConfigLoad 非受理にする方針を文書化済み。
   - 方式固有 destination の命名規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義済み。
   - `fm.index` は `source.type=fm` の `modulation` で受理し、FMレンダへ適用する Phase 1 を実装済み。
+  - GUI編集導線を段階導入し、FM source の Modulation Destination で `fm.index` を選択可能にした。
 - 不足:
-  - 方式固有 destination の GUI編集導線は未実装（JSON編集で設定）。
+  - なし（2.4範囲内）。
 
 ### 2.5 Voice Lifecycle 契約
 
@@ -90,11 +91,11 @@
 
 ## 3. 未定義項目リスト（実装順）
 
-1. 方式固有 destination の GUI編集導線（destination 選択UI）を導入するか判断し、必要なら段階導入する。
+なし
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1 を完了する（方式固有 destination の GUI導線要否判断）
+なし
 
 ## 5. タスク完了後の凍結手順
 
@@ -143,9 +144,9 @@
    - 状態: 未評価（本監査対象外）
    - 残: Renderer/Voices 側で契約監査
 4. `2.4 Modulation Routing`
-   - 状態: 部分対応
-   - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義
-   - 残: 方式固有 destination の GUI編集導線（任意）
+   - 状態: 対応済み
+   - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義、`fm.index` の受理/適用、FM向けGUI編集導線
+   - 残: なし
 5. `2.5 Voice Lifecycle`
    - 状態: 対応済み
    - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、retrigger/steal/one-shot の実装一致確認
@@ -155,7 +156,7 @@
 
 ### 7.2 現行の残タスク（実装/判断）
 
-1. 方式固有 destination の GUI編集導線（destination 選択UI）を導入するか判断し、必要なら段階導入する。
+なし
 
 ### 7.3 凍結時タスク（最終クローズ）
 

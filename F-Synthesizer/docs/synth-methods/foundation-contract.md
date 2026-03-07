@@ -91,6 +91,7 @@
     - 方式固有 destination を複数追加する場合は、`<sourceKind>.<parameterId>` と `ParameterSchema` の対応表を追加する。
   - Phase 3（将来）:
     - GUI編集導線（方式固有 destination の選択UI）を追加し、手動JSON編集依存を解消する。
+    - 2026-03-08 時点では FM の destination 選択UIに `fm.index` を導入済み（Waveform には未表示）。
 
 ### 2.5 Voice Lifecycle 契約
 

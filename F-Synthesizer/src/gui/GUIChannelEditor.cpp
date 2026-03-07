@@ -1,6 +1,7 @@
 #include "gui/GUIChannelEditor.h"
 
 #include <algorithm>
+#include <array>
 #include <string>
 
 #include <imgui.h>
@@ -144,6 +145,163 @@ bool DrawChannelEditor(
             value = static_cast<double>(v);
         }
         return edited;
+    };
+    auto drawModulationEditor = [&](const char* idPrefix,
+        ModulationConfig& modulation,
+        bool allowFilterCutoff,
+        bool allowFmIndex) -> bool
+    {
+        bool localChanged = false;
+        ImGui::Separator();
+        ImGui::TextUnformatted("Modulation");
+
+        const char* lfoWaves[] = { "sine", "triangle" };
+        int lfoWaveIdx = (modulation.lfo1.wave == LfoWave::Triangle) ? 1 : 0;
+        ImGui::SetNextItemWidth(220.0f);
+        if (ImGui::Combo("LFO1 Wave", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
+        {
+            modulation.lfo1.wave = (lfoWaveIdx == 1) ? LfoWave::Triangle : LfoWave::Sine;
+            localChanged = true;
+        }
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("LFO1 Rate (Hz)", modulation.lfo1.rateHz, 0.0f, 100.0f, "%.2f");
+        if (updateHoverHelp) updateHoverHelp("LFO1 Rate を調整します。", "周期変調の速さが変わります。", nullptr);
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("LFO1 Depth", modulation.lfo1.depth, 0.0f, 1.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("LFO1 Depth を調整します。", "LFOの変調量が変わります。", nullptr);
+        localChanged |= ImGui::Checkbox("LFO1 Bipolar", &modulation.lfo1.bipolar);
+        if (updateHoverHelp) updateHoverHelp("LFO1 Bipolar を切り替えます。", "LFO出力の極性レンジが変わります。", nullptr);
+
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("Env2 Attack", modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("Env2 Decay", modulation.env2.decaySec, 0.0f, 10.0f, "%.3f");
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("Env2 Sustain", modulation.env2.sustainLevel, 0.0f, 1.0f, "%.3f");
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("Env2 Release", modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
+
+        const char* modSources[] = { "none", "lfo1", "env2" };
+        struct DestinationChoice
+        {
+            const char* label;
+            ModDestination value;
+        };
+        std::array<DestinationChoice, 5> destinationChoices{ {
+            { "none", ModDestination::None },
+            { "pitchMul", ModDestination::Pitch },
+            { "amp", ModDestination::Amp },
+            { "filterCutoffHz", ModDestination::FilterCutoff },
+            { "fm.index", ModDestination::FmIndex },
+        } };
+        int destinationCount = 3;
+        if (allowFilterCutoff)
+        {
+            destinationCount++;
+        }
+        if (allowFmIndex)
+        {
+            destinationChoices[destinationCount++] = { "fm.index", ModDestination::FmIndex };
+        }
+
+        auto destinationLabel = [&](ModDestination destination) -> const char*
+        {
+            for (int i = 0; i < destinationCount; i++)
+            {
+                if (destinationChoices[i].value == destination)
+                {
+                    return destinationChoices[i].label;
+                }
+            }
+            return "none";
+        };
+        auto destinationIndex = [&](ModDestination destination) -> int
+        {
+            for (int i = 0; i < destinationCount; i++)
+            {
+                if (destinationChoices[i].value == destination)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        };
+
+        ImGui::PushID(idPrefix);
+        for (int routeIdx = 0; routeIdx < 4; routeIdx++)
+        {
+            ModRoute& route = modulation.matrix.routes[static_cast<size_t>(routeIdx)];
+            ImGui::PushID(routeIdx);
+
+            std::string summary;
+            bool hasRoute = (route.source != ModSource::None && route.destination != ModDestination::None);
+            if (hasRoute)
+            {
+                char amtBuf[16];
+                snprintf(amtBuf, sizeof(amtBuf), "%+.2f", static_cast<float>(route.amount));
+                summary = "Route " + std::to_string(routeIdx) + ": "
+                    + modSources[static_cast<int>(route.source)]
+                    + " -> "
+                    + destinationLabel(route.destination)
+                    + " (" + amtBuf + ")"
+                    + (route.enabled ? "" : " [off]");
+            }
+            else
+            {
+                summary = "Route " + std::to_string(routeIdx) + ": (empty)";
+            }
+
+            if (!ImGui::CollapsingHeader(summary.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::PopID();
+                continue;
+            }
+
+            localChanged |= ImGui::Checkbox("Enabled", &route.enabled);
+            if (updateHoverHelp) updateHoverHelp("Route Enabled を切り替えます。", "このモジュレーション経路の有効/無効が変わります。", nullptr);
+
+            int srcIdx = 0;
+            switch (route.source)
+            {
+            case ModSource::None: srcIdx = 0; break;
+            case ModSource::Lfo1: srcIdx = 1; break;
+            case ModSource::Env2: srcIdx = 2; break;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("Source", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
+            {
+                switch (srcIdx)
+                {
+                case 0: route.source = ModSource::None; break;
+                case 1: route.source = ModSource::Lfo1; break;
+                case 2: route.source = ModSource::Env2; break;
+                default: route.source = ModSource::None; break;
+                }
+                localChanged = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Route Source を選択します。", "変調元が変わります。", nullptr);
+
+            int dstIdx = destinationIndex(route.destination);
+            const char* destinationLabels[5] = {};
+            for (int i = 0; i < destinationCount; i++)
+            {
+                destinationLabels[i] = destinationChoices[i].label;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("Destination", &dstIdx, destinationLabels, destinationCount))
+            {
+                route.destination = destinationChoices[dstIdx].value;
+                localChanged = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Route Destination を選択します。", "変調先パラメータが変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            localChanged |= sliderWaveParam("Amount", route.amount, -1.0f, 1.0f, "%.3f");
+            if (updateHoverHelp) updateHoverHelp("Route Amount を調整します。", "変調量と極性が変わります。", nullptr);
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+        ImGui::PopID();
+        return localChanged;
     };
 
     ImGui::TextDisabled("Sound tab edits sound definitions only. Channel mix/assign is in Music tab.");
@@ -315,119 +473,7 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Smoothing (ms)", wf->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
 
-            ImGui::Separator();
-            ImGui::TextUnformatted("Modulation");
-
-            const char* lfoWaves[] = { "sine", "triangle" };
-            int lfoWaveIdx = (wf->modulation.lfo1.wave == LfoWave::Triangle) ? 1 : 0;
-            ImGui::SetNextItemWidth(220.0f);
-            if (ImGui::Combo("LFO1 Wave", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
-            {
-                wf->modulation.lfo1.wave = (lfoWaveIdx == 1) ? LfoWave::Triangle : LfoWave::Sine;
-                changed = true;
-            }
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("LFO1 Rate (Hz)", wf->modulation.lfo1.rateHz, 0.0f, 100.0f, "%.2f");
-            if (updateHoverHelp) updateHoverHelp("LFO1 Rate を調整します。", "周期変調の速さが変わります。", nullptr);
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("LFO1 Depth", wf->modulation.lfo1.depth, 0.0f, 1.0f, "%.3f");
-            if (updateHoverHelp) updateHoverHelp("LFO1 Depth を調整します。", "LFOの変調量が変わります。", nullptr);
-            changed |= ImGui::Checkbox("LFO1 Bipolar", &wf->modulation.lfo1.bipolar);
-            if (updateHoverHelp) updateHoverHelp("LFO1 Bipolar を切り替えます。", "LFO出力の極性レンジが変わります。", nullptr);
-
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("Env2 Attack", wf->modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("Env2 Decay", wf->modulation.env2.decaySec, 0.0f, 10.0f, "%.3f");
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("Env2 Sustain", wf->modulation.env2.sustainLevel, 0.0f, 1.0f, "%.3f");
-            ImGui::SetNextItemWidth(220.0f);
-            changed |= sliderWaveParam("Env2 Release", wf->modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
-
-            const char* modSources[] = { "none", "lfo1", "env2" };
-            const char* modDestinations[] = { "none", "pitchMul", "amp", "filterCutoffHz" };
-            for (int routeIdx = 0; routeIdx < 4; routeIdx++)
-            {
-                ModRoute& route = wf->modulation.matrix.routes[static_cast<size_t>(routeIdx)];
-                ImGui::PushID(routeIdx);
-
-                std::string summary;
-                bool hasRoute = (route.source != ModSource::None && route.destination != ModDestination::None);
-                if (hasRoute)
-                {
-                    char amtBuf[16];
-                    snprintf(amtBuf, sizeof(amtBuf), "%+.2f", static_cast<float>(route.amount));
-                    summary = "Route " + std::to_string(routeIdx) + ": "
-                        + modSources[static_cast<int>(route.source)]
-                        + " -> "
-                        + modDestinations[static_cast<int>(route.destination)]
-                        + " (" + amtBuf + ")"
-                        + (route.enabled ? "" : " [off]");
-                }
-                else
-                {
-                    summary = "Route " + std::to_string(routeIdx) + ": (empty)";
-                }
-
-                if (!ImGui::CollapsingHeader(summary.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    ImGui::PopID();
-                    continue;
-                }
-
-                changed |= ImGui::Checkbox("Enabled", &route.enabled);
-                if (updateHoverHelp) updateHoverHelp("Route Enabled を切り替えます。", "このモジュレーション経路の有効/無効が変わります。", nullptr);
-
-                int srcIdx = 0;
-                switch (route.source)
-                {
-                case ModSource::None: srcIdx = 0; break;
-                case ModSource::Lfo1: srcIdx = 1; break;
-                case ModSource::Env2: srcIdx = 2; break;
-                }
-                ImGui::SetNextItemWidth(220.0f);
-                if (ImGui::Combo("Source", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
-                {
-                    switch (srcIdx)
-                    {
-                    case 0: route.source = ModSource::None; break;
-                    case 1: route.source = ModSource::Lfo1; break;
-                    case 2: route.source = ModSource::Env2; break;
-                    default: route.source = ModSource::None; break;
-                    }
-                    changed = true;
-                }
-                if (updateHoverHelp) updateHoverHelp("Route Source を選択します。", "変調元が変わります。", nullptr);
-
-                int dstIdx = 0;
-                switch (route.destination)
-                {
-                case ModDestination::None: dstIdx = 0; break;
-                case ModDestination::Pitch: dstIdx = 1; break;
-                case ModDestination::Amp: dstIdx = 2; break;
-                case ModDestination::FilterCutoff: dstIdx = 3; break;
-                case ModDestination::FmIndex: dstIdx = 0; break;
-                }
-                ImGui::SetNextItemWidth(220.0f);
-                if (ImGui::Combo("Destination", &dstIdx, modDestinations, IM_ARRAYSIZE(modDestinations)))
-                {
-                    switch (dstIdx)
-                    {
-                    case 0: route.destination = ModDestination::None; break;
-                    case 1: route.destination = ModDestination::Pitch; break;
-                    case 2: route.destination = ModDestination::Amp; break;
-                    case 3: route.destination = ModDestination::FilterCutoff; break;
-                    default: route.destination = ModDestination::None; break;
-                    }
-                    changed = true;
-                }
-                if (updateHoverHelp) updateHoverHelp("Route Destination を選択します。", "変調先パラメータが変わります。", nullptr);
-                ImGui::SetNextItemWidth(220.0f);
-                changed |= sliderWaveParam("Amount", route.amount, -1.0f, 1.0f, "%.3f");
-                if (updateHoverHelp) updateHoverHelp("Route Amount を調整します。", "変調量と極性が変わります。", nullptr);
-                ImGui::Separator();
-                ImGui::PopID();
-            }
+            changed |= drawModulationEditor("waveform_modulation", wf->modulation, true, false);
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {
@@ -439,6 +485,21 @@ bool DrawChannelEditor(
         }
         else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
         {
+            fm->carrierRatio = std::clamp(fm->carrierRatio, 0.0, 32.0);
+            fm->modRatio = std::clamp(fm->modRatio, 0.0, 32.0);
+            fm->index = std::clamp(fm->index, 0.0, 20.0);
+            fm->outLevel = std::clamp(fm->outLevel, 0.0, 4.0);
+            fm->modulation.lfo1.rateHz = std::clamp(fm->modulation.lfo1.rateHz, 0.0, 100.0);
+            fm->modulation.lfo1.depth = std::clamp(fm->modulation.lfo1.depth, 0.0, 1.0);
+            fm->modulation.env2.attackSec = std::clamp(fm->modulation.env2.attackSec, 0.0, 10.0);
+            fm->modulation.env2.decaySec = std::clamp(fm->modulation.env2.decaySec, 0.0, 10.0);
+            fm->modulation.env2.sustainLevel = std::clamp(fm->modulation.env2.sustainLevel, 0.0, 1.0);
+            fm->modulation.env2.releaseSec = std::clamp(fm->modulation.env2.releaseSec, 0.0, 10.0);
+            for (auto& route : fm->modulation.matrix.routes)
+            {
+                route.amount = std::clamp(route.amount, -1.0, 1.0);
+            }
+
             int cIdx = WaveToIndex(fm->carrierWave);
             int mIdx = WaveToIndex(fm->modWave);
             const char* waves[] = { "sine", "square", "saw", "triangle" };
@@ -456,6 +517,8 @@ bool DrawChannelEditor(
             if (updateHoverHelp) updateHoverHelp("FM Index を調整します。", "倍音の強さが変わります。", nullptr);
             changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
             if (updateHoverHelp) updateHoverHelp("FM OutLevel を調整します。", "FM経路の出力音量が変わります。", nullptr);
+
+            changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true);
         }
         else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
         {
