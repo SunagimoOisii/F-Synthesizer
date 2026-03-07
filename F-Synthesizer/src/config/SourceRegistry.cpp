@@ -12,14 +12,45 @@ struct SourceKindInfo
     const char* typeName;
     const char* displayName;
     SourceCapability capability;
+    SourceLifecyclePolicy lifecycle;
 };
 
 constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
-    { SourceKind::Waveform, "waveform", "waveform", SourceCapability{ true, true, true, true, true, false, false } },
-    { SourceKind::Noise, "noise", "noise", SourceCapability{ false, true, false, false, true, false, false } },
-    { SourceKind::Fm, "fm", "fm", SourceCapability{ true, true, true, false, true, false, false } },
-    { SourceKind::Drum, "drum", "drum", SourceCapability{ false, true, false, false, false, true, true } },
-    { SourceKind::DrumKit, "drumkit", "drumkit", SourceCapability{ false, true, false, false, false, true, true } },
+    {
+        SourceKind::Waveform,
+        "waveform",
+        "waveform",
+        SourceCapability{ true, true, true, true, true, false, false },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
+    },
+    {
+        SourceKind::Noise,
+        "noise",
+        "noise",
+        SourceCapability{ false, true, false, false, true, false, false },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
+    },
+    {
+        SourceKind::Fm,
+        "fm",
+        "fm",
+        SourceCapability{ true, true, true, false, true, false, false },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
+    },
+    {
+        SourceKind::Drum,
+        "drum",
+        "drum",
+        SourceCapability{ false, true, false, false, false, true, true },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Stack, SourceLifecycleSteal::RejectNew, false, true }
+    },
+    {
+        SourceKind::DrumKit,
+        "drumkit",
+        "drumkit",
+        SourceCapability{ false, true, false, false, false, true, true },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Stack, SourceLifecycleSteal::RejectNew, false, true }
+    },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 6> kWaveformParameterSchema{ {
@@ -108,6 +139,23 @@ SourceCapability SourceCapabilityOf(SourceKind kind)
 SourceCapability SourceCapabilityOf(const SourceConfig& src)
 {
     return SourceCapabilityOf(SourceConfigKind(src));
+}
+
+SourceLifecyclePolicy SourceLifecycleOf(SourceKind kind)
+{
+    for (const auto& k : kSourceKinds)
+    {
+        if (k.kind == kind)
+        {
+            return k.lifecycle;
+        }
+    }
+    return kSourceKinds[0].lifecycle;
+}
+
+SourceLifecyclePolicy SourceLifecycleOf(const SourceConfig& src)
+{
+    return SourceLifecycleOf(SourceConfigKind(src));
 }
 
 bool TryGetParameterSchema(

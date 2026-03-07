@@ -16,7 +16,7 @@
 - 2.2 Parameter Schema 契約: `部分対応（Waveform最小版）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
 - 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan未対応）`
-- 2.5 Voice Lifecycle 契約: `未対応（ConfigLoad対象外）`
+- 2.5 Voice Lifecycle 契約: `部分対応（最小受け皿を定義）`
 - 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
 
 ## 2. 観測結果（契約別）
@@ -56,17 +56,19 @@
 
 ### 2.5 Voice Lifecycle 契約
 
+- できていること:
+  - `SourceRegistry` に `SourceLifecyclePolicy`（retrigger/steal/noteOff/release/one-shot終了）を追加。
+  - `ConfigLoad` で `source.lifecycle` の任意宣言を受理し、`SourceKind` 固定値との整合を検証できる。
 - 不足:
-  - SourceRegistry/ConfigLoad では noteOn/noteOff/retrigger/steal/one-shot終了条件を定義していない。
-  - lifecycle 契約の受け皿（設定キー・宣言）も未整備。
+  - 実レンダ側の挙動（voice steal優先順位やretrigger挙動）の完全一致監査は未実施。
 
 ### 2.6 Test Harness 契約
 
 - 現状:
   - 個人運用方針として、重い自動Harnessは導入しない。
   - `check.ps1` + 代表MIDI手動確認で運用する方針へ切替。
-- 不足:
-  - 軽量運用手順の文書化（`OPERATIONS.md` 反映）が未完了。
+- できていること:
+  - `OPERATIONS.md` に軽量運用手順を反映済み。
 
 ## 3. 未定義項目リスト（実装順）
 
@@ -74,14 +76,13 @@
 2. `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）。
 3. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
 4. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
-5. Voice Lifecycle 契約の受け皿（設定/文書）を明確化する。
-6. `OPERATIONS.md` に軽量運用（`check.ps1` + 代表MIDI手動確認）を明記する。
+5. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
 
 ## 4. 優先実施順（最小）
 
 1. 3章の 1〜2 を完了する（schema 拡張）
 2. 3章の 3〜4 を完了する（modulation 拡張方針）
-3. 3章の 5〜6 を完了する（lifecycle + 軽量運用整備）
+3. 3章の 5 を完了する（lifecycle挙動監査）
 
 ## 5. タスク完了後の凍結手順
 

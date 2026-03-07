@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (doc-sync/ops: method-boundaries・integration-playbook・OPERATIONS の整合を完了)
+Last Updated: 2026-03-08 (foundation: lifecycle 契約 2.5 の最小受け皿を SourceRegistry/ConfigLoad に導入)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -58,6 +58,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui cleanup: Musicタブ補助文言/ヘルプを現行UIへ再整理（Reference廃止後の説明差分を反映）
   - doc-sync: 個人運用前提で `method-boundaries` / `integration-playbook` / `STATUS` の記載整合を最終確認
   - ops: 重い自動ハーネスを採用せず、`check.ps1` + 代表MIDI手動確認の軽量運用を `OPERATIONS.md` に明記
+  - foundation: lifecycle 契約（2.5）の最小受け皿を追加（`SourceLifecyclePolicy` 定義 + `source.lifecycle` 整合検証）
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -91,9 +92,9 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 ## Backlog
 
-- `foundation`: lifecycle 契約（2.5）の受け皿を最小定義し、`foundation-audit` の未定義項目と整合させる
 - `foundation`: `SourceKind -> ParameterSchema[]` の対象を Waveform 以外へ段階拡張する
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+- `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
 
 ## Recurring Checks
 

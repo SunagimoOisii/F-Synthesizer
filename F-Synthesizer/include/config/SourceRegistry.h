@@ -31,6 +31,28 @@ struct SourceCapability
     bool isPercussion = false;
 };
 
+enum class SourceLifecycleRetrigger
+{
+    Restart = 0,
+    Stack = 1
+};
+
+enum class SourceLifecycleSteal
+{
+    Oldest = 0,
+    RejectNew = 1
+};
+
+// source 種別ごとの lifecycle 契約（最小受け皿）。
+// 実レンダ実装とは独立に、設定/文書整合の基準値として使う。
+struct SourceLifecyclePolicy
+{
+    SourceLifecycleRetrigger retrigger = SourceLifecycleRetrigger::Restart;
+    SourceLifecycleSteal steal = SourceLifecycleSteal::Oldest;
+    bool noteOffEntersRelease = true;
+    bool oneShotEndsAutomatically = false;
+};
+
 enum class SourceParameterType
 {
     Int,
@@ -62,6 +84,10 @@ SourceKind SourceConfigKind(const SourceConfig& src);
 SourceCapability SourceCapabilityOf(SourceKind kind);
 // SourceConfig の実体型に対応する capability を返す。
 SourceCapability SourceCapabilityOf(const SourceConfig& src);
+// 種別ごとの lifecycle 契約を返す。不正値は Waveform を返す。
+SourceLifecyclePolicy SourceLifecycleOf(SourceKind kind);
+// SourceConfig の実体型に対応する lifecycle 契約を返す。
+SourceLifecyclePolicy SourceLifecycleOf(const SourceConfig& src);
 // 種別ごとの最小パラメータschema（id/type/range/default）を返す。未定義種別は false を返す。
 bool TryGetParameterSchema(
     SourceKind kind,

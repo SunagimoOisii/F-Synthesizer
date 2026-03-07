@@ -11,6 +11,127 @@ namespace config::internal::load
 {
 namespace
 {
+const char* RetriggerToString(SourceLifecycleRetrigger retrigger)
+{
+    switch (retrigger)
+    {
+    case SourceLifecycleRetrigger::Restart: return "restart";
+    case SourceLifecycleRetrigger::Stack: return "stack";
+    }
+    return "restart";
+}
+
+bool TryParseRetrigger(const std::string& name, SourceLifecycleRetrigger& out)
+{
+    if (name == "restart")
+    {
+        out = SourceLifecycleRetrigger::Restart;
+        return true;
+    }
+    if (name == "stack")
+    {
+        out = SourceLifecycleRetrigger::Stack;
+        return true;
+    }
+    return false;
+}
+
+const char* StealToString(SourceLifecycleSteal steal)
+{
+    switch (steal)
+    {
+    case SourceLifecycleSteal::Oldest: return "oldest";
+    case SourceLifecycleSteal::RejectNew: return "rejectNew";
+    }
+    return "oldest";
+}
+
+bool TryParseSteal(const std::string& name, SourceLifecycleSteal& out)
+{
+    if (name == "oldest")
+    {
+        out = SourceLifecycleSteal::Oldest;
+        return true;
+    }
+    if (name == "rejectNew")
+    {
+        out = SourceLifecycleSteal::RejectNew;
+        return true;
+    }
+    return false;
+}
+
+bool ValidateLifecycleContract(
+    const std::string& sourceObjText,
+    SourceKind sourceKind,
+    std::string& err)
+{
+    std::string lifecycleObj;
+    bool foundLifecycle = false;
+    if (!ExtractObjectForKey(sourceObjText, "lifecycle", lifecycleObj, foundLifecycle, err))
+    {
+        return false;
+    }
+    if (!foundLifecycle)
+    {
+        return true;
+    }
+
+    const SourceLifecyclePolicy expected = SourceLifecycleOf(sourceKind);
+    if (auto v = ReadJSONString(lifecycleObj, "retrigger"))
+    {
+        SourceLifecycleRetrigger parsed{};
+        if (!TryParseRetrigger(*v, parsed))
+        {
+            err = "source.lifecycle.retrigger must be restart/stack";
+            return false;
+        }
+        if (parsed != expected.retrigger)
+        {
+            err = "source.lifecycle.retrigger must be '" + std::string(RetriggerToString(expected.retrigger))
+                + "' for source.type=" + std::string(SourceKindToTypeName(sourceKind));
+            return false;
+        }
+    }
+    if (auto v = ReadJSONString(lifecycleObj, "steal"))
+    {
+        SourceLifecycleSteal parsed{};
+        if (!TryParseSteal(*v, parsed))
+        {
+            err = "source.lifecycle.steal must be oldest/rejectNew";
+            return false;
+        }
+        if (parsed != expected.steal)
+        {
+            err = "source.lifecycle.steal must be '" + std::string(StealToString(expected.steal))
+                + "' for source.type=" + std::string(SourceKindToTypeName(sourceKind));
+            return false;
+        }
+    }
+    if (auto v = ReadJSONBool(lifecycleObj, "noteOffEntersRelease"))
+    {
+        if (*v != expected.noteOffEntersRelease)
+        {
+            err = "source.lifecycle.noteOffEntersRelease must be "
+                + std::string(expected.noteOffEntersRelease ? "true" : "false")
+                + " for source.type=" + std::string(SourceKindToTypeName(sourceKind));
+            return false;
+        }
+    }
+    if (auto v = ReadJSONBool(lifecycleObj, "oneShotEndsAutomatically"))
+    {
+        if (*v != expected.oneShotEndsAutomatically)
+        {
+            err = "source.lifecycle.oneShotEndsAutomatically must be "
+                + std::string(expected.oneShotEndsAutomatically ? "true" : "false")
+                + " for source.type=" + std::string(SourceKindToTypeName(sourceKind));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
 {
     const auto formatSchemaValue = [](double value, SourceParameterType type) -> std::string
@@ -218,6 +339,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     if (!TryParseSourceKind(*type, sourceKind))
     {
         err = "unknown source.type: " + *type;
+        return false;
+    }
+    if (!ValidateLifecycleContract(sourceObjText, sourceKind, err))
+    {
         return false;
     }
 

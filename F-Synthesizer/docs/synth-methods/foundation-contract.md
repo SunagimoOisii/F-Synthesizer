@@ -84,6 +84,14 @@
   - retrigger 挙動
   - voice steal 時の優先順位
   - one-shot の終了条件
+- 最小受け皿（Config/Registry）:
+  - `SourceRegistry` に `SourceLifecyclePolicy` を定義する。
+  - `ConfigLoad` は `source.lifecycle` を任意で受理し、`SourceKind` ごとの固定値と照合する。
+  - 最小キー:
+    - `retrigger`（`restart` / `stack`）
+    - `steal`（`oldest` / `rejectNew`）
+    - `noteOffEntersRelease`（bool）
+    - `oneShotEndsAutomatically`（bool）
 
 ### 2.6 Test Harness 契約
 
