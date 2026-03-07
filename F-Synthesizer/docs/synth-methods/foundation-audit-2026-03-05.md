@@ -13,7 +13,7 @@
 ## 1. 判定サマリ
 
 - 2.1 Source Capability 契約: `対応済み`
-- 2.2 Parameter Schema 契約: `部分対応（LoadSource の schema 検証を FM/Drum/DrumKit へ移行）`
+- 2.2 Parameter Schema 契約: `対応済み（最小版 + 拡張項目は非導入判断）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
 - 2.4 Modulation Routing 契約: `対応済み（source固有 destination の phase1 導入まで完了）`
 - 2.5 Voice Lifecycle 契約: `対応済み（retrigger/steal/one-shot終了を実装一致）`
@@ -38,8 +38,9 @@
   - DrumKit は可変 `note -> DrumConfig` 構造のため、`ParameterSchema[]` は空定義（構造上の特例）とした。
   - `LoadSource.cpp` の schema 駆動検証は Waveform/FM/Drum/DrumKit（各noteのDrumConfig）まで移行済み。
   - Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の分離方針で統合済み。
+  - 個人運用方針として `displayName` / `smoothable` / `automatable` は当面非導入と判断し、最小版（`id/type/range/default`）を契約の正とした。
 - 不足:
-  - `displayName` / `smoothable` / `automatable` は未導入。
+  - なし（2.2範囲内）。
 
 ### 2.3 Render Contract 契約
 
@@ -138,9 +139,9 @@
    - 状態: 対応済み
    - 残: なし
 2. `2.2 Parameter Schema`
-   - 状態: 部分対応
-   - 完了: Waveform/Noise/FM/Drum schema、DrumKit特例、LoadSource schema検証移行、Noise enum統合方針
-   - 残: `displayName` / `smoothable` / `automatable` 導入
+   - 状態: 対応済み
+   - 完了: Waveform/Noise/FM/Drum schema、DrumKit特例、LoadSource schema検証移行、Noise enum統合方針、拡張項目の非導入判断
+   - 残: なし
 3. `2.3 Render Contract`
    - 状態: 未評価（本監査対象外）
    - 残: Renderer/Voices 側で契約監査

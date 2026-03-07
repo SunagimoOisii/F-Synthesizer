@@ -37,13 +37,18 @@
 ### 2.2 Parameter Schema 契約
 
 - 方式パラメータは schema で定義する（単一の正とする）。
-- 含める項目:
-  - `id` / `displayName`
-  - `type`（bool/int/float/enum）
+- 必須項目（最小版）:
+  - `id`
+  - `type`（int/float）
   - `range`（min/max）
   - `default`
+- 拡張項目（任意）:
+  - `displayName`
+  - `type` の追加種別（bool/enum）
   - `smoothable`（スムージング対象可否）
   - `automatable`（将来拡張用）
+- 個人運用の現行判断（2026-03-08）:
+  - `displayName` / `smoothable` / `automatable` は当面 `非導入`（必要時に追加）。
 - 用途:
   - Config load/save の一貫性確保
   - GUI項目の自動整合

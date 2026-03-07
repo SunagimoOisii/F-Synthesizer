@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: capability ベース分岐を点検し SourceKind 直分岐の残りを置換)
+Last Updated: 2026-03-08 (foundation: ParameterSchema 拡張項目の導入可否を判断)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -28,6 +28,7 @@ Branch: `main`
 - `foundation`: 方式固有 destination の Phase 1 として `fm.index` を採用（FM source限定で受理・適用）
 - `foundation`: 方式固有 destination の GUI編集導線を導入（FMの Modulation Destination で `fm.index` を選択可能）
 - `foundation`: capability ベース分岐を点検し、Soundタブ source 種別選択と voice同種判定の SourceKind 直依存を置換
+- `foundation`: ParameterSchema の `displayName` / `smoothable` / `automatable` は当面非導入（最小版 `id/type/range/default` を正）と判断
 - `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
 - `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
@@ -35,7 +36,7 @@ Branch: `main`
 ## Next 3
 
 1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-2. `foundation`: ParameterSchema の `displayName` / `smoothable` / `automatable` 導入可否を判断する
+2. なし
 3. なし
 
 ## Blockers

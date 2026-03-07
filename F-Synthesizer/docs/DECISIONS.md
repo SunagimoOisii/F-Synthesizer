@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-08 | ParameterSchema の `displayName` / `smoothable` / `automatable` は当面導入せず、最小版（`id/type/range/default`）を契約の正とする | 先行してschema項目を拡張しGUI/自動化連携まで同時実装する | 個人開発規模では運用コスト増が先行しやすく、現時点の利用箇所（Config検証）に対して過剰なため |
 | 2026-03-08 | 方式固有 destination の GUI編集導線は FM から段階導入し、`fm.index` の選択UIを追加する | 方式固有 destination の編集を当面 JSON 手編集に限定する | 実装済み受理・適用（Phase 1）と編集導線を一致させ、運用負荷を下げるため |
 | 2026-03-08 | 方式固有 destination は `fm.index` を Phase 1 で採用し、`source.type=fm` 限定で受理・適用する | 方式固有 destination を当面すべて非採用のまま凍結する | 契約（`<sourceKind>.<parameterId>`）の実効性を小さく検証しつつ、Waveformとの誤混在を防ぐため |
 | 2026-03-03 | スモークテストを `quick`（開発時デフォルト）と `full`（包括回帰）に分割する | 常に単一のフルスイートを実行する | 日常開発の待ち時間を抑えつつ、必要時の網羅性を維持するため |
