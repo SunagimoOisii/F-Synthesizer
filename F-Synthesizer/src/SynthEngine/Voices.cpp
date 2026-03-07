@@ -3,6 +3,7 @@
 #include <cmath>
 #include <utility>
 
+#include "config/SourceRegistry.h"
 #include "synth/Oscillator.h"
 
 namespace
@@ -35,6 +36,143 @@ void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int samp
         voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
         voices.drumBaseFreq[i] = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
     }
+}
+
+void InitializeVoiceAtIndex(
+    VoicesSoA& voices,
+    size_t i,
+    const ChannelConfig& cfg,
+    const MIDIEvent& e,
+    int sampleRate)
+{
+    // 1 voice の実行状態を初期化し、retrigger=restart 時も同じ経路で再利用する。
+    voices.source[i] = cfg.source;
+    voices.noteNumber[i] = e.noteNumber;
+    voices.velocity[i] = e.velocity;
+    voices.channel[i] = e.channel;
+    voices.channelIndex[i] = ClampChannel(e.channel);
+    voices.noteInstanceID[i] = e.noteInstanceID;
+    voices.released[i] = 0;
+    voices.pendingRemove[i] = 0;
+
+    voices.amp[i] = cfg.amp;
+    voices.attackSec[i] = cfg.attackSec;
+    voices.decaySec[i] = cfg.decaySec;
+    voices.sustainLevel[i] = cfg.sustainLevel;
+    voices.releaseSec[i] = cfg.releaseSec;
+    ADSRState envState{};
+    NoteOn(envState);
+    voices.env[i] = envState;
+
+    voices.phase[i] = 0.0;
+    voices.phaseInc[i] = NoteNumberToFreq(e.noteNumber) / sampleRate;
+    voices.fmCarrierPhase[i] = 0.0;
+    voices.fmModPhase[i] = 0.0;
+
+    voices.drumTime[i] = 0.0;
+    voices.drumBaseFreq[i] = 0.0;
+    voices.drumPitchDrop[i] = 1.0;
+    voices.drumPitchDecaySec[i] = 0.0;
+    voices.drumNoisePrev[i] = 0.0;
+    voices.drumHpPrev[i] = 0.0;
+    voices.drumHpAlpha[i] = 0.0;
+    voices.drumLpPrev[i] = 0.0;
+    voices.drumLpAlpha[i] = 0.0;
+
+    SetSmoothingRange(voices.waveformAmpSmoothing[i], 0.0, 2.0);
+    SetSmoothingSampleRate(voices.waveformAmpSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(voices.waveformAmpSmoothing[i], 4.0);
+    ResetSmoothedParam(voices.waveformAmpSmoothing[i], 1.0);
+
+    SetSmoothingRange(voices.waveformPitchSmoothing[i], 0.25, 4.0);
+    SetSmoothingSampleRate(voices.waveformPitchSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(voices.waveformPitchSmoothing[i], 2.0);
+    ResetSmoothedParam(voices.waveformPitchSmoothing[i], 1.0);
+
+    SetSmoothingRange(voices.waveformFilterCutoffSmoothing[i], 10.0, 20000.0);
+    SetSmoothingSampleRate(voices.waveformFilterCutoffSmoothing[i], sampleRate);
+    SetSmoothingTimeMs(voices.waveformFilterCutoffSmoothing[i], 8.0);
+    ResetSmoothedParam(voices.waveformFilterCutoffSmoothing[i], 1200.0);
+
+    if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
+    {
+        InitDrumVoice(*drum, voices, i, sampleRate);
+    }
+    if (const auto* wave = std::get_if<WaveformConfig>(&cfg.source))
+    {
+        FilterInstance& filter = voices.waveformFilter[i];
+        SetFilterSampleRate(filter, sampleRate);
+        SetFilterMode(filter, wave->filterMode);
+        SetFilterCutoffHz(filter, wave->filterCutoffHz);
+        SetFilterResonance(filter, wave->filterResonance);
+        ResetFilterState(filter);
+
+        SetSmoothingTimeMs(voices.waveformAmpSmoothing[i], wave->smoothing.ampTimeMs);
+        SetSmoothingTimeMs(voices.waveformPitchSmoothing[i], wave->smoothing.pitchTimeMs);
+        SetSmoothingTimeMs(voices.waveformFilterCutoffSmoothing[i], wave->smoothing.filterCutoffTimeMs);
+        ResetSmoothedParam(voices.waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
+
+        ResetModulationState(voices.waveformModulation[i]);
+        NoteOnModulation(voices.waveformModulation[i]);
+    }
+    else
+    {
+        SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
+        ResetModulationState(voices.waveformModulation[i]);
+    }
+}
+
+bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+{
+    const config::SourceLifecyclePolicy policy = config::SourceLifecycleOf(cfg.source);
+    if (policy.retrigger != config::SourceLifecycleRetrigger::Restart)
+    {
+        return false;
+    }
+
+    const config::SourceKind incomingKind = config::SourceConfigKind(cfg.source);
+    size_t restartIndex = static_cast<size_t>(-1);
+    for (size_t i = 0; i < voices.size(); i++)
+    {
+        if (voices.pendingRemove[i] != 0)
+        {
+            continue;
+        }
+        if (voices.channel[i] != e.channel || voices.noteNumber[i] != e.noteNumber)
+        {
+            continue;
+        }
+        if (config::SourceConfigKind(voices.source[i]) != incomingKind)
+        {
+            continue;
+        }
+
+        if (restartIndex == static_cast<size_t>(-1))
+        {
+            restartIndex = i;
+            continue;
+        }
+
+        // 既存の重複voiceは release 済みへ倒し、後段の cleanup で回収する。
+        if (voices.released[i] == 0)
+        {
+            NoteOff(voices.env[i]);
+            if (std::holds_alternative<WaveformConfig>(voices.source[i]))
+            {
+                NoteOffModulation(voices.waveformModulation[i]);
+            }
+            voices.released[i] = 1;
+        }
+        voices.env[i] = ADSRState{};
+    }
+
+    if (restartIndex == static_cast<size_t>(-1))
+    {
+        return false;
+    }
+
+    InitializeVoiceAtIndex(voices, restartIndex, cfg, e, sampleRate);
+    return true;
 }
 
 template <typename T>
@@ -142,27 +280,30 @@ void VoicesSoA::clear()
 
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
+    if (TryRestartVoiceOnRetrigger(*this, cfg, e, sampleRate))
+    {
+        return;
+    }
+
     // SoA 全配列へ同一インデックスで push し、列単位アクセス可能な状態を維持する。
-    source.push_back(cfg.source);
-    noteNumber.push_back(e.noteNumber);
-    velocity.push_back(e.velocity);
-    channel.push_back(e.channel);
-    channelIndex.push_back(ClampChannel(e.channel));
-    noteInstanceID.push_back(e.noteInstanceID);
+    source.emplace_back();
+    noteNumber.push_back(0);
+    velocity.push_back(0);
+    channel.push_back(0);
+    channelIndex.push_back(0);
+    noteInstanceID.push_back(-1);
     released.push_back(0);
     pendingRemove.push_back(0);
 
-    amp.push_back(cfg.amp);
-    attackSec.push_back(cfg.attackSec);
-    decaySec.push_back(cfg.decaySec);
-    sustainLevel.push_back(cfg.sustainLevel);
-    releaseSec.push_back(cfg.releaseSec);
-    ADSRState envState{};
-    NoteOn(envState);
-    env.push_back(envState);
+    amp.push_back(0.0);
+    attackSec.push_back(0.0);
+    decaySec.push_back(0.0);
+    sustainLevel.push_back(0.0);
+    releaseSec.push_back(0.0);
+    env.emplace_back();
 
     phase.push_back(0.0);
-    phaseInc.push_back(NoteNumberToFreq(e.noteNumber) / sampleRate);
+    phaseInc.push_back(0.0);
     fmCarrierPhase.push_back(0.0);
     fmModPhase.push_back(0.0);
 
@@ -182,47 +323,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     waveformFilterCutoffSmoothing.emplace_back();
 
     const size_t i = size() - 1;
-    SetSmoothingRange(waveformAmpSmoothing[i], 0.0, 2.0);
-    SetSmoothingSampleRate(waveformAmpSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformAmpSmoothing[i], 4.0);
-    ResetSmoothedParam(waveformAmpSmoothing[i], 1.0);
-
-    SetSmoothingRange(waveformPitchSmoothing[i], 0.25, 4.0);
-    SetSmoothingSampleRate(waveformPitchSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformPitchSmoothing[i], 2.0);
-    ResetSmoothedParam(waveformPitchSmoothing[i], 1.0);
-
-    SetSmoothingRange(waveformFilterCutoffSmoothing[i], 10.0, 20000.0);
-    SetSmoothingSampleRate(waveformFilterCutoffSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], 8.0);
-    ResetSmoothedParam(waveformFilterCutoffSmoothing[i], 1200.0);
-
-    if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
-    {
-        InitDrumVoice(*drum, *this, i, sampleRate);
-    }
-    if (const auto* wave = std::get_if<WaveformConfig>(&cfg.source))
-    {
-        FilterInstance& filter = waveformFilter[i];
-        SetFilterSampleRate(filter, sampleRate);
-        SetFilterMode(filter, wave->filterMode);
-        SetFilterCutoffHz(filter, wave->filterCutoffHz);
-        SetFilterResonance(filter, wave->filterResonance);
-        ResetFilterState(filter);
-
-        SetSmoothingTimeMs(waveformAmpSmoothing[i], wave->smoothing.ampTimeMs);
-        SetSmoothingTimeMs(waveformPitchSmoothing[i], wave->smoothing.pitchTimeMs);
-        SetSmoothingTimeMs(waveformFilterCutoffSmoothing[i], wave->smoothing.filterCutoffTimeMs);
-        ResetSmoothedParam(waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
-
-        ResetModulationState(waveformModulation[i]);
-        NoteOnModulation(waveformModulation[i]);
-    }
-    else
-    {
-        SetFilterMode(waveformFilter[i], FilterMode::Bypass);
-        ResetModulationState(waveformModulation[i]);
-    }
+    InitializeVoiceAtIndex(*this, i, cfg, e, sampleRate);
 }
 
 void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)

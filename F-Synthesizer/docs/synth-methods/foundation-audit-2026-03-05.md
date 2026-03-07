@@ -65,8 +65,8 @@
   - 実レンダ実装を監査し、契約との差分を特定した。
 - 監査結果（2026-03-08）:
   - retrigger:
-    - 実装: `VoicesSoA::AddVoice` は既存voiceを止めず常に積み増し（stack）。
-    - 判定: `Waveform/Noise/FM` は契約（restart）と不一致。`Drum/DrumKit` は契約（stack）と一致。
+    - 実装: `SourceLifecyclePolicy` が restart の方式（`Waveform/Noise/FM`）は同一 note の既存voiceを再初期化し、積み増ししない。
+    - 判定: `Waveform/Noise/FM` は契約（restart）と一致。`Drum/DrumKit` は契約（stack）と一致。
   - noteOff -> release:
     - 実装: 非Drumは `MarkNoteOff` で `NoteOff` 実行、Drumは `PrepareDrumRelease` で自動 `NoteOff`。
     - 判定: 契約意図と概ね一致。
@@ -77,7 +77,6 @@
     - 実装: voice上限/steal処理が無く、`Oldest/RejectNew` の優先順位は未適用。
     - 判定: 契約の「steal優先順位」は未実装（評価不能）。
 - 不足:
-  - `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy` どおりに適用する実装が未着手。
   - voice上限と steal 優先順位（`Oldest` / `RejectNew`）の実装が未着手。
 
 ### 2.6 Test Harness 契約
@@ -91,13 +90,12 @@
 ## 3. 未定義項目リスト（実装順）
 
 1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
-2. `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致させる。
-3. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
+2. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
 
 ## 4. 優先実施順（最小）
 
 1. 3章の 1 を完了する（modulation destination 拡張の実装判断）
-2. 3章の 2〜3 を完了する（lifecycle 実装一致）
+2. 3章の 2 を完了する（lifecycle 実装一致）
 
 ## 5. タスク完了後の凍結手順
 
@@ -152,7 +150,7 @@
 5. `2.5 Voice Lifecycle`
    - 状態: 部分対応
    - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、実レンダ監査
-   - 残: retrigger/steal の実装一致
+   - 残: steal の実装一致
 6. `2.6 Test Harness`
    - 状態: 運用代替で整理済み
    - 完了: 重い自動Harness非採用、`check.ps1` + 代表MIDI手動確認運用
@@ -160,8 +158,7 @@
 ### 7.2 現行の残タスク（実装/判断）
 
 1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
-2. `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致させる。
-3. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
+2. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
 
 ### 7.3 凍結時タスク（最終クローズ）
 
