@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: LoadSource の schema 検証を FM/Drum/DrumKit へ段階移行)
+Last Updated: 2026-03-08 (foundation: Noise enum 検証の schema 統合方針を確定)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -22,11 +22,12 @@ Branch: `main`
 - `foundation`: lifecycle 契約（2.5）の最小受け皿として `SourceLifecyclePolicy` と `source.lifecycle` 整合検証を追加
 - `foundation`: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
 - `foundation`: `LoadSource.cpp` の検証を schema 駆動へ移行（Waveform/FM/Drum/DrumKit）
+- `foundation`: Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の方針で統合
 
 ## Next 3
 
-1. `foundation`: Noise の enum 系検証を schema 定義とどこまで統合するか方針を確定する
-2. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+1. `foundation`: modulation destination の `pan` 対応可否を明記する（採用/非採用の理由を文書化）
+2. `foundation`: 方式固有 destination（例: `fm.index`）の拡張規約を定義する
 3. `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
 
 ## Blockers

@@ -219,6 +219,26 @@ bool IsDrumOptionalWhenNonPositive(std::string_view id)
         || id == "lpCut";
 }
 
+bool ValidateNoiseBySchema(NoiseType noise, std::string& err)
+{
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Noise, schema, schemaCount) || schema == nullptr || schemaCount == 0)
+    {
+        err = "noise schema is not defined";
+        return false;
+    }
+
+    const SourceParameterSchemaEntry& e = schema[0];
+    if (std::string_view(e.id) != "noise")
+    {
+        err = "noise schema has unknown id: " + std::string(e.id);
+        return false;
+    }
+    const double value = static_cast<double>(noise);
+    return ValidateSchemaRange("noise", e, value, false, err);
+}
+
 bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
 {
     const SourceParameterSchemaEntry* schema = nullptr;
@@ -491,6 +511,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (!TryParseNoiseType(*noise, n))
         {
             err = "invalid noise: " + *noise;
+            return false;
+        }
+        if (!ValidateNoiseBySchema(n, err))
+        {
             return false;
         }
         outSource = NoiseConfig{ n };

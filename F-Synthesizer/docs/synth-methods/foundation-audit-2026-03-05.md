@@ -36,8 +36,8 @@
   - `SourceParameterSchemaEntry` が導入され、`SourceKind -> ParameterSchema[]` は Waveform/Noise/FM/Drum まで定義済み。
   - DrumKit は可変 `note -> DrumConfig` 構造のため、`ParameterSchema[]` は空定義（構造上の特例）とした。
   - `LoadSource.cpp` の schema 駆動検証は Waveform/FM/Drum/DrumKit（各noteのDrumConfig）まで移行済み。
+  - Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の分離方針で統合済み。
 - 不足:
-  - Noise の enum 検証は個別 parse 中心で、schema 駆動との一本化は未実施。
   - `displayName` / `smoothable` / `automatable` は未導入。
 
 ### 2.3 Render Contract 契約
@@ -74,16 +74,14 @@
 
 ## 3. 未定義項目リスト（実装順）
 
-1. Noise の enum 系検証を schema 定義とどこまで統合するか方針を確定する。
-2. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
-3. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
-4. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
+1. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
+2. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
+3. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1 を完了する（Noise schema 統合方針）
-2. 3章の 2〜3 を完了する（modulation 拡張方針）
-3. 3章の 4 を完了する（lifecycle挙動監査）
+1. 3章の 1〜2 を完了する（modulation 拡張方針）
+2. 3章の 3 を完了する（lifecycle挙動監査）
 
 ## 5. タスク完了後の凍結手順
 

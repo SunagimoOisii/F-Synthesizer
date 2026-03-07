@@ -48,6 +48,10 @@
   - Config load/save の一貫性確保
   - GUI項目の自動整合
   - バリデーションの共通化
+- enum 検証の統合方針:
+  - 文字列 -> enum の解決は parse 層で行う（不正文字列は即エラー）。
+  - 解決後の enum 値ドメイン（許容範囲）は schema で検証する。
+  - これにより、`LoadSource` は「解決」と「契約範囲検証」を分離して扱う。
 
 ### 2.3 Render Contract 契約
 
