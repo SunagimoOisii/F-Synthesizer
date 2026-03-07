@@ -225,8 +225,13 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             }
             else if constexpr (std::is_same_v<T, FmConfig>)
             {
-                const double carrierInc = voices.phaseInc[i] * pitchFactor * src.carrierRatio;
-                const double modInc = voices.phaseInc[i] * pitchFactor * src.modRatio;
+                const ModulationResult mod = EvaluateModulation(
+                    voices.waveformModulation[i],
+                    src.modulation,
+                    dt);
+                const double carrierInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul * src.carrierRatio;
+                const double modInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul * src.modRatio;
+                const double fmIndex = src.index * mod.fmIndexMul;
                 w = SampleFmPhase(
                     src.carrierWave,
                     src.modWave,
@@ -234,8 +239,8 @@ double RenderVoices(RenderState& state, const SoundData& sound)
                     voices.fmModPhase[i],
                     carrierInc,
                     modInc,
-                    src.index);
-                sum += mixGain * voices.amp[i] * src.outLevel * ccGain * velGain * w * envGain;
+                    fmIndex);
+                sum += mixGain * voices.amp[i] * src.outLevel * ccGain * velGain * w * envGain * mod.ampMul;
 
                 voices.fmCarrierPhase[i] += carrierInc;
                 if (voices.fmCarrierPhase[i] >= 1.0) voices.fmCarrierPhase[i] -= 1.0;

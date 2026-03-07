@@ -134,34 +134,46 @@ bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::Smoot
     return true;
 }
 
-bool ValidateModulation(const ModulationConfig& modulation, std::string& err)
+bool ValidateModulation(
+    const ModulationConfig& modulation,
+    bool allowFmIndexDestination,
+    const char* contextPrefix,
+    std::string& err)
 {
+    const std::string prefix = (contextPrefix != nullptr && contextPrefix[0] != '\0')
+        ? std::string(contextPrefix)
+        : std::string("modulation");
     if (modulation.lfo1.rateHz < 0.0 || modulation.lfo1.rateHz > 100.0)
     {
-        err = "waveform.modulation.lfo1.rateHz must be in range 0.0..100.0";
+        err = prefix + ".lfo1.rateHz must be in range 0.0..100.0";
         return false;
     }
     if (modulation.lfo1.depth < 0.0 || modulation.lfo1.depth > 1.0)
     {
-        err = "waveform.modulation.lfo1.depth must be in range 0.0..1.0";
+        err = prefix + ".lfo1.depth must be in range 0.0..1.0";
         return false;
     }
     if (modulation.env2.attackSec < 0.0 || modulation.env2.decaySec < 0.0 || modulation.env2.releaseSec < 0.0)
     {
-        err = "waveform.modulation.env2 attack/decay/release must be >= 0.0";
+        err = prefix + ".env2 attack/decay/release must be >= 0.0";
         return false;
     }
     if (modulation.env2.sustainLevel < 0.0 || modulation.env2.sustainLevel > 1.0)
     {
-        err = "waveform.modulation.env2.sustainLevel must be in range 0.0..1.0";
+        err = prefix + ".env2.sustainLevel must be in range 0.0..1.0";
         return false;
     }
     for (size_t i = 0; i < modulation.matrix.routes.size(); i++)
     {
         const ModRoute& route = modulation.matrix.routes[i];
+        if (route.destination == ModDestination::FmIndex && !allowFmIndexDestination)
+        {
+            err = prefix + ".routes[" + std::to_string(i) + "].destination 'fm.index' is not allowed for this source type";
+            return false;
+        }
         if (route.amount < -1.0 || route.amount > 1.0)
         {
-            err = "waveform.modulation.routes[" + std::to_string(i) + "].amount must be in range -1.0..1.0";
+            err = prefix + ".routes[" + std::to_string(i) + "].amount must be in range -1.0..1.0";
             return false;
         }
     }

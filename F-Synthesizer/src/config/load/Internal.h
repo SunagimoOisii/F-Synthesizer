@@ -9,7 +9,11 @@ namespace config::internal::load
 {
 bool ParseModulationObject(const std::string& text, ModulationConfig& modulation, std::string& err);
 bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing);
-bool ValidateModulation(const ModulationConfig& modulation, std::string& err);
+bool ValidateModulation(
+    const ModulationConfig& modulation,
+    bool allowFmIndexDestination,
+    const char* contextPrefix,
+    std::string& err);
 bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing, std::string& err);
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);

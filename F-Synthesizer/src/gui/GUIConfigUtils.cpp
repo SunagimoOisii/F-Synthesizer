@@ -106,7 +106,8 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.carrierRatio, bv->carrierRatio) &&
                     NearlyEq(av.modRatio, bv->modRatio) &&
                     NearlyEq(av.index, bv->index) &&
-                    NearlyEq(av.outLevel, bv->outLevel);
+                    NearlyEq(av.outLevel, bv->outLevel) &&
+                    ModulationConfigEquals(av.modulation, bv->modulation);
             }
             else if constexpr (std::is_same_v<T, DrumConfig>)
             {

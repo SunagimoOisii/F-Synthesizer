@@ -488,7 +488,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             return false;
         }
-        if (!ValidateModulation(wf.modulation, err))
+        if (!ValidateModulation(wf.modulation, false, "waveform.modulation", err))
         {
             return false;
         }
@@ -539,8 +539,25 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             err = "invalid fm wave type";
             return false;
         }
-        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel };
+        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel, {} };
+        std::string modulationObj;
+        bool foundModulation = false;
+        if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
+        {
+            return false;
+        }
+        if (foundModulation)
+        {
+            if (!ParseModulationObject(modulationObj, fm.modulation, err))
+            {
+                return false;
+            }
+        }
         if (!ValidateFmBySchema(fm, err))
+        {
+            return false;
+        }
+        if (!ValidateModulation(fm.modulation, true, "fm.modulation", err))
         {
             return false;
         }

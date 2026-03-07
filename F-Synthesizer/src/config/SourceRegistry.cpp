@@ -34,7 +34,7 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceKind::Fm,
         "fm",
         "fm",
-        SourceCapability{ true, true, true, false, true, false, false },
+        SourceCapability{ true, true, true, true, true, false, false },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
     },
     {
@@ -233,7 +233,7 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     case SourceKind::Noise:
         return NoiseConfig{ NoiseType::White };
     case SourceKind::Fm:
-        return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0 };
+        return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0, {} };
     case SourceKind::Drum:
         return DrumConfig{ DrumType::Kick };
     case SourceKind::DrumKit:

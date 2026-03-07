@@ -83,7 +83,14 @@
   - `sourceKind` は `source.type` と同じ小文字名を使う（`fm`, `noise`, `drum` など）。
   - `parameterId` は対象方式の `ParameterSchema.id` と一致させる。
   - 単位は `ParameterSchema` と同じ意味を使う（無次元倍率/Hzなど）。
-  - 当面は予約規約として文書化のみ行い、ConfigLoad の受理対象には追加しない。
+- 段階導入方針（2026-03-08 決定）:
+  - Phase 1（実装済み）:
+    - `fm.index` を ConfigLoad で受理し、FMレンダで適用する。
+    - 受理範囲は `source.type=fm` の `modulation` に限定し、Waveform等では非受理にする。
+  - Phase 2（将来）:
+    - 方式固有 destination を複数追加する場合は、`<sourceKind>.<parameterId>` と `ParameterSchema` の対応表を追加する。
+  - Phase 3（将来）:
+    - GUI編集導線（方式固有 destination の選択UI）を追加し、手動JSON編集依存を解消する。
 
 ### 2.5 Voice Lifecycle 契約
 

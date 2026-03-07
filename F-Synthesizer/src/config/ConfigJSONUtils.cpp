@@ -206,7 +206,7 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
     // - 新命名: pitchMul / filterCutoffHz
     // - 旧命名: pitch / filterCutoff も読込だけ許可する。
     // - pan は現行モノラル経路では非採用のため非受理。
-    // - source固有 destination（例: fm.index）は命名規約のみ先行定義し、現時点では非受理。
+    // - source固有 destination は source.type ごとの検証で受理可否を制御する。
     if (name == "none")
     {
         outDestination = ModDestination::None;
@@ -225,6 +225,11 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
     if (name == "filterCutoff" || name == "filterCutoffHz")
     {
         outDestination = ModDestination::FilterCutoff;
+        return true;
+    }
+    if (name == "fm.index")
+    {
+        outDestination = ModDestination::FmIndex;
         return true;
     }
     return false;
@@ -307,6 +312,7 @@ std::string ModDestinationToString(ModDestination destination)
     case ModDestination::Pitch: return "pitchMul";
     case ModDestination::Amp: return "amp";
     case ModDestination::FilterCutoff: return "filterCutoffHz";
+    case ModDestination::FmIndex: return "fm.index";
     }
     return "none";
 }
@@ -597,7 +603,9 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"carrierRatio\": " << v.carrierRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"modRatio\": " << v.modRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"index\": " << v.index << ",\n";
-            WriteIndent(out, indent + 2); out << "\"outLevel\": " << v.outLevel << "\n";
+            WriteIndent(out, indent + 2); out << "\"outLevel\": " << v.outLevel << ",\n";
+            WriteModulationConfig(out, v.modulation, indent + 2);
+            out << "\n";
         }
         else if constexpr (std::is_same_v<T, DrumConfig>)
         {

@@ -15,7 +15,7 @@
 - 2.1 Source Capability 契約: `対応済み`
 - 2.2 Parameter Schema 契約: `部分対応（LoadSource の schema 検証を FM/Drum/DrumKit へ移行）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
-- 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan非採用方針確定）`
+- 2.4 Modulation Routing 契約: `対応済み（source固有 destination の phase1 導入まで完了）`
 - 2.5 Voice Lifecycle 契約: `対応済み（retrigger/steal/one-shot終了を実装一致）`
 - 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
 
@@ -54,8 +54,9 @@
   - route数は固定（8）で、index 範囲外を検出できる。
   - `pan` は現時点で非採用とし、ConfigLoad 非受理にする方針を文書化済み。
   - 方式固有 destination の命名規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義済み。
+  - `fm.index` は `source.type=fm` の `modulation` で受理し、FMレンダへ適用する Phase 1 を実装済み。
 - 不足:
-  - 拡張規約は定義済みだが、`fm.index` などの受理・適用実装は未着手。
+  - 方式固有 destination の GUI編集導線は未実装（JSON編集で設定）。
 
 ### 2.5 Voice Lifecycle 契約
 
@@ -89,11 +90,11 @@
 
 ## 3. 未定義項目リスト（実装順）
 
-1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
+1. 方式固有 destination の GUI編集導線（destination 選択UI）を導入するか判断し、必要なら段階導入する。
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1 を完了する（modulation destination 拡張の実装判断）
+1. 3章の 1 を完了する（方式固有 destination の GUI導線要否判断）
 
 ## 5. タスク完了後の凍結手順
 
@@ -144,7 +145,7 @@
 4. `2.4 Modulation Routing`
    - 状態: 部分対応
    - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義
-   - 残: 方式固有 destination の受理/適用実装判断
+   - 残: 方式固有 destination の GUI編集導線（任意）
 5. `2.5 Voice Lifecycle`
    - 状態: 対応済み
    - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、retrigger/steal/one-shot の実装一致確認
@@ -154,7 +155,7 @@
 
 ### 7.2 現行の残タスク（実装/判断）
 
-1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
+1. 方式固有 destination の GUI編集導線（destination 選択UI）を導入するか判断し、必要なら段階導入する。
 
 ### 7.3 凍結時タスク（最終クローズ）
 

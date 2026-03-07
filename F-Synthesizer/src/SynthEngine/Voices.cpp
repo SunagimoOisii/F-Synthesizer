@@ -116,6 +116,12 @@ void InitializeVoiceAtIndex(
         ResetModulationState(voices.waveformModulation[i]);
         NoteOnModulation(voices.waveformModulation[i]);
     }
+    else if (std::holds_alternative<FmConfig>(cfg.source))
+    {
+        SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
+        ResetModulationState(voices.waveformModulation[i]);
+        NoteOnModulation(voices.waveformModulation[i]);
+    }
     else
     {
         SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
@@ -158,7 +164,8 @@ bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, con
         if (voices.released[i] == 0)
         {
             NoteOff(voices.env[i]);
-            if (std::holds_alternative<WaveformConfig>(voices.source[i]))
+            if (std::holds_alternative<WaveformConfig>(voices.source[i]) ||
+                std::holds_alternative<FmConfig>(voices.source[i]))
             {
                 NoteOffModulation(voices.waveformModulation[i]);
             }
@@ -396,7 +403,8 @@ void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)
             if (released[i] == 0 && this->noteInstanceID[i] == noteInstanceID)
             {
                 NoteOff(env[i]);
-                if (std::holds_alternative<WaveformConfig>(source[i]))
+                if (std::holds_alternative<WaveformConfig>(source[i]) ||
+                    std::holds_alternative<FmConfig>(source[i]))
                 {
                     NoteOffModulation(waveformModulation[i]);
                 }
@@ -416,7 +424,8 @@ void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)
         if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
         {
             NoteOff(env[i]);
-            if (std::holds_alternative<WaveformConfig>(source[i]))
+            if (std::holds_alternative<WaveformConfig>(source[i]) ||
+                std::holds_alternative<FmConfig>(source[i]))
             {
                 NoteOffModulation(waveformModulation[i]);
             }

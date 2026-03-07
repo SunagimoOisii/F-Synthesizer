@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation: voice上限と steal 優先順位を SourceLifecyclePolicy に沿って実装)
+Last Updated: 2026-03-08 (foundation: `fm.index` の受理・適用を Phase 1 導入)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -64,6 +64,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - foundation: Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の方針で統合
   - foundation: modulation destination の `pan` は現時点で非採用（ConfigLoad 非受理）と確定
   - foundation: 方式固有 destination 拡張規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義
+  - foundation: 方式固有 destination の Phase 1 として `fm.index` を採用（FM source限定で受理・適用）
   - foundation: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。`Waveform/Noise/FM` の retrigger と steal 実装に差分を確認
   - foundation: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致（同一note積み増しを抑止）
   - foundation: voice上限（256）到達時の steal 優先順位を `SourceLifecyclePolicy` に沿って実装（`Oldest` 差し替え / `RejectNew` 破棄）
@@ -100,7 +101,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 ## Backlog
 
-- `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
+- `foundation`: 方式固有 destination の GUI編集導線（destination 選択UI）を導入するか判断し、必要なら段階導入する
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 - `foundation`: capability ベース分岐の適用範囲を点検し、SourceKind 直分岐の残りを置換する
 

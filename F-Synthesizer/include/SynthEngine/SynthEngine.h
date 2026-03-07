@@ -58,6 +58,8 @@ struct FmConfig
     double modRatio;
     double index;
     double outLevel;
+    // 共通Modulationレイヤー（Phase1: fm.index / pitchMul / amp をサポート）。
+    ModulationConfig modulation{};
 };
 
 enum class DrumType

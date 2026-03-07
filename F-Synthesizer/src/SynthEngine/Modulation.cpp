@@ -138,6 +138,9 @@ ModulationResult EvaluateModulation(
         case ModDestination::FilterCutoff:
             out.filterCutoffMul *= (1.0 + value);
             break;
+        case ModDestination::FmIndex:
+            out.fmIndexMul *= (1.0 + value);
+            break;
         case ModDestination::None:
         default:
             break;
@@ -146,5 +149,6 @@ ModulationResult EvaluateModulation(
 
     out.ampMul = (std::max)(0.0, out.ampMul);
     out.filterCutoffMul = (std::max)(0.0, out.filterCutoffMul);
+    out.fmIndexMul = (std::max)(0.0, out.fmIndexMul);
     return out;
 }

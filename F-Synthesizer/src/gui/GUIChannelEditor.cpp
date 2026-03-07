@@ -406,6 +406,7 @@ bool DrawChannelEditor(
                 case ModDestination::Pitch: dstIdx = 1; break;
                 case ModDestination::Amp: dstIdx = 2; break;
                 case ModDestination::FilterCutoff: dstIdx = 3; break;
+                case ModDestination::FmIndex: dstIdx = 0; break;
                 }
                 ImGui::SetNextItemWidth(220.0f);
                 if (ImGui::Combo("Destination", &dstIdx, modDestinations, IM_ARRAYSIZE(modDestinations)))
