@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation FM/Drum range validation completed; next tasks reordered)
+Last Updated: 2026-03-08 (doc-sync: foundation docs cross-reference/completion criteria aligned)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -20,9 +20,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
-2. `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
-3. `doc-sync`: foundation 系ドキュメント（contract/audit/STATUS）の相互参照と完了条件の整合を確認する
+1. `doc-sync`: 個人運用前提で `method-boundaries` / `integration-playbook` / `STATUS` の記載整合を最終確認する
+2. `ops`: 重い自動ハーネスは導入せず、`check.ps1` + 代表MIDI手動確認の運用手順を `OPERATIONS.md` に明記する
+3. `foundation`: lifecycle 契約（2.5）の受け皿を最小定義し、`foundation-audit` の未定義項目と整合させる
 
 ## Blockers
 

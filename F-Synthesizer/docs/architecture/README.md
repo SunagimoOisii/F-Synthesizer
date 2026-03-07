@@ -1,77 +1,38 @@
-# Architecture Overview
+# Architecture Index
 
-最終更新: 2026-02-25
+最終更新: 2026-03-08
+運用方針: 個人開発向けに「この1枚を正」とし、詳細は必要時のみ参照・更新する。
 
-## Big Picture
+## 1. 最小把握（この章だけ読めばOK）
 
-```mermaid
-flowchart LR
-    H[HANDBOOK]
-    A[module-map]
-    B[runtime-flow]
-    C[gui]
-    D[config-and-io]
-    H --> A --> B --> C --> D
-```
+- 依存方向: `gui -> app -> core`
+- `core` は UI 実装（ImGui/GLFW）へ依存しない
+- Config 読込は `src/config/load/` に集約
+- 実行入口は `Run(...)`（`include/AppCore.h` / `src/app/*`）
+- 合成方式の境界は `docs/synth-methods/*` を正とする
 
-## Scope
+## 2. 詳細ドキュメント（必要時のみ）
 
-このディレクトリは、現行実装の構造を以下の観点で分割管理します。
-
-1. モジュール責務と依存方向
-2. 実行時データフロー
-3. GUI構成
-4. Config/I/O 境界
-
-## Read Order
-
-1. `docs/architecture/HANDBOOK.md`
-2. `docs/architecture/module-map.md`
-3. `docs/architecture/runtime-flow.md`
-4. `docs/architecture/gui.md`
-5. `docs/architecture/config-and-io.md`
-
-## Quick Map
-
-| ファイル | 主題 | 更新タイミング |
-|---|---|---|
-| `HANDBOOK.md` | 全体方針、原則、更新ルール | 原則・評価基準を変更した時 |
-| `module-map.md` | レイヤー責務/依存方向 | `src/*` の依存方向や責務境界を変更した時 |
-| `runtime-flow.md` | 実行経路・境界 | `src/app/Run*.cpp` や `include/AppCore.h` を変更した時 |
-| `gui.md` | GUI分割・状態管理 | `src/gui/main/*` または `src/gui/pianoroll/*` の責務を変更した時 |
-| `config-and-io.md` | Config読込/保存・I/O方針 | `src/config/*` や `src/io/*` の入出力仕様を変更した時 |
-
-## Design Rules
-
-- 依存方向は `gui -> app -> core` を維持する
-- `core` は UI 実装（ImGui/GLFW）に依存しない
-- Config 解析ロジックは `src/config/load/` に集約する
-- GUI巨大化は `src/gui/main/` と `src/gui/pianoroll/` の責務分割で抑制する
-
-## Impact Map（変更時の影響先）
-
-| 変更対象 | 影響を確認する先 |
+| ファイル | 使うタイミング |
 |---|---|
-| `module-map.md` | `runtime-flow.md`, `gui.md`, `config-and-io.md` |
-| `runtime-flow.md` | `module-map.md`, `gui.md`, `config-and-io.md` |
-| `gui.md` | `runtime-flow.md`, `module-map.md` |
-| `config-and-io.md` | `runtime-flow.md`, `module-map.md` |
+| `HANDBOOK.md` | 全体原則や記録導線を見直す時 |
+| `module-map.md` | 依存方向/責務境界を変更する時 |
+| `runtime-flow.md` | Run/レンダ経路を変更する時 |
+| `gui.md` | GUI責務や状態遷移を変更する時 |
+| `config-and-io.md` | Config/I/O境界を変更する時 |
 
-## Documentation Operation Rule
+## 3. 更新ルール（軽量）
 
-- 記録カテゴリと追記先は `docs/architecture/HANDBOOK.md` の `6. 設計判断ログ導線（Special Notes）` に統一。
-- 詳細の更新判断は本ファイルの `Quick Map` と `Impact Map` に従う。
+1. まず本ファイルだけ更新する。
+2. 詳細ファイルは、実際に差分が出た領域だけ更新する。
+3. 更新後は `docs/STATUS.md` と `docs/STATUS_DETAIL.md` に要点だけ反映する。
 
-## ADR Card Template
-
-Special Notes に設計判断を記録する際のテンプレート:
+## 4. ADR最小テンプレート
 
 ```md
 ### YYYY-MM-DD: タイトル
-- カテゴリ:
 - 背景:
 - 判断:
-- 代替案:
 - 影響範囲:
 - 関連ファイル:
 ```

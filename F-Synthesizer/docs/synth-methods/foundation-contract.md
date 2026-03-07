@@ -14,6 +14,8 @@
 - `docs/synth-methods/method-boundaries.md`
 - `docs/synth-methods/integration-playbook.md`
 - `docs/synth-methods/foundation-audit-2026-03-05.md`
+- `docs/STATUS.md`
+- `docs/STATUS_DETAIL.md`
 
 ## 2. 基盤契約（必須）
 
@@ -92,6 +94,7 @@
   - 同一入力の再現性（乱数利用時はseed固定）
   - CPU負荷の基準（poly数を明記）
 - AB比較は耳確認に加え、peak/rms/clip のログを残す。
+- 個人運用では、重い自動ハーネスの代わりに `check.ps1` + 代表MIDI手動確認を許可する。
 
 ## 3. 方式追加時チェック
 
@@ -110,7 +113,7 @@
 1. 判定条件:
    - 2.1〜2.6 の必須項目が実装・文書の両方で満たされている。
 2. 反映:
-   - `SYNTH_METHODS.md` / `integration-playbook.md` / 本書の関連リンクと手順を最終状態へ更新する。
+   - `SYNTH_METHODS.md` / `integration-playbook.md` / `STATUS.md` / `STATUS_DETAIL.md` / 本書の関連リンクと手順を最終状態へ更新する。
 3. 状態更新:
    - 本書の `状態` を `Frozen` へ変更し、`最終更新` を更新する。
 4. 履歴化:

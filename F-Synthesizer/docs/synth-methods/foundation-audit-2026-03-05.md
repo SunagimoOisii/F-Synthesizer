@@ -1,6 +1,8 @@
 # 基盤契約 棚卸し（SourceRegistry / ConfigLoad）
 
 作成日: 2026-03-05
+最終更新: 2026-03-08
+状態: Draft（更新継続）
 対象:
 - `include/config/SourceRegistry.h`
 - `src/config/SourceRegistry.cpp`
@@ -10,12 +12,12 @@
 
 ## 1. 判定サマリ
 
-- 2.1 Source Capability 契約: `未対応`
-- 2.2 Parameter Schema 契約: `部分対応`
+- 2.1 Source Capability 契約: `対応済み`
+- 2.2 Parameter Schema 契約: `部分対応（Waveform最小版）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
-- 2.4 Modulation Routing 契約: `部分対応`
+- 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan未対応）`
 - 2.5 Voice Lifecycle 契約: `未対応（ConfigLoad対象外）`
-- 2.6 Test Harness 契約: `未対応（ConfigLoad対象外）`
+- 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
 
 ## 2. 観測結果（契約別）
 
@@ -24,19 +26,17 @@
 - できていること:
   - source種別の列挙と typeName 解決は `SourceKind` で一元化されている。
   - `DefaultSourceConfig` により種別ごとの既定値を返せる。
+  - `SourceCapability` が導入され、GUIのドラム判定に capability 利用が入っている。
 - 不足:
-  - `hasPitch` / `hasFilterIn` / `supportsPolyphony` / `isOneShot` など capability 宣言が無い。
-  - GUI表示制御・Load時の無効項目拒否を capability ベースで行う仕組みが無い。
+  - capability ベース適用は一部のみで、全方式の分岐置換は継続課題。
 
 ### 2.2 Parameter Schema 契約
 
 - できていること:
-  - `LoadSource.cpp` / `LoadModulation.cpp` に個別パラメータの parse・validate がある。
-  - Waveform は範囲検証が比較的明確（unison/filter/mod/smoothing）。
+  - `SourceParameterSchemaEntry` が導入され、Waveform の一部項目（unison/filter）が schema 駆動検証へ移行。
 - 不足:
-  - schema の単一定義（`id/type/range/default/smoothable`）が存在しない。
-  - 検証ロジックが方式別に分散し、定義重複の温床になっている。
-  - FM/Drum は「必須項目チェック中心」で、数値レンジ検証が薄い。
+  - Waveform 以外（Noise/FM/Drum/DrumKit）の schema 未整備。
+  - `displayName` / `smoothable` / `automatable` は未導入。
 
 ### 2.3 Render Contract 契約
 
@@ -47,10 +47,10 @@
 ### 2.4 Modulation Routing 契約
 
 - できていること:
-  - destination は `Pitch/Amp/FilterCutoff` に限定され、未知値は parse error になる。
+  - 保存時の destination 命名は `pitchMul` / `amp` / `filterCutoffHz` に統一済み。
+  - 旧命名 `pitch` / `filterCutoff` は読込互換を維持。
   - route数は固定（8）で、index 範囲外を検出できる。
 - 不足:
-  - 契約が求める命名/単位（`pitchMul`, `filterCutoffHz`, `pan`）との差分がある。
   - `pan` destination 未対応。
   - 方式固有 destination（例: `fm.index`）の拡張規約がまだ無い。
 
@@ -62,26 +62,26 @@
 
 ### 2.6 Test Harness 契約
 
+- 現状:
+  - 個人運用方針として、重い自動Harnessは導入しない。
+  - `check.ps1` + 代表MIDI手動確認で運用する方針へ切替。
 - 不足:
-  - ConfigLoad 追加変更時に共通で走る契約テスト（再現性/clip率/無音）が紐づいていない。
-  - source type 追加時の必須テストチェックリストがコード近傍に無い。
+  - 軽量運用手順の文書化（`OPERATIONS.md` 反映）が未完了。
 
 ## 3. 未定義項目リスト（実装順）
 
-1. `SourceCapability` 構造体を追加し、`SourceKind` ごとの capability を定義する。
-2. `SourceKind -> ParameterSchema[]` の単一テーブルを追加する。
-3. `LoadSource.cpp` の検証を schema 駆動へ段階移行する（少なくとも range/default の一元化）。
-4. modulation destination を契約命名へ寄せる方針を決める（互換 alias を許可するか含む）。
-5. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
-6. FM/Drum の数値レンジ検証ポリシーを追加する（必須キーのみ運用を終了）。
-7. source type 追加時の「契約2.1〜2.6チェック」テンプレートを PR チェックリスト化する。
-8. 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する。
+1. `SourceKind -> ParameterSchema[]` の対象を段階拡張する（Waveform以外）。
+2. `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）。
+3. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
+4. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
+5. Voice Lifecycle 契約の受け皿（設定/文書）を明確化する。
+6. `OPERATIONS.md` に軽量運用（`check.ps1` + 代表MIDI手動確認）を明記する。
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1〜3 を完了する（capability + schema 土台）
-2. 3章の 4〜5 を完了する（modulation 命名/互換方針）
-3. 3章の 6〜8 を完了する（検証強化 + 運用チェック + テスト基盤）
+1. 3章の 1〜2 を完了する（schema 拡張）
+2. 3章の 3〜4 を完了する（modulation 拡張方針）
+3. 3章の 5〜6 を完了する（lifecycle + 軽量運用整備）
 
 ## 5. タスク完了後の凍結手順
 

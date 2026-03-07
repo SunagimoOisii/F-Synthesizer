@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation FM/Drum range validation completed)
+Last Updated: 2026-03-08 (doc-sync: foundation docs cross-reference/completion criteria aligned)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -90,9 +90,9 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 ## Backlog
 
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-- `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
-- `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
-- `doc-sync`: foundation 系ドキュメント（contract/audit/STATUS）の相互参照と完了条件の整合を確認する
+- `doc-sync`: 個人運用前提で `method-boundaries` / `integration-playbook` / `STATUS` の記載整合を最終確認する
+- `ops`: 重い自動ハーネスは導入せず、`check.ps1` + 代表MIDI手動確認の運用手順を `OPERATIONS.md` に明記する
+- `foundation`: lifecycle 契約（2.5）の受け皿を最小定義し、`foundation-audit` の未定義項目と整合させる
 
 ## Recurring Checks
 
