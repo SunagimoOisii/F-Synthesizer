@@ -53,6 +53,20 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 .\scripts\check.ps1 -AllowDocMismatch
 ```
 
+## Personal Verification Flow (Lightweight)
+
+個人運用前提として、重い自動ハーネス（大規模回帰自動化）は導入しない。
+日常運用は以下を標準とする。
+
+1. 変更内容に応じて `.\scripts\check.ps1` を実行する
+2. 代表MIDI（最低1つ）で手動確認を実施する
+3. 変更が音色・レンダ品質に影響する場合のみ、追加で `.\scripts\midi_regression.ps1` を実行する
+
+手動確認の観点:
+- 異常なノイズ/破綻音がない
+- クリップ増加がない（必要時は比較ログを残す）
+- 変更対象パラメータが意図どおり反映される
+
 ## Git Hook (Auto Doc Update)
 
 ```powershell
