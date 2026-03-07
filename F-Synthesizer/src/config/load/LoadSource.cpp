@@ -1,5 +1,8 @@
 #include "Internal.h"
 
+#include <iomanip>
+#include <sstream>
+
 #include "../ConfigFileInternal.h"
 
 #include "config/SourceRegistry.h"
@@ -8,6 +11,71 @@ namespace config::internal::load
 {
 namespace
 {
+bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
+{
+    const auto formatSchemaValue = [](double value, SourceParameterType type) -> std::string
+    {
+        if (type == SourceParameterType::Int)
+        {
+            return std::to_string(static_cast<int>(value));
+        }
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(1) << value;
+        return oss.str();
+    };
+
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Waveform, schema, schemaCount) || schema == nullptr)
+    {
+        err = "waveform schema is not defined";
+        return false;
+    }
+
+    for (size_t i = 0; i < schemaCount; i++)
+    {
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (std::string_view(e.id) == "unisonVoices")
+        {
+            value = static_cast<double>(wf.unisonVoices);
+        }
+        else if (std::string_view(e.id) == "unisonDetuneCents")
+        {
+            value = wf.unisonDetuneCents;
+        }
+        else if (std::string_view(e.id) == "unisonSpread")
+        {
+            value = wf.unisonSpread;
+        }
+        else if (std::string_view(e.id) == "subOscLevel")
+        {
+            value = wf.subOscLevel;
+        }
+        else if (std::string_view(e.id) == "filterCutoffHz")
+        {
+            value = wf.filterCutoffHz;
+        }
+        else if (std::string_view(e.id) == "filterResonance")
+        {
+            value = wf.filterResonance;
+        }
+        else
+        {
+            err = "waveform schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+
+        if (value < e.minValue || value > e.maxValue)
+        {
+            err = "waveform." + std::string(e.id) + " must be in range " +
+                formatSchemaValue(e.minValue, e.type) + ".." + formatSchemaValue(e.maxValue, e.type);
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::string& err)
 {
     if (auto t = ReadJSONString(text, "drumType"))
@@ -148,34 +216,8 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
                 return false;
             }
         }
-        if (wf.unisonVoices < 1 || wf.unisonVoices > 8)
+        if (!ValidateWaveformBySchema(wf, err))
         {
-            err = "waveform.unisonVoices must be in range 1..8";
-            return false;
-        }
-        if (wf.unisonDetuneCents < 0.0 || wf.unisonDetuneCents > 120.0)
-        {
-            err = "waveform.unisonDetuneCents must be in range 0.0..120.0";
-            return false;
-        }
-        if (wf.unisonSpread < 0.0 || wf.unisonSpread > 1.0)
-        {
-            err = "waveform.unisonSpread must be in range 0.0..1.0";
-            return false;
-        }
-        if (wf.subOscLevel < 0.0 || wf.subOscLevel > 2.0)
-        {
-            err = "waveform.subOscLevel must be in range 0.0..2.0";
-            return false;
-        }
-        if (wf.filterCutoffHz < 10.0 || wf.filterCutoffHz > 20000.0)
-        {
-            err = "waveform.filterCutoffHz must be in range 10.0..20000.0";
-            return false;
-        }
-        if (wf.filterResonance < 0.1 || wf.filterResonance > 18.0)
-        {
-            err = "waveform.filterResonance must be in range 0.1..18.0";
             return false;
         }
         if (!ValidateModulation(wf.modulation, err))

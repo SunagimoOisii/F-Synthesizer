@@ -21,6 +21,15 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
     { SourceKind::Drum, "drum", "drum", SourceCapability{ false, true, false, false, false, true, true } },
     { SourceKind::DrumKit, "drumkit", "drumkit", SourceCapability{ false, true, false, false, false, true, true } },
 } };
+
+constexpr std::array<SourceParameterSchemaEntry, 6> kWaveformParameterSchema{ {
+    { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
+    { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
+    { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "subOscLevel", SourceParameterType::Float, 0.0, 2.0, 0.0 },
+    { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
+    { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
+} };
 } // namespace
 
 bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind)
@@ -99,6 +108,29 @@ SourceCapability SourceCapabilityOf(SourceKind kind)
 SourceCapability SourceCapabilityOf(const SourceConfig& src)
 {
     return SourceCapabilityOf(SourceConfigKind(src));
+}
+
+bool TryGetParameterSchema(
+    SourceKind kind,
+    const SourceParameterSchemaEntry*& outEntries,
+    size_t& outCount)
+{
+    outEntries = nullptr;
+    outCount = 0;
+    switch (kind)
+    {
+    case SourceKind::Waveform:
+        outEntries = kWaveformParameterSchema.data();
+        outCount = kWaveformParameterSchema.size();
+        return true;
+    case SourceKind::Noise:
+    case SourceKind::Fm:
+    case SourceKind::Drum:
+    case SourceKind::DrumKit:
+    case SourceKind::Count:
+        return false;
+    }
+    return false;
 }
 
 SourceConfig DefaultSourceConfig(SourceKind kind)

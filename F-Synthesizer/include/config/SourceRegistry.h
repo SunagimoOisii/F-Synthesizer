@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string_view>
 
 #include "SynthEngine/SynthEngine.h"
@@ -30,6 +31,21 @@ struct SourceCapability
     bool isPercussion = false;
 };
 
+enum class SourceParameterType
+{
+    Int,
+    Float
+};
+
+struct SourceParameterSchemaEntry
+{
+    const char* id = "";
+    SourceParameterType type = SourceParameterType::Float;
+    double minValue = 0.0;
+    double maxValue = 0.0;
+    double defaultValue = 0.0;
+};
+
 // typeName が既知なら true を返し、outKind を更新する。
 bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind);
 // 不正値が来た場合は waveform を返す（読み込み互換を優先した代替値）。
@@ -46,6 +62,11 @@ SourceKind SourceConfigKind(const SourceConfig& src);
 SourceCapability SourceCapabilityOf(SourceKind kind);
 // SourceConfig の実体型に対応する capability を返す。
 SourceCapability SourceCapabilityOf(const SourceConfig& src);
+// 種別ごとの最小パラメータschema（id/type/range/default）を返す。未定義種別は false を返す。
+bool TryGetParameterSchema(
+    SourceKind kind,
+    const SourceParameterSchemaEntry*& outEntries,
+    size_t& outCount);
 // 種別ごとの既定値を返す。DrumKit は 36(Kick) 以外を None 初期化する。
 SourceConfig DefaultSourceConfig(SourceKind kind);
 } // namespace config
