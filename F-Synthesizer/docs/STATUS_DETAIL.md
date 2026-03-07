@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation SourceCapability completed)
+Last Updated: 2026-03-08 (foundation ParameterSchema completed)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -90,7 +90,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 ## Backlog
 
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-- `foundation`: `ParameterSchema` 最小版（`id/type/range/default`）を追加し、`LoadSource` の range 検証を段階移行する（初回対象: Waveform）
 - `foundation`: modulation destination の命名契約と互換方針を確定する（現行 `Pitch/Amp/FilterCutoff` との差分解消）
 - `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消する
 - `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
