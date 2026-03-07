@@ -1,6 +1,6 @@
 # Module Map
 
-最終更新: 2026-02-25
+最終更新: 2026-03-08
 
 ## Dependency Graph
 
@@ -55,6 +55,12 @@ flowchart LR
 | Config/IO層 | 設定I/OとWAV保存は `src/config`, `src/io` が担当する | `src/config`, `src/io` |
 
 変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
+
+## Foundation契約の境界責務
+
+- source 種別の契約定義（capability / lifecycle / schema）は `config::SourceRegistry` が保持する。
+- GUI / app / SynthEngine は契約の利用側とし、種別判定の定数直書きや独自判定を原則禁止する。
+- 新方式追加時は `SourceRegistry` 更新を先行し、各層は同API参照へ追従する。
 
 ## Special Notes
 

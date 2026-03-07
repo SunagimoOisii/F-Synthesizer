@@ -1,6 +1,6 @@
 # Config And IO
 
-最終更新: 2026-02-25
+最終更新: 2026-03-08
 
 ## Data Path
 
@@ -68,6 +68,9 @@ flowchart LR
 | キー追加 | 後方互換維持 | `config-and-io.md` Special Notes |
 | キー廃止 | 移行方針を明示 | `config-and-io.md` Special Notes |
 | デフォルト変更 | 影響範囲を明示 | `runtime-flow.md` 併記 |
+| source capability 変更 | `SourceRegistry` を正として利用側判定を追従 | `module-map.md` 併記 |
+| source lifecycle 変更 | `SourceLifecyclePolicy` と実装挙動の差分を明示 | `runtime-flow.md` 併記 |
+| source schema 変更 | 受理条件・検証方針を明示 | `config-and-io.md` Special Notes |
 
 変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 

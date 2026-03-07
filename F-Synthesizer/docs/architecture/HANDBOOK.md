@@ -1,6 +1,6 @@
 # Architecture Handbook
 
-最終更新: 2026-02-25
+最終更新: 2026-03-08
 
 ## プロジェクト概要
 
@@ -141,7 +141,17 @@ flowchart LR
 4. Config schemaや保存方針が変わったら `config-and-io.md` を更新する
 5. 特殊対応が発生したら、同日に該当ファイルの `Special Notes` を追記する
 
-## 7.1 Portfolio Readiness Check
+## 7.1 Foundation契約（capability / lifecycle / schema）更新規約
+
+1. 正本は `SourceRegistry`（`include/config/SourceRegistry.h`, `src/config/SourceRegistry.cpp`）とする。
+2. GUI/app/SynthEngine 側で種別判定を増やす場合は、直書きを避けて `SourceRegistry` の公開API参照へ統一する。
+3. 契約変更時は、同日に以下を最小更新する。
+   - `config-and-io.md`: 受理条件・互換影響
+   - `module-map.md`: 境界責務（どの層が判定責務を持つか）
+   - `STATUS.md` / `STATUS_DETAIL.md`: 作業結果
+4. 重要な運用判断（採用/非採用、段階導入、凍結）は `DECISIONS.md` に追記する。
+
+## 7.2 Portfolio Readiness Check
 
 | チェック項目 | 合格条件 |
 |---|---|

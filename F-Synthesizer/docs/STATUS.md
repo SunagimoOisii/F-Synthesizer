@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: ParameterSchema 拡張項目の導入可否を判断)
+Last Updated: 2026-03-08 (foundation: capability / lifecycle / schema 契約の運用ルールを architecture 系へ反映)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -33,12 +33,13 @@ Branch: `main`
 - `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
 - `ops`: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
+- `foundation`: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
 
 ## Next 3
 
 1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 2. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
-3. `foundation`: capability / lifecycle / schema 契約の運用ルールを `architecture` 系ドキュメントで最終整合する
+3. `foundation`: lifecycle 契約の実装挙動監査結果（retrigger/steal/one-shot）を `synth-methods` 側の説明へ同期する
 
 ## Blockers
 
