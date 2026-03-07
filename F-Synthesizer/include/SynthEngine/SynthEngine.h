@@ -12,6 +12,8 @@
 #include "synth/Oscillator.h"
 #include "midi/Sequencer.h"
 
+// 波形発振方式の設定集合。
+// ConfigLoad / GUI編集 / Renderer の共通入力として使う。
 struct WaveformConfig
 {
     struct SmoothingConfig
@@ -43,12 +45,15 @@ struct WaveformConfig
     ModulationConfig modulation{};
 };
 
+// ノイズ発振方式の最小設定。
 struct NoiseConfig
 {
     // ノイズ音源種別。
     NoiseType noise;
 };
 
+// FM発振方式の設定集合。
+// modulation は FM専用 destination(fm.index) を含めて扱う。
 struct FmConfig
 {
     // 2オペレータFM用の最小パラメータ集合。
@@ -70,6 +75,8 @@ enum class DrumType
     Hat
 };
 
+// 単発ドラム音源の設定。
+// type別に使う項目が異なり、0/負値は「内部既定値を使う」意味を持つ。
 struct DrumConfig
 {
     // DrumType ごとに参照する項目が異なるため、未使用値は 0/負値で未指定を表す。
@@ -87,6 +94,8 @@ struct DrumConfig
     int noiseType = -1;
 };
 
+// DrumKit 用の note(0..127) マップ。
+// 各ノートは DrumConfig を持ち、None で未割り当てを表す。
 struct DrumKitConfig
 {
     // GM想定の note(0..127) -> DrumConfig マップ。
@@ -95,6 +104,8 @@ struct DrumKitConfig
 
 using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig>;
 
+// 旧AoS互換の Voice 状態。
+// 実レンダは VoicesSoA を使うが、互換参照のため定義を維持する。
 struct Voice
 {
     // 旧AoS互換の Voice 定義。実レンダは SoA 側を使用する。
@@ -136,6 +147,8 @@ struct Voice
     double drumLpAlpha;
 };
 
+// 1チャンネル分の音色設定。
+// source + ADSR + amp を1セットで保持する。
 struct ChannelConfig
 {
     // 1チャンネルの合成設定（音源 + ADSR + 振幅）

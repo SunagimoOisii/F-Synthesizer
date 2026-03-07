@@ -61,6 +61,8 @@ bool TryParseSteal(const std::string& name, SourceLifecycleSteal& out)
     return false;
 }
 
+// 目的: source.lifecycle が SourceKind 固定値と一致するか確認する。
+// 前提: lifecycle は任意項目。未指定時は検証をスキップする。
 bool ValidateLifecycleContract(
     const std::string& sourceObjText,
     SourceKind sourceKind,
@@ -150,6 +152,7 @@ bool ValidateSchemaRange(
     bool optionalWhenNonPositive,
     std::string& err)
 {
+    // Drum系では「0以下を未指定扱い」にする項目がある。
     if (optionalWhenNonPositive && value <= 0.0)
     {
         return true;
@@ -387,6 +390,8 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
+    // 呼び出し経路: LoadConfigFromText -> ParseSourceObject。
+    // 目的: source.type ごとの必須キー検証と SourceConfig 構築をここで完結させる。
     const auto type = ReadJSONString(sourceObjText, "type");
     if (!type)
     {
@@ -409,6 +414,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     {
     case SourceKind::Waveform:
     {
+        // Waveform は modulation/smoothing を含むため、サブオブジェクトを段階解析する。
         auto wave = ReadJSONString(sourceObjText, "wave");
         if (!wave)
         {
@@ -522,6 +528,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::Fm:
     {
+        // FM は必須6キー + 任意 modulation を受理する。
         auto carrier = ReadJSONString(sourceObjText, "carrierWave");
         auto mod = ReadJSONString(sourceObjText, "modWave");
         auto carrierRatio = ReadJSONDouble(sourceObjText, "carrierRatio");
@@ -580,7 +587,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::DrumKit:
     {
-        // drumkit は差分上書き前提のため、未指定noteは None 初期値を維持する。
+        // DrumKit は差分上書き方式。未指定ノートは DrumType::None のまま保持する。
         DrumKitConfig kit{};
         for (auto& d : kit.map)
         {

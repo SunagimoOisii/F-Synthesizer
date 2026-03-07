@@ -22,6 +22,7 @@ double WrapPhase(double phase)
 
 void EnsureDrumFilters(VoicesSoA& voices, size_t i, double hpCut, double lpCut, int sampleRate)
 {
+    // 初回のみ係数を計算し、同一voice中は再利用する。
     if (voices.drumHpAlpha[i] <= 0.0)
     {
         voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
@@ -34,6 +35,7 @@ void EnsureDrumFilters(VoicesSoA& voices, size_t i, double hpCut, double lpCut, 
 
 void PrepareDrumRelease(VoicesSoA& voices, size_t i)
 {
+    // Drum は attack+decay 到達で自動 NoteOff へ移す。
     if (voices.released[i] == 0 && voices.drumTime[i] >= (voices.attackSec[i] + voices.decaySec[i]))
     {
         NoteOff(voices.env[i]);
@@ -124,6 +126,7 @@ double RenderDrumSample(const DrumConfig& src, VoicesSoA& voices, size_t i, doub
 
 double RenderVoices(RenderState& state, const SoundData& sound)
 {
+    // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
     double sum = 0.0;
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;

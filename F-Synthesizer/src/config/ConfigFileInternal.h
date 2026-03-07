@@ -12,8 +12,11 @@
 
 namespace config::internal
 {
+// 目的: UTF-8テキストを読み込む。失敗時は空文字を返す。
 std::string ReadTextFile(const std::filesystem::path& filePath);
 
+// 目的: top-level 付近の単純キーを正規表現で取り出す。
+// 制約: 本関数群は厳密JSONパースではなく、設定ファイルの定型書式を前提とする。
 std::optional<std::string> ReadJSONString(const std::string& text, const std::string& key);
 std::optional<int> ReadJSONInt(const std::string& text, const std::string& key);
 std::optional<double> ReadJSONDouble(const std::string& text, const std::string& key);
@@ -38,11 +41,14 @@ std::string EscapeJSON(const std::string& src);
 
 bool ExtractObjectAt(const std::string& text, size_t openBracePos, std::string& outObject, std::string& err);
 bool ExtractObjectForKey(const std::string& text, const std::string& key, std::string& outObject, bool& found, std::string& err);
+// 目的: {"k": {...}} の object を1段だけ走査して、各要素を onEntry へ渡す。
 bool ParseTopLevelObjectEntries(
     const std::string& objText,
     const std::function<bool(const std::string&, const std::string&)>& onEntry,
     std::string& err);
 
+// 目的: cfgの共有テーブルを可変コピーへ展開する。
+// 副作用: cfg自体は変更しない。
 std::shared_ptr<std::array<ChannelConfig, 16>> MakeMutableChannelConfigs(const AppConfig& cfg);
 std::shared_ptr<std::array<ChannelMixState, 16>> MakeMutableChannelMixStates(const AppConfig& cfg);
 

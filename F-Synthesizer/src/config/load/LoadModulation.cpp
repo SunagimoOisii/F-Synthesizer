@@ -6,6 +6,7 @@ namespace config::internal::load
 {
 namespace
 {
+// 目的: modulation.lfo1 のキーを読み取って既定値へ上書きする。
 bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
 {
     if (auto v = ReadJSONString(text, "wave"))
@@ -33,6 +34,8 @@ bool ParseEnv2Object(const std::string& text, ModEnvelopeConfig& env2)
     return true;
 }
 
+// 目的: modulation.routes[n] の source/destination/amount/enabled を解析する。
+// 前提: destination 名の許可判定は ValidateModulation 側で行う。
 bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err)
 {
     if (auto v = ReadJSONString(text, "source"))
@@ -140,6 +143,7 @@ bool ValidateModulation(
     const char* contextPrefix,
     std::string& err)
 {
+    // contextPrefix はエラーメッセージの先頭キー（例: waveform.modulation / fm.modulation）。
     const std::string prefix = (contextPrefix != nullptr && contextPrefix[0] != '\0')
         ? std::string(contextPrefix)
         : std::string("modulation");
@@ -166,6 +170,7 @@ bool ValidateModulation(
     for (size_t i = 0; i < modulation.matrix.routes.size(); i++)
     {
         const ModRoute& route = modulation.matrix.routes[i];
+        // source.type が fm 以外の場合、方式固有 destination 'fm.index' は受理しない。
         if (route.destination == ModDestination::FmIndex && !allowFmIndexDestination)
         {
             err = prefix + ".routes[" + std::to_string(i) + "].destination 'fm.index' is not allowed for this source type";

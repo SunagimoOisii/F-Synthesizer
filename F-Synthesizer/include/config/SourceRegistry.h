@@ -7,6 +7,8 @@
 
 namespace config
 {
+// source.type の正規名を表す列挙。
+// ConfigLoad / GUI / Renderer の分岐基準を統一する。
 enum class SourceKind
 {
     Waveform = 0,
@@ -59,6 +61,8 @@ enum class SourceParameterType
     Float
 };
 
+// sourceパラメータ検証の最小契約。
+// min/max/default は ConfigLoad の値検証と既定値提示で共通利用する。
 struct SourceParameterSchemaEntry
 {
     const char* id = "";
@@ -68,9 +72,11 @@ struct SourceParameterSchemaEntry
     double defaultValue = 0.0;
 };
 
-// typeName が既知なら true を返し、outKind を更新する。
+// 目的: source.type 文字列を SourceKind へ変換する。
+// 前提: typeName は小文字の type 名（例: waveform / fm）を想定する。
 bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind);
-// 不正値が来た場合は waveform を返す（読み込み互換を優先した代替値）。
+// 目的: SourceKind から保存用の type 名を返す。
+// 副作用: なし。不正値は読み込み互換のため waveform を返す。
 const char* SourceKindToTypeName(SourceKind kind);
 // GUI表示向けラベル。不正値は waveform を返す。
 const char* SourceKindToDisplayName(SourceKind kind);
@@ -78,7 +84,8 @@ const char* SourceKindToDisplayName(SourceKind kind);
 SourceKind SourceKindFromIndex(int index);
 int SourceKindToIndex(SourceKind kind);
 
-// variant の実体型から SourceKind を判定する。未知の型は Waveform を返す。
+// 目的: SourceConfig の実体型から SourceKind を判定する。
+// 副作用: なし。未知の型は Waveform を返す。
 SourceKind SourceConfigKind(const SourceConfig& src);
 // 種別ごとの capability を返す。不正値は Waveform を返す。
 SourceCapability SourceCapabilityOf(SourceKind kind);

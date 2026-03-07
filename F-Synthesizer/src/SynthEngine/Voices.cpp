@@ -11,6 +11,8 @@ namespace
 constexpr double kPi = 3.14159265358979323846;
 constexpr size_t kMaxVoices = 256;
 
+// 目的: retrigger/steal の「同系統判定」を capability 基準でそろえる。
+// 制約: SourceKind が異なっても capability が同一なら同系統として扱う。
 bool HasSameCapabilityProfile(const SourceConfig& a, const SourceConfig& b)
 {
     const config::SourceCapability lhs = config::SourceCapabilityOf(a);
@@ -144,6 +146,7 @@ void InitializeVoiceAtIndex(
 
 bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
+    // 前提: source.lifecycle.retrigger=restart の場合のみ既存voiceを再初期化する。
     const config::SourceLifecyclePolicy policy = config::SourceLifecycleOf(cfg.source);
     if (policy.retrigger != config::SourceLifecycleRetrigger::Restart)
     {
@@ -209,7 +212,7 @@ bool TryHandleVoiceLimitAndSteal(VoicesSoA& voices, const ChannelConfig& cfg, co
     }
 
     size_t victim = static_cast<size_t>(-1);
-    // Oldest: まず同一sourceKindの最古voiceを優先して差し替える。
+    // Oldest: まず同一capabilityの最古voiceを優先して差し替える。
     for (size_t i = 0; i < voices.size(); i++)
     {
         if (voices.pendingRemove[i] != 0)
@@ -222,7 +225,7 @@ bool TryHandleVoiceLimitAndSteal(VoicesSoA& voices, const ChannelConfig& cfg, co
             break;
         }
     }
-    // 同一kindが無い場合は、全体の最古voiceを差し替える。
+    // 同一capabilityが無い場合は、全体の最古voiceを差し替える。
     if (victim == static_cast<size_t>(-1))
     {
         for (size_t i = 0; i < voices.size(); i++)

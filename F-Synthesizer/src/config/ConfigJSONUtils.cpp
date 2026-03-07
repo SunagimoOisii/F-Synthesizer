@@ -9,6 +9,8 @@
 
 namespace config::internal
 {
+// 目的: 設定ファイルを文字列ベースで読み書きする共通ユーティリティ群。
+// 前提: 本実装は軽量運用を優先し、正規JSONパーサではなく正規表現/手書き走査を使う。
 std::string ReadTextFile(const std::filesystem::path& filePath)
 {
     std::ifstream fin(filePath, std::ios::binary);
@@ -333,6 +335,8 @@ std::string EscapeJSON(const std::string& src)
 
 bool ExtractObjectAt(const std::string& text, size_t openBracePos, std::string& outObject, std::string& err)
 {
+    // 目的: openBracePos から対応する '}' までを切り出す。
+    // 前提: 文字列リテラル内の '{' '}' は深さ計算に含めない。
     if (openBracePos >= text.size() || text[openBracePos] != '{')
     {
         err = "invalid object start";
@@ -413,6 +417,8 @@ bool ParseTopLevelObjectEntries(
     const std::function<bool(const std::string&, const std::string&)>& onEntry,
     std::string& err)
 {
+    // 目的: {"k": {...}, ...} 形式の top-level object を1段だけ走査する。
+    // 制約: value は object を前提とし、配列やプリミティブ値はここでは扱わない。
     if (objText.size() < 2 || objText.front() != '{' || objText.back() != '}')
     {
         err = "invalid object";

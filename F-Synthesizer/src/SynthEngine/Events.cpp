@@ -4,6 +4,7 @@
 
 namespace
 {
+    // 目的: CC7/CC11 を 0.0..1.0 のチャンネルゲインへ反映する。
     void ApplyControlChange(const MIDIEvent& e, RenderState& state)
     {
         if (e.controller != 7 && e.controller != 11)
@@ -15,7 +16,7 @@ namespace
         int v = e.value;
         if (v < 0) v = 0;
         if (v > 127) v = 127;
-        // 範囲外入力は 0..127 に丸めて 0..1 に正規化し、ミックスゲイン計算を安定させる。
+        // 範囲外入力は 0..127 に丸め、0.0..1.0 へ変換してミックス計算を安定させる。
         double norm = v / 127.0;
         if (e.controller == 7)
         {
@@ -27,6 +28,7 @@ namespace
         }
     }
 
+    // 目的: MIDI Pitch Bend(14bit) をピッチ比へ変換して保持する。
     void ApplyPitchBend(const MIDIEvent& e, RenderState& state)
     {
         int ch = ClampChannel(e.channel);
@@ -51,6 +53,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleRate,
     RenderState& state)
 {
+    // 呼び出し前提: audio thread のサンプルループから時系列順で呼ぶ。
     // sampleIndex までに到達したイベントを順次適用する。
     // 目的: RenderVoices 実行前に CC/Pitch/Note 状態をサンプル境界で確定させる。
     while (state.eventIndex < events.size() && events[state.eventIndex].sample <= sampleIndex)

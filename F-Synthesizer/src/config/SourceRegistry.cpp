@@ -6,6 +6,8 @@ namespace config
 {
 namespace
 {
+// SourceKind ごとの固定メタ情報。
+// SourceRegistry の公開関数はこの表だけを参照し、定義の重複を避ける。
 struct SourceKindInfo
 {
     SourceKind kind;
@@ -90,7 +92,8 @@ constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
     { "noiseType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
 } };
 
-// DrumKit は note->DrumConfig の可変マップ構造なので、単一schema配列では表現しない。
+// DrumKit は note(0..127) ごとに DrumConfig を持つ可変構造のため、
+// 1本の schema 配列では表現しない。
 constexpr std::array<SourceParameterSchemaEntry, 0> kDrumKitParameterSchema{};
 } // namespace
 
@@ -133,6 +136,7 @@ const char* SourceKindToDisplayName(SourceKind kind)
 
 SourceKind SourceKindFromIndex(int index)
 {
+    // 範囲外入力は Waveform へ倒し、既存設定との互換を優先する。
     if (index < 0 || index >= kSourceKindCount)
     {
         return SourceKind::Waveform;
@@ -194,6 +198,7 @@ bool TryGetParameterSchema(
     const SourceParameterSchemaEntry*& outEntries,
     size_t& outCount)
 {
+    // 返却先は static 配列を指すため、呼び出し側で解放しない。
     outEntries = nullptr;
     outCount = 0;
     switch (kind)
