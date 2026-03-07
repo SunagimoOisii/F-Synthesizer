@@ -16,7 +16,7 @@
 - 2.2 Parameter Schema 契約: `部分対応（LoadSource の schema 検証を FM/Drum/DrumKit へ移行）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
 - 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan非採用方針確定）`
-- 2.5 Voice Lifecycle 契約: `部分対応（最小受け皿を定義）`
+- 2.5 Voice Lifecycle 契約: `対応済み（retrigger/steal/one-shot終了を実装一致）`
 - 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
 
 ## 2. 観測結果（契約別）
@@ -74,10 +74,10 @@
     - 実装: Drumは `drumTime >= attack+decay` で自動release、`ADSRStage::Off` 後に `pendingRemove` で削除。
     - 判定: 契約意図と一致。
   - voice steal:
-    - 実装: voice上限/steal処理が無く、`Oldest/RejectNew` の優先順位は未適用。
-    - 判定: 契約の「steal優先順位」は未実装（評価不能）。
+    - 実装: voice上限（`kMaxVoices=256`）到達時、`Oldest` は最古voice差し替え、`RejectNew` は新規voice破棄。
+    - 判定: 契約の steal 優先順位と一致。
 - 不足:
-  - voice上限と steal 優先順位（`Oldest` / `RejectNew`）の実装が未着手。
+  - なし（2.5範囲内）。
 
 ### 2.6 Test Harness 契約
 
@@ -90,12 +90,10 @@
 ## 3. 未定義項目リスト（実装順）
 
 1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
-2. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
 
 ## 4. 優先実施順（最小）
 
 1. 3章の 1 を完了する（modulation destination 拡張の実装判断）
-2. 3章の 2 を完了する（lifecycle 実装一致）
 
 ## 5. タスク完了後の凍結手順
 
@@ -148,9 +146,8 @@
    - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義
    - 残: 方式固有 destination の受理/適用実装判断
 5. `2.5 Voice Lifecycle`
-   - 状態: 部分対応
-   - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、実レンダ監査
-   - 残: steal の実装一致
+   - 状態: 対応済み
+   - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、retrigger/steal/one-shot の実装一致確認
 6. `2.6 Test Harness`
    - 状態: 運用代替で整理済み
    - 完了: 重い自動Harness非採用、`check.ps1` + 代表MIDI手動確認運用
@@ -158,7 +155,6 @@
 ### 7.2 現行の残タスク（実装/判断）
 
 1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
-2. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
 
 ### 7.3 凍結時タスク（最終クローズ）
 

@@ -9,6 +9,7 @@
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
+constexpr size_t kMaxVoices = 256;
 
 void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
 {
@@ -175,6 +176,56 @@ bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, con
     return true;
 }
 
+bool TryHandleVoiceLimitAndSteal(VoicesSoA& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+{
+    if (voices.size() < kMaxVoices)
+    {
+        return false;
+    }
+
+    const config::SourceLifecyclePolicy policy = config::SourceLifecycleOf(cfg.source);
+    if (policy.steal == config::SourceLifecycleSteal::RejectNew)
+    {
+        return true;
+    }
+
+    size_t victim = static_cast<size_t>(-1);
+    // Oldest: まず同一sourceKindの最古voiceを優先して差し替える。
+    const config::SourceKind incomingKind = config::SourceConfigKind(cfg.source);
+    for (size_t i = 0; i < voices.size(); i++)
+    {
+        if (voices.pendingRemove[i] != 0)
+        {
+            continue;
+        }
+        if (config::SourceConfigKind(voices.source[i]) == incomingKind)
+        {
+            victim = i;
+            break;
+        }
+    }
+    // 同一kindが無い場合は、全体の最古voiceを差し替える。
+    if (victim == static_cast<size_t>(-1))
+    {
+        for (size_t i = 0; i < voices.size(); i++)
+        {
+            if (voices.pendingRemove[i] == 0)
+            {
+                victim = i;
+                break;
+            }
+        }
+    }
+    if (victim == static_cast<size_t>(-1))
+    {
+        // 全voiceが pendingRemove の場合は次回cleanupを待ち、新規は受け付けない。
+        return true;
+    }
+
+    InitializeVoiceAtIndex(voices, victim, cfg, e, sampleRate);
+    return true;
+}
+
 template <typename T>
 void CompactVectorByKeep(std::vector<T>& v, const std::vector<uint8_t>& keep)
 {
@@ -281,6 +332,10 @@ void VoicesSoA::clear()
 void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     if (TryRestartVoiceOnRetrigger(*this, cfg, e, sampleRate))
+    {
+        return;
+    }
+    if (TryHandleVoiceLimitAndSteal(*this, cfg, e, sampleRate))
     {
         return;
     }

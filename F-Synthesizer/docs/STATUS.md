@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: Waveform/Noise/FM の retrigger を SourceLifecyclePolicy(restart) へ一致)
+Last Updated: 2026-03-08 (foundation: voice上限と steal 優先順位を SourceLifecyclePolicy に沿って実装)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -27,12 +27,13 @@ Branch: `main`
 - `foundation`: 方式固有 destination 拡張規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義
 - `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
 - `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
+- `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
 
 ## Next 3
 
-1. `foundation`: voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する
-2. `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
-3. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+1. `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
+2. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+3. `foundation`: capability ベース分岐の適用範囲を点検し、SourceKind 直分岐の残りを置換する
 
 ## Blockers
 
