@@ -58,6 +58,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - gui cleanup: Musicタブ補助文言/ヘルプを現行UIへ再整理（Reference廃止後の説明差分を反映）
   - doc-sync: 個人運用前提で `method-boundaries` / `integration-playbook` / `STATUS` の記載整合を最終確認
   - ops: 重い自動ハーネスを採用せず、`check.ps1` + 代表MIDI手動確認の軽量運用を `OPERATIONS.md` に明記
+  - ops: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
   - foundation: lifecycle 契約（2.5）の最小受け皿を追加（`SourceLifecyclePolicy` 定義 + `source.lifecycle` 整合検証）
   - foundation: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
   - foundation: `LoadSource.cpp` の schema 駆動検証を FM/Drum/DrumKit へ段階移行（DrumKit は noteごとに Drum schema を適用）

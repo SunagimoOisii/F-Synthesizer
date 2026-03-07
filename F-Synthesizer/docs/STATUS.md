@@ -32,12 +32,13 @@ Branch: `main`
 - `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
 - `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
+- `ops`: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
 
 ## Next 3
 
 1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-2. なし
-3. なし
+2. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
+3. `foundation`: capability / lifecycle / schema 契約の運用ルールを `architecture` 系ドキュメントで最終整合する
 
 ## Blockers
 

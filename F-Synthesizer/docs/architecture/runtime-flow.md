@@ -170,11 +170,11 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
 ### Runtime Flow and Cancellation
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: `defaultWave` 導線を削除し、Run -> MIDI pipeline 契約を簡素化
 - Category: Runtime Flow and Cancellation
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: `defaultWave` は実行経路で実質未使用だったため、Run引数とMIDIイベント構造に残ると「契約上は必要だが効果がない」状態になる。
+- Decision: `AppConfig` / `BuildMIDIPipeline` / `BuildSampleEvents` から `defaultWave` を削除し、Run経路の入力契約を実使用項目に一致させる。
+- Alternatives: 互換キーとして契約に残し、内部で無視する案。
+- Impact: 実行境界の引数が減り、Run経路の理解と保守が容易になる。未使用契約由来の誤設定も抑制できる。
 - Related Files: include/AppCore.h, include/midi/MIDIPipeline.h, include/midi/Sequencer.h, src/app/RunDefaults.cpp, src/app/RunExecution.cpp
 

@@ -172,20 +172,20 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
 ### Dependency Direction and Boundaries
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: Source編集の集約点を `GUIChannelEditor` に固定し、境界責務を明確化
 - Category: Dependency Direction and Boundaries
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: Source編集ロジックが画面側へ分散すると、描画変更と編集挙動変更が同時に発生し、回帰切り分けが難しくなる。
+- Decision: Source別編集・補助説明の主要責務を `GUIChannelEditor` に固定し、`MainWindow` は画面構成と導線接続に専念させる。
+- Alternatives: source方式ごとに `MainWindow` 側へ分岐ロジックを分散配置する案。
+- Impact: GUI境界の責務が読みやすくなり、編集機能追加時の修正点が局所化される。
 - Related Files: src/gui/GUIChannelEditor.cpp
 
 
-#### 2026-03-08: TODO (auto-generated)
+#### 2026-03-08: 種別判定の境界を GUI直書きから `SourceRegistry` 契約へ移管
 - Category: Dependency Direction and Boundaries
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: `SourceKind` / variant 直書き判定が GUI と Config に重複すると、契約変更時に境界ごとの不整合が生まれやすい。
+- Decision: 種別能力判定は `SourceRegistry` の capability 契約を正とし、GUI側は `SourceCapabilityOf(...)` を参照して分岐する。
+- Alternatives: GUI/Configがそれぞれ独自の種別判定ロジックを保持する案。
+- Impact: 依存方向を `gui -> config(契約)` に整理し、方式追加時の変更漏れリスクを抑制できる。
 - Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp, src/gui/GUIActions.cpp, src/gui/main/MainWindow.inl
 

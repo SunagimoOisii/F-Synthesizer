@@ -135,20 +135,20 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 
 ### GUI Operations and State
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: `DrawChannelEditor` のヘルプ導線を標準化し、Drum未指定値ルールをUI明示
 - Category: GUI Operations and State
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: Sound編集UIの項目数増加に対して操作説明が不足すると、編集意図と音変化の対応が分かりづらく、誤操作が増えやすい。
+- Decision: `DrawChannelEditor` 全体で `what -> impact -> caution` 形式のホバー導線を統一し、DrumConfig の `0 = 未指定（内部デフォルト）` ルールを画面上に明示する。
+- Alternatives: 詳細説明を外部ドキュメントに集約し、UI上はラベルのみを維持する案。
+- Impact: 実機確認時の導線理解が改善し、Sound編集の試行コストを下げられる。反面、文言量の増加に合わせた表示位置の運用管理が必要。
 - Related Files: src/gui/GUIChannelEditor.cpp
 
 
-#### 2026-03-08: TODO (auto-generated)
+#### 2026-03-08: パーカッション判定を capability 基準へ統一
 - Category: GUI Operations and State
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: `holds_alternative` による型直書き判定は source 種別追加時の修正漏れリスクが高く、GUI挙動が実装差分で崩れやすい。
+- Decision: `MainWindow` と `GUIActions` のドラム判定を `SourceCapabilityOf(...).isPercussion` に置換し、種別判定の根拠を `SourceRegistry` へ一本化する。
+- Alternatives: 既存どおり variant 型判定をGUI各所へ残す案。
+- Impact: GUIの判定規則が registry 契約と一致し、方式追加時の影響範囲を縮小できる。判定変更は registry 更新だけで追従可能になる。
 - Related Files: src/gui/GUIActions.cpp, src/gui/main/MainWindow.inl
 

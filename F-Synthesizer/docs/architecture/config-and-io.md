@@ -119,20 +119,20 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Related Files: include/io/Writer.h, src/io/Writer.cpp
 
 
-#### 2026-03-05: TODO (auto-generated)
+#### 2026-03-05: `defaultWave` の設定キーを廃止し、Config上位契約を整理
 - Category: Config Compatibility
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: `defaultWave` は runtime/gui-cleanup 後に実行経路で未使用になっており、Config にキーだけ残すと「保存されるが効かない」状態を招く。
+- Decision: `ConfigSave` の書き出しと `LoadTopLevel` の読込から `defaultWave` を削除し、上位キー契約を実装使用項目に一致させる。
+- Alternatives: 廃止予定キーとして no-op 受理を継続し、移行期間を設ける案。
+- Impact: 設定契約が単純化され、運用時の誤解（反映されると思って編集する）を防げる。一方で旧キー依存の手元設定は効果を失うため、文書側での周知が必要。
 - Related Files: src/config/ConfigSave.cpp, src/config/load/LoadTopLevel.cpp
 
 
-#### 2026-03-08: TODO (auto-generated)
+#### 2026-03-08: `SourceRegistry` に capability / lifecycle / schema 契約を集約
 - Category: Config Compatibility
-- Background:
-- Decision:
-- Alternatives:
-- Impact:
+- Background: Source種別ごとの能力・lifecycle・parameter検証が複数箇所へ分散すると、方式追加時にConfig受理条件と実装挙動の差分が発生しやすい。
+- Decision: `SourceRegistry` を正本として `SourceCapability` / `SourceLifecyclePolicy` / `ParameterSchema` を集約し、Config検証は同定義を参照する。
+- Alternatives: 呼び出し側（Load/GUI/実行層）で種別分岐と検証条件を個別維持する案。
+- Impact: 種別追加や契約変更時の更新点が集約され、Config互換の説明責任を一元化できる。ドキュメントと実装の同期も取りやすくなる。
 - Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp
 
