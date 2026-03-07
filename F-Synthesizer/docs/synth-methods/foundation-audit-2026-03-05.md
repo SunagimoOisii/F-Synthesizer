@@ -13,7 +13,7 @@
 ## 1. 判定サマリ
 
 - 2.1 Source Capability 契約: `対応済み`
-- 2.2 Parameter Schema 契約: `部分対応（Waveform最小版）`
+- 2.2 Parameter Schema 契約: `部分対応（Waveform/Noise/FM/Drum へ拡張）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
 - 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan未対応）`
 - 2.5 Voice Lifecycle 契約: `部分対応（最小受け皿を定義）`
@@ -33,9 +33,10 @@
 ### 2.2 Parameter Schema 契約
 
 - できていること:
-  - `SourceParameterSchemaEntry` が導入され、Waveform の一部項目（unison/filter）が schema 駆動検証へ移行。
+  - `SourceParameterSchemaEntry` が導入され、`SourceKind -> ParameterSchema[]` は Waveform/Noise/FM/Drum まで定義済み。
+  - DrumKit は可変 `note -> DrumConfig` 構造のため、`ParameterSchema[]` は空定義（構造上の特例）とした。
 - 不足:
-  - Waveform 以外（Noise/FM/Drum/DrumKit）の schema 未整備。
+  - `LoadSource.cpp` の schema 駆動検証は Waveform 中心で、FM/Drum/DrumKit は段階移行中。
   - `displayName` / `smoothable` / `automatable` は未導入。
 
 ### 2.3 Render Contract 契約
@@ -72,17 +73,16 @@
 
 ## 3. 未定義項目リスト（実装順）
 
-1. `SourceKind -> ParameterSchema[]` の対象を段階拡張する（Waveform以外）。
-2. `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）。
-3. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
-4. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
-5. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
+1. `LoadSource.cpp` の検証を schema 駆動へ段階移行する（FM/Drum/DrumKit）。
+2. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
+3. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
+4. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1〜2 を完了する（schema 拡張）
-2. 3章の 3〜4 を完了する（modulation 拡張方針）
-3. 3章の 5 を完了する（lifecycle挙動監査）
+1. 3章の 1 を完了する（schema 検証移行）
+2. 3章の 2〜3 を完了する（modulation 拡張方針）
+3. 3章の 4 を完了する（lifecycle挙動監査）
 
 ## 5. タスク完了後の凍結手順
 
@@ -96,3 +96,22 @@
    - `foundation-contract.md` 側の関連リンクから本書を「完了監査」として参照する。
 5. 変更制限:
    - 凍結後は誤記修正のみ許可し、内容変更が必要な場合は新しい監査ファイルを日付付きで追加する。
+
+## 6. Foundationタスク対象プログラムファイル
+
+本監査で対象とする実装ファイルは `foundation-contract.md` の「6. Foundationタスク対象プログラムファイル」を正とする。
+監査観点ごとの主要対象は以下。
+
+- 契約定義:
+  - `include/config/SourceRegistry.h`
+  - `src/config/SourceRegistry.cpp`
+- Config整合:
+  - `src/config/ConfigLoad.cpp`
+  - `src/config/load/Internal.h`
+  - `src/config/load/LoadSource.cpp`
+  - `src/config/load/LoadModulation.cpp`
+  - `src/config/ConfigJSONUtils.cpp`
+- 実挙動監査:
+  - `src/SynthEngine/Events.cpp`
+  - `src/SynthEngine/Voices.cpp`
+  - `src/SynthEngine/Renderer.cpp`

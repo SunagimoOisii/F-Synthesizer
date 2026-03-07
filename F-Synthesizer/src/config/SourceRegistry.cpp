@@ -61,6 +61,37 @@ constexpr std::array<SourceParameterSchemaEntry, 6> kWaveformParameterSchema{ {
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
+
+constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
+    { "noise", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+} };
+
+constexpr std::array<SourceParameterSchemaEntry, 6> kFmParameterSchema{ {
+    { "carrierWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "modWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "carrierRatio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
+    { "modRatio", SourceParameterType::Float, 0.0, 32.0, 2.0 },
+    { "index", SourceParameterType::Float, 0.0, 20.0, 1.0 },
+    { "outLevel", SourceParameterType::Float, 0.0, 4.0, 1.0 },
+} };
+
+constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
+    { "drumType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "gain", SourceParameterType::Float, 0.0, 4.0, 1.0 },
+    { "baseFreq", SourceParameterType::Float, 20.0, 20000.0, 60.0 },
+    { "pitchDrop", SourceParameterType::Float, 0.1, 16.0, 3.0 },
+    { "pitchDecaySec", SourceParameterType::Float, 0.001, 2.0, 0.06 },
+    { "toneFreq", SourceParameterType::Float, 20.0, 20000.0, 200.0 },
+    { "toneLevel", SourceParameterType::Float, 0.0, 2.0, 0.5 },
+    { "noiseLevel", SourceParameterType::Float, 0.0, 2.0, 0.5 },
+    { "hpCut", SourceParameterType::Float, 20.0, 20000.0, 600.0 },
+    { "lpCut", SourceParameterType::Float, 20.0, 20000.0, 9000.0 },
+    { "toneWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "noiseType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+} };
+
+// DrumKit は note->DrumConfig の可変マップ構造なので、単一schema配列では表現しない。
+constexpr std::array<SourceParameterSchemaEntry, 0> kDrumKitParameterSchema{};
 } // namespace
 
 bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind)
@@ -172,9 +203,21 @@ bool TryGetParameterSchema(
         outCount = kWaveformParameterSchema.size();
         return true;
     case SourceKind::Noise:
+        outEntries = kNoiseParameterSchema.data();
+        outCount = kNoiseParameterSchema.size();
+        return true;
     case SourceKind::Fm:
+        outEntries = kFmParameterSchema.data();
+        outCount = kFmParameterSchema.size();
+        return true;
     case SourceKind::Drum:
+        outEntries = kDrumParameterSchema.data();
+        outCount = kDrumParameterSchema.size();
+        return true;
     case SourceKind::DrumKit:
+        outEntries = kDrumKitParameterSchema.data();
+        outCount = 0;
+        return true;
     case SourceKind::Count:
         return false;
     }

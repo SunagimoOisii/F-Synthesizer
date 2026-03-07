@@ -128,3 +128,35 @@
    - 未解決論点がある場合は `docs-archive/` へ移送する論点メモを作成してから凍結する。
 5. 運用ルール:
    - 凍結後の変更は「新方式追加」または「契約違反修正」のみ許可し、差分理由を冒頭に明記する。
+
+## 6. Foundationタスク対象プログラムファイル
+
+foundation 系タスクでは、原則として次の実装ファイルを操作対象にする。
+
+- Source 契約/定義
+  - `include/config/SourceRegistry.h`
+  - `src/config/SourceRegistry.cpp`
+- Config load/save
+  - `src/config/ConfigLoad.cpp`
+  - `src/config/load/Internal.h`
+  - `src/config/load/LoadSource.cpp`
+  - `src/config/load/LoadModulation.cpp`
+  - `src/config/ConfigJSONUtils.cpp`
+  - `src/config/ConfigFileInternal.h`
+- データモデル
+  - `include/SynthEngine/SynthEngine.h`
+- レンダ/ライフサイクル実装監査対象
+  - `src/SynthEngine/Events.cpp`
+  - `src/SynthEngine/Voices.cpp`
+  - `src/SynthEngine/Renderer.cpp`
+
+新規追加が必要な場合は、次の配置を優先する。
+
+- Config load 拡張:
+  - `src/config/load/Load*.cpp`
+- Source 契約拡張:
+  - `include/config/*.h`
+  - `src/config/*.cpp`
+- SynthEngine 側契約受け皿:
+  - `include/SynthEngine/*.h`
+  - `src/SynthEngine/*.cpp`
