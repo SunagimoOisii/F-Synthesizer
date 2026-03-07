@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: modulation destination の pan 方針と source固有destination拡張規約を確定)
+Last Updated: 2026-03-08 (foundation: lifecycle 実装挙動を契約 2.5 に照らして監査)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -25,12 +25,13 @@ Branch: `main`
 - `foundation`: Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の方針で統合
 - `foundation`: modulation destination の `pan` は現時点で非採用（ConfigLoad 非受理）と確定
 - `foundation`: 方式固有 destination 拡張規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義
+- `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
 
 ## Next 3
 
-1. `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
-2. `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
-3. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+1. `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致させる
+2. `foundation`: voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する
+3. `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
 
 ## Blockers
 

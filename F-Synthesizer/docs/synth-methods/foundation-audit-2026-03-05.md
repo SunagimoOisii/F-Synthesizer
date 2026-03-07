@@ -15,7 +15,7 @@
 - 2.1 Source Capability 契約: `対応済み`
 - 2.2 Parameter Schema 契約: `部分対応（LoadSource の schema 検証を FM/Drum/DrumKit へ移行）`
 - 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
-- 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan未対応）`
+- 2.4 Modulation Routing 契約: `部分対応（命名統一 + 旧命名互換。pan非採用方針確定）`
 - 2.5 Voice Lifecycle 契約: `部分対応（最小受け皿を定義）`
 - 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
 
@@ -62,8 +62,23 @@
 - できていること:
   - `SourceRegistry` に `SourceLifecyclePolicy`（retrigger/steal/noteOff/release/one-shot終了）を追加。
   - `ConfigLoad` で `source.lifecycle` の任意宣言を受理し、`SourceKind` 固定値との整合を検証できる。
+  - 実レンダ実装を監査し、契約との差分を特定した。
+- 監査結果（2026-03-08）:
+  - retrigger:
+    - 実装: `VoicesSoA::AddVoice` は既存voiceを止めず常に積み増し（stack）。
+    - 判定: `Waveform/Noise/FM` は契約（restart）と不一致。`Drum/DrumKit` は契約（stack）と一致。
+  - noteOff -> release:
+    - 実装: 非Drumは `MarkNoteOff` で `NoteOff` 実行、Drumは `PrepareDrumRelease` で自動 `NoteOff`。
+    - 判定: 契約意図と概ね一致。
+  - one-shot 終了条件:
+    - 実装: Drumは `drumTime >= attack+decay` で自動release、`ADSRStage::Off` 後に `pendingRemove` で削除。
+    - 判定: 契約意図と一致。
+  - voice steal:
+    - 実装: voice上限/steal処理が無く、`Oldest/RejectNew` の優先順位は未適用。
+    - 判定: 契約の「steal優先順位」は未実装（評価不能）。
 - 不足:
-  - 実レンダ側の挙動（voice steal優先順位やretrigger挙動）の完全一致監査は未実施。
+  - `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy` どおりに適用する実装が未着手。
+  - voice上限と steal 優先順位（`Oldest` / `RejectNew`）の実装が未着手。
 
 ### 2.6 Test Harness 契約
 
@@ -76,12 +91,13 @@
 ## 3. 未定義項目リスト（実装順）
 
 1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
-2. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
+2. `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致させる。
+3. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
 
 ## 4. 優先実施順（最小）
 
 1. 3章の 1 を完了する（modulation destination 拡張の実装判断）
-2. 3章の 2 を完了する（lifecycle挙動監査）
+2. 3章の 2〜3 を完了する（lifecycle 実装一致）
 
 ## 5. タスク完了後の凍結手順
 
@@ -114,3 +130,43 @@
   - `src/SynthEngine/Events.cpp`
   - `src/SynthEngine/Voices.cpp`
   - `src/SynthEngine/Renderer.cpp`
+
+## 7. Foundationタスク一覧（棚卸し）
+
+### 7.1 契約2.1〜2.6タスク
+
+1. `2.1 Source Capability`
+   - 状態: 対応済み（部分適用課題あり）
+   - 残: capability ベース分岐の全面適用
+2. `2.2 Parameter Schema`
+   - 状態: 部分対応
+   - 完了: Waveform/Noise/FM/Drum schema、DrumKit特例、LoadSource schema検証移行、Noise enum統合方針
+   - 残: `displayName` / `smoothable` / `automatable` 導入
+3. `2.3 Render Contract`
+   - 状態: 未評価（本監査対象外）
+   - 残: Renderer/Voices 側で契約監査
+4. `2.4 Modulation Routing`
+   - 状態: 部分対応
+   - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義
+   - 残: 方式固有 destination の受理/適用実装判断
+5. `2.5 Voice Lifecycle`
+   - 状態: 部分対応
+   - 完了: `SourceLifecyclePolicy` + `source.lifecycle` 整合検証、実レンダ監査
+   - 残: retrigger/steal の実装一致
+6. `2.6 Test Harness`
+   - 状態: 運用代替で整理済み
+   - 完了: 重い自動Harness非採用、`check.ps1` + 代表MIDI手動確認運用
+
+### 7.2 現行の残タスク（実装/判断）
+
+1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
+2. `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致させる。
+3. voice上限と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装する。
+
+### 7.3 凍結時タスク（最終クローズ）
+
+1. 2.1〜2.6 を再監査し、`未対応/部分対応` を解消する。
+2. 判定サマリを最終版へ更新し、完了日を追記する。
+3. 冒頭の状態を `Frozen` に更新する。
+4. `foundation-contract.md` から本書を「完了監査」として参照固定する。
+5. 凍結後の変更は誤記修正のみとし、内容変更は新しい監査ファイルを日付付きで追加する。
