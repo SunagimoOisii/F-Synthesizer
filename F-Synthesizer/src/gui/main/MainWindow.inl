@@ -854,9 +854,7 @@ else
     {
         state.channelAssignments[drumMidiChannel] = drumMidiChannel;
         ChannelConfig& drumCh = (*state.channelConfigs)[drumMidiChannel];
-        const bool isDrumSource =
-            std::holds_alternative<DrumConfig>(drumCh.source) ||
-            std::holds_alternative<DrumKitConfig>(drumCh.source);
+        const bool isDrumSource = config::SourceCapabilityOf(drumCh.source).isPercussion;
         if (!isDrumSource)
         {
             drumCh.source = gui::DefaultSourceByType(config::SourceKindToIndex(config::SourceKind::DrumKit));
@@ -990,9 +988,7 @@ else
             {
                 const int src = std::clamp(state.channelAssignments[ch], 0, 15);
                 const SourceConfig& srcCfg = (*state.channelConfigs)[src].source;
-                const bool mappedToDrum =
-                    std::holds_alternative<DrumConfig>(srcCfg) ||
-                    std::holds_alternative<DrumKitConfig>(srcCfg);
+                const bool mappedToDrum = config::SourceCapabilityOf(srcCfg).isPercussion;
                 if (mappedToDrum)
                 {
                     ImGui::TextUnformatted("Drum Ready");

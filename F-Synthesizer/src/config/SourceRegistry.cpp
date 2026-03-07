@@ -11,14 +11,15 @@ struct SourceKindInfo
     SourceKind kind;
     const char* typeName;
     const char* displayName;
+    SourceCapability capability;
 };
 
 constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
-    { SourceKind::Waveform, "waveform", "waveform" },
-    { SourceKind::Noise, "noise", "noise" },
-    { SourceKind::Fm, "fm", "fm" },
-    { SourceKind::Drum, "drum", "drum" },
-    { SourceKind::DrumKit, "drumkit", "drumkit" },
+    { SourceKind::Waveform, "waveform", "waveform", SourceCapability{ true, true, true, true, true, false, false } },
+    { SourceKind::Noise, "noise", "noise", SourceCapability{ false, true, false, false, true, false, false } },
+    { SourceKind::Fm, "fm", "fm", SourceCapability{ true, true, true, false, true, false, false } },
+    { SourceKind::Drum, "drum", "drum", SourceCapability{ false, true, false, false, false, true, true } },
+    { SourceKind::DrumKit, "drumkit", "drumkit", SourceCapability{ false, true, false, false, false, true, true } },
 } };
 } // namespace
 
@@ -81,6 +82,23 @@ SourceKind SourceConfigKind(const SourceConfig& src)
     if (std::holds_alternative<DrumConfig>(src)) return SourceKind::Drum;
     if (std::holds_alternative<DrumKitConfig>(src)) return SourceKind::DrumKit;
     return SourceKind::Waveform;
+}
+
+SourceCapability SourceCapabilityOf(SourceKind kind)
+{
+    for (const auto& k : kSourceKinds)
+    {
+        if (k.kind == kind)
+        {
+            return k.capability;
+        }
+    }
+    return kSourceKinds[0].capability;
+}
+
+SourceCapability SourceCapabilityOf(const SourceConfig& src)
+{
+    return SourceCapabilityOf(SourceConfigKind(src));
 }
 
 SourceConfig DefaultSourceConfig(SourceKind kind)

@@ -180,3 +180,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Impact:
 - Related Files: src/gui/GUIChannelEditor.cpp
 
+
+#### 2026-03-08: TODO (auto-generated)
+- Category: Dependency Direction and Boundaries
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp, src/gui/GUIActions.cpp, src/gui/main/MainWindow.inl
+

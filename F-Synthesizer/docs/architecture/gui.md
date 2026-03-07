@@ -143,3 +143,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Impact:
 - Related Files: src/gui/GUIChannelEditor.cpp
 
+
+#### 2026-03-08: TODO (auto-generated)
+- Category: GUI Operations and State
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: src/gui/GUIActions.cpp, src/gui/main/MainWindow.inl
+

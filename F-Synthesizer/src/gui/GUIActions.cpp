@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "AppCore.h"
+#include "config/SourceRegistry.h"
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIPlatform.h"
 #include "gui/GUIPresetIO.h"
@@ -295,7 +296,8 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
         }
         return 36;
     }
-    if (std::holds_alternative<DrumConfig>(src))
+    const config::SourceCapability capability = config::SourceCapabilityOf(src);
+    if (capability.isPercussion)
     {
         return std::clamp(state.selectedDrumNote, 0, 127);
     }

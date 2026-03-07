@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-05 (foundation tasks queued before new synth methods)
+Last Updated: 2026-03-08 (foundation SourceCapability completed; next tasks reordered)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -20,9 +20,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `foundation`: `SourceCapability` を `SourceKind` 単位で定義し、方式分岐の基準を capability へ寄せる
-2. `foundation`: `ParameterSchema` 最小版（`id/type/range/default`）を導入し、Waveform検証を schema 駆動へ移行
-3. `foundation`: modulation destination 命名/互換方針（`Pitch/Amp/FilterCutoff` vs `pitchMul/amp/filterCutoffHz/pan`）を確定
+1. `foundation`: `ParameterSchema` 最小版（`id/type/range/default`）を導入し、Waveform検証を schema 駆動へ移行
+2. `foundation`: modulation destination 命名/互換方針（`Pitch/Amp/FilterCutoff` vs `pitchMul/amp/filterCutoffHz/pan`）を確定
+3. `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消
 
 ## Blockers
 

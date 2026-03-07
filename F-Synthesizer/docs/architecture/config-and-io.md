@@ -127,3 +127,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Impact:
 - Related Files: src/config/ConfigSave.cpp, src/config/load/LoadTopLevel.cpp
 
+
+#### 2026-03-08: TODO (auto-generated)
+- Category: Config Compatibility
+- Background:
+- Decision:
+- Alternatives:
+- Impact:
+- Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp
+
