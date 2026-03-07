@@ -202,12 +202,15 @@ bool TryParseModSource(const std::string& name, ModSource& outSource)
 
 bool TryParseModDestination(const std::string& name, ModDestination& outDestination)
 {
+    // 互換方針:
+    // - 新命名: pitchMul / filterCutoffHz
+    // - 旧命名: pitch / filterCutoff も読込だけ許可する。
     if (name == "none")
     {
         outDestination = ModDestination::None;
         return true;
     }
-    if (name == "pitch")
+    if (name == "pitch" || name == "pitchMul")
     {
         outDestination = ModDestination::Pitch;
         return true;
@@ -217,7 +220,7 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
         outDestination = ModDestination::Amp;
         return true;
     }
-    if (name == "filterCutoff")
+    if (name == "filterCutoff" || name == "filterCutoffHz")
     {
         outDestination = ModDestination::FilterCutoff;
         return true;
@@ -299,9 +302,9 @@ std::string ModDestinationToString(ModDestination destination)
     switch (destination)
     {
     case ModDestination::None: return "none";
-    case ModDestination::Pitch: return "pitch";
+    case ModDestination::Pitch: return "pitchMul";
     case ModDestination::Amp: return "amp";
-    case ModDestination::FilterCutoff: return "filterCutoff";
+    case ModDestination::FilterCutoff: return "filterCutoffHz";
     }
     return "none";
 }

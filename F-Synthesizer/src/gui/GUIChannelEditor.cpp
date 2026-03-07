@@ -345,7 +345,7 @@ bool DrawChannelEditor(
             changed |= sliderWaveParam("Env2 Release", wf->modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
 
             const char* modSources[] = { "none", "lfo1", "env2" };
-            const char* modDestinations[] = { "none", "pitch", "amp", "filterCutoff" };
+            const char* modDestinations[] = { "none", "pitchMul", "amp", "filterCutoffHz" };
             for (int routeIdx = 0; routeIdx < 4; routeIdx++)
             {
                 ModRoute& route = wf->modulation.matrix.routes[static_cast<size_t>(routeIdx)];

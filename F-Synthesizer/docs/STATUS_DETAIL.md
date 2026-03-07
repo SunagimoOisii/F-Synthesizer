@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation ParameterSchema completed)
+Last Updated: 2026-03-08 (foundation modulation destination policy completed)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -90,7 +90,6 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 ## Backlog
 
 - `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-- `foundation`: modulation destination の命名契約と互換方針を確定する（現行 `Pitch/Amp/FilterCutoff` との差分解消）
 - `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消する
 - `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
 - `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
