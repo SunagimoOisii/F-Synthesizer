@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation: Noise enum 検証の schema 統合方針を確定)
+Last Updated: 2026-03-08 (foundation: modulation destination の pan 方針と source固有destination拡張規約を確定)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -62,6 +62,8 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - foundation: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
   - foundation: `LoadSource.cpp` の schema 駆動検証を FM/Drum/DrumKit へ段階移行（DrumKit は noteごとに Drum schema を適用）
   - foundation: Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の方針で統合
+  - foundation: modulation destination の `pan` は現時点で非採用（ConfigLoad 非受理）と確定
+  - foundation: 方式固有 destination 拡張規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義
 - 品質確認
   - `Debug x64` ビルド成功（2026-02-21）
   - `scripts/gui_smoke.ps1` 15ステップ通過（2026-02-23）
@@ -95,9 +97,9 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 ## Backlog
 
-- `foundation`: modulation destination の `pan` 対応可否を明記する（採用/非採用の理由を文書化）
-- `foundation`: 方式固有 destination（例: `fm.index`）の拡張規約を定義する
 - `foundation`: lifecycle 実装挙動（retrigger/steal/one-shot終了）を契約 2.5 に照らして監査する
+- `foundation`: 方式固有 destination（例: `fm.index`）の受理・適用を実装するか判断し、採用時は段階導入する
+- `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 
 ## Recurring Checks
 

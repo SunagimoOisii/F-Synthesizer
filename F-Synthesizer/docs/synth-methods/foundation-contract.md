@@ -67,14 +67,23 @@
 ### 2.4 Modulation Routing 契約
 
 - destination 名と単位を固定する。
-- 最小 destination:
+- 現行 destination（実装済み）:
   - `pitchMul`
   - `amp`
   - `filterCutoffHz`
-  - `pan`
-- 方式固有 destination（例: FM `index`）は接頭辞を付ける。
-  - 例: `fm.index`
-- 無効 destination は no-op として安全に無視する。
+- `pan` の扱い（2026-03-08 確定）:
+  - 現行は `非採用`（ConfigLoad で受理しない）。
+  - 理由:
+    - 現レンダがモノラル前提で、voice 単位の pan 変調を適用しても出力意味が不明確。
+    - `channelMix.pan` と競合しやすく、契約境界を曖昧にする。
+  - 再検討条件:
+    - ステレオレンダ経路と voice pan 合成規約（pre/post mix）を先に確定した場合のみ採用検討する。
+- 方式固有 destination の拡張規約（2026-03-08 確定）:
+  - 命名: `<sourceKind>.<parameterId>`（例: `fm.index`）。
+  - `sourceKind` は `source.type` と同じ小文字名を使う（`fm`, `noise`, `drum` など）。
+  - `parameterId` は対象方式の `ParameterSchema.id` と一致させる。
+  - 単位は `ParameterSchema` と同じ意味を使う（無次元倍率/Hzなど）。
+  - 当面は予約規約として文書化のみ行い、ConfigLoad の受理対象には追加しない。
 
 ### 2.5 Voice Lifecycle 契約
 

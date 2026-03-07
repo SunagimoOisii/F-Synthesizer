@@ -52,9 +52,10 @@
   - 保存時の destination 命名は `pitchMul` / `amp` / `filterCutoffHz` に統一済み。
   - 旧命名 `pitch` / `filterCutoff` は読込互換を維持。
   - route数は固定（8）で、index 範囲外を検出できる。
+  - `pan` は現時点で非採用とし、ConfigLoad 非受理にする方針を文書化済み。
+  - 方式固有 destination の命名規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義済み。
 - 不足:
-  - `pan` destination 未対応。
-  - 方式固有 destination（例: `fm.index`）の拡張規約がまだ無い。
+  - 拡張規約は定義済みだが、`fm.index` などの受理・適用実装は未着手。
 
 ### 2.5 Voice Lifecycle 契約
 
@@ -74,14 +75,13 @@
 
 ## 3. 未定義項目リスト（実装順）
 
-1. `pan` destination 対応可否を明記する（採用/非採用の理由を文書化）。
-2. 方式固有 destination（例: `fm.index`）の拡張規約を定義する。
-3. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
+1. 方式固有 destination（例: `fm.index`）の受理・適用実装を行うか判断し、採用時は段階導入する。
+2. Voice Lifecycle の実レンダ挙動を契約項目（retrigger/steal/one-shot終了）に照らして監査する。
 
 ## 4. 優先実施順（最小）
 
-1. 3章の 1〜2 を完了する（modulation 拡張方針）
-2. 3章の 3 を完了する（lifecycle挙動監査）
+1. 3章の 1 を完了する（modulation destination 拡張の実装判断）
+2. 3章の 2 を完了する（lifecycle挙動監査）
 
 ## 5. タスク完了後の凍結手順
 

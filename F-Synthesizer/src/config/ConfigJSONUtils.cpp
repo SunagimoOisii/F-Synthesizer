@@ -205,6 +205,8 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
     // 互換方針:
     // - 新命名: pitchMul / filterCutoffHz
     // - 旧命名: pitch / filterCutoff も読込だけ許可する。
+    // - pan は現行モノラル経路では非採用のため非受理。
+    // - source固有 destination（例: fm.index）は命名規約のみ先行定義し、現時点では非受理。
     if (name == "none")
     {
         outDestination = ModDestination::None;
