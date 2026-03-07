@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation SourceCapability completed; next tasks reordered)
+Last Updated: 2026-03-08 (foundation ParameterSchema completed; next tasks reordered)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -20,9 +20,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `foundation`: `ParameterSchema` 最小版（`id/type/range/default`）を導入し、Waveform検証を schema 駆動へ移行
-2. `foundation`: modulation destination 命名/互換方針（`Pitch/Amp/FilterCutoff` vs `pitchMul/amp/filterCutoffHz/pan`）を確定
-3. `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消
+1. `foundation`: modulation destination 命名/互換方針（`Pitch/Amp/FilterCutoff` vs `pitchMul/amp/filterCutoffHz/pan`）を確定
+2. `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消
+3. `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
 
 ## Blockers
 
