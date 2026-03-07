@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation modulation destination policy completed; next tasks reordered)
+Last Updated: 2026-03-08 (foundation FM/Drum range validation completed; next tasks reordered)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -20,9 +20,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `foundation`: FM/Drum の数値レンジ検証ポリシーを追加し、必須キー検証中心の状態を解消
-2. `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
-3. `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
+1. `foundation`: source type 追加時の契約チェック（2.1〜2.6）を PR チェックリスト化する
+2. `foundation`: 共通 Test Harness 最小セット（無音/再現性/clip率/CPU基準）を導入する
+3. `doc-sync`: foundation 系ドキュメント（contract/audit/STATUS）の相互参照と完了条件の整合を確認する
 
 ## Blockers
 

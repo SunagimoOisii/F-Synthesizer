@@ -119,6 +119,90 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     }
     return true;
 }
+
+bool ValidateFmConfig(const FmConfig& fm, std::string& err)
+{
+    if (fm.carrierRatio <= 0.0 || fm.carrierRatio > 32.0)
+    {
+        err = "fm.carrierRatio must be in range 0.0<..32.0";
+        return false;
+    }
+    if (fm.modRatio <= 0.0 || fm.modRatio > 32.0)
+    {
+        err = "fm.modRatio must be in range 0.0<..32.0";
+        return false;
+    }
+    if (fm.index < 0.0 || fm.index > 20.0)
+    {
+        err = "fm.index must be in range 0.0..20.0";
+        return false;
+    }
+    if (fm.outLevel < 0.0 || fm.outLevel > 4.0)
+    {
+        err = "fm.outLevel must be in range 0.0..4.0";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateDrumConfig(const DrumConfig& drum, std::string& err)
+{
+    // 0/負値は「未指定」を許可し、正値が指定された項目のみレンジ検証する。
+    if (drum.gain < 0.0 || drum.gain > 4.0)
+    {
+        err = "drum.gain must be in range 0.0..4.0";
+        return false;
+    }
+
+    if (drum.baseFreq > 0.0 && (drum.baseFreq < 20.0 || drum.baseFreq > 20000.0))
+    {
+        err = "drum.baseFreq must be in range 20.0..20000.0 when specified";
+        return false;
+    }
+    if (drum.pitchDrop > 0.0 && (drum.pitchDrop < 0.1 || drum.pitchDrop > 16.0))
+    {
+        err = "drum.pitchDrop must be in range 0.1..16.0 when specified";
+        return false;
+    }
+    if (drum.pitchDecaySec > 0.0 && (drum.pitchDecaySec < 0.001 || drum.pitchDecaySec > 2.0))
+    {
+        err = "drum.pitchDecaySec must be in range 0.001..2.0 when specified";
+        return false;
+    }
+
+    if (drum.toneFreq > 0.0 && (drum.toneFreq < 20.0 || drum.toneFreq > 20000.0))
+    {
+        err = "drum.toneFreq must be in range 20.0..20000.0 when specified";
+        return false;
+    }
+    if (drum.toneLevel > 0.0 && drum.toneLevel > 2.0)
+    {
+        err = "drum.toneLevel must be in range 0.0<..2.0 when specified";
+        return false;
+    }
+    if (drum.noiseLevel > 0.0 && drum.noiseLevel > 2.0)
+    {
+        err = "drum.noiseLevel must be in range 0.0<..2.0 when specified";
+        return false;
+    }
+    if (drum.hpCut > 0.0 && (drum.hpCut < 20.0 || drum.hpCut > 20000.0))
+    {
+        err = "drum.hpCut must be in range 20.0..20000.0 when specified";
+        return false;
+    }
+    if (drum.lpCut > 0.0 && (drum.lpCut < 20.0 || drum.lpCut > 20000.0))
+    {
+        err = "drum.lpCut must be in range 20.0..20000.0 when specified";
+        return false;
+    }
+
+    if (drum.hpCut > 0.0 && drum.lpCut > 0.0 && drum.hpCut >= drum.lpCut)
+    {
+        err = "drum.hpCut must be less than drum.lpCut when both are specified";
+        return false;
+    }
+    return true;
+}
 } // namespace
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
@@ -267,13 +351,22 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             err = "invalid fm wave type";
             return false;
         }
-        outSource = FmConfig{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel };
+        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel };
+        if (!ValidateFmConfig(fm, err))
+        {
+            return false;
+        }
+        outSource = fm;
         return true;
     }
     case SourceKind::Drum:
     {
         DrumConfig drum{};
         if (!ParseDrumConfigObject(sourceObjText, drum, err))
+        {
+            return false;
+        }
+        if (!ValidateDrumConfig(drum, err))
         {
             return false;
         }
@@ -315,6 +408,11 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
                 DrumConfig d{};
                 if (!ParseDrumConfigObject(valueObj, d, err))
                 {
+                    return false;
+                }
+                if (!ValidateDrumConfig(d, err))
+                {
+                    err = "drumkit note " + k + ": " + err;
                     return false;
                 }
                 kit.map[note] = d;
