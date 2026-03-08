@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: capability / lifecycle / schema 契約の運用ルールを architecture 系へ反映)
+Last Updated: 2026-03-08 (foundation: synth-methods 同期と監査凍結を完了)
 Branch: `main`
 
 詳細ログと履歴は `STATUS_DETAIL.md` を参照。
@@ -34,12 +34,13 @@ Branch: `main`
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
 - `ops`: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
 - `foundation`: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
+- `foundation`: `foundation-audit-2026-03-05.md` を Frozen 化し、`foundation-contract.md` / `integration-playbook.md` / `SYNTH_METHODS.md` の参照を完了監査へ同期
 
 ## Next 3
 
 1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 2. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
-3. `foundation`: lifecycle 契約の実装挙動監査結果（retrigger/steal/one-shot）を `synth-methods` 側の説明へ同期する
+3. `foundation`: Render Contract（2.3）の監査範囲（Renderer/Voices）を別監査タスクとして定義する
 
 ## Blockers
 

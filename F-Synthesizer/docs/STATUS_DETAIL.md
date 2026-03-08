@@ -1,6 +1,6 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation: ParameterSchema 拡張項目の導入可否を判断)
+Last Updated: 2026-03-08 (foundation: synth-methods 同期と監査凍結を完了)
 Branch: `main`
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
@@ -60,6 +60,7 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - ops: 重い自動ハーネスを採用せず、`check.ps1` + 代表MIDI手動確認の軽量運用を `OPERATIONS.md` に明記
   - ops: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
   - foundation: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
+  - foundation: `foundation-audit-2026-03-05.md` を Frozen 化し、`foundation-contract.md` / `integration-playbook.md` / `SYNTH_METHODS.md` の参照を完了監査へ同期
   - foundation: lifecycle 契約（2.5）の最小受け皿を追加（`SourceLifecyclePolicy` 定義 + `source.lifecycle` 整合検証）
   - foundation: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
   - foundation: `LoadSource.cpp` の schema 駆動検証を FM/Drum/DrumKit へ段階移行（DrumKit は noteごとに Drum schema を適用）

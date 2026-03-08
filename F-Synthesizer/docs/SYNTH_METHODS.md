@@ -1,6 +1,6 @@
 # SYNTH_METHODS
 
-最終更新: 2026-03-05
+最終更新: 2026-03-08
 担当: Synth/Audio
 状態: Draft（分割運用）
 
@@ -15,7 +15,8 @@
 - 方式の追加実装時に、対応する個別 `md` を新規作成する。
 - 実装接続の標準手順は `docs/synth-methods/integration-playbook.md` を参照する。
 - 方式間の重複防止は `docs/synth-methods/method-boundaries.md` を正として運用する。
-- 方式横断の基盤契約は `docs/synth-methods/foundation-contract.md` を正として運用する。
+- 方式横断の基盤契約は `docs/synth-methods/foundation-contract.md`（Frozen）を正として運用する。
+- 基盤契約の完了監査は `docs/synth-methods/foundation-audit-2026-03-05.md`（Frozen）を参照する。
 
 ## 3. 実装済み方式（個別ファイル）
 

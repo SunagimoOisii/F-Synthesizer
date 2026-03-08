@@ -2,7 +2,7 @@
 
 作成日: 2026-03-05
 最終更新: 2026-03-08
-状態: Draft（更新継続）
+状態: Frozen（2026-03-08 監査完了）
 対象:
 - `include/config/SourceRegistry.h`
 - `src/config/SourceRegistry.cpp`
@@ -14,7 +14,7 @@
 
 - 2.1 Source Capability 契約: `対応済み`
 - 2.2 Parameter Schema 契約: `対応済み（最小版 + 拡張項目は非導入判断）`
-- 2.3 Render Contract 契約: `未評価（ConfigLoad対象外）`
+- 2.3 Render Contract 契約: `評価済み（本監査対象外として確定）`
 - 2.4 Modulation Routing 契約: `対応済み（source固有 destination の phase1 導入まで完了）`
 - 2.5 Voice Lifecycle 契約: `対応済み（retrigger/steal/one-shot終了を実装一致）`
 - 2.6 Test Harness 契約: `運用代替（重い自動Harnessは未導入）`
@@ -47,6 +47,8 @@
 - 備考:
   - Render順序契約は Renderer/Voices 側で評価すべきで、SourceRegistry/ConfigLoadのみでは判定できない。
   - 本棚卸しでは対象外とする。
+- 判定:
+  - 本監査の完了条件に対しては「対象外確定」でクローズし、Render Contract の詳細監査は別監査（Renderer/Voices）へ分離する。
 
 ### 2.4 Modulation Routing 契約
 
@@ -99,17 +101,11 @@
 
 なし
 
-## 5. タスク完了後の凍結手順
+## 5. 凍結後の運用ルール
 
-1. 再監査:
-   - 本書の 2.1〜2.6 を再評価し、`未対応/部分対応` が残らないことを確認する。
-2. 最終判定:
-   - 判定サマリを最終版へ更新し、完了日を追記する。
-3. 状態固定:
-   - ファイル名を維持したまま冒頭へ `状態: Frozen` を追記する。
-4. 参照固定:
+1. 参照固定:
    - `foundation-contract.md` 側の関連リンクから本書を「完了監査」として参照する。
-5. 変更制限:
+2. 変更制限:
    - 凍結後は誤記修正のみ許可し、内容変更が必要な場合は新しい監査ファイルを日付付きで追加する。
 
 ## 6. Foundationタスク対象プログラムファイル
@@ -143,8 +139,8 @@
    - 完了: Waveform/Noise/FM/Drum schema、DrumKit特例、LoadSource schema検証移行、Noise enum統合方針、拡張項目の非導入判断
    - 残: なし
 3. `2.3 Render Contract`
-   - 状態: 未評価（本監査対象外）
-   - 残: Renderer/Voices 側で契約監査
+   - 状態: 評価済み（本監査対象外として確定）
+   - 残: Renderer/Voices 側の別監査で契約監査
 4. `2.4 Modulation Routing`
    - 状態: 対応済み
    - 完了: 命名統一、旧名互換、`pan` 非採用方針、`<sourceKind>.<parameterId>` 規約定義、`fm.index` の受理/適用、FM向けGUI編集導線
@@ -162,8 +158,8 @@
 
 ### 7.3 凍結時タスク（最終クローズ）
 
-1. 2.1〜2.6 を再監査し、`未対応/部分対応` を解消する。
-2. 判定サマリを最終版へ更新し、完了日を追記する。
-3. 冒頭の状態を `Frozen` に更新する。
-4. `foundation-contract.md` から本書を「完了監査」として参照固定する。
-5. 凍結後の変更は誤記修正のみとし、内容変更は新しい監査ファイルを日付付きで追加する。
+1. [x] 2.1〜2.6 を再監査し、`未対応/部分対応` を解消した（2.3 は対象外確定で分離）。
+2. [x] 判定サマリを最終版へ更新し、完了日（2026-03-08）を反映した。
+3. [x] 冒頭の状態を `Frozen` に更新した。
+4. [x] `foundation-contract.md` から本書を「完了監査」として参照固定した。
+5. [x] 凍結後の変更制限（誤記修正のみ、内容変更は新規監査ファイル）を運用ルールに反映した。

@@ -1,7 +1,7 @@
 # 合成基盤契約（方式横断）
 
 最終更新: 2026-03-08
-状態: Draft（運用開始）
+状態: Frozen（2026-03-08 契約凍結）
 
 ## 1. 目的
 
@@ -13,7 +13,7 @@
 - `docs/SYNTH_METHODS.md`
 - `docs/synth-methods/method-boundaries.md`
 - `docs/synth-methods/integration-playbook.md`
-- `docs/synth-methods/foundation-audit-2026-03-05.md`
+- `docs/synth-methods/foundation-audit-2026-03-05.md`（完了監査・Frozen）
 - `docs/STATUS.md`
 - `docs/STATUS_DETAIL.md`
 
@@ -154,6 +154,12 @@
    - 未解決論点がある場合は `docs-archive/` へ移送する論点メモを作成してから凍結する。
 5. 運用ルール:
    - 凍結後の変更は「新方式追加」または「契約違反修正」のみ許可し、差分理由を冒頭に明記する。
+
+## 5.1 凍結完了記録
+
+- 完了日: 2026-03-08
+- 監査参照: `docs/synth-methods/foundation-audit-2026-03-05.md`（完了監査・Frozen）
+- 判定: 2.1〜2.6 は本契約の運用条件を満たしたため凍結
 
 ## 6. Foundationタスク対象プログラムファイル
 
