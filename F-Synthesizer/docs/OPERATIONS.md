@@ -77,6 +77,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 自動更新対象:
 - `docs/Architecture.md`（Auto-Generated ブロック）
+- 実行条件: `src/` / `include/` / `scripts/check.ps1` がステージされているコミット時のみ
 
 ## GUI Smoke
 

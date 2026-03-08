@@ -16,11 +16,13 @@
 
 | ファイル | 使うタイミング |
 |---|---|
-| `HANDBOOK.md` | 全体原則や記録導線を見直す時 |
 | `module-map.md` | 依存方向/責務境界を変更する時 |
 | `runtime-flow.md` | Run/レンダ経路を変更する時 |
 | `gui.md` | GUI責務や状態遷移を変更する時 |
 | `config-and-io.md` | Config/I/O境界を変更する時 |
+
+補足:
+- 旧 `HANDBOOK.md` は重複整理のため `docs-archive/architecture/HANDBOOK-2026-03-08.md` へ移管済み。
 
 ## 3. 更新ルール（軽量）
 

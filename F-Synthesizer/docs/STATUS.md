@@ -1,42 +1,17 @@
 # STATUS
 
-Last Updated: 2026-03-08 (ops: ドキュメント運用を個人開発向けに簡素化)
+Last Updated: 2026-03-08 (ops: STATUS Current を短期運用向けに圧縮)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
 
 ## Current
 
-- GUI v8 ベースの実装は安定運用中
-- 現在の優先は `gui-help` / `feat-infra` / `doc-sync`
-- コメント追加フェーズ（Step1-8）は完了
-- `gui-help` Phase 2-9 を実施（共通導線化 + Music/Sound主要導線拡張 + 要件昇格 + 計画移管）
-- `feat-infra` を実施（`midi_regression.ps1` のCWD依存解消 + `check.ps1 -RunMIDIRegression` 統合）
-- 略称大文字統一を継続実施（`MIDI` / `WAV` / `CLI` / `JSON`）
-- 略称大文字統一を継続実施（`UI` / `ID`、GUI state保存キーは後方互換のため旧キー併用）
-- `runtime`: 未使用だった `Default Wave` 導線（`defaultWave` / `MIDIEvent.typeWave`）を廃止
-- `gui-cleanup`: 未接続だった `Sound Reference (Snapshot/Link)` UI/状態保存を廃止
-- `gui-cleanup`: Musicタブの補助文言/ヘルプを現行UI（Reference廃止後）へ再整理
-- `doc-sync`: 個人運用前提で `method-boundaries` / 契約文書 / `STATUS` の記載整合を最終確認
-- `ops`: 重い自動ハーネスは導入せず、`check.ps1` + 代表MIDI手動確認の運用を `OPERATIONS.md` へ明記
-- `foundation`: lifecycle 契約（2.5）の最小受け皿として `SourceLifecyclePolicy` と `source.lifecycle` 整合検証を追加
-- `foundation`: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
-- `foundation`: `LoadSource.cpp` の検証を schema 駆動へ移行（Waveform/FM/Drum/DrumKit）
-- `foundation`: Noise enum は「parse で文字列解決 + schema で値ドメイン検証」の方針で統合
-- `foundation`: modulation destination の `pan` は現時点で非採用（ConfigLoad 非受理）と確定
-- `foundation`: 方式固有 destination 拡張規約（`<sourceKind>.<parameterId>`、例: `fm.index`）を定義
-- `foundation`: 方式固有 destination の Phase 1 として `fm.index` を採用（FM source限定で受理・適用）
-- `foundation`: 方式固有 destination の GUI編集導線を導入（FMの Modulation Destination で `fm.index` を選択可能）
-- `foundation`: capability ベース分岐を点検し、Soundタブ source 種別選択と voice同種判定の SourceKind 直依存を置換
-- `foundation`: ParameterSchema の `displayName` / `smoothable` / `automatable` は当面非導入（最小版 `id/type/range/default` を正）と判断
-- `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
-- `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
-- `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
-- `ops`: Weekly Maintenance で未処理だった運用TODOを解消
-- `foundation`: capability / lifecycle / schema 契約の運用ルールを `foundation-contract.md` 中心の単一運用へ整理
-- `foundation`: 旧 `foundation-audit-2026-03-05.md` を完了監査として `docs-archive/synth-methods/` へ移管し、参照を `foundation-contract.md` 中心へ統合
-- `ops`: foundation 監査運用を簡素化（`foundation-contract.md` に監査サマリ統合、詳細監査は `docs-archive` へ移行）
-- `ops`: `architecture` / `synth-methods` の重複運用ルールを「要約 + 正本参照」へ整理
+- 優先: `doc-sync` / `gui-help`（実機確認） / 軽量運用の維持
+- 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
+- `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
+- architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
+- 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
 
