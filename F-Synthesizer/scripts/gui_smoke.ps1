@@ -10,6 +10,12 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $exePath = Join-Path $repoRoot "build\$Platform\$Configuration\F-Synthesizer.exe"
+if (-not (Test-Path $exePath)) {
+    $legacyPath = Join-Path $repoRoot "$Platform\$Configuration\F-Synthesizer.exe"
+    if (Test-Path $legacyPath) {
+        $exePath = $legacyPath
+    }
+}
 $quickDir = Join-Path $repoRoot "output\smoke_quick"
 $jpDir = Join-Path $repoRoot "output\日本語\スモーク"
 $singleConfigPath = Join-Path $repoRoot "output\single_channel_smoke.json"

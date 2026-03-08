@@ -29,7 +29,7 @@ MIDI ファイルを読み込み、サンプル単位で合成して WAV に書�
 ```powershell
 git status --short --branch
 .\scripts\check.ps1
-.\scripts\gui_smoke.ps1
+.\scripts\check.ps1 -GuiSmokeProfile full -RunMIDIRegression
 ```
 
 ## リポジトリ構成（最小）

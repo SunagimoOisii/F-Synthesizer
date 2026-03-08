@@ -3,6 +3,8 @@ param(
     [string]$Platform = "x64",
     [switch]$SkipBuild,
     [switch]$SkipRun,
+    [ValidateSet("quick", "full")]
+    [string]$GuiSmokeProfile = "quick",
     [switch]$RunMIDIRegression,
     [switch]$AllowDocMismatch,
     [ValidateSet("off", "warn", "error")]
@@ -240,24 +242,18 @@ try {
     }
 
     if (-not $SkipRun) {
-        $exePath = Join-Path $repoRoot "build\$Platform\$Configuration\F-Synthesizer.exe"
-        if (-not (Test-Path $exePath)) {
-            $legacyPath = Join-Path $repoRoot "$Platform\$Configuration\F-Synthesizer.exe"
-            if (Test-Path $legacyPath) {
-                $exePath = $legacyPath
-            }
-        }
-        if (Test-Path $exePath) {
-            Write-Host "Running executable: $exePath"
-            & $exePath
+        $guiSmokeScript = Join-Path $PSScriptRoot "gui_smoke.ps1"
+        if (Test-Path $guiSmokeScript) {
+            Write-Host "Running GUI smoke (profile: $GuiSmokeProfile)..."
+            & $guiSmokeScript -Configuration $Configuration -Platform $Platform -Profile $GuiSmokeProfile
         }
         else {
-            Write-Warning "Executable not found: $exePath"
-            Write-Warning "Run with -SkipRun or build first."
+            Write-Warning "GUI smoke script not found: $guiSmokeScript"
+            Write-Warning "Run step skipped."
         }
     }
     else {
-        Write-Host "Run step skipped by option."
+        Write-Host "Run step skipped by option (GUI smoke disabled)."
     }
 
     if ($RunMIDIRegression) {
