@@ -109,6 +109,13 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 週 1 回（10〜20分）で実施する。
 
+情報保持ポリシー:
+- 短期入力（次回週次まで）: `docs/STATUS.md` の `Current`
+- 長期判断（恒久）: `docs/DECISIONS.md`
+- 長期契約（恒久）: `docs/synth-methods/foundation-contract.md`
+- ADR詳細（恒久）: `docs/architecture/*.md` の `Special Notes`
+- 履歴退避（恒久・参照専用）: `docs-archive/`
+
 手順:
 1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しし、更新要否を判定する
 2. 判定結果に応じて、必要なファイルだけ更新する
@@ -119,6 +126,10 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
    - それ以外の文書: 差分がある時のみ更新（なければ更新しない）
 3. `docs/architecture/*.md` の `Special Notes` へ追記する場合は、`背景/判断/代替案/影響範囲/関連ファイル` を記入する
 4. 変更がなかった文書は `STATUS.md` に `No update` として記録する（例: `foundation-contract: No update`）
+
+週次AI更新の入出力:
+- 入力: `STATUS.md`（短期情報）+ 直近コード差分（git）
+- 出力: `STATUS.md` / `DECISIONS.md` / `foundation-contract.md` / 必要時 `docs/architecture/*.md`
 
 完了チェック:
 - `STATUS.md` に棚卸し結果（更新または `No update`）が残っている

@@ -27,4 +27,5 @@
 
 - 自動更新対象は `docs/Architecture.md` / `docs/STATUS.md` / `docs/DECISIONS.md` の 3 ファイルに固定。
 - 進捗管理の正本は `docs/STATUS.md` のみとする。
+- 情報保持は `STATUS(短期) / DECISIONS(長期判断) / foundation-contract(長期契約) / architecture Special Notes(ADR詳細)` を正本とする。
 - 上記以外の md 変更は、提案テンプレで承認を取ってから反映する。

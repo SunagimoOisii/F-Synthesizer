@@ -12,6 +12,13 @@ AI が直接更新してよいのは次の 3 ファイルのみ。
 
 - `docs/STATUS.md` を進捗管理の正本として運用する（`Current` / `Next 3` / `Blockers`）。
 
+## 情報保持ポリシー
+
+- 短期情報（次回週次まで）: `docs/STATUS.md`
+- 長期判断: `docs/DECISIONS.md`
+- 長期契約: `docs/synth-methods/foundation-contract.md`
+- ADR詳細: `docs/architecture/*.md` の `Special Notes`
+
 ## 非自動更新ファイル
 
 - 上記以外は直接変更しない。

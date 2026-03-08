@@ -26,7 +26,7 @@
 ## 監査記録フォーマット
 
 監査実施時は個別ドキュメントに以下の表を使用し、完了後は
-`docs/cleanup/archive/<batch>/` に移動して保管する。
+`docs-archive/cleanup/archive/<batch>/` に移動して保管する。
 
 | Path | Kind | Evidence (ref=0) | Decision | Note |
 |---|---|---|---|---|
@@ -34,11 +34,11 @@
 
 ## Phase 実績
 
-- Phase 1 (`scripts`): `docs/cleanup/archive/2026-03-phase1-6/scripts-audit.md`
-- Phase 2 (`docs`): `docs/cleanup/archive/2026-03-phase1-6/docs-audit.md`
-- Phase 3 (`gui`): `docs/cleanup/archive/2026-03-phase1-6/gui-audit.md`
-- Phase 4 (`midi`): `docs/cleanup/archive/2026-03-phase1-6/midi-audit.md`
-- Phase 5 (`core`): `docs/cleanup/archive/2026-03-phase1-6/core-audit.md`
+- Phase 1 (`scripts`): `docs-archive/cleanup/archive/2026-03-phase1-6/scripts-audit.md`
+- Phase 2 (`docs`): `docs-archive/cleanup/archive/2026-03-phase1-6/docs-audit.md`
+- Phase 3 (`gui`): `docs-archive/cleanup/archive/2026-03-phase1-6/gui-audit.md`
+- Phase 4 (`midi`): `docs-archive/cleanup/archive/2026-03-phase1-6/midi-audit.md`
+- Phase 5 (`core`): `docs-archive/cleanup/archive/2026-03-phase1-6/core-audit.md`
 
 ## Phase 要約
 
@@ -68,3 +68,4 @@
 
 - 本 cleanup では、`delete` 判定分のみ削除を実施した。
 - 判定に迷う項目は方針どおり `keep` 保留とし、監査ログに記録した。
+
