@@ -84,15 +84,10 @@
   - `sourceKind` は `source.type` と同じ小文字名を使う（`fm`, `noise`, `drum` など）。
   - `parameterId` は対象方式の `ParameterSchema.id` と一致させる。
   - 単位は `ParameterSchema` と同じ意味を使う（無次元倍率/Hzなど）。
-- 段階導入方針（2026-03-08 決定）:
-  - Phase 1（実装済み）:
-    - `fm.index` を ConfigLoad で受理し、FMレンダで適用する。
-    - 受理範囲は `source.type=fm` の `modulation` に限定し、Waveform等では非受理にする。
-  - Phase 2（将来）:
-    - 方式固有 destination を複数追加する場合は、`<sourceKind>.<parameterId>` と `ParameterSchema` の対応表を追加する。
-  - Phase 3（将来）:
-    - GUI編集導線（方式固有 destination の選択UI）を追加し、手動JSON編集依存を解消する。
-    - 2026-03-08 時点では FM の destination 選択UIに `fm.index` を導入済み（Waveform には未表示）。
+- 現行実装:
+  - `fm.index` を ConfigLoad で受理し、FMレンダで適用する。
+  - 受理範囲は `source.type=fm` の `modulation` に限定し、Waveform等では非受理にする。
+- 将来拡張の検討メモは `docs-archive/` 側へ保持し、本書では扱わない。
 
 ### 2.5 Voice Lifecycle 契約
 
@@ -117,26 +112,37 @@
 
 ### 2.6 Test Harness 契約
 
-- 新方式追加時の最低確認を固定する。
-- 必須項目:
-  - 無音入力で無音出力
-  - クリップ率上限（閾値は方式別に記録）
-  - 同一入力の再現性（乱数利用時はseed固定）
-  - CPU負荷の基準（poly数を明記）
-- AB比較は耳確認に加え、peak/rms/clip のログを残す。
-- 個人運用では、重い自動ハーネスの代わりに `check.ps1` + 代表MIDI手動確認を許可する。
+- 個人運用の通常確認（常時）:
+  - `check.ps1` が通る
+  - 代表MIDI 1件以上で破綻音がない
+  - 重大クリップ増加がない
+- 追加確認（変更トリガー時のみ）:
+  - レンダ挙動を変えた時: AB比較（耳確認 + 必要時 peak/rms/clip）
+  - 乱数系を変えた時: 再現性確認（seed固定）
+  - 高負荷機能を触った時: CPU負荷の簡易比較
 
 ## 2.7 監査結果サマリ（2026-03-08）
 
 - 2.1 Source Capability: 対応済み
 - 2.2 Parameter Schema: 対応済み（最小版維持）
-- 2.3 Render Contract: 本契約の範囲では「変更トリガー時のみ確認」にする
+- 2.3 Render Contract: 変更トリガー時のみ確認
 - 2.4 Modulation Routing: 対応済み（`fm.index` phase 1）
 - 2.5 Voice Lifecycle: 対応済み（retrigger/steal/one-shot 一致）
-- 2.6 Test Harness: 個人運用として軽量手順を採用
+- 2.6 Test Harness: 個人運用の軽量手順へ圧縮
 
 履歴監査（アーカイブ）:
 - `docs-archive/synth-methods/foundation-audit-2026-03-05.md`
+
+### 2.8 監査トリガー（個人開発用）
+
+- `SourceRegistry` / `ConfigLoad` / `LoadSource` を変更した時:
+  - 2.1 / 2.2 / 2.4 / 2.5 を確認する
+- `Events` / `Voices` / `Renderer` を変更した時:
+  - 2.3 / 2.5 / 2.6 を確認する
+- GUI の source 編集・変調導線を変更した時:
+  - 2.1 / 2.4 の利用整合のみ確認する
+- 上記に該当しない変更:
+  - foundation監査は省略可
 
 ## 3. 方式追加時チェック
 
@@ -150,53 +156,11 @@
 - 方式ごとの詳細アルゴリズム設計を本書で定義しない。
 - UI文言やプリセット方針の全体設計を本書で代替しない。
 
-## 5. タスク完了後の凍結手順
+## 5. 凍結後の更新条件
 
-1. 判定条件:
-   - 2.1〜2.6 の必須項目が実装・文書の両方で満たされている。
-2. 反映:
-   - `STATUS.md` / 本書の関連リンクと手順を最終状態へ更新する。
-3. 状態更新:
-   - 本書の `状態` を `Frozen` へ変更し、`最終更新` を更新する。
-4. 履歴化:
-   - 未解決論点がある場合は `docs-archive/` へ移送する論点メモを作成してから凍結する。
-5. 運用ルール:
-   - 凍結後の変更は「新方式追加」または「契約違反修正」のみ許可し、差分理由を冒頭に明記する。
-
-## 5.1 凍結完了記録
-
-- 完了日: 2026-03-08
-- 監査参照: 本書 `2.7 監査結果サマリ`
-- 判定: 2.1〜2.6 は本契約の運用条件を満たしたため凍結
-
-## 6. Foundationタスク対象プログラムファイル
-
-foundation 系タスクでは、原則として次の実装ファイルを操作対象にする。
-
-- Source 契約/定義
-  - `include/config/SourceRegistry.h`
-  - `src/config/SourceRegistry.cpp`
-- Config load/save
-  - `src/config/ConfigLoad.cpp`
-  - `src/config/load/Internal.h`
-  - `src/config/load/LoadSource.cpp`
-  - `src/config/load/LoadModulation.cpp`
-  - `src/config/ConfigJSONUtils.cpp`
-  - `src/config/ConfigFileInternal.h`
-- データモデル
-  - `include/SynthEngine/SynthEngine.h`
-- レンダ/ライフサイクル実装監査対象
-  - `src/SynthEngine/Events.cpp`
-  - `src/SynthEngine/Voices.cpp`
-  - `src/SynthEngine/Renderer.cpp`
-
-新規追加が必要な場合は、次の配置を優先する。
-
-- Config load 拡張:
-  - `src/config/load/Load*.cpp`
-- Source 契約拡張:
-  - `include/config/*.h`
-  - `src/config/*.cpp`
-- SynthEngine 側契約受け皿:
-  - `include/SynthEngine/*.h`
-  - `src/SynthEngine/*.cpp`
+- 本書の更新は次の場合のみ許可する:
+  - 新方式追加
+  - 既存契約違反の修正
+  - 監査トリガーと運用ルールの明確化
+- 更新時は `DECISIONS.md` に判断理由を残す。
+- 詳細監査ログと検討メモは `docs-archive/` へ保管する。
