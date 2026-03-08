@@ -69,15 +69,15 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 - クリップ増加がない（必要時は比較ログを残す）
 - 変更対象パラメータが意図どおり反映される
 
-## Git Hook (Auto Doc Update)
+## Git Hook (Lightweight)
 
 ```powershell
 .\scripts\install_git_hooks.ps1
 ```
 
-自動更新対象:
-- `docs/Architecture.md`（Auto-Generated ブロック）
-- 実行条件: `src/` / `include/` / `scripts/check.ps1` がステージされているコミット時のみ
+運用方針:
+- pre-commit では md 自動更新を行わない（時刻のみ差分のノイズを避けるため）
+- `docs/Architecture.md` の Auto-Generated 更新は必要時のみ手動実行（`check.ps1`）
 
 ## GUI Smoke
 
@@ -130,14 +130,14 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
    - `docs/architecture/*.md`: 設計判断の背景詳細を残す必要がある時のみ `Special Notes` に ADR を追記
    - それ以外の文書: 差分がある時のみ更新（なければ更新しない）
 3. `docs/architecture/*.md` の `Special Notes` へ追記する場合は、`背景/判断/代替案/影響範囲/関連ファイル` を記入する
-4. 変更がなかった文書は `STATUS.md` に `No update` として記録する（例: `foundation-contract: No update`）
+4. 変更がなかった文書は記録しない（`No update` の記載は不要）
 
 週次AI更新の入出力:
 - 入力: `STATUS.md`（短期情報）+ 直近コード差分（git）
 - 出力: `STATUS.md` / `DECISIONS.md` / `foundation-contract.md` / 必要時 `docs/architecture/*.md`
 
 完了チェック:
-- `STATUS.md` に棚卸し結果（更新または `No update`）が残っている
+- 変更が必要だった文書のみ更新されている
 - 優先事項が変わった場合のみ `STATUS.md` の `Next 3` を更新した
 - 新しい判断がある場合のみ `DECISIONS.md` に追記した
 - 契約変更がある場合のみ `foundation-contract.md` を更新した
