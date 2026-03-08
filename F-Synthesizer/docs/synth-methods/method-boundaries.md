@@ -101,4 +101,4 @@
 ## 6. 更新トリガー
 
 - 方式追加/方式拡張時に本ファイルを更新する。
-- 責務変更が発生したら `docs/SYNTH_METHODS.md` と同時更新する。
+- 責務変更が発生したら `docs/synth-methods/foundation-contract.md` と同時更新する。

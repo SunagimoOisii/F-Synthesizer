@@ -35,7 +35,7 @@
 - 合成方式ごとの責務は明確に分離し、同じ機能を複数方式へ重複実装しない
 - 共通化すべき機能は、方式へ追加する前に共通レイヤーへ切り出す
 - 方式境界の判断は `docs/synth-methods/method-boundaries.md` を正とする
-- 方式追加/拡張時は、`docs/SYNTH_METHODS.md` と境界ガイドを同時更新する
+- 方式追加/拡張時は、`docs/synth-methods/foundation-contract.md` と境界ガイドを同時更新する
 
 ## 当面の成功指標（運用）
 

@@ -3,7 +3,7 @@
 Last Updated: 2026-03-08 (ops: ドキュメント運用を個人開発向けに簡素化)
 Branch: `main`
 
-日次の正本は本ファイル。`STATUS_DETAIL.md` は月次/節目の履歴ログのみ記録する。
+進捗管理の正本は本ファイルのみ。
 
 ## Current
 
@@ -17,7 +17,7 @@ Branch: `main`
 - `runtime`: 未使用だった `Default Wave` 導線（`defaultWave` / `MIDIEvent.typeWave`）を廃止
 - `gui-cleanup`: 未接続だった `Sound Reference (Snapshot/Link)` UI/状態保存を廃止
 - `gui-cleanup`: Musicタブの補助文言/ヘルプを現行UI（Reference廃止後）へ再整理
-- `doc-sync`: 個人運用前提で `method-boundaries` / `integration-playbook` / `STATUS` の記載整合を最終確認
+- `doc-sync`: 個人運用前提で `method-boundaries` / 契約文書 / `STATUS` の記載整合を最終確認
 - `ops`: 重い自動ハーネスは導入せず、`check.ps1` + 代表MIDI手動確認の運用を `OPERATIONS.md` へ明記
 - `foundation`: lifecycle 契約（2.5）の最小受け皿として `SourceLifecyclePolicy` と `source.lifecycle` 整合検証を追加
 - `foundation`: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
@@ -32,8 +32,8 @@ Branch: `main`
 - `foundation`: lifecycle 実装挙動を監査（retrigger/steal/one-shot終了）。retrigger/steal は契約との差分を確認
 - `foundation`: `Waveform/Noise/FM` の retrigger を `SourceLifecyclePolicy`（restart）へ一致
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
-- `ops`: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
-- `foundation`: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
+- `ops`: Weekly Maintenance で未処理だった運用TODOを解消
+- `foundation`: capability / lifecycle / schema 契約の運用ルールを `foundation-contract.md` 中心の単一運用へ整理
 - `foundation`: 旧 `foundation-audit-2026-03-05.md` を完了監査として `docs-archive/synth-methods/` へ移管し、参照を `foundation-contract.md` 中心へ統合
 - `ops`: foundation 監査運用を簡素化（`foundation-contract.md` に監査サマリ統合、詳細監査は `docs-archive` へ移行）
 - `ops`: `architecture` / `synth-methods` の重複運用ルールを「要約 + 正本参照」へ整理
@@ -50,7 +50,6 @@ Branch: `main`
 
 ## Quick Links
 
-- 月次履歴: `STATUS_DETAIL.md`
 - 設計: `Architecture.md`
 - 実行手順: `OPERATIONS.md`
 - 設計判断: `DECISIONS.md`

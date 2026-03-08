@@ -75,8 +75,6 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 自動更新対象:
 - `docs/Architecture.md`（Auto-Generated ブロック）
-- `docs/synth-methods/integration-playbook.md`（Auto-Generated ブロック）
-- `docs/architecture/*.md` の `Special Notes`
 
 ## GUI Smoke
 
@@ -112,14 +110,19 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 週 1 回（10〜20分）で実施する。
 
 手順:
-1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しする
-2. 構造変更があれば `docs/Architecture.md` を更新する
-3. 優先順位の変化を `docs/STATUS.md` の `Next 3` に反映する
-4. 新しい設計判断を `docs/DECISIONS.md` に追記する
-5. `docs/architecture/*.md` の `Special Notes` で `TODO (auto-generated)` を確認し、対象があれば ADR を記入する（`背景/判断/代替案/影響範囲/関連ファイル`）
+1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しし、更新要否を判定する
+2. 判定結果に応じて、必要なファイルだけ更新する
+   - `STATUS.md`: 進捗/優先順位が変わった時
+   - `DECISIONS.md`: 新しい設計判断が発生した時
+   - `docs/synth-methods/foundation-contract.md`: 契約（capability/lifecycle/schema）が変わった時
+   - `docs/architecture/*.md`: 設計判断の背景詳細を残す必要がある時のみ `Special Notes` に ADR を追記
+   - それ以外の文書: 差分がある時のみ更新（なければ更新しない）
+3. `docs/architecture/*.md` の `Special Notes` へ追記する場合は、`背景/判断/代替案/影響範囲/関連ファイル` を記入する
+4. 変更がなかった文書は `STATUS.md` に `No update` として記録する（例: `foundation-contract: No update`）
 
 完了チェック:
-- 解消済み課題を `STATUS.md` から削除した
-- 優先事項が `STATUS.md` の `Next 3` に反映されている
-- 新しい判断があれば `DECISIONS.md` に残した
-- `docs/architecture/*.md` の `Special Notes` に未記入の `TODO (auto-generated)` が残っていない
+- `STATUS.md` に棚卸し結果（更新または `No update`）が残っている
+- 優先事項が変わった場合のみ `STATUS.md` の `Next 3` を更新した
+- 新しい判断がある場合のみ `DECISIONS.md` に追記した
+- 契約変更がある場合のみ `foundation-contract.md` を更新した
+- `docs/architecture/*.md` へ追記した場合、ADR 5項目が埋まっている

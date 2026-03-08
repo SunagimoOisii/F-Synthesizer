@@ -9,7 +9,6 @@ if [ $status -ne 0 ]; then
 fi
 
 # Include auto-updated docs in the commit.
-git add F-Synthesizer/docs/Architecture.md F-Synthesizer/docs/synth-methods/integration-playbook.md
-git add F-Synthesizer/docs/architecture/*.md
+git add F-Synthesizer/docs/Architecture.md
 
 exit 0

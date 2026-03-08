@@ -19,7 +19,7 @@ MIDI ファイルを読み込み、サンプル単位で合成して WAV に書�
 - コメント規約（詳細版）: `agents/standards/COMMENT_GUIDELINE_FULL.md`
 - 音色パラメータ要約: `docs/SOUND_PARAMETERS_SUMMARY.md`
 - 音色パラメータ詳細: `docs/SOUND_PARAMETERS.md`
-- 合成方式ガイド: `docs/SYNTH_METHODS.md`
+- 合成方式/契約: `docs/synth-methods/foundation-contract.md`
 - 設計判断: `docs/DECISIONS.md`
 - 直近計画: `docs/STATUS.md` の `Next 3`
 - アーカイブ: `docs-archive/`

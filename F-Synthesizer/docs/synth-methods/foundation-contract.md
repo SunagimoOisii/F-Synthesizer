@@ -10,9 +10,7 @@
 - Config / GUI / Renderer / Test の更新漏れを減らす。
 
 関連:
-- `docs/SYNTH_METHODS.md`
 - `docs/synth-methods/method-boundaries.md`
-- `docs/synth-methods/integration-playbook.md`
 - `docs/STATUS.md`
 
 ## 2. 基盤契約（必須）
@@ -144,8 +142,8 @@
 
 1. `method-boundaries.md` で責務境界を先に確定する。
 2. 本契約の 2.1〜2.6 を埋める（未定義を残さない）。
-3. `integration-playbook.md` の手順に沿って接続する。
-4. `SYNTH_METHODS.md` と方式別 `md` を更新する。
+3. 方式別 `md` を更新する。
+4. `STATUS.md` と必要時 `DECISIONS.md` を更新する。
 
 ## 4. 非目標
 
@@ -157,7 +155,7 @@
 1. 判定条件:
    - 2.1〜2.6 の必須項目が実装・文書の両方で満たされている。
 2. 反映:
-   - `SYNTH_METHODS.md` / `integration-playbook.md` / `STATUS.md` / 本書の関連リンクと手順を最終状態へ更新する。
+   - `STATUS.md` / 本書の関連リンクと手順を最終状態へ更新する。
 3. 状態更新:
    - 本書の `状態` を `Frozen` へ変更し、`最終更新` を更新する。
 4. 履歴化:

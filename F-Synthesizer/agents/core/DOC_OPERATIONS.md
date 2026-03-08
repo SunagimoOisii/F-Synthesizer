@@ -8,11 +8,9 @@ AI が直接更新してよいのは次の 3 ファイルのみ。
 2. `docs/STATUS.md`
 3. `docs/DECISIONS.md`
 
-## STATUS 運用（分割）
+## STATUS 運用
 
-- `docs/STATUS.md` はダッシュボードとして運用する（`Current` / `Next 3` / `Blockers`）。
-- `docs/STATUS_DETAIL.md` は履歴・詳細ログ専用として運用する。
-- AI は `docs/STATUS.md` 更新時に、必要な差分があれば `docs/STATUS_DETAIL.md` も直接更新してよい。
+- `docs/STATUS.md` を進捗管理の正本として運用する（`Current` / `Next 3` / `Blockers`）。
 
 ## 非自動更新ファイル
 
