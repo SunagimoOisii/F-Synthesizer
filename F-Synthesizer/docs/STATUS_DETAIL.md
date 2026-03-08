@@ -1,7 +1,8 @@
 # STATUS_DETAIL
 
-Last Updated: 2026-03-08 (foundation: synth-methods 同期と監査凍結を完了)
+Last Updated: 2026-03-08 (ops: 月次/節目ログ運用へ縮退)
 Branch: `main`
+運用: 本ファイルは月次/節目ログ専用。日次更新は `STATUS.md` を正本とする。
 Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
 
 ## Current Snapshot
@@ -60,7 +61,8 @@ Migration Progress: `GUI v7: DONE(FROZEN) / GUI v8: DONE`
   - ops: 重い自動ハーネスを採用せず、`check.ps1` + 代表MIDI手動確認の軽量運用を `OPERATIONS.md` に明記
   - ops: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
   - foundation: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
-  - foundation: `foundation-audit-2026-03-05.md` を Frozen 化し、`foundation-contract.md` / `integration-playbook.md` / `SYNTH_METHODS.md` の参照を完了監査へ同期
+  - foundation: 旧 `foundation-audit-2026-03-05.md` を完了監査として `docs-archive/synth-methods/` へ移管し、参照を `foundation-contract.md` 中心へ統合
+  - ops: `foundation-contract.md` に監査サマリを統合し、`foundation-audit-2026-03-05.md` は `docs-archive/synth-methods/` へ移管
   - foundation: lifecycle 契約（2.5）の最小受け皿を追加（`SourceLifecyclePolicy` 定義 + `source.lifecycle` 整合検証）
   - foundation: `SourceKind -> ParameterSchema[]` を Waveform/Noise/FM/Drum（DrumKit は空schema特例）へ拡張
   - foundation: `LoadSource.cpp` の schema 駆動検証を FM/Drum/DrumKit へ段階移行（DrumKit は noteごとに Drum schema を適用）

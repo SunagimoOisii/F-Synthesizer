@@ -68,9 +68,7 @@ flowchart LR
 | キー追加 | 後方互換維持 | `config-and-io.md` Special Notes |
 | キー廃止 | 移行方針を明示 | `config-and-io.md` Special Notes |
 | デフォルト変更 | 影響範囲を明示 | `runtime-flow.md` 併記 |
-| source capability 変更 | `SourceRegistry` を正として利用側判定を追従 | `module-map.md` 併記 |
-| source lifecycle 変更 | `SourceLifecyclePolicy` と実装挙動の差分を明示 | `runtime-flow.md` 併記 |
-| source schema 変更 | 受理条件・検証方針を明示 | `config-and-io.md` Special Notes |
+| foundation 契約変更（capability/lifecycle/schema） | 正本 `foundation-contract.md` を更新し、本書は差分要約のみ追記 | `docs/synth-methods/foundation-contract.md`, `config-and-io.md` |
 
 変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 

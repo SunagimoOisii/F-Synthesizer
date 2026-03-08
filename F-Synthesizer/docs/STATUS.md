@@ -1,9 +1,9 @@
 # STATUS
 
-Last Updated: 2026-03-08 (foundation: synth-methods 同期と監査凍結を完了)
+Last Updated: 2026-03-08 (ops: ドキュメント運用を個人開発向けに簡素化)
 Branch: `main`
 
-詳細ログと履歴は `STATUS_DETAIL.md` を参照。
+日次の正本は本ファイル。`STATUS_DETAIL.md` は月次/節目の履歴ログのみ記録する。
 
 ## Current
 
@@ -34,13 +34,15 @@ Branch: `main`
 - `foundation`: voice上限（256）と steal 優先順位（`Oldest/RejectNew`）を `SourceLifecyclePolicy` に沿って実装
 - `ops`: Weekly Maintenance を実施し、`docs/architecture/*.md` の `TODO (auto-generated)` 7件を ADR 記入で解消
 - `foundation`: capability / lifecycle / schema 契約の運用ルールを `docs/architecture/README.md` / `HANDBOOK.md` / `module-map.md` / `config-and-io.md` に反映
-- `foundation`: `foundation-audit-2026-03-05.md` を Frozen 化し、`foundation-contract.md` / `integration-playbook.md` / `SYNTH_METHODS.md` の参照を完了監査へ同期
+- `foundation`: 旧 `foundation-audit-2026-03-05.md` を完了監査として `docs-archive/synth-methods/` へ移管し、参照を `foundation-contract.md` 中心へ統合
+- `ops`: foundation 監査運用を簡素化（`foundation-contract.md` に監査サマリ統合、詳細監査は `docs-archive` へ移行）
+- `ops`: `architecture` / `synth-methods` の重複運用ルールを「要約 + 正本参照」へ整理
 
 ## Next 3
 
 1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
 2. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
-3. `foundation`: Render Contract（2.3）の監査範囲（Renderer/Voices）を別監査タスクとして定義する
+3. `foundation`: なし（Render Contract の確認は Renderer/Voices 変更時のみ実施）
 
 ## Blockers
 
@@ -48,7 +50,7 @@ Branch: `main`
 
 ## Quick Links
 
-- 状況詳細: `STATUS_DETAIL.md`
+- 月次履歴: `STATUS_DETAIL.md`
 - 設計: `Architecture.md`
 - 実行手順: `OPERATIONS.md`
 - 設計判断: `DECISIONS.md`

@@ -143,13 +143,9 @@ flowchart LR
 
 ## 7.1 Foundation契約（capability / lifecycle / schema）更新規約
 
-1. 正本は `SourceRegistry`（`include/config/SourceRegistry.h`, `src/config/SourceRegistry.cpp`）とする。
-2. GUI/app/SynthEngine 側で種別判定を増やす場合は、直書きを避けて `SourceRegistry` の公開API参照へ統一する。
-3. 契約変更時は、同日に以下を最小更新する。
-   - `config-and-io.md`: 受理条件・互換影響
-   - `module-map.md`: 境界責務（どの層が判定責務を持つか）
-   - `STATUS.md` / `STATUS_DETAIL.md`: 作業結果
-4. 重要な運用判断（採用/非採用、段階導入、凍結）は `DECISIONS.md` に追記する。
+1. 正本は `docs/synth-methods/foundation-contract.md` とする。
+2. 本ファイルでは境界責務の要点のみ保持し、詳細運用手順は正本へ集約する。
+3. 重要な運用判断は `DECISIONS.md`、作業結果は `STATUS.md` に反映する。
 
 ## 7.2 Portfolio Readiness Check
 

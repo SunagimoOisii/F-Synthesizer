@@ -26,7 +26,7 @@
 
 1. まず本ファイルだけ更新する。
 2. 詳細ファイルは、実際に差分が出た領域だけ更新する。
-3. 更新後は `docs/STATUS.md` と `docs/STATUS_DETAIL.md` に要点だけ反映する。
+3. 更新後は `docs/STATUS.md` に要点だけ反映する。
 
 ## 4. ADR最小テンプレート
 
@@ -40,10 +40,5 @@
 
 ## 5. Foundation契約の運用ルール
 
-`capability / lifecycle / schema` の変更は、次の順で更新する。
-
-1. `include/config/SourceRegistry.h` / `src/config/SourceRegistry.cpp` を先に更新する（正本）。
-2. 影響する呼び出し側（`load/*`, `gui/*`, `SynthEngine/*`）を正本参照へそろえる。
-3. `docs/architecture/config-and-io.md` に互換性・受理方針を追記する。
-4. `docs/architecture/module-map.md` に境界責務（どの層が判定を持つか）を追記する。
-5. `docs/STATUS.md` / `docs/STATUS_DETAIL.md` / `docs/DECISIONS.md` に要点を同期する。
+- 正本は `docs/synth-methods/foundation-contract.md` とする。
+- `architecture` 側は要約のみ保持し、詳細手順は正本を参照する。

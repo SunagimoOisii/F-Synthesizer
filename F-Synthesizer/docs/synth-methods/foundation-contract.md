@@ -13,9 +13,7 @@
 - `docs/SYNTH_METHODS.md`
 - `docs/synth-methods/method-boundaries.md`
 - `docs/synth-methods/integration-playbook.md`
-- `docs/synth-methods/foundation-audit-2026-03-05.md`（完了監査・Frozen）
 - `docs/STATUS.md`
-- `docs/STATUS_DETAIL.md`
 
 ## 2. 基盤契約（必須）
 
@@ -130,6 +128,18 @@
 - AB比較は耳確認に加え、peak/rms/clip のログを残す。
 - 個人運用では、重い自動ハーネスの代わりに `check.ps1` + 代表MIDI手動確認を許可する。
 
+## 2.7 監査結果サマリ（2026-03-08）
+
+- 2.1 Source Capability: 対応済み
+- 2.2 Parameter Schema: 対応済み（最小版維持）
+- 2.3 Render Contract: 本契約の範囲では「変更トリガー時のみ確認」にする
+- 2.4 Modulation Routing: 対応済み（`fm.index` phase 1）
+- 2.5 Voice Lifecycle: 対応済み（retrigger/steal/one-shot 一致）
+- 2.6 Test Harness: 個人運用として軽量手順を採用
+
+履歴監査（アーカイブ）:
+- `docs-archive/synth-methods/foundation-audit-2026-03-05.md`
+
 ## 3. 方式追加時チェック
 
 1. `method-boundaries.md` で責務境界を先に確定する。
@@ -147,7 +157,7 @@
 1. 判定条件:
    - 2.1〜2.6 の必須項目が実装・文書の両方で満たされている。
 2. 反映:
-   - `SYNTH_METHODS.md` / `integration-playbook.md` / `STATUS.md` / `STATUS_DETAIL.md` / 本書の関連リンクと手順を最終状態へ更新する。
+   - `SYNTH_METHODS.md` / `integration-playbook.md` / `STATUS.md` / 本書の関連リンクと手順を最終状態へ更新する。
 3. 状態更新:
    - 本書の `状態` を `Frozen` へ変更し、`最終更新` を更新する。
 4. 履歴化:
@@ -158,7 +168,7 @@
 ## 5.1 凍結完了記録
 
 - 完了日: 2026-03-08
-- 監査参照: `docs/synth-methods/foundation-audit-2026-03-05.md`（完了監査・Frozen）
+- 監査参照: 本書 `2.7 監査結果サマリ`
 - 判定: 2.1〜2.6 は本契約の運用条件を満たしたため凍結
 
 ## 6. Foundationタスク対象プログラムファイル
