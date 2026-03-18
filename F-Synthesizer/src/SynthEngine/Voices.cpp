@@ -179,8 +179,7 @@ bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const M
         if (voices.released[i] == 0)
         {
             NoteOff(voices.env[i]);
-            if (std::holds_alternative<WaveformConfig>(voices.source[i]) ||
-                std::holds_alternative<FmConfig>(voices.source[i]))
+            if (config::SourceCapabilityOf(voices.source[i]).hasModTargets)
             {
                 NoteOffModulation(voices.waveformModulation[i]);
             }
@@ -410,15 +409,15 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
     {
         for (size_t i = 0; i < size(); i++)
         {
-            if (std::holds_alternative<DrumConfig>(source[i]))
+            const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
+            if (cap.isOneShot)
             {
                 continue;
             }
             if (released[i] == 0 && this->noteInstanceID[i] == noteInstanceID)
             {
                 NoteOff(env[i]);
-                if (std::holds_alternative<WaveformConfig>(source[i]) ||
-                    std::holds_alternative<FmConfig>(source[i]))
+                if (cap.hasModTargets)
                 {
                     NoteOffModulation(waveformModulation[i]);
                 }
@@ -431,15 +430,15 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
     // 旧互換経路: 既存データや異常入力でIDが取れない場合のみ利用。
     for (size_t i = 0; i < size(); i++)
     {
-        if (std::holds_alternative<DrumConfig>(source[i]))
+        const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
+        if (cap.isOneShot)
         {
             continue;
         }
         if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
         {
             NoteOff(env[i]);
-            if (std::holds_alternative<WaveformConfig>(source[i]) ||
-                std::holds_alternative<FmConfig>(source[i]))
+            if (cap.hasModTargets)
             {
                 NoteOffModulation(waveformModulation[i]);
             }
