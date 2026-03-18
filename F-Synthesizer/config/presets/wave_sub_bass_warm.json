@@ -1,0 +1,62 @@
+{
+  "midiPath": "../../assets/midi/smoothing_phaseF_ab.mid",
+  "wavPath": "../../output/wave_sub_bass_warm.wav",
+  "targetChannel": 0,
+  "defaultWave": "saw",
+  "initialSeconds": 10,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.5,
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.005,
+      "decaySec": 0.12,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.18,
+      "source": {
+        "type": "waveform",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 3.0,
+        "unisonSpread": 0.1,
+        "subOscLevel": 0.8,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 1800.0,
+        "filterResonance": 1.2,
+        "filterKeytrack": 0.5,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 0.8,
+            "depth": 0.12,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.001,
+            "decaySec": 0.18,
+            "sustainLevel": 0.55,
+            "releaseSec": 0.14
+          },
+          "routes": {
+            "0": { "source": "env2", "destination": "filterCutoff", "amount": 0.38, "enabled": true },
+            "1": { "source": "lfo1", "destination": "filterCutoff", "amount": 0.08, "enabled": true },
+            "2": { "source": "none", "destination": "none", "amount": 0, "enabled": false },
+            "3": { "source": "none", "destination": "none", "amount": 0, "enabled": false },
+            "4": { "source": "none", "destination": "none", "amount": 0, "enabled": false },
+            "5": { "source": "none", "destination": "none", "amount": 0, "enabled": false },
+            "6": { "source": "none", "destination": "none", "amount": 0, "enabled": false },
+            "7": { "source": "none", "destination": "none", "amount": 0, "enabled": false }
+          }
+        }
+      }
+    }
+  }
+}

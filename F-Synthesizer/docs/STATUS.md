@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-19 (SubtractiveConfig 新設・Filter Keytrack 実装・基盤 10 ファイル更新)
+Last Updated: 2026-03-19 (SubtractiveConfig 廃止・filterKeytrack を WaveformConfig へ移行・プリセット/サンプル追加)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -19,9 +19,9 @@ Branch: `main`
 
 ## Next 3
 
-1. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
-2. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
-3. `foundation`: なし（Render Contract の確認は Renderer/Voices 変更時のみ実施）
+1. `sub-verify`: `phaseE_sub_keytrack_A/B.json` と `wave_sub_bass_warm/lead_resonant.json` を実機レンダして耳確認する
+2. `doc-sync`: Musicタブ導線変更（Reference廃止）に伴う説明文/ガイド差分を点検する
+3. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
 
 ## Blockers
 
