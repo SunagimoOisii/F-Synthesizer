@@ -87,10 +87,6 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 `gui_smoke.ps1` はデバッグ用途の直接実行向け。通常運用では `check.ps1` 経由を正とする。
 
-## GUI Acceptance (Manual)
-
-- `docs-archive/gui-migration/GUI_V8_ACCEPTANCE_TEST.md`
-
 ## GUI Validation Contract
 
 `Run` 前に以下を検証する。
@@ -119,7 +115,6 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 - 長期判断（恒久）: `docs/DECISIONS.md`
 - 長期契約（恒久）: `docs/synth-methods/foundation-contract.md`
 - ADR詳細（恒久）: `docs/architecture/*.md` の `Special Notes`
-- 履歴退避（恒久・参照専用）: `docs-archive/`
 
 手順:
 1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しし、更新要否を判定する

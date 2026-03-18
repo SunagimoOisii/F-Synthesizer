@@ -60,6 +60,23 @@ struct VoicesSoA
     size_t CleanupPending(std::vector<uint8_t>& keepScratch);
 };
 
+enum class CommonShaperKind
+{
+    None,
+    WaveformFilter
+};
+
+// source render -> common shaper -> modulation apply の受け渡し最小単位。
+// 方式追加時はこの構造を介して段階的に共通レイヤーへ接続する。
+struct SourceRenderFrame
+{
+    double sample = 0.0;
+    double ampMul = 1.0;
+    double sourceGain = 1.0;
+    double shaperCutoffHz = 0.0;
+    CommonShaperKind shaperKind = CommonShaperKind::None;
+};
+
 struct RenderState
 {
     // RenderMIDIEvents の 1 実行スコープで共有される可変状態。

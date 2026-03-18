@@ -10,6 +10,16 @@ namespace
 {
 constexpr double kPi = 3.14159265358979323846;
 
+struct VoiceRenderInput
+{
+    double dt = 0.0;
+    double mixGain = 1.0;
+    double pitchFactor = 1.0;
+    double ccGain = 1.0;
+    double velGain = 1.0;
+    double envGain = 1.0;
+};
+
 double WrapPhase(double phase)
 {
     phase -= std::floor(phase);
@@ -122,6 +132,189 @@ double RenderDrumSample(const DrumConfig& src, VoicesSoA& voices, size_t i, doub
     voices.drumTime[i] += dt;
     return w;
 }
+
+void RenderWaveformSource(
+    const WaveformConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    SourceRenderFrame& frame)
+{
+    ModulationResult mod = EvaluateModulation(
+        voices.waveformModulation[i],
+        src.modulation,
+        in.dt);
+    double pitchMul = mod.pitchMul;
+    if (src.smoothing.enabled && src.smoothing.pitchEnabled)
+    {
+        SetSmoothedTarget(voices.waveformPitchSmoothing[i], pitchMul);
+        pitchMul = StepSmoothedParam(voices.waveformPitchSmoothing[i]);
+    }
+
+    const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
+    const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
+    const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
+    const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
+    const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+
+    double unisonSum = 0.0;
+    for (int uv = 0; uv < unisonVoices; uv++)
+    {
+        const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
+        const double centered = (pos * 2.0) - 1.0;
+        const double cents = centered * detuneCents;
+        const double ratio = std::pow(2.0, cents / 1200.0);
+        const double phaseOffset = centered * spread * 0.08;
+        const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
+        const double uvInc = phaseInc * ratio;
+        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
+    }
+
+    double mainWave = unisonSum / unisonVoices;
+    if (subOscLevel > 0.0)
+    {
+        const double subPhase = WrapPhase(voices.phase[i] * 0.5);
+        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
+        mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+    }
+
+    frame.sample = mainWave;
+    frame.ampMul = mod.ampMul;
+    frame.shaperKind = CommonShaperKind::WaveformFilter;
+    frame.shaperCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
+
+    voices.phase[i] += phaseInc;
+    if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
+}
+
+void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)
+{
+    frame.sample = SampleNoise(src.noise);
+}
+
+void RenderFmSource(
+    const FmConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    SourceRenderFrame& frame)
+{
+    const ModulationResult mod = EvaluateModulation(
+        voices.waveformModulation[i],
+        src.modulation,
+        in.dt);
+    const double carrierInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.carrierRatio;
+    const double modInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.modRatio;
+    const double fmIndex = src.index * mod.fmIndexMul;
+    frame.sample = SampleFmPhase(
+        src.carrierWave,
+        src.modWave,
+        voices.fmCarrierPhase[i],
+        voices.fmModPhase[i],
+        carrierInc,
+        modInc,
+        fmIndex);
+    frame.ampMul = mod.ampMul;
+    frame.sourceGain = src.outLevel;
+
+    voices.fmCarrierPhase[i] += carrierInc;
+    if (voices.fmCarrierPhase[i] >= 1.0) voices.fmCarrierPhase[i] -= 1.0;
+    voices.fmModPhase[i] += modInc;
+    if (voices.fmModPhase[i] >= 1.0) voices.fmModPhase[i] -= 1.0;
+}
+
+void RenderDrumSource(
+    const DrumConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    int sampleRate,
+    SourceRenderFrame& frame)
+{
+    const double drumGain = (src.gain > 0.0) ? src.gain : 1.0;
+    frame.sample = RenderDrumSample(src, voices, i, in.dt, sampleRate);
+    frame.sourceGain = drumGain;
+}
+
+void RenderSourceFrame(
+    const SourceConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    int sampleRate,
+    SourceRenderFrame& frame)
+{
+    std::visit([&](const auto& source)
+    {
+        using T = std::decay_t<decltype(source)>;
+        if constexpr (std::is_same_v<T, WaveformConfig>)
+        {
+            RenderWaveformSource(source, voices, i, in, frame);
+        }
+        else if constexpr (std::is_same_v<T, NoiseConfig>)
+        {
+            RenderNoiseSource(source, frame);
+        }
+        else if constexpr (std::is_same_v<T, FmConfig>)
+        {
+            RenderFmSource(source, voices, i, in, frame);
+        }
+        else if constexpr (std::is_same_v<T, DrumConfig>)
+        {
+            RenderDrumSource(source, voices, i, in, sampleRate, frame);
+        }
+    }, src);
+}
+
+void ApplyCommonShaper(
+    const SourceConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    SourceRenderFrame& frame)
+{
+    std::visit([&](const auto& source)
+    {
+        using T = std::decay_t<decltype(source)>;
+        if constexpr (std::is_same_v<T, WaveformConfig>)
+        {
+            if (frame.shaperKind != CommonShaperKind::WaveformFilter)
+            {
+                return;
+            }
+
+            double filterCutoffHz = frame.shaperCutoffHz;
+            if (source.smoothing.enabled)
+            {
+                SetSmoothedTarget(voices.waveformFilterCutoffSmoothing[i], filterCutoffHz);
+                filterCutoffHz = StepSmoothedParam(voices.waveformFilterCutoffSmoothing[i]);
+            }
+            SetFilterCutoffHz(voices.waveformFilter[i], filterCutoffHz);
+            frame.sample = ProcessFilterSample(voices.waveformFilter[i], frame.sample);
+        }
+    }, src);
+}
+
+void ApplyModulationLayer(
+    const SourceConfig& src,
+    VoicesSoA& voices,
+    size_t i,
+    SourceRenderFrame& frame)
+{
+    std::visit([&](const auto& source)
+    {
+        using T = std::decay_t<decltype(source)>;
+        if constexpr (std::is_same_v<T, WaveformConfig>)
+        {
+            double ampMul = frame.ampMul;
+            if (source.smoothing.enabled)
+            {
+                SetSmoothedTarget(voices.waveformAmpSmoothing[i], ampMul);
+                ampMul = StepSmoothedParam(voices.waveformAmpSmoothing[i]);
+            }
+            frame.ampMul = ampMul;
+        }
+    }, src);
+}
 } // namespace
 
 double RenderVoices(RenderState& state, const SoundData& sound)
@@ -150,7 +343,10 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             continue;
         }
 
-        const double velGain = VelocityToGain(voices.velocity[i]);
+        VoiceRenderInput in{};
+        in.dt = dt;
+        in.velGain = VelocityToGain(voices.velocity[i]);
+        in.envGain = envGain;
         const int ch = voices.channelIndex[i];
         // mute/solo/mixGain 判定は事前計算済みフラグを参照する。
         // 目的: ホットループの分岐段数を減らし、分岐予測ミスを抑える。
@@ -160,104 +356,23 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         {
             continue;
         }
-        const double mixGain = state.channelMixGain[ch];
-        const double pitchFactor = state.channelPitch[ch];
-        const double ccGain = state.channelCc7[ch] * state.channelCc11[ch];
+        in.mixGain = state.channelMixGain[ch];
+        in.pitchFactor = state.channelPitch[ch];
+        in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
 
-        double w = 0.0;
-        std::visit([&](const auto& src)
-        {
-            using T = std::decay_t<decltype(src)>;
-            if constexpr (std::is_same_v<T, WaveformConfig>)
-            {
-                ModulationResult mod = EvaluateModulation(
-                    voices.waveformModulation[i],
-                    src.modulation,
-                    dt);
-                double pitchMul = mod.pitchMul;
-                if (src.smoothing.enabled && src.smoothing.pitchEnabled)
-                {
-                    SetSmoothedTarget(voices.waveformPitchSmoothing[i], pitchMul);
-                    pitchMul = StepSmoothedParam(voices.waveformPitchSmoothing[i]);
-                }
-                const double phaseInc = voices.phaseInc[i] * pitchFactor * pitchMul;
-                const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
-                const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
-                const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
-                const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+        SourceRenderFrame frame{};
+        RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
+        ApplyCommonShaper(voices.source[i], voices, i, frame);
+        ApplyModulationLayer(voices.source[i], voices, i, frame);
 
-                double unisonSum = 0.0;
-                for (int uv = 0; uv < unisonVoices; uv++)
-                {
-                    const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
-                    const double centered = (pos * 2.0) - 1.0;
-                    const double cents = centered * detuneCents;
-                    const double ratio = std::pow(2.0, cents / 1200.0);
-                    const double phaseOffset = centered * spread * 0.08;
-                    const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
-                    const double uvInc = phaseInc * ratio;
-                    unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
-                }
-                double mainWave = unisonSum / unisonVoices;
-                if (subOscLevel > 0.0)
-                {
-                    const double subPhase = WrapPhase(voices.phase[i] * 0.5);
-                    const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
-                    mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
-                }
-                double filterCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
-                double ampMul = mod.ampMul;
-                if (src.smoothing.enabled)
-                {
-                    SetSmoothedTarget(voices.waveformFilterCutoffSmoothing[i], filterCutoffHz);
-                    filterCutoffHz = StepSmoothedParam(voices.waveformFilterCutoffSmoothing[i]);
-                    SetSmoothedTarget(voices.waveformAmpSmoothing[i], ampMul);
-                    ampMul = StepSmoothedParam(voices.waveformAmpSmoothing[i]);
-                }
-                SetFilterCutoffHz(voices.waveformFilter[i], filterCutoffHz);
-                w = ProcessFilterSample(voices.waveformFilter[i], mainWave);
-                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain * ampMul;
-
-                voices.phase[i] += phaseInc;
-                if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
-            }
-            else if constexpr (std::is_same_v<T, NoiseConfig>)
-            {
-                w = SampleNoise(src.noise);
-                sum += mixGain * voices.amp[i] * ccGain * velGain * w * envGain;
-            }
-            else if constexpr (std::is_same_v<T, FmConfig>)
-            {
-                const ModulationResult mod = EvaluateModulation(
-                    voices.waveformModulation[i],
-                    src.modulation,
-                    dt);
-                const double carrierInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul * src.carrierRatio;
-                const double modInc = voices.phaseInc[i] * pitchFactor * mod.pitchMul * src.modRatio;
-                const double fmIndex = src.index * mod.fmIndexMul;
-                w = SampleFmPhase(
-                    src.carrierWave,
-                    src.modWave,
-                    voices.fmCarrierPhase[i],
-                    voices.fmModPhase[i],
-                    carrierInc,
-                    modInc,
-                    fmIndex);
-                sum += mixGain * voices.amp[i] * src.outLevel * ccGain * velGain * w * envGain * mod.ampMul;
-
-                voices.fmCarrierPhase[i] += carrierInc;
-                if (voices.fmCarrierPhase[i] >= 1.0) voices.fmCarrierPhase[i] -= 1.0;
-                voices.fmModPhase[i] += modInc;
-                if (voices.fmModPhase[i] >= 1.0) voices.fmModPhase[i] -= 1.0;
-            }
-            else if constexpr (std::is_same_v<T, DrumConfig>)
-            {
-                // Drum は NoteOn 後に自動リリースへ遷移する one-shot 系を想定する。
-                const double drumGain = (src.gain > 0.0) ? src.gain : 1.0;
-                w = RenderDrumSample(src, voices, i, dt, sound.fs);
-                sum += mixGain * drumGain * voices.amp[i] * ccGain * velGain * w * envGain;
-            }
-        }, voices.source[i]);
+        sum += in.mixGain *
+            frame.sourceGain *
+            voices.amp[i] *
+            in.ccGain *
+            in.velGain *
+            frame.sample *
+            in.envGain *
+            frame.ampMul;
     }
 
     return sum;

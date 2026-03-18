@@ -21,8 +21,6 @@
 | `gui.md` | GUI責務や状態遷移を変更する時 |
 | `config-and-io.md` | Config/I/O境界を変更する時 |
 
-補足:
-- 旧 `HANDBOOK.md` は重複整理のため `docs-archive/architecture/HANDBOOK-2026-03-08.md` へ移管済み。
 
 ## 3. 更新ルール（軽量）
 

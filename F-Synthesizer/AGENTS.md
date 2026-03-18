@@ -5,12 +5,10 @@
 ## コンテキスト読み込み順
 
 1. `agents/core/AGENT.md`
-2. `agents/core/PRINCIPLES.md`
-3. `agents/core/OUTPUT_RULES.md`
-4. `agents/core/DOC_OPERATIONS.md`
-5. `agents/core/INSTRUCTIONS.md`
-6. `agents/standards/COMMENT_GUIDELINE.md`（必須版）
-7. `agents/safety/RISK_POLICY.md`（存在する場合）
+2. `agents/core/OUTPUT_RULES.md`
+3. `agents/core/DOC_OPERATIONS.md`
+4. `agents/standards/COMMENT_GUIDELINE.md`（必須版）
+5. `agents/safety/RISK_POLICY.md`（存在する場合）
 
 ## 必要時のみ参照
 

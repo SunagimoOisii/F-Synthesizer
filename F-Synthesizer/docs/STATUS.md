@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-19 (smoothing 契約を waveform 限定へ統一)
+Last Updated: 2026-03-19 (Rendererの source/shaper/modulation 境界を分離)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -10,6 +10,7 @@ Branch: `main`
 - 優先: `doc-sync` / `gui-help`（実機確認） / 軽量運用の維持
 - 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
 - `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
+- Renderer 内部を `source render -> common shaper -> modulation apply -> mix` へ分離し、`SourceRenderFrame` で段間データを受け渡す構造へ整理
 - smoothing 方針を `waveform=適用` / `fm,noise,drum=非適用` に統一し、非対応方式の `source.smoothing` は load 時エラー化
 - architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
 - waveform / fm の modulation route 編集GUIを `0..7` まで拡張（サマリ表示含む）

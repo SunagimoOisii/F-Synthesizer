@@ -57,13 +57,16 @@
 ### 2.3 Render Contract 契約
 
 - 1サンプル処理順を固定する。
-- 標準順序:
+- 現行順序（2026-03-19）:
   1. voice state 更新
   2. source render（方式固有）
-  3. shaper（filter / drive など共通処理）
-  4. modulation 適用
+  3. common shaper（filter / drive など共通処理）
+  4. modulation 適用（後段乗算）
   5. mix / output
-- 例外は方式ドキュメントに明記し、理由を残す。
+- source render 内で「発振に直結する modulation サンプリング（pitch など）」を行うことは許可する。
+- waveform/fm の現行マッピング:
+  - waveform: `pitchMul` は 2 で参照、`filterCutoff` は 3、`amp` は 4
+  - fm: `pitchMul/fm.index` は 2、`amp` は 4
 
 ### 2.4 Modulation Routing 契約
 

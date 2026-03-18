@@ -87,6 +87,5 @@ source type: `drum`, `drumkit`
 
 ## H. 運用固定（Phase E）
 
-- AB手順と記録テンプレートを以下へ固定:
-  - `docs-archive/synth-migration/WAVE_DRUM_AB_RUNBOOK.md`
+- AB比較は `scripts/gui_smoke.ps1` と手動試聴で実施する。
 

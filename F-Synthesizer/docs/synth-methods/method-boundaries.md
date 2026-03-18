@@ -1,6 +1,6 @@
 # 合成方式の責務境界（重複防止ガイド）
 
-最終更新: 2026-03-08  
+最終更新: 2026-03-19  
 状態: Draft（運用開始）
 
 ## 1. 目的
@@ -12,12 +12,21 @@
 
 - `Oscillator Layer`:
   - 音の発振そのもの（波形生成、位相、チューニング、ユニゾン）
+  - source固有で必須な前段制御（例: pitch へ効く modulation サンプリング）
 - `Shaper Layer`:
-  - 発振後の成形（フィルタ、サチュレーション等）
+  - 発振後の共通成形（filter / drive 等）
+  - `SourceRenderFrame` を入力に受ける共通処理として実装する
 - `Modulation Layer`:
-  - 時間変化制御（LFO、追加Env、ルーティング）
+  - source/shaper 後段で効く変調量の適用（例: ampMul）
 - `Mixer/Output Layer`:
   - mute/solo/level/pan/gain、最終出力
+
+現行Rendererでの契約順（2026-03-19）:
+1. voice state 更新
+2. source render（方式固有）
+3. common shaper
+4. modulation apply（後段乗算）
+5. mix / output
 
 ## 3. 方式ごとの責務範囲（In / Out）
 
@@ -28,7 +37,7 @@
   - band-limited 品質改善
   - `unison`, `sub-osc`, 位相挙動
 - Out:
-  - 減算フィルタ本体
+  - 共通shaperとして適用されるフィルタ段の再実装
   - 汎用LFOマトリクス
   - 空間系/マスター系エフェクト
 
