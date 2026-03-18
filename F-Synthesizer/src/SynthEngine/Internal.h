@@ -88,7 +88,7 @@ struct Voice
 enum class CommonShaperKind
 {
     None,
-    WaveformFilter
+    BiquadFilter
 };
 
 // source render -> common shaper -> modulation apply の受け渡し最小単位。

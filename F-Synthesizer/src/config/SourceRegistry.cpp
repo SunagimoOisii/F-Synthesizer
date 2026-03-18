@@ -36,7 +36,7 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceKind::Fm,
         "fm",
         "fm",
-        SourceCapability{ true, true, true, true, true, false, false },
+        SourceCapability{ true, true, false, true, true, false, false },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
     },
     {

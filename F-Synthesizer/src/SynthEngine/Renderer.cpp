@@ -182,7 +182,7 @@ void RenderWaveformSource(
 
     frame.sample = mainWave;
     frame.ampMul = mod.ampMul;
-    frame.shaperKind = CommonShaperKind::WaveformFilter;
+    frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
 
     voices.phase[i] += phaseInc;
@@ -275,27 +275,23 @@ void ApplyCommonShaper(
     size_t i,
     SourceRenderFrame& frame)
 {
-    std::visit([&](const auto& source)
+    if (frame.shaperKind != CommonShaperKind::BiquadFilter)
     {
-        using T = std::decay_t<decltype(source)>;
-        if constexpr (std::is_same_v<T, WaveformConfig>)
-        {
-            auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
-            if (frame.shaperKind != CommonShaperKind::WaveformFilter)
-            {
-                return;
-            }
+        return;
+    }
 
-            double filterCutoffHz = frame.shaperCutoffHz;
-            if (source.smoothing.enabled)
-            {
-                SetSmoothedTarget(ws.filterCutoffSmoothing, filterCutoffHz);
-                filterCutoffHz = StepSmoothedParam(ws.filterCutoffSmoothing);
-            }
-            SetFilterCutoffHz(ws.filter, filterCutoffHz);
-            frame.sample = ProcessFilterSample(ws.filter, frame.sample);
+    if (auto* ws = std::get_if<WaveformVoiceState>(&voices.sourceState[i]))
+    {
+        const auto* waveformSrc = std::get_if<WaveformConfig>(&src);
+        double filterCutoffHz = frame.shaperCutoffHz;
+        if (waveformSrc && waveformSrc->smoothing.enabled)
+        {
+            SetSmoothedTarget(ws->filterCutoffSmoothing, filterCutoffHz);
+            filterCutoffHz = StepSmoothedParam(ws->filterCutoffSmoothing);
         }
-    }, src);
+        SetFilterCutoffHz(ws->filter, filterCutoffHz);
+        frame.sample = ProcessFilterSample(ws->filter, frame.sample);
+    }
 }
 
 void ApplyModulationLayer(
