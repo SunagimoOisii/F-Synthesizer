@@ -108,7 +108,28 @@ struct DrumKitConfig
     std::array<DrumConfig, 128> map;
 };
 
-using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig>;
+// 減算合成方式の設定集合。
+// 発振器 + LowPassフィルタ + filterKeytrack + Modulation（Env2 = filter envelope）。
+// smoothing は waveform 専用のため非対応（契約 §2.7）。
+struct SubtractiveConfig
+{
+    // 発振器（waveformと同レイヤー、重複実装を避けて共通化対象外）。
+    WaveType wave = WaveType::Saw;
+    int unisonVoices = 1;
+    double unisonDetuneCents = 0.0;
+    double unisonSpread = 0.0;
+    double subOscLevel = 0.0;
+    // フィルタ（減算合成の中核）。デフォルトは LowPass。
+    FilterMode filterMode = FilterMode::LowPass;
+    double filterCutoffHz = 4000.0;
+    double filterResonance = 0.707;
+    // キートラック量（0.0=なし, 1.0=フルトラック）。基準ノートは C4(60)。
+    double filterKeytrack = 0.5;
+    // Modulation（LFO/Env2 → Pitch/Amp/FilterCutoff）。Env2 がフィルタエンベロープを担う。
+    ModulationConfig modulation{};
+};
+
+using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig, SubtractiveConfig>;
 
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。

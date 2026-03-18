@@ -388,6 +388,45 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     return true;
 }
 
+bool SubtractiveSchemaValue(const SubtractiveConfig& sub, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(sub.unisonVoices); return true; }
+    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = sub.unisonDetuneCents; return true; }
+    if (std::string_view(e.id) == "unisonSpread") { outValue = sub.unisonSpread; return true; }
+    if (std::string_view(e.id) == "subOscLevel") { outValue = sub.subOscLevel; return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = sub.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = sub.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterKeytrack") { outValue = sub.filterKeytrack; return true; }
+    return false;
+}
+
+bool ValidateSubtractiveBySchema(const SubtractiveConfig& sub, std::string& err)
+{
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Subtractive, schema, schemaCount) || schema == nullptr)
+    {
+        err = "subtractive schema is not defined";
+        return false;
+    }
+
+    for (size_t i = 0; i < schemaCount; i++)
+    {
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (!SubtractiveSchemaValue(sub, e, value))
+        {
+            err = "subtractive schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+        if (!ValidateSchemaRange("subtractive", e, value, false, err))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ValidateSmoothingSupport(
     const std::string& sourceObjText,
     SourceKind sourceKind,
@@ -687,6 +726,64 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             }
         }
         outSource = kit;
+        return true;
+    }
+    case SourceKind::Subtractive:
+    {
+        // wave は必須、それ以外は任意（省略時は SubtractiveConfig のデフォルト値を使う）。
+        auto wave = ReadJSONString(sourceObjText, "wave");
+        if (!wave)
+        {
+            err = "subtractive source requires 'wave'";
+            return false;
+        }
+        WaveType w{};
+        if (!TryParseWaveType(*wave, w))
+        {
+            err = "invalid subtractive wave: " + *wave;
+            return false;
+        }
+        SubtractiveConfig sub{};
+        sub.wave = w;
+        if (auto v = ReadJSONInt(sourceObjText, "unisonVoices")) sub.unisonVoices = *v;
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonDetuneCents")) sub.unisonDetuneCents = *v;
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonSpread")) sub.unisonSpread = *v;
+        if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel")) sub.subOscLevel = *v;
+        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+        {
+            FilterMode mode{};
+            if (!TryParseFilterMode(*v, mode))
+            {
+                err = "invalid subtractive.filterMode: " + *v;
+                return false;
+            }
+            sub.filterMode = mode;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz")) sub.filterCutoffHz = *v;
+        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance")) sub.filterResonance = *v;
+        if (auto v = ReadJSONDouble(sourceObjText, "filterKeytrack")) sub.filterKeytrack = *v;
+        std::string modulationObj;
+        bool foundModulation = false;
+        if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
+        {
+            return false;
+        }
+        if (foundModulation)
+        {
+            if (!ParseModulationObject(modulationObj, sub.modulation, err))
+            {
+                return false;
+            }
+        }
+        if (!ValidateSubtractiveBySchema(sub, err))
+        {
+            return false;
+        }
+        if (!ValidateModulation(sub.modulation, false, "subtractive.modulation", err))
+        {
+            return false;
+        }
+        outSource = sub;
         return true;
     }
     case SourceKind::Count:

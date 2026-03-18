@@ -633,6 +633,21 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             out << "\n";
             WriteIndent(out, indent + 2); out << "}\n";
         }
+        else if constexpr (std::is_same_v<T, SubtractiveConfig>)
+        {
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Subtractive) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
+            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
+            WriteModulationConfig(out, v.modulation, indent + 2);
+            out << "\n";
+        }
         }, src);
     WriteIndent(out, indent); out << "}";
 }

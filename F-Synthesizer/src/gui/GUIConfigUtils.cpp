@@ -120,6 +120,19 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                 }
                 return true;
             }
+            else if constexpr (std::is_same_v<T, SubtractiveConfig>)
+            {
+                return av.wave == bv->wave &&
+                    av.unisonVoices == bv->unisonVoices &&
+                    NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
+                    NearlyEq(av.unisonSpread, bv->unisonSpread) &&
+                    NearlyEq(av.subOscLevel, bv->subOscLevel) &&
+                    av.filterMode == bv->filterMode &&
+                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
+                    NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
+                    ModulationConfigEquals(av.modulation, bv->modulation);
+            }
             return false;
         }, a);
 }

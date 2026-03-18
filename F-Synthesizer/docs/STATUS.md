@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-19 (DrumConfig をロード層のみに封じ込め・ChannelConfig.source への直接混入を排除)
+Last Updated: 2026-03-19 (SubtractiveConfig 新設・Filter Keytrack 実装・基盤 10 ファイル更新)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。

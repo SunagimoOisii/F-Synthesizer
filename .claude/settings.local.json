@@ -10,7 +10,9 @@
       "Bash(grep -r \"unused\\\\|never\\\\s*used\\\\|not\\\\s*used\\\\|can\\\\s*remove\" F-Synthesizer/docs --include=*.md)",
       "Bash(grep -n \"^int Run\" F-Synthesizer/src/app/*.cpp)",
       "Bash(grep -A 5 \"^int Run\" F-Synthesizer/src/app/*.cpp)",
-      "Bash(pwsh ./F-Synthesizer/scripts/check.ps1)"
+      "Bash(pwsh ./F-Synthesizer/scripts/check.ps1)",
+      "Bash(powershell -File \"./F-Synthesizer/scripts/check.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"./F-Synthesizer/scripts/check.ps1\")"
     ]
   }
 }
