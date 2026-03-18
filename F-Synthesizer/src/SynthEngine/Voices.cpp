@@ -135,18 +135,6 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(fs.filter, fm->filterResonance);
         ResetFilterState(fs.filter);
     }
-    else if (const auto* sub = std::get_if<SubtractiveConfig>(&cfg.source))
-    {
-        voices.sourceState[i] = SubtractiveVoiceState{};
-        auto& ss = std::get<SubtractiveVoiceState>(voices.sourceState[i]);
-        ResetModulationState(ss.modulation);
-        NoteOnModulation(ss.modulation);
-        SetFilterSampleRate(ss.filter, sampleRate);
-        SetFilterMode(ss.filter, sub->filterMode);
-        SetFilterCutoffHz(ss.filter, sub->filterCutoffHz);
-        SetFilterResonance(ss.filter, sub->filterResonance);
-        ResetFilterState(ss.filter);
-    }
     else if (std::holds_alternative<NoiseConfig>(cfg.source))
     {
         voices.sourceState[i] = NoiseVoiceState{};

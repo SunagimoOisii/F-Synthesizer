@@ -200,59 +200,6 @@ void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)
     frame.sample = SampleNoise(src.noise);
 }
 
-void RenderSubtractiveSource(
-    const SubtractiveConfig& src,
-    Voice& voices,
-    size_t i,
-    const VoiceRenderInput& in,
-    SourceRenderFrame& frame)
-{
-    auto& ss = std::get<SubtractiveVoiceState>(voices.sourceState[i]);
-    const ModulationResult mod = EvaluateModulation(ss.modulation, src.modulation, in.dt);
-
-    const double phaseInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul;
-    const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
-    const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
-    const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
-    const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
-
-    double unisonSum = 0.0;
-    for (int uv = 0; uv < unisonVoices; uv++)
-    {
-        const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
-        const double centered = (pos * 2.0) - 1.0;
-        const double cents = centered * detuneCents;
-        const double ratio = std::pow(2.0, cents / 1200.0);
-        const double phaseOffset = centered * spread * 0.08;
-        const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
-        const double uvInc = phaseInc * ratio;
-        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
-    }
-    double mainWave = unisonSum / unisonVoices;
-    if (subOscLevel > 0.0)
-    {
-        const double subPhase = WrapPhase(voices.phase[i] * 0.5);
-        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
-        mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
-    }
-
-    // filterKeytrack: 基準ノート C4(60) からの半音差に比例してカットオフを動かす。
-    double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;
-    if (src.filterKeytrack != 0.0)
-    {
-        const double keytrackRatio = std::pow(2.0, src.filterKeytrack * (voices.noteNumber[i] - 60) / 12.0);
-        effectiveCutoff *= keytrackRatio;
-    }
-
-    frame.sample = mainWave;
-    frame.ampMul = mod.ampMul;
-    frame.shaperKind = CommonShaperKind::BiquadFilter;
-    frame.shaperCutoffHz = effectiveCutoff;
-
-    voices.phase[i] += phaseInc;
-    if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
-}
-
 void RenderFmSource(
     const FmConfig& src,
     Voice& voices,
@@ -326,10 +273,6 @@ void RenderSourceFrame(
         else if constexpr (std::is_same_v<T, DrumConfig>)
         {
             RenderDrumSource(source, voices, i, in, sampleRate, frame);
-        }
-        else if constexpr (std::is_same_v<T, SubtractiveConfig>)
-        {
-            RenderSubtractiveSource(source, voices, i, in, frame);
         }
     }, src);
 }

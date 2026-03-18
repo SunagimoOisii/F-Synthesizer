@@ -44,22 +44,12 @@ struct DrumVoiceState
 
 struct DrumKitVoiceState : DrumVoiceState {};
 
-// 減算合成方式の Voice 実行状態。
-// filter: ApplyCommonShaper の if constexpr (requires { st.filter; }) で自動適用される。
-// filterCutoffSmoothing は持たない（waveform 専用契約 §2.7 に従い省略）。
-struct SubtractiveVoiceState
-{
-    FilterInstance filter;
-    ModulationRuntimeState modulation;
-};
-
 using PerSourceVoiceState = std::variant<
     WaveformVoiceState,
     FmVoiceState,
     NoiseVoiceState,
     DrumVoiceState,
-    DrumKitVoiceState,
-    SubtractiveVoiceState>;
+    DrumKitVoiceState>;
 
 struct Voice
 {

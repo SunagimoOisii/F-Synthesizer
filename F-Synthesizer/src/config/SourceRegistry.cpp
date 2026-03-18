@@ -53,14 +53,6 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceCapability{ false, true, false, false, false, true, true },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Stack, SourceLifecycleSteal::RejectNew, false, true }
     },
-    {
-        SourceKind::Subtractive,
-        "subtractive",
-        "subtractive",
-        // hasPitch/hasAmpEnv/hasFilterIn/hasModTargets/supportsPolyphony/isOneShot/isPercussion
-        SourceCapability{ true, true, true, true, true, false, false },
-        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
-    },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 7> kWaveformParameterSchema{ {
@@ -107,16 +99,6 @@ constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
 // 1本の schema 配列では表現しない。
 constexpr std::array<SourceParameterSchemaEntry, 0> kDrumKitParameterSchema{};
 
-// wave/filterMode は string enum のため数値スキーマに含めない（LoadSource 側で別途検証）。
-constexpr std::array<SourceParameterSchemaEntry, 7> kSubtractiveParameterSchema{ {
-    { "unisonVoices",       SourceParameterType::Int,   1.0,  8.0,     1.0   },
-    { "unisonDetuneCents",  SourceParameterType::Float, 0.0,  120.0,   0.0   },
-    { "unisonSpread",       SourceParameterType::Float, 0.0,  1.0,     0.0   },
-    { "subOscLevel",        SourceParameterType::Float, 0.0,  2.0,     0.0   },
-    { "filterCutoffHz",     SourceParameterType::Float, 10.0, 20000.0, 4000.0},
-    { "filterResonance",    SourceParameterType::Float, 0.1,  18.0,    0.707 },
-    { "filterKeytrack",     SourceParameterType::Float, 0.0,  1.0,     0.5   },
-} };
 } // namespace
 
 bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind)
@@ -178,7 +160,6 @@ SourceKind SourceConfigKind(const SourceConfig& src)
     if (std::holds_alternative<FmConfig>(src)) return SourceKind::Fm;
     if (std::holds_alternative<DrumConfig>(src)) return SourceKind::Drum;
     if (std::holds_alternative<DrumKitConfig>(src)) return SourceKind::DrumKit;
-    if (std::holds_alternative<SubtractiveConfig>(src)) return SourceKind::Subtractive;
     return SourceKind::Waveform;
 }
 
@@ -246,10 +227,6 @@ bool TryGetParameterSchema(
         outEntries = kDrumKitParameterSchema.data();
         outCount = 0;
         return true;
-    case SourceKind::Subtractive:
-        outEntries = kSubtractiveParameterSchema.data();
-        outCount = kSubtractiveParameterSchema.size();
-        return true;
     case SourceKind::Count:
         return false;
     }
@@ -284,8 +261,6 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
         kit.map[36] = DrumConfig{ DrumType::Kick };
         return kit;
     }
-    case SourceKind::Subtractive:
-        return SubtractiveConfig{};
     case SourceKind::Count:
         break;
     }
