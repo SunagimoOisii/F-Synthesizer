@@ -58,13 +58,15 @@
   - 減算用フィルタ設計
   - アナログ非線形モデル
 
-### 減算合成（未実装）
+### 減算合成
 
+- 実現方法: waveform source の filterKeytrack + filter envelope（Env2 → filterCutoffHz）
+  の組み合わせで実現する。独立した source type は持たない。
 - In:
-  - 共通フィルタ（LP/HP/BP + resonance）
-  - filter envelope / filter keytrack
+  - filterKeytrack（WaveformConfig に追加済み）
+  - filter envelope は ModulationConfig の Env2 → filterCutoffHz ルートで実現
 - Out:
-  - 発振器固有機能の再実装（waveform/fm/noise側を再利用）
+  - subtractive 専用の source type の追加（waveform で吸収済み）
 
 ### 加算合成（未実装）
 
