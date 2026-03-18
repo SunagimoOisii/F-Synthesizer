@@ -5,10 +5,6 @@
 ## コンテキスト読み込み順
 
 1. `agents/core/AGENT.md`
-2. `agents/core/OUTPUT_RULES.md`
-3. `agents/core/DOC_OPERATIONS.md`
-4. `agents/standards/COMMENT_GUIDELINE.md`（必須版）
-5. `agents/safety/RISK_POLICY.md`（存在する場合）
 
 ## 必要時のみ参照
 
@@ -19,7 +15,7 @@
 - `src/` と `include/` のコメント規約は `agents/standards/COMMENT_GUIDELINE.md` を既定として適用する。
 - 境界条件や運用手順の詳細が必要な場合のみ `agents/standards/COMMENT_GUIDELINE_FULL.md` を参照する。
 - 指示が競合した場合は、ユーザーの明示指示を最優先とする。
-- ドキュメントは `agents/core/DOC_OPERATIONS.md` の運用を適用する。
+- ドキュメントは `agents/core/AGENT.md` のドキュメント運用を適用する。
 
 ## 運用切替（Phase D）
 

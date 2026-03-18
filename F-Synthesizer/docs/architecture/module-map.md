@@ -56,6 +56,11 @@ flowchart LR
 
 変更影響の確認先は `docs/architecture/README.md` の `Impact Map（変更時の影響先）` を参照。
 
+## Sound パラメータ仕様の正本
+
+- Sound パラメータ仕様は `docs/architecture/` と `docs/synth-methods/foundation-contract.md` を正本とする。
+- `docs/SOUND_PARAMETERS.md` は参照導線のみを保持し、仕様値・挙動の重複定義を持たない。
+- 方式境界（Waveform / FM / Noise / DrumKit）の判断は本書の責務境界と `SourceRegistry` 契約に従う。
 ## Foundation契約の境界責務
 
 - source 種別の契約定義（capability / lifecycle / schema）は `docs/synth-methods/foundation-contract.md` を正本として運用する。
@@ -193,4 +198,5 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Alternatives: GUI/Configがそれぞれ独自の種別判定ロジックを保持する案。
 - Impact: 依存方向を `gui -> config(契約)` に整理し、方式追加時の変更漏れリスクを抑制できる。
 - Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp, src/gui/GUIActions.cpp, src/gui/main/MainWindow.inl
+
 

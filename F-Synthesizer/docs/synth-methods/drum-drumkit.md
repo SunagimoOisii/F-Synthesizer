@@ -85,7 +85,3 @@ source type: `drum`, `drumkit`
   - snare/hat: `hpCut/lpCut/noiseLevel` を再配分し、lead帯域との衝突を抑制
   - channel mix の `level/pan/gain` を固定し、書き出しヘッドルームを確保
 
-## H. 運用固定（Phase E）
-
-- AB比較は `scripts/gui_smoke.ps1` と手動試聴で実施する。
-

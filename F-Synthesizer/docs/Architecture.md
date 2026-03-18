@@ -35,6 +35,8 @@ flowchart LR
 - GUI実装は `src/gui/` 配下に集約し、`GUIMain.cpp` と `GUIPianoRoll.cpp` を中心に責務分割している
 - Source契約（capability/lifecycle/schema）の正本は `docs/synth-methods/foundation-contract.md`
 - 設計判断（ADR）は `docs/DECISIONS.md` を正本として運用する
+- パラメータ仕様の正本は `docs/architecture/`（特に `gui.md` / `module-map.md`）と `docs/synth-methods/foundation-contract.md` とする
+- `docs/SOUND_PARAMETERS.md` は参照導線のみ保持し、仕様の詳細は持たない
 
 ## Auto-Generated
 
@@ -62,4 +64,5 @@ flowchart LR
 - `src/io/Writer.cpp` (updated: 2026-03-05 01:12:02)
 - `include/SynthEngine/SynthEngine.h` (updated: 2026-03-19 02:48:34)
 <!-- AUTO-GENERATED:END -->
+
 

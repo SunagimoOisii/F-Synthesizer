@@ -133,8 +133,3 @@ source type: `waveform`
   - modulation amount を軽減してミックス時の揺れを抑制
   - channel mix の level/pan/gain を固定してヘッドルームを確保
 
-## J. 運用固定（Phase E）
-
-- AB比較は `scripts/gui_smoke.ps1` と手動試聴で実施する。
-
-

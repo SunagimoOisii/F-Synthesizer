@@ -108,8 +108,6 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 ## Weekly Maintenance
 
-週 1 回（10〜20分）で実施する。
-
 情報保持ポリシー:
 - 短期入力（次回週次まで）: `docs/STATUS.md` の `Current`
 - 長期判断（恒久）: `docs/DECISIONS.md`
@@ -126,14 +124,3 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
    - それ以外の文書: 差分がある時のみ更新（なければ更新しない）
 3. `docs/architecture/*.md` の `Special Notes` へ追記する場合は、`背景/判断/代替案/影響範囲/関連ファイル` を記入する
 4. 変更がなかった文書は記録しない（`No update` の記載は不要）
-
-週次AI更新の入出力:
-- 入力: `STATUS.md`（短期情報）+ 直近コード差分（git）
-- 出力: `STATUS.md` / `DECISIONS.md` / `foundation-contract.md` / 必要時 `docs/architecture/*.md`
-
-完了チェック:
-- 変更が必要だった文書のみ更新されている
-- 優先事項が変わった場合のみ `STATUS.md` の `Next 3` を更新した
-- 新しい判断がある場合のみ `DECISIONS.md` に追記した
-- 契約変更がある場合のみ `foundation-contract.md` を更新した
-- `docs/architecture/*.md` へ追記した場合、ADR 5項目が埋まっている
