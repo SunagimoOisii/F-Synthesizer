@@ -1,6 +1,6 @@
 # 合成基盤契約（方式横断）
 
-最終更新: 2026-03-08
+最終更新: 2026-03-19
 状態: Frozen（2026-03-08 契約凍結）
 
 ## 1. 目的
@@ -121,7 +121,22 @@
   - 乱数系を変えた時: 再現性確認（seed固定）
   - 高負荷機能を触った時: CPU負荷の簡易比較
 
-## 2.7 監査結果サマリ（2026-03-08）
+### 2.7 Parameter Smoothing 契約
+
+- 方式横断の適用方針:
+  - `waveform`: `適用済み`（amp/pitch/filterCutoff を source 内 smoothing で適用）
+  - `fm`: `未適用`（読み込み/保存/GUIで smoothing 項目を持たない）
+  - `noise`: `未適用`（読み込み/保存/GUIで smoothing 項目を持たない）
+  - `drum` / `drumkit`: `未適用`（one-shot アタック保護のため非適用）
+- Config 契約:
+  - `source.smoothing` は `source.type=waveform` のみ受理する。
+  - `source.type` が `fm/noise/drum/drumkit` の場合、`source.smoothing` はロード時エラーにする（黙殺しない）。
+- 安全制約:
+  - one-shot 系（drum/drumkit）はアタック破壊を避けるため smoothing 非適用を既定とする。
+- 再検討条件:
+  - 方式別に「適用対象パラメータ」「適用帯域（attack/release）」「ABでの peak/rms/clip + 聴感」を定義できた場合のみ導入検討する。
+
+## 2.8 監査結果サマリ（2026-03-19）
 
 - 2.1 Source Capability: 対応済み
 - 2.2 Parameter Schema: 対応済み（最小版維持）
@@ -129,11 +144,12 @@
 - 2.4 Modulation Routing: 対応済み（`fm.index` phase 1）
 - 2.5 Voice Lifecycle: 対応済み（retrigger/steal/one-shot 一致）
 - 2.6 Test Harness: 個人運用の軽量手順へ圧縮
+- 2.7 Parameter Smoothing: 対応済み（waveform限定 + 非対応方式はロード拒否）
 
 履歴監査（アーカイブ）:
 - `docs-archive/synth-methods/foundation-audit-2026-03-05.md`
 
-### 2.8 監査トリガー（個人開発用）
+### 2.9 監査トリガー（個人開発用）
 
 - `SourceRegistry` / `ConfigLoad` / `LoadSource` を変更した時:
   - 2.1 / 2.2 / 2.4 / 2.5 を確認する
@@ -147,7 +163,7 @@
 ## 3. 方式追加時チェック
 
 1. `method-boundaries.md` で責務境界を先に確定する。
-2. 本契約の 2.1〜2.6 を埋める（未定義を残さない）。
+2. 本契約の 2.1〜2.7 を埋める（未定義を残さない）。
 3. 方式別 `md` を更新する。
 4. `STATUS.md` と必要時 `DECISIONS.md` を更新する。
 

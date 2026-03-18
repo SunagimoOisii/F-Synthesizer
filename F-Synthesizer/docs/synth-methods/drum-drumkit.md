@@ -1,6 +1,6 @@
 # Drum / DrumKit
 
-最終更新: 2026-02-23
+最終更新: 2026-03-19
 状態: 実装済み
 source type: `drum`, `drumkit`
 
@@ -32,7 +32,7 @@ source type: `drum`, `drumkit`
 
 - 楽器バリエーションが小さい
 - `drumType` ごとにパラメータ意味が変わり、把握しづらい
-- Parameter Smoothing は未接続（Phase E 判定）
+- Parameter Smoothing は非適用（one-shot アタック保護）
 
 ## D. 改善案
 
@@ -42,9 +42,20 @@ source type: `drum`, `drumkit`
 - 中期:
   - モデル追加（tom/clap/cymbal など）
   - パラメータ UI の文脈表示
-  - one-shot アタックを壊さない限定的 smoothing（リリース帯域のみ）を検証
+  - one-shot アタックを壊さない限定的 smoothing（リリース帯域のみ）を再検討
 - 長期:
   - ドラム専用モジュール化（共通エンベロープ/フィルタ設計）
+
+## I. Smoothing 契約整合（2026-03-19）
+
+- 適用状況:
+  - `未適用`
+- 非適用理由:
+  - drum/drumkit は one-shot 前提で、立ち上がりの遅延はアタック破壊に直結する。
+  - 現行実装は `attack+decay` 到達で自動 release するため、source smoothing の混在は寿命設計を崩しやすい。
+- 再検討条件:
+  - attack 帯域へ影響しない設計（例: release 帯域限定）を先に仕様化できること。
+  - `wave_drum_phaseC_ab.mid` など代表MIDIで AB（peak/rms/clip + 聴感）を通過し、アタック遅れがないこと。
 
 ## E. 保守 / 拡張メモ
 

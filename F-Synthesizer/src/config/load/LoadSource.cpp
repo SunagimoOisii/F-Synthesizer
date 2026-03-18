@@ -386,6 +386,30 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     return true;
 }
 
+bool ValidateSmoothingSupport(
+    const std::string& sourceObjText,
+    SourceKind sourceKind,
+    std::string& err)
+{
+    std::string smoothingObj;
+    bool foundSmoothing = false;
+    if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
+    {
+        return false;
+    }
+    if (!foundSmoothing)
+    {
+        return true;
+    }
+    if (sourceKind == SourceKind::Waveform)
+    {
+        return true;
+    }
+
+    err = "source.smoothing is allowed only for source.type=waveform";
+    return false;
+}
+
 } // namespace
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
@@ -406,6 +430,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         return false;
     }
     if (!ValidateLifecycleContract(sourceObjText, sourceKind, err))
+    {
+        return false;
+    }
+    if (!ValidateSmoothingSupport(sourceObjText, sourceKind, err))
     {
         return false;
     }

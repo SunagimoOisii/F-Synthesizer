@@ -49,6 +49,7 @@ struct WaveformConfig
 struct NoiseConfig
 {
     // ノイズ音源種別。
+    // smoothing は非対応（契約上 waveform 専用）。
     NoiseType noise;
 };
 
@@ -64,6 +65,7 @@ struct FmConfig
     double index;
     double outLevel;
     // 共通Modulationレイヤー（Phase1: fm.index / pitchMul / amp をサポート）。
+    // smoothing は非対応（契約上 waveform 専用）。
     ModulationConfig modulation{};
 };
 
@@ -92,6 +94,7 @@ struct DrumConfig
     double lpCut = 0.0;
     int toneWave = -1;
     int noiseType = -1;
+    // one-shot アタック保護のため smoothing は非対応（契約上 waveform 専用）。
 };
 
 // DrumKit 用の note(0..127) マップ。
