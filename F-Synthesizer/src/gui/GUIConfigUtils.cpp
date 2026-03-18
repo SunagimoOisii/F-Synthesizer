@@ -92,6 +92,7 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     av.filterMode == bv->filterMode &&
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
                     WaveformSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }

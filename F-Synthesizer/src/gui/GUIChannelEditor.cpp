@@ -400,6 +400,7 @@ bool DrawChannelEditor(
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
             wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
             wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
+            wf->filterKeytrack = std::clamp(wf->filterKeytrack, 0.0, 1.0);
             wf->smoothing.ampTimeMs = std::clamp(wf->smoothing.ampTimeMs, 0.0, 1000.0);
             wf->smoothing.pitchTimeMs = std::clamp(wf->smoothing.pitchTimeMs, 0.0, 1000.0);
             wf->smoothing.filterCutoffTimeMs = std::clamp(wf->smoothing.filterCutoffTimeMs, 0.0, 1000.0);
@@ -466,6 +467,9 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", wf->filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Keytrack", wf->filterKeytrack, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Keytrack を調整します。", "ノート音程に連動してカットオフが動く量が変わります。基準は C4(60)。", nullptr);
 
             ImGui::Separator();
             ImGui::TextUnformatted("Smoothing");
