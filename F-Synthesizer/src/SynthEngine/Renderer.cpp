@@ -219,6 +219,8 @@ void RenderFmSource(
         fmIndex);
     frame.ampMul = mod.ampMul;
     frame.sourceGain = src.outLevel;
+    frame.shaperKind = CommonShaperKind::BiquadFilter;
+    frame.shaperCutoffHz = src.filterCutoffHz;
 
     fs.carrierPhase += carrierInc;
     if (fs.carrierPhase >= 1.0) fs.carrierPhase -= 1.0;
@@ -291,6 +293,12 @@ void ApplyCommonShaper(
         }
         SetFilterCutoffHz(ws->filter, filterCutoffHz);
         frame.sample = ProcessFilterSample(ws->filter, frame.sample);
+    }
+    else if (auto* fs = std::get_if<FmVoiceState>(&voices.sourceState[i]))
+    {
+        const double filterCutoffHz = frame.shaperCutoffHz;
+        SetFilterCutoffHz(fs->filter, filterCutoffHz);
+        frame.sample = ProcessFilterSample(fs->filter, frame.sample);
     }
 }
 

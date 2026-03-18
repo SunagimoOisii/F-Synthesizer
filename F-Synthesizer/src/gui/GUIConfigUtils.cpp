@@ -107,6 +107,9 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.modRatio, bv->modRatio) &&
                     NearlyEq(av.index, bv->index) &&
                     NearlyEq(av.outLevel, bv->outLevel) &&
+                    av.filterMode == bv->filterMode &&
+                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
+                    NearlyEq(av.filterResonance, bv->filterResonance) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
             else if constexpr (std::is_same_v<T, DrumKitConfig>)

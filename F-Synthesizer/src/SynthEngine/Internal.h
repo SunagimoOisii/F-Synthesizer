@@ -24,6 +24,7 @@ struct FmVoiceState
     double carrierPhase = 0.0;
     double modPhase = 0.0;
     ModulationRuntimeState modulation;
+    FilterInstance filter;
 };
 
 struct NoiseVoiceState {};

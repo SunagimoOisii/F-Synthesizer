@@ -64,6 +64,9 @@ struct FmConfig
     double modRatio;
     double index;
     double outLevel;
+    FilterMode filterMode = FilterMode::Bypass;
+    double filterCutoffHz = 8000.0;
+    double filterResonance = 0.707;
     // 共通Modulationレイヤー（Phase1: fm.index / pitchMul / amp をサポート）。
     // smoothing は非対応（契約上 waveform 専用）。
     ModulationConfig modulation{};

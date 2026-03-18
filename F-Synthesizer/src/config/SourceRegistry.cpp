@@ -36,7 +36,7 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceKind::Fm,
         "fm",
         "fm",
-        SourceCapability{ true, true, false, true, true, false, false },
+        SourceCapability{ true, true, true, true, true, false, false },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
     },
     {
@@ -68,13 +68,15 @@ constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
     { "noise", SourceParameterType::Int, 0.0, 3.0, 0.0 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 6> kFmParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 8> kFmParameterSchema{ {
     { "carrierWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
     { "modWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
     { "carrierRatio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
     { "modRatio", SourceParameterType::Float, 0.0, 32.0, 2.0 },
     { "index", SourceParameterType::Float, 0.0, 20.0, 1.0 },
     { "outLevel", SourceParameterType::Float, 0.0, 4.0, 1.0 },
+    { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
+    { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
@@ -238,7 +240,7 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     case SourceKind::Noise:
         return NoiseConfig{ NoiseType::White };
     case SourceKind::Fm:
-        return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0, {} };
+        return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0, FilterMode::Bypass, 8000.0, 0.707, {} };
     case SourceKind::Drum:
     {
         // Drum kind はロード互換用途のみ。デフォルト生成は DrumKit と同じ形式で返す。

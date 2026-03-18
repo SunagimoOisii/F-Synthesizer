@@ -190,6 +190,8 @@ bool FmSchemaValue(const FmConfig& fm, const SourceParameterSchemaEntry& e, doub
     if (std::string_view(e.id) == "modRatio") { outValue = fm.modRatio; return true; }
     if (std::string_view(e.id) == "index") { outValue = fm.index; return true; }
     if (std::string_view(e.id) == "outLevel") { outValue = fm.outLevel; return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = fm.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = fm.filterResonance; return true; }
     return false;
 }
 
@@ -574,7 +576,25 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             err = "invalid fm wave type";
             return false;
         }
-        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel, {} };
+        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel, FilterMode::Bypass, 8000.0, 0.707, {} };
+        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+        {
+            FilterMode mode{};
+            if (!TryParseFilterMode(*v, mode))
+            {
+                err = "invalid fm.filterMode: " + *v;
+                return false;
+            }
+            fm.filterMode = mode;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
+        {
+            fm.filterCutoffHz = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
+        {
+            fm.filterResonance = *v;
+        }
         std::string modulationObj;
         bool foundModulation = false;
         if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))

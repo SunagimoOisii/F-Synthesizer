@@ -123,12 +123,17 @@ void InitializeVoiceAtIndex(
         ResetModulationState(ws.modulation);
         NoteOnModulation(ws.modulation);
     }
-    else if (std::holds_alternative<FmConfig>(cfg.source))
+    else if (const auto* fm = std::get_if<FmConfig>(&cfg.source))
     {
         voices.sourceState[i] = FmVoiceState{};
         auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
         ResetModulationState(fs.modulation);
         NoteOnModulation(fs.modulation);
+        SetFilterSampleRate(fs.filter, sampleRate);
+        SetFilterMode(fs.filter, fm->filterMode);
+        SetFilterCutoffHz(fs.filter, fm->filterCutoffHz);
+        SetFilterResonance(fs.filter, fm->filterResonance);
+        ResetFilterState(fs.filter);
     }
     else if (std::holds_alternative<NoiseConfig>(cfg.source))
     {
