@@ -1,12 +1,6 @@
 param(
     [string]$Configuration = "Debug",
     [string]$Platform = "x64",
-    [switch]$SkipBuild,
-    [switch]$SkipRun,
-    [ValidateSet("quick", "full")]
-    [string]$GuiSmokeProfile = "quick",
-    [switch]$RunMIDIRegression,
-    [switch]$AllowDocMismatch,
     [ValidateSet("off", "warn", "error")]
     [string]$DocRules = "warn"
 )
@@ -181,6 +175,296 @@ function Update-ArchitectureDoc {
     }
 }
 
+function Get-MsbuildPath {
+    $cmd = Get-Command msbuild -ErrorAction SilentlyContinue
+    if ($null -ne $cmd) {
+        return $cmd.Source
+    }
+
+    $vswhere = "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+    if (Test-Path $vswhere) {
+        $found = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find MSBuild/**/Bin/MSBuild.exe | Select-Object -First 1
+        if ($found) {
+            return $found
+        }
+    }
+
+    $fallbacks = @(
+        "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe",
+        "C:/Program Files/Microsoft Visual Studio/2022/Professional/MSBuild/Current/Bin/MSBuild.exe",
+        "C:/Program Files/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
+    )
+    foreach ($path in $fallbacks) {
+        if (Test-Path $path) {
+            return $path
+        }
+    }
+
+    return $null
+}
+
+function Resolve-ExePath {
+    param(
+        [string]$RepoRoot,
+        [string]$Platform,
+        [string]$Configuration
+    )
+
+    $candidates = @(
+        (Join-Path $RepoRoot "build/$Platform/$Configuration/F-Synthesizer.exe"),
+        (Join-Path $RepoRoot "$Platform/$Configuration/F-Synthesizer.exe")
+    )
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    return $candidates[0]
+}
+
+function Ensure-RuntimeDependencies {
+    param(
+        [string]$ExePath,
+        [string]$Configuration
+    )
+
+    $exeDir = Split-Path -Parent $ExePath
+    $glfwPath = Join-Path $exeDir "glfw3.dll"
+    if (Test-Path $glfwPath) {
+        return
+    }
+
+    $vcpkgRoot = "C:/vcpkg/installed/x64-windows"
+    $sourceCandidates = @(
+        (Join-Path $vcpkgRoot "debug/bin/glfw3.dll"),
+        (Join-Path $vcpkgRoot "bin/glfw3.dll")
+    )
+    foreach ($src in $sourceCandidates) {
+        if (Test-Path $src) {
+            Copy-Item -Path $src -Destination $glfwPath -Force
+            Write-Host "Runtime dependency restored: $glfwPath"
+            return
+        }
+    }
+
+    throw "Missing runtime dependency glfw3.dll and no vcpkg source found."
+}
+
+function Parse-RenderStats {
+    param(
+        [string]$Text
+    )
+
+    $line = ($Text -split "`r?`n" | Where-Object { $_ -like "*RenderStats*" } | Select-Object -Last 1)
+    if (-not $line) {
+        throw "RenderStats not found in command output."
+    }
+
+    if ($line -notmatch 'peak=([^ ]+) rms=([^ ]+) nonZero=([0-9]+)/([0-9]+)') {
+        throw "RenderStats parse failed: $line"
+    }
+
+    return [PSCustomObject]@{
+        Peak = [double]$matches[1]
+        Rms = [double]$matches[2]
+        NonZero = [int]$matches[3]
+        Total = [int]$matches[4]
+    }
+}
+
+function Parse-OutputPath {
+    param(
+        [string]$Text
+    )
+
+    $line = ($Text -split "`r?`n" | Where-Object { $_ -like "Output Path:*" } | Select-Object -Last 1)
+    if (-not $line) {
+        throw "Output Path not found in command output."
+    }
+
+    return $line.Substring("Output Path:".Length).Trim()
+}
+
+function Invoke-CLI {
+    param(
+        [string]$ExePath,
+        [string[]]$Args,
+        [int]$TimeoutSec = 120
+    )
+
+    $tmpOut = [System.IO.Path]::GetTempFileName()
+    $tmpErr = [System.IO.Path]::GetTempFileName()
+    try {
+        $p = Start-Process -FilePath $ExePath -ArgumentList $Args -NoNewWindow -PassThru -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
+        if (-not $p.WaitForExit($TimeoutSec * 1000)) {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            throw "Command timed out after ${TimeoutSec}s: $ExePath $($Args -join ' ')"
+        }
+        $out = ((Get-Content -Path $tmpOut -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content -Path $tmpErr -Raw -ErrorAction SilentlyContinue))
+        $exitCode = $p.ExitCode
+    }
+    finally {
+        Remove-Item -Path $tmpOut -Force -ErrorAction SilentlyContinue
+        Remove-Item -Path $tmpErr -Force -ErrorAction SilentlyContinue
+    }
+
+    return [PSCustomObject]@{
+        ExitCode = $exitCode
+        Output = $out
+    }
+}
+
+function Invoke-PresetStats {
+    param(
+        [string]$ExePath,
+        [string]$Preset
+    )
+
+    $result = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--preset", $Preset) -TimeoutSec 120
+    if ($result.ExitCode -ne 0) {
+        throw "Preset run failed: $Preset (exit=$($result.ExitCode))"
+    }
+
+    $stats = Parse-RenderStats -Text $result.Output
+    $outputPath = Parse-OutputPath -Text $result.Output
+    return [PSCustomObject]@{
+        Preset = $Preset
+        Peak = $stats.Peak
+        Rms = $stats.Rms
+        NonZero = $stats.NonZero
+        Total = $stats.Total
+        OutputPath = $outputPath
+    }
+}
+
+function Run-QuickSmoke {
+    param(
+        [string]$RepoRoot,
+        [string]$ExePath
+    )
+
+    $smokeDir = Join-Path $RepoRoot "output/check/smoke"
+    New-Item -ItemType Directory -Path $smokeDir -Force | Out-Null
+
+    $configPath = Join-Path $smokeDir "quick_smoke.json"
+    $wavPath = Join-Path $smokeDir "quick_smoke.wav"
+    $midiPath = (Join-Path $RepoRoot "assets/midi/logo.mid") -replace "\\", "/"
+    $wavPathNorm = ($wavPath -replace "\\", "/")
+
+    $json = @"
+{
+  "midiPath": "$midiPath",
+  "wavPath": "$wavPathNorm",
+  "targetChannel": 0,
+  "defaultWave": "saw",
+  "initialSeconds": 1,
+  "bits": 16,
+  "sampleRate": 44100,
+  "extraReleaseSec": 0.05
+}
+"@
+    Set-Content -Path $configPath -Value $json -Encoding UTF8
+
+    $ok = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", $configPath) -TimeoutSec 45
+    if ($ok.ExitCode -ne 0) {
+        throw "quick_smoke render failed (exit=$($ok.ExitCode))"
+    }
+    $stats = Parse-RenderStats -Text $ok.Output
+    if ($stats.NonZero -le 0) {
+        throw "quick_smoke produced silent output"
+    }
+    if (-not (Test-Path $wavPath)) {
+        throw "quick_smoke wav not found: $wavPath"
+    }
+
+    $ng = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", (Join-Path $RepoRoot "config/__missing__.json")) -TimeoutSec 15
+    if ($ng.ExitCode -eq 0) {
+        throw "missing config should fail, but exited 0"
+    }
+
+    Write-Host "Quick smoke: OK (peak=$($stats.Peak), rms=$($stats.Rms), nonZero=$($stats.NonZero)/$($stats.Total))"
+}
+
+function Invoke-GuiLaunchSmoke {
+    param(
+        [string]$ExePath,
+        [string[]]$Args,
+        [string]$Label
+    )
+
+    Write-Host "GUI smoke: $Label"
+    $p = $null
+    if ($null -eq $Args -or $Args.Count -eq 0) {
+        $p = Start-Process -FilePath $ExePath -PassThru
+    }
+    else {
+        $p = Start-Process -FilePath $ExePath -ArgumentList $Args -PassThru
+    }
+
+    Start-Sleep -Seconds 2
+    if (-not $p.HasExited) {
+        Stop-Process -Id $p.Id -Force
+        return
+    }
+
+    throw "GUI process exited unexpectedly with code $($p.ExitCode)"
+}
+
+function Copy-ExecutableSnapshot {
+    param(
+        [string]$ExePath,
+        [string]$SnapshotDir
+    )
+
+    if (-not (Test-Path $ExePath)) {
+        return $null
+    }
+
+    if (Test-Path $SnapshotDir) {
+        Remove-Item -Path $SnapshotDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    New-Item -ItemType Directory -Path $SnapshotDir -Force | Out-Null
+
+    $srcDir = Split-Path -Parent $ExePath
+    Copy-Item -Path $ExePath -Destination (Join-Path $SnapshotDir "F-Synthesizer.exe") -Force
+    Get-ChildItem -Path $srcDir -Filter *.dll -File | ForEach-Object {
+        Copy-Item -Path $_.FullName -Destination (Join-Path $SnapshotDir $_.Name) -Force
+    }
+
+    return (Join-Path $SnapshotDir "F-Synthesizer.exe")
+}
+
+function Compare-Stats {
+    param(
+        [string]$Name,
+        [pscustomobject]$Before,
+        [pscustomobject]$After,
+        [double]$PeakTolerance,
+        [double]$RmsTolerance
+    )
+
+    $deltaPeak = $After.Peak - $Before.Peak
+    $deltaRms = $After.Rms - $Before.Rms
+    $peakChanged = [math]::Abs($deltaPeak) -gt $PeakTolerance
+    $rmsChanged = [math]::Abs($deltaRms) -gt $RmsTolerance
+    $newClipRisk = ($Before.Peak -le 1.0 -and $After.Peak -gt 1.0)
+
+    Write-Host "AB($Name): before(peak=$($Before.Peak),rms=$($Before.Rms)) -> after(peak=$($After.Peak),rms=$($After.Rms))"
+    Write-Host "AB($Name): deltaPeak=$deltaPeak deltaRms=$deltaRms"
+
+    return [PSCustomObject]@{
+        Name = $Name
+        DeltaPeak = $deltaPeak
+        DeltaRms = $deltaRms
+        Passed = (-not $peakChanged) -and (-not $rmsChanged) -and (-not $newClipRisk)
+        PeakChanged = $peakChanged
+        RmsChanged = $rmsChanged
+        NewClipRisk = $newClipRisk
+    }
+}
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $repoRoot
 try {
@@ -189,6 +473,7 @@ try {
     Write-Host "Config: $Configuration | Platform: $Platform"
 
     Update-ArchitectureDoc -RepoRoot $repoRoot
+
     $projectDirName = Split-Path -Leaf $repoRoot
     $changedFiles = @(Get-ChangedFiles -ProjectDirName $projectDirName)
     if ($changedFiles.Count -eq 0) {
@@ -199,77 +484,116 @@ try {
         $changedFiles | ForEach-Object { Write-Host "  - $_" }
     }
 
-    $violations = @()
+    $docCheckFailed = $false
     if ($DocRules -ne "off") {
         $violations = @(Test-DocRules -ChangedFiles $changedFiles)
+        if ($violations.Count -gt 0) {
+            Write-Warning "Documentation update rules are not satisfied."
+            foreach ($v in $violations) {
+                Write-Warning "Rule: $($v.Rule)"
+                Write-Warning "  Required update: $($v.RequiredFile)"
+                Write-Warning "  Triggered by: $($v.TriggeredBy)"
+            }
+            if ($DocRules -eq "error") {
+                $docCheckFailed = $true
+            }
+        }
+        else {
+            Write-Host "Documentation rules: OK"
+        }
     }
-    if ($AllowDocMismatch -and $DocRules -eq "error") {
-        Write-Warning "-AllowDocMismatch is set. Downgrading DocRules from 'error' to 'warn'."
-        $DocRules = "warn"
-    }
-
-    $docCheckFailed = $false
-    if ($DocRules -eq "off") {
+    else {
         Write-Host "Documentation rules: OFF"
     }
-    elseif ($violations.Count -gt 0) {
-        Write-Warning "Documentation update rules are not satisfied."
-        foreach ($v in $violations) {
-            Write-Warning "Rule: $($v.Rule)"
-            Write-Warning "  Required update: $($v.RequiredFile)"
-            Write-Warning "  Triggered by: $($v.TriggeredBy)"
-        }
-        if ($DocRules -eq "error") {
-            $docCheckFailed = $true
-        }
-    }
-    else {
-        Write-Host "Documentation rules: OK"
+
+    $docsOnly = ($changedFiles.Count -gt 0) -and -not ($changedFiles | Where-Object { $_ -notmatch '^(docs|docs-archive)/' })
+    $compileChanged = $false
+    $renderChanged = $false
+    $guiChanged = $false
+    $midiChanged = $false
+    if ($changedFiles.Count -gt 0) {
+        $compileChanged = [bool]($changedFiles | Where-Object { $_ -match '^(src|include)/|^F-Synthesizer\.vcxproj$|^F-Synthesizer\.sln$' })
+        $renderChanged = [bool]($changedFiles | Where-Object { $_ -match '^(src/SynthEngine|include/SynthEngine|src/synth|include/synth)/' })
+        $guiChanged = [bool]($changedFiles | Where-Object { $_ -match '^(src/gui|include/gui)/' })
+        $midiChanged = [bool]($changedFiles | Where-Object { $_ -match '^(src/midi|include/midi)/' })
     }
 
-    if (-not $SkipBuild) {
-        $msbuild = Get-Command msbuild -ErrorAction SilentlyContinue
-        if ($null -eq $msbuild) {
-            Write-Warning "msbuild is not available in PATH. Build step skipped."
+    Write-Host "Auto plan: docsOnly=$docsOnly compileChanged=$compileChanged renderChanged=$renderChanged guiChanged=$guiChanged midiChanged=$midiChanged"
+
+    $exeBeforeBuild = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
+    $snapshotExe = $null
+    if ($renderChanged -and (Test-Path $exeBeforeBuild)) {
+        $snapshotDir = Join-Path $repoRoot "output/check/ab_snapshot"
+        $snapshotExe = Copy-ExecutableSnapshot -ExePath $exeBeforeBuild -SnapshotDir $snapshotDir
+        Write-Host "AB snapshot prepared: $snapshotExe"
+    }
+
+    if ($compileChanged -and -not $docsOnly) {
+        $msbuildPath = Get-MsbuildPath
+        if (-not $msbuildPath) {
+            throw "MSBuild not found. Install Visual Studio Build Tools or add MSBuild to PATH."
+        }
+
+        Write-Host "Running build..."
+        & $msbuildPath "F-Synthesizer.vcxproj" /t:Build "/p:Configuration=$Configuration;Platform=$Platform" /m /nologo
+    }
+    else {
+        Write-Host "Build skipped (no compile-target changes)."
+    }
+
+    $exePath = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
+    if ((-not $docsOnly) -and (Test-Path $exePath)) {
+        Ensure-RuntimeDependencies -ExePath $exePath -Configuration $Configuration
+        Run-QuickSmoke -RepoRoot $repoRoot -ExePath $exePath
+
+        if ($guiChanged) {
+            Invoke-GuiLaunchSmoke -ExePath $exePath -Args @() -Label "default launch"
+            Invoke-GuiLaunchSmoke -ExePath $exePath -Args @("--gui") -Label "--gui launch"
         }
         else {
-            Write-Host "Running build..."
-            & $msbuild.Source "F-Synthesizer.vcxproj" /t:Build "/p:Configuration=$Configuration;Platform=$Platform" /m /nologo
+            Write-Host "GUI launch smoke skipped (GUI-related files unchanged)."
         }
+    }
+    elseif (-not $docsOnly) {
+        throw "Executable not found after build/check: $exePath"
     }
     else {
-        Write-Host "Build step skipped by option."
+        Write-Host "Runtime checks skipped (docs-only change set)."
     }
 
-    if (-not $SkipRun) {
-        $guiSmokeScript = Join-Path $PSScriptRoot "gui_smoke.ps1"
-        if (Test-Path $guiSmokeScript) {
-            Write-Host "Running GUI smoke (profile: $GuiSmokeProfile)..."
-            & $guiSmokeScript -Configuration $Configuration -Platform $Platform -Profile $GuiSmokeProfile
+    if ($renderChanged -and $snapshotExe -and (Test-Path $snapshotExe) -and (Test-Path $exePath)) {
+        Write-Host "Running staged AB regression..."
+
+        $oldQuick = Invoke-PresetStats -ExePath $snapshotExe -Preset "wave_bass_solid"
+        $newQuick = Invoke-PresetStats -ExePath $exePath -Preset "wave_bass_solid"
+        $quickCmp = Compare-Stats -Name "quick/wave_bass_solid" -Before $oldQuick -After $newQuick -PeakTolerance 0.02 -RmsTolerance 0.002
+
+        if (-not $quickCmp.Passed) {
+            throw "AB regression threshold exceeded (wave_bass_solid)."
         }
-        else {
-            Write-Warning "GUI smoke script not found: $guiSmokeScript"
-            Write-Warning "Run step skipped."
-        }
+        Write-Host "Quick AB passed."
+    }
+    elseif ($renderChanged) {
+        Write-Warning "Render changes detected but AB baseline executable was not available. AB compare skipped."
     }
     else {
-        Write-Host "Run step skipped by option (GUI smoke disabled)."
+        Write-Host "AB regression skipped (render-related files unchanged)."
     }
 
-    if ($RunMIDIRegression) {
+    if ($midiChanged) {
         $midiRegressionScript = Join-Path $PSScriptRoot "midi_regression.ps1"
         if (-not (Test-Path $midiRegressionScript)) {
             throw "MIDI regression script not found: $midiRegressionScript"
         }
-        Write-Host "Running MIDI regression..."
+        Write-Host "Running MIDI regression (auto-triggered)..."
         & $midiRegressionScript -Configuration $Configuration -Platform $Platform
     }
     else {
-        Write-Host "MIDI regression skipped. Use -RunMIDIRegression to enable."
+        Write-Host "MIDI regression skipped (midi-related files unchanged)."
     }
 
     if ($docCheckFailed) {
-        Write-Error "Documentation check failed. Update required markdown files or run with -AllowDocMismatch."
+        throw "Documentation check failed."
     }
 
     Write-Host "Check completed."
@@ -277,4 +601,3 @@ try {
 finally {
     Pop-Location
 }
-
