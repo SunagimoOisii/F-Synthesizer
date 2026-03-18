@@ -46,7 +46,7 @@ struct Voice
     std::vector<double> drumLpPrev;
     std::vector<double> drumLpAlpha;
     std::vector<FilterInstance> waveformFilter;
-    std::vector<ModulationRuntimeState> waveformModulation;
+    std::vector<ModulationRuntimeState> modulation;
     std::vector<SmoothedParam> waveformAmpSmoothing;
     std::vector<SmoothedParam> waveformPitchSmoothing;
     std::vector<SmoothedParam> waveformFilterCutoffSmoothing;

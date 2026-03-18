@@ -141,7 +141,7 @@ void RenderWaveformSource(
     SourceRenderFrame& frame)
 {
     ModulationResult mod = EvaluateModulation(
-        voices.waveformModulation[i],
+        voices.modulation[i],
         src.modulation,
         in.dt);
     double pitchMul = mod.pitchMul;
@@ -200,7 +200,7 @@ void RenderFmSource(
     SourceRenderFrame& frame)
 {
     const ModulationResult mod = EvaluateModulation(
-        voices.waveformModulation[i],
+        voices.modulation[i],
         src.modulation,
         in.dt);
     const double carrierInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.carrierRatio;

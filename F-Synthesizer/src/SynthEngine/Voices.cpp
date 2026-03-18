@@ -128,19 +128,19 @@ void InitializeVoiceAtIndex(
         SetSmoothingTimeMs(voices.waveformFilterCutoffSmoothing[i], wave->smoothing.filterCutoffTimeMs);
         ResetSmoothedParam(voices.waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
 
-        ResetModulationState(voices.waveformModulation[i]);
-        NoteOnModulation(voices.waveformModulation[i]);
+        ResetModulationState(voices.modulation[i]);
+        NoteOnModulation(voices.modulation[i]);
     }
     else if (std::holds_alternative<FmConfig>(cfg.source))
     {
         SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
-        ResetModulationState(voices.waveformModulation[i]);
-        NoteOnModulation(voices.waveformModulation[i]);
+        ResetModulationState(voices.modulation[i]);
+        NoteOnModulation(voices.modulation[i]);
     }
     else
     {
         SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
-        ResetModulationState(voices.waveformModulation[i]);
+        ResetModulationState(voices.modulation[i]);
     }
 }
 
@@ -181,7 +181,7 @@ bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const M
             NoteOff(voices.env[i]);
             if (config::SourceCapabilityOf(voices.source[i]).hasModTargets)
             {
-                NoteOffModulation(voices.waveformModulation[i]);
+                NoteOffModulation(voices.modulation[i]);
             }
             voices.released[i] = 1;
         }
@@ -307,7 +307,7 @@ void Voice::reserve(size_t n)
     drumLpPrev.reserve(n);
     drumLpAlpha.reserve(n);
     waveformFilter.reserve(n);
-    waveformModulation.reserve(n);
+    modulation.reserve(n);
     waveformAmpSmoothing.reserve(n);
     waveformPitchSmoothing.reserve(n);
     waveformFilterCutoffSmoothing.reserve(n);
@@ -343,7 +343,7 @@ void Voice::clear()
     drumLpPrev.clear();
     drumLpAlpha.clear();
     waveformFilter.clear();
-    waveformModulation.clear();
+    modulation.clear();
     waveformAmpSmoothing.clear();
     waveformPitchSmoothing.clear();
     waveformFilterCutoffSmoothing.clear();
@@ -392,7 +392,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     drumLpPrev.push_back(0.0);
     drumLpAlpha.push_back(0.0);
     waveformFilter.emplace_back();
-    waveformModulation.emplace_back();
+    modulation.emplace_back();
     waveformAmpSmoothing.emplace_back();
     waveformPitchSmoothing.emplace_back();
     waveformFilterCutoffSmoothing.emplace_back();
@@ -419,7 +419,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
                 NoteOff(env[i]);
                 if (cap.hasModTargets)
                 {
-                    NoteOffModulation(waveformModulation[i]);
+                    NoteOffModulation(modulation[i]);
                 }
                 released[i] = 1;
                 return;
@@ -440,7 +440,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
             NoteOff(env[i]);
             if (cap.hasModTargets)
             {
-                NoteOffModulation(waveformModulation[i]);
+                NoteOffModulation(modulation[i]);
             }
             released[i] = 1;
             break;
@@ -499,7 +499,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(drumLpPrev, keepScratch);
     CompactVectorByKeep(drumLpAlpha, keepScratch);
     CompactVectorByKeep(waveformFilter, keepScratch);
-    CompactVectorByKeep(waveformModulation, keepScratch);
+    CompactVectorByKeep(modulation, keepScratch);
     CompactVectorByKeep(waveformAmpSmoothing, keepScratch);
     CompactVectorByKeep(waveformPitchSmoothing, keepScratch);
     CompactVectorByKeep(waveformFilterCutoffSmoothing, keepScratch);
