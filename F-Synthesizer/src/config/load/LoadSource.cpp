@@ -179,6 +179,7 @@ bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEn
     if (std::string_view(e.id) == "subOscLevel") { outValue = wf.subOscLevel; return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = wf.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = wf.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterKeytrack") { outValue = wf.filterKeytrack; return true; }
     return false;
 }
 
@@ -531,6 +532,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
         {
             wf.filterResonance = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterKeytrack"))
+        {
+            wf.filterKeytrack = *v;
         }
         std::string smoothingObj;
         bool foundSmoothing = false;

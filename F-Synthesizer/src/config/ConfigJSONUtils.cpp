@@ -591,6 +591,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
             WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
             out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);

@@ -63,13 +63,14 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
     },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 6> kWaveformParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 7> kWaveformParameterSchema{ {
     { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
     { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
     { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "subOscLevel", SourceParameterType::Float, 0.0, 2.0, 0.0 },
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
+    { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
