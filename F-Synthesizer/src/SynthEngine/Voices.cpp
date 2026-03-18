@@ -26,7 +26,7 @@ bool HasSameCapabilityProfile(const SourceConfig& a, const SourceConfig& b)
         lhs.isPercussion == rhs.isPercussion;
 }
 
-void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int sampleRate)
+void InitDrumVoice(const DrumConfig& drum, Voice& voices, size_t i, int sampleRate)
 {
     if (drum.type == DrumType::Kick)
     {
@@ -55,7 +55,7 @@ void InitDrumVoice(const DrumConfig& drum, VoicesSoA& voices, size_t i, int samp
 }
 
 void InitializeVoiceAtIndex(
-    VoicesSoA& voices,
+    Voice& voices,
     size_t i,
     const ChannelConfig& cfg,
     const MIDIEvent& e,
@@ -144,7 +144,7 @@ void InitializeVoiceAtIndex(
     }
 }
 
-bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     // 前提: source.lifecycle.retrigger=restart の場合のみ既存voiceを再初期化する。
     const config::SourceLifecyclePolicy policy = config::SourceLifecycleOf(cfg.source);
@@ -198,7 +198,7 @@ bool TryRestartVoiceOnRetrigger(VoicesSoA& voices, const ChannelConfig& cfg, con
     return true;
 }
 
-bool TryHandleVoiceLimitAndSteal(VoicesSoA& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+bool TryHandleVoiceLimitAndSteal(Voice& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     if (voices.size() < kMaxVoices)
     {
@@ -268,17 +268,17 @@ void CompactVectorByKeep(std::vector<T>& v, const std::vector<uint8_t>& keep)
 }
 } // namespace
 
-size_t VoicesSoA::size() const
+size_t Voice::size() const
 {
     return source.size();
 }
 
-bool VoicesSoA::empty() const
+bool Voice::empty() const
 {
     return source.empty();
 }
 
-void VoicesSoA::reserve(size_t n)
+void Voice::reserve(size_t n)
 {
     source.reserve(n);
     noteNumber.reserve(n);
@@ -314,7 +314,7 @@ void VoicesSoA::reserve(size_t n)
     waveformFilterCutoffSmoothing.reserve(n);
 }
 
-void VoicesSoA::clear()
+void Voice::clear()
 {
     source.clear();
     noteNumber.clear();
@@ -350,7 +350,7 @@ void VoicesSoA::clear()
     waveformFilterCutoffSmoothing.clear();
 }
 
-void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     if (TryRestartVoiceOnRetrigger(*this, cfg, e, sampleRate))
     {
@@ -402,7 +402,7 @@ void VoicesSoA::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampl
     InitializeVoiceAtIndex(*this, i, cfg, e, sampleRate);
 }
 
-void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)
+void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
 {
     // 原則: NoteOn/NoteOff の対応IDで閉じる。
     // 互換性: IDが無い/不一致の場合は旧ロジック(ch+note)へフォールバックする。
@@ -449,7 +449,7 @@ void VoicesSoA::MarkNoteOff(int ch, int note, int noteInstanceID)
     }
 }
 
-size_t VoicesSoA::CleanupPending(std::vector<uint8_t>& keepScratch)
+size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
 {
     if (empty())
     {

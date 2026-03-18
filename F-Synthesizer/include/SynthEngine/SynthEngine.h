@@ -92,8 +92,8 @@ struct DrumConfig
     double noiseLevel = 0.0;
     double hpCut = 0.0;
     double lpCut = 0.0;
-    int toneWave = -1;
-    int noiseType = -1;
+    int toneWave = 0;
+    int noiseType = 0;
     // one-shot アタック保護のため smoothing は非対応（契約上 waveform 専用）。
 };
 
@@ -106,49 +106,6 @@ struct DrumKitConfig
 };
 
 using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig>;
-
-// 旧AoS互換の Voice 状態。
-// 実レンダは VoicesSoA を使うが、互換参照のため定義を維持する。
-struct Voice
-{
-    // 旧AoS互換の Voice 定義。実レンダは SoA 側を使用する。
-    // 識別, 状態
-    SourceConfig source;
-    int noteNumber;
-    int velocity;
-    int channel;
-    int channelIndex;
-    int noteInstanceID;
-    bool released;
-    bool pendingRemove;
-
-    //レベル, エンベロープ
-    double amp;
-    double attackSec;
-    double decaySec;
-    double sustainLevel;
-    double releaseSec;
-    ADSRState env;
-
-    //基本波形位相
-    double phase;
-    double phaseInc;
-
-    //FM パラメータ
-    double fmCarrierPhase;
-    double fmModPhase;
-
-    //Drum パラメータ
-    double drumTime;
-    double drumBaseFreq;
-    double drumPitchDrop;
-    double drumPitchDecaySec;
-    double drumNoisePrev;
-    double drumHpPrev;
-    double drumHpAlpha;
-    double drumLpPrev;
-    double drumLpAlpha;
-};
 
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。

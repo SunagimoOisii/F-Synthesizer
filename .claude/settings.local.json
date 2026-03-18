@@ -6,7 +6,11 @@
       "Bash(done)",
       "Bash(find \"c:\\\\Users\\\\sunag_qspg5zm\\\\OneDrive\\\\ドキュメント\\\\作業台\\\\Dev\\\\GitHub\\\\F-Synthesizer\" -name \"*.md\" -type f -exec wc -l {} +)",
       "Read(//c/Users/sunag_qspg5zm/OneDrive/ドキュメント/作業台/Dev/GitHub/F-Synthesizer/NR>1 {print $1 \"\"\"\"\"\"\"\" lines/**)",
-      "Bash(ls \"c:\\\\Users\\\\sunag_qspg5zm\\\\OneDrive\\\\ドキュメント\\\\作業台\\\\Dev\\\\GitHub\\\\F-Synthesizer\\\\F-Synthesizer\\\\docs-archive\"\" 2>/dev/null || echo \"NOT FOUND \")"
+      "Bash(ls \"c:\\\\Users\\\\sunag_qspg5zm\\\\OneDrive\\\\ドキュメント\\\\作業台\\\\Dev\\\\GitHub\\\\F-Synthesizer\\\\F-Synthesizer\\\\docs-archive\"\" 2>/dev/null || echo \"NOT FOUND \")",
+      "Bash(grep -r \"unused\\\\|never\\\\s*used\\\\|not\\\\s*used\\\\|can\\\\s*remove\" F-Synthesizer/docs --include=*.md)",
+      "Bash(grep -n \"^int Run\" F-Synthesizer/src/app/*.cpp)",
+      "Bash(grep -A 5 \"^int Run\" F-Synthesizer/src/app/*.cpp)",
+      "Bash(pwsh ./F-Synthesizer/scripts/check.ps1)"
     ]
   }
 }

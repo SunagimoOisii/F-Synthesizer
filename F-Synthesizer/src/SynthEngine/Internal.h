@@ -9,7 +9,7 @@
 #include "SynthEngine/Smoothing.h"
 #include "SynthEngine/SynthEngine.h"
 
-struct VoicesSoA
+struct Voice
 {
     // SoA 構造:
     // 目的: sample ループで必要な属性を列単位に連続配置し、キャッシュ効率を上げる。
@@ -80,7 +80,7 @@ struct SourceRenderFrame
 struct RenderState
 {
     // RenderMIDIEvents の 1 実行スコープで共有される可変状態。
-    VoicesSoA voices;
+    Voice voices;
     size_t eventIndex = 0;
     size_t pendingRemoveCount = 0;
     std::array<double, 16> channelCc7{};

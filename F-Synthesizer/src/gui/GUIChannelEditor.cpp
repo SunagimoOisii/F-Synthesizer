@@ -101,14 +101,14 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
         key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("LP Cut を調整します。", "低域寄りに残す帯域が変わります。", nullptr);
 
-        int toneWave = d.toneWave >= 0 ? d.toneWave : 0;
+        int toneWave = d.toneWave;
         const char* waves[] = { "sine", "square", "saw", "triangle" };
         key = std::string("Tone Wave##") + IDPrefix;
         changed |= ImGui::Combo(key.c_str(), &toneWave, waves, IM_ARRAYSIZE(waves));
         if (updateHoverHelp) updateHoverHelp("Tone Wave を選択します。", "有音成分の波形キャラクターが変わります。", nullptr);
         d.toneWave = toneWave;
 
-        int noiseType = d.noiseType >= 0 ? d.noiseType : 0;
+        int noiseType = d.noiseType;
         const char* noises[] = { "white", "pink", "brown", "blue" };
         key = std::string("Noise Type##") + IDPrefix;
         changed |= ImGui::Combo(key.c_str(), &noiseType, noises, IM_ARRAYSIZE(noises));

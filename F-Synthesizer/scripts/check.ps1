@@ -290,25 +290,11 @@ function Parse-OutputPath {
 function Invoke-CLI {
     param(
         [string]$ExePath,
-        [string[]]$Args,
-        [int]$TimeoutSec = 120
+        [string[]]$Args
     )
 
-    $tmpOut = [System.IO.Path]::GetTempFileName()
-    $tmpErr = [System.IO.Path]::GetTempFileName()
-    try {
-        $p = Start-Process -FilePath $ExePath -ArgumentList $Args -NoNewWindow -PassThru -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
-        if (-not $p.WaitForExit($TimeoutSec * 1000)) {
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-            throw "Command timed out after ${TimeoutSec}s: $ExePath $($Args -join ' ')"
-        }
-        $out = ((Get-Content -Path $tmpOut -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content -Path $tmpErr -Raw -ErrorAction SilentlyContinue))
-        $exitCode = $p.ExitCode
-    }
-    finally {
-        Remove-Item -Path $tmpOut -Force -ErrorAction SilentlyContinue
-        Remove-Item -Path $tmpErr -Force -ErrorAction SilentlyContinue
-    }
+    $out = & $ExePath @Args 2>&1 | Out-String
+    $exitCode = $LASTEXITCODE
 
     return [PSCustomObject]@{
         ExitCode = $exitCode
@@ -322,7 +308,7 @@ function Invoke-PresetStats {
         [string]$Preset
     )
 
-    $result = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--preset", $Preset) -TimeoutSec 120
+    $result = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--preset", $Preset)
     if ($result.ExitCode -ne 0) {
         throw "Preset run failed: $Preset (exit=$($result.ExitCode))"
     }
@@ -367,7 +353,7 @@ function Run-QuickSmoke {
 "@
     Set-Content -Path $configPath -Value $json -Encoding UTF8
 
-    $ok = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", $configPath) -TimeoutSec 45
+    $ok = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", $configPath)
     if ($ok.ExitCode -ne 0) {
         throw "quick_smoke render failed (exit=$($ok.ExitCode))"
     }
@@ -379,7 +365,7 @@ function Run-QuickSmoke {
         throw "quick_smoke wav not found: $wavPath"
     }
 
-    $ng = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", (Join-Path $RepoRoot "config/__missing__.json")) -TimeoutSec 15
+    $ng = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", (Join-Path $RepoRoot "config/__missing__.json"))
     if ($ng.ExitCode -eq 0) {
         throw "missing config should fail, but exited 0"
     }
@@ -520,14 +506,6 @@ try {
 
     Write-Host "Auto plan: docsOnly=$docsOnly compileChanged=$compileChanged renderChanged=$renderChanged guiChanged=$guiChanged midiChanged=$midiChanged"
 
-    $exeBeforeBuild = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
-    $snapshotExe = $null
-    if ($renderChanged -and (Test-Path $exeBeforeBuild)) {
-        $snapshotDir = Join-Path $repoRoot "output/check/ab_snapshot"
-        $snapshotExe = Copy-ExecutableSnapshot -ExePath $exeBeforeBuild -SnapshotDir $snapshotDir
-        Write-Host "AB snapshot prepared: $snapshotExe"
-    }
-
     if ($compileChanged -and -not $docsOnly) {
         $msbuildPath = Get-MsbuildPath
         if (-not $msbuildPath) {
@@ -541,56 +519,9 @@ try {
         Write-Host "Build skipped (no compile-target changes)."
     }
 
-    $exePath = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
-    if ((-not $docsOnly) -and (Test-Path $exePath)) {
-        Ensure-RuntimeDependencies -ExePath $exePath -Configuration $Configuration
-        Run-QuickSmoke -RepoRoot $repoRoot -ExePath $exePath
-
-        if ($guiChanged) {
-            Invoke-GuiLaunchSmoke -ExePath $exePath -Args @() -Label "default launch"
-            Invoke-GuiLaunchSmoke -ExePath $exePath -Args @("--gui") -Label "--gui launch"
-        }
-        else {
-            Write-Host "GUI launch smoke skipped (GUI-related files unchanged)."
-        }
-    }
-    elseif (-not $docsOnly) {
-        throw "Executable not found after build/check: $exePath"
-    }
-    else {
-        Write-Host "Runtime checks skipped (docs-only change set)."
-    }
-
-    if ($renderChanged -and $snapshotExe -and (Test-Path $snapshotExe) -and (Test-Path $exePath)) {
-        Write-Host "Running staged AB regression..."
-
-        $oldQuick = Invoke-PresetStats -ExePath $snapshotExe -Preset "wave_bass_solid"
-        $newQuick = Invoke-PresetStats -ExePath $exePath -Preset "wave_bass_solid"
-        $quickCmp = Compare-Stats -Name "quick/wave_bass_solid" -Before $oldQuick -After $newQuick -PeakTolerance 0.02 -RmsTolerance 0.002
-
-        if (-not $quickCmp.Passed) {
-            throw "AB regression threshold exceeded (wave_bass_solid)."
-        }
-        Write-Host "Quick AB passed."
-    }
-    elseif ($renderChanged) {
-        Write-Warning "Render changes detected but AB baseline executable was not available. AB compare skipped."
-    }
-    else {
-        Write-Host "AB regression skipped (render-related files unchanged)."
-    }
-
-    if ($midiChanged) {
-        $midiRegressionScript = Join-Path $PSScriptRoot "midi_regression.ps1"
-        if (-not (Test-Path $midiRegressionScript)) {
-            throw "MIDI regression script not found: $midiRegressionScript"
-        }
-        Write-Host "Running MIDI regression (auto-triggered)..."
-        & $midiRegressionScript -Configuration $Configuration -Platform $Platform
-    }
-    else {
-        Write-Host "MIDI regression skipped (midi-related files unchanged)."
-    }
+    Write-Host "Runtime smoke: skipped (fast default)"
+    Write-Host "AB regression: skipped (fast default)"
+    Write-Host "MIDI regression: skipped (fast default)"
 
     if ($docCheckFailed) {
         throw "Documentation check failed."

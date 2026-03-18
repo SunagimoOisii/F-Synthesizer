@@ -41,7 +41,7 @@ namespace
         state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
     }
 
-    void HandleNoteOff(const MIDIEvent& e, VoicesSoA& voices)
+    void HandleNoteOff(const MIDIEvent& e, Voice& voices)
     {
         voices.MarkNoteOff(e.channel, e.noteNumber, e.noteInstanceID);
     }

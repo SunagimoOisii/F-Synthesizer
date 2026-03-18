@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-19 (Rendererの source/shaper/modulation 境界を分離)
+Last Updated: 2026-03-19 (旧AoS Voice struct 削除・VoicesSoA→Voice リネーム・toneWave/noiseType デフォルト正規化)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。

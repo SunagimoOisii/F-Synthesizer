@@ -111,13 +111,13 @@ flowchart LR
 
 ### 音響アルゴリズム上の制約
 
-#### 2026-02-25: Voice状態はAoS互換を残しつつ、レンダ経路はSoAを採用
+#### 2026-02-25: Voice状態はSoAで管理する（AoS互換定義は削除済み）
 - カテゴリ: 音響アルゴリズム上の制約
-- 背景: AoS（Voice構造体の配列）だと、1sampleごとの更新で必要フィールドが離散し、サンプルごとに繰り返す処理で参照局所性が落ちやすい。
-- 判断: 実レンダは SoA（`VoicesSoA`）を標準実装とし、AoS定義は互換・移行用途に限定する。
+- 背景: AoS（構造体の配列）だと、1sampleごとの更新で必要フィールドが離散し、サンプルごとに繰り返す処理で参照局所性が落ちやすい。
+- 判断: レンダ経路は SoA（`Voice`、旧名 `VoicesSoA`）を正規実装とし、2026-03-19 に旧 AoS 互換定義を削除した。
 - 代替案: AoSのままレンダする。
 - 影響範囲: `Renderer.cpp` の走査は同種データを連続アクセスできる。代わりに `Voices.cpp` 側で配列の同期追加/圧縮管理が必要。
-- 関連ファイル: `src/SynthEngine/Internal.h`, `src/SynthEngine/Voices.cpp`, `src/SynthEngine/Renderer.cpp`, `include/SynthEngine/SynthEngine.h`
+- 関連ファイル: `src/SynthEngine/Internal.h`, `src/SynthEngine/Voices.cpp`, `src/SynthEngine/Renderer.cpp`
 
 #### 2026-02-25: Smoothingは異常値を入口で正規化し、破綻時は即時反映へフォールバック
 - カテゴリ: 音響アルゴリズム上の制約
@@ -150,7 +150,7 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 #### 2026-03-03: 重複ノート対応のため `noteInstanceID` を導入
 - カテゴリ: 音響アルゴリズム上の制約
 - 背景: 同一ch/noteの重なり発音では、`ch+note` だけの照合だと誤った NoteOff が別Voiceを止める可能性がある。
-- 判断: `MIDIParser -> Sequencer -> VoicesSoA` で `noteInstanceID` を通線し、ID優先で NoteOff 対象を照合する。
+- 判断: `MIDIParser -> Sequencer -> Voice` で `noteInstanceID` を通線し、ID優先で NoteOff 対象を照合する。
 - 代替案: 従来どおり `ch+note` のみで照合する案。
 - 影響範囲: オーバーラップノート時の発音安定性が向上し、MIDI互換性の説明材料になる。
 - 関連ファイル: include/SynthEngine/SynthEngine.h, src/SynthEngine/Internal.h, src/SynthEngine/Voices.cpp
