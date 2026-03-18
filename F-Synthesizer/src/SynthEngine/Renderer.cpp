@@ -183,7 +183,13 @@ void RenderWaveformSource(
     frame.sample = mainWave;
     frame.ampMul = mod.ampMul;
     frame.shaperKind = CommonShaperKind::BiquadFilter;
-    frame.shaperCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
+    double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;
+    if (src.filterKeytrack != 0.0)
+    {
+        const double keytrackRatio = std::pow(2.0, src.filterKeytrack * (voices.noteNumber[i] - 60) / 12.0);
+        effectiveCutoff *= keytrackRatio;
+    }
+    frame.shaperCutoffHz = effectiveCutoff;
 
     voices.phase[i] += phaseInc;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
