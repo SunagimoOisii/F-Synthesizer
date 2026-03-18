@@ -109,10 +109,6 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.outLevel, bv->outLevel) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
-            else if constexpr (std::is_same_v<T, DrumConfig>)
-            {
-                return DrumConfigEquals(av, *bv);
-            }
             else if constexpr (std::is_same_v<T, DrumKitConfig>)
             {
                 for (int i = 0; i < 128; i++)

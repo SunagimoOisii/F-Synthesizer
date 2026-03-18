@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-19 (旧AoS Voice struct 削除・VoicesSoA→Voice リネーム・toneWave/noiseType デフォルト正規化)
+Last Updated: 2026-03-19 (DrumConfig をロード層のみに封じ込め・ChannelConfig.source への直接混入を排除)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。

@@ -613,22 +613,6 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
         }
-        else if constexpr (std::is_same_v<T, DrumConfig>)
-        {
-            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Drum) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"drumType\": \"" << DrumTypeToString(v.type) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"gain\": " << v.gain << ",\n";
-            WriteIndent(out, indent + 2); out << "\"baseFreq\": " << v.baseFreq << ",\n";
-            WriteIndent(out, indent + 2); out << "\"pitchDrop\": " << v.pitchDrop << ",\n";
-            WriteIndent(out, indent + 2); out << "\"pitchDecaySec\": " << v.pitchDecaySec << ",\n";
-            WriteIndent(out, indent + 2); out << "\"toneFreq\": " << v.toneFreq << ",\n";
-            WriteIndent(out, indent + 2); out << "\"toneLevel\": " << v.toneLevel << ",\n";
-            WriteIndent(out, indent + 2); out << "\"noiseLevel\": " << v.noiseLevel << ",\n";
-            WriteIndent(out, indent + 2); out << "\"hpCut\": " << v.hpCut << ",\n";
-            WriteIndent(out, indent + 2); out << "\"lpCut\": " << v.lpCut << ",\n";
-            WriteIndent(out, indent + 2); out << "\"toneWave\": \"" << WaveTypeToString((WaveType)v.toneWave) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"noiseType\": \"" << NoiseTypeToString((NoiseType)v.noiseType) << "\"\n";
-        }
         else if constexpr (std::is_same_v<T, DrumKitConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::DrumKit) << "\",\n";

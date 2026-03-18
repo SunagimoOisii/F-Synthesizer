@@ -240,7 +240,13 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     case SourceKind::Fm:
         return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0, {} };
     case SourceKind::Drum:
-        return DrumConfig{ DrumType::Kick };
+    {
+        // Drum kind はロード互換用途のみ。デフォルト生成は DrumKit と同じ形式で返す。
+        DrumKitConfig kit{};
+        for (auto& d : kit.map) d.type = DrumType::None;
+        kit.map[60] = DrumConfig{ DrumType::Kick };
+        return kit;
+    }
     case SourceKind::DrumKit:
     {
         DrumKitConfig kit{};

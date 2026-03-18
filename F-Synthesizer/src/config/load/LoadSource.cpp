@@ -601,6 +601,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::Drum:
     {
+        // 旧フォーマット("type": "drum")を drumkit(note 60)へ自動変換してロードする。
         DrumConfig drum{};
         if (!ParseDrumConfigObject(sourceObjText, drum, err))
         {
@@ -610,7 +611,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             return false;
         }
-        outSource = drum;
+        DrumKitConfig kit{};
+        for (auto& d : kit.map) d.type = DrumType::None;
+        kit.map[60] = drum;
+        outSource = kit;
         return true;
     }
     case SourceKind::DrumKit:

@@ -347,21 +347,6 @@ bool DrawChannelEditor(
 
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        if (auto* legacyDrum = std::get_if<DrumConfig>(&chCfg.source))
-        {
-            // Soundタブでは drumkit を正規運用とし、旧 drum 設定は自動移行する。
-            DrumKitConfig kit{};
-            for (auto& d : kit.map)
-            {
-                d.type = DrumType::None;
-            }
-            const int dstNote = std::clamp(state.selectedDrumNote, 0, 127);
-            kit.map[dstNote] = *legacyDrum;
-            chCfg.source = kit;
-            changed = true;
-            ImGui::TextDisabled("Legacy drum source was converted to drumkit (note %d).", dstNote);
-        }
-
         const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
         size_t guiSourceKindCount = 0;
         const auto guiSourceKinds = BuildGuiSourceKindList(guiSourceKindCount);
@@ -541,10 +526,6 @@ bool DrawChannelEditor(
             if (updateHoverHelp) updateHoverHelp("FM OutLevel を調整します。", "FM経路の出力音量が変わります。", nullptr);
 
             changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true);
-        }
-        else if (auto* drum = std::get_if<DrumConfig>(&chCfg.source))
-        {
-            changed |= DrawDrumConfigEditor("drum_single", *drum, updateHoverHelp);
         }
         else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
         {
