@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-08 (ops: STATUS Current を短期運用向けに圧縮)
+Last Updated: 2026-03-19 (waveform/fm modulation route GUI 0..7 対応)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -11,6 +11,7 @@ Branch: `main`
 - 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
 - `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
 - architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
+- waveform / fm の modulation route 編集GUIを `0..7` まで拡張（サマリ表示含む）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

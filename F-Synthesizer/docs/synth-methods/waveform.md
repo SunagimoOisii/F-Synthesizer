@@ -35,7 +35,7 @@ source type: `waveform`
 - GUI対応:
   - Source Details から `wave/unison/sub-osc/filter/modulation` を直接編集可能
   - GUI編集値とJSON編集値で一致レンダを確認済み
-  - modulation route は GUI では `0..3` を編集対象として提供
+  - modulation route は GUI で `0..7` を編集可能
 
 ## B. 作れる音 / 向いている用途
 
@@ -53,13 +53,10 @@ source type: `waveform`
 
 - `unisonDetuneCents` を上げすぎるとベースの音程感が崩れやすい
 - `subOscLevel` を上げすぎると低域が膨らみ過ぎる
-- modulation route `4..7` は JSON 編集前提（GUI露出は未対応）
 - modulation の source/destination は現状 `LFO1/Env2 -> Pitch/Amp/FilterCutoff` の最小セット
 
 ## D. 改善案
 
-- 短期:
-  - modulation route `4..7` の GUI 編集対応
 - 中期:
   - modulation ルーティング候補（例: resonance, pan）の拡張判断
 - 長期:

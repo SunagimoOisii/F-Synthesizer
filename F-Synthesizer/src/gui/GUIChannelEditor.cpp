@@ -247,7 +247,8 @@ bool DrawChannelEditor(
         };
 
         ImGui::PushID(idPrefix);
-        for (int routeIdx = 0; routeIdx < 4; routeIdx++)
+        const int routeCount = static_cast<int>(modulation.matrix.routes.size());
+        for (int routeIdx = 0; routeIdx < routeCount; routeIdx++)
         {
             ModRoute& route = modulation.matrix.routes[static_cast<size_t>(routeIdx)];
             ImGui::PushID(routeIdx);
