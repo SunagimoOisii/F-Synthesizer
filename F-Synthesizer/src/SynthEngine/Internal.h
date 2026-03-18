@@ -3,11 +3,52 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <variant>
 #include <vector>
 
 #include "SynthEngine/Filter.h"
 #include "SynthEngine/Smoothing.h"
 #include "SynthEngine/SynthEngine.h"
+
+struct WaveformVoiceState
+{
+    FilterInstance filter;
+    ModulationRuntimeState modulation;
+    SmoothedParam ampSmoothing;
+    SmoothedParam pitchSmoothing;
+    SmoothedParam filterCutoffSmoothing;
+};
+
+struct FmVoiceState
+{
+    double carrierPhase = 0.0;
+    double modPhase = 0.0;
+    ModulationRuntimeState modulation;
+};
+
+struct NoiseVoiceState {};
+
+struct DrumVoiceState
+{
+    double time = 0.0;
+    double baseFreq = 0.0;
+    double pitchDrop = 1.0;
+    double pitchDecaySec = 0.0;
+    double noisePrev = 0.0;
+    double hpPrev = 0.0;
+    double hpAlpha = 0.0;
+    double lpPrev = 0.0;
+    double lpAlpha = 0.0;
+};
+
+struct DrumKitVoiceState : DrumVoiceState {};
+
+using PerSourceVoiceState = std::variant<
+    WaveformVoiceState,
+    FmVoiceState,
+    NoiseVoiceState,
+    DrumVoiceState,
+    DrumKitVoiceState>;
 
 struct Voice
 {
@@ -33,23 +74,7 @@ struct Voice
 
     std::vector<double> phase;
     std::vector<double> phaseInc;
-    std::vector<double> fmCarrierPhase;
-    std::vector<double> fmModPhase;
-
-    std::vector<double> drumTime;
-    std::vector<double> drumBaseFreq;
-    std::vector<double> drumPitchDrop;
-    std::vector<double> drumPitchDecaySec;
-    std::vector<double> drumNoisePrev;
-    std::vector<double> drumHpPrev;
-    std::vector<double> drumHpAlpha;
-    std::vector<double> drumLpPrev;
-    std::vector<double> drumLpAlpha;
-    std::vector<FilterInstance> waveformFilter;
-    std::vector<ModulationRuntimeState> modulation;
-    std::vector<SmoothedParam> waveformAmpSmoothing;
-    std::vector<SmoothedParam> waveformPitchSmoothing;
-    std::vector<SmoothedParam> waveformFilterCutoffSmoothing;
+    std::vector<PerSourceVoiceState> sourceState;
 
     size_t size() const;
     bool empty() const;

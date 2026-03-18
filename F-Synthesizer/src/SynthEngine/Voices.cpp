@@ -26,31 +26,42 @@ bool HasSameCapabilityProfile(const SourceConfig& a, const SourceConfig& b)
         lhs.isPercussion == rhs.isPercussion;
 }
 
-void InitDrumVoice(const DrumConfig& drum, Voice& voices, size_t i, int sampleRate)
+void NoteOffVoiceModulation(PerSourceVoiceState& sourceState)
+{
+    std::visit([&](auto& st)
+    {
+        if constexpr (requires { st.modulation; })
+        {
+            NoteOffModulation(st.modulation);
+        }
+    }, sourceState);
+}
+
+void InitDrumVoice(const DrumConfig& drum, DrumVoiceState& drumState, double& phaseInc, int sampleRate)
 {
     if (drum.type == DrumType::Kick)
     {
-        voices.drumBaseFreq[i] = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
-        voices.drumPitchDrop[i] = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
-        voices.drumPitchDecaySec[i] = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
-        voices.phaseInc[i] = voices.drumBaseFreq[i] / sampleRate;
+        drumState.baseFreq = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
+        drumState.pitchDrop = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
+        drumState.pitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
+        phaseInc = drumState.baseFreq / sampleRate;
     }
     else if (drum.type == DrumType::Snare)
     {
-        voices.drumBaseFreq[i] = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
-        voices.phaseInc[i] = voices.drumBaseFreq[i] / sampleRate;
+        drumState.baseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
+        phaseInc = drumState.baseFreq / sampleRate;
         const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 1200.0;
-        voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
         const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 6000.0;
-        voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
     }
     else if (drum.type == DrumType::Hat)
     {
         const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 6000.0;
-        voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
         const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12000.0;
-        voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
-        voices.drumBaseFreq[i] = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
+        drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        drumState.baseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
     }
 }
 
@@ -82,65 +93,56 @@ void InitializeVoiceAtIndex(
 
     voices.phase[i] = 0.0;
     voices.phaseInc[i] = NoteNumberToFreq(e.noteNumber) / sampleRate;
-    voices.fmCarrierPhase[i] = 0.0;
-    voices.fmModPhase[i] = 0.0;
 
-    voices.drumTime[i] = 0.0;
-    voices.drumBaseFreq[i] = 0.0;
-    voices.drumPitchDrop[i] = 1.0;
-    voices.drumPitchDecaySec[i] = 0.0;
-    voices.drumNoisePrev[i] = 0.0;
-    voices.drumHpPrev[i] = 0.0;
-    voices.drumHpAlpha[i] = 0.0;
-    voices.drumLpPrev[i] = 0.0;
-    voices.drumLpAlpha[i] = 0.0;
-
-    SetSmoothingRange(voices.waveformAmpSmoothing[i], 0.0, 2.0);
-    SetSmoothingSampleRate(voices.waveformAmpSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(voices.waveformAmpSmoothing[i], 4.0);
-    ResetSmoothedParam(voices.waveformAmpSmoothing[i], 1.0);
-
-    SetSmoothingRange(voices.waveformPitchSmoothing[i], 0.25, 4.0);
-    SetSmoothingSampleRate(voices.waveformPitchSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(voices.waveformPitchSmoothing[i], 2.0);
-    ResetSmoothedParam(voices.waveformPitchSmoothing[i], 1.0);
-
-    SetSmoothingRange(voices.waveformFilterCutoffSmoothing[i], 10.0, 20000.0);
-    SetSmoothingSampleRate(voices.waveformFilterCutoffSmoothing[i], sampleRate);
-    SetSmoothingTimeMs(voices.waveformFilterCutoffSmoothing[i], 8.0);
-    ResetSmoothedParam(voices.waveformFilterCutoffSmoothing[i], 1200.0);
-
-    if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
-    {
-        InitDrumVoice(*drum, voices, i, sampleRate);
-    }
     if (const auto* wave = std::get_if<WaveformConfig>(&cfg.source))
     {
-        FilterInstance& filter = voices.waveformFilter[i];
-        SetFilterSampleRate(filter, sampleRate);
-        SetFilterMode(filter, wave->filterMode);
-        SetFilterCutoffHz(filter, wave->filterCutoffHz);
-        SetFilterResonance(filter, wave->filterResonance);
-        ResetFilterState(filter);
+        voices.sourceState[i] = WaveformVoiceState{};
+        auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
 
-        SetSmoothingTimeMs(voices.waveformAmpSmoothing[i], wave->smoothing.ampTimeMs);
-        SetSmoothingTimeMs(voices.waveformPitchSmoothing[i], wave->smoothing.pitchTimeMs);
-        SetSmoothingTimeMs(voices.waveformFilterCutoffSmoothing[i], wave->smoothing.filterCutoffTimeMs);
-        ResetSmoothedParam(voices.waveformFilterCutoffSmoothing[i], wave->filterCutoffHz);
+        SetSmoothingRange(ws.ampSmoothing, 0.0, 2.0);
+        SetSmoothingSampleRate(ws.ampSmoothing, sampleRate);
+        SetSmoothingTimeMs(ws.ampSmoothing, wave->smoothing.ampTimeMs);
+        ResetSmoothedParam(ws.ampSmoothing, 1.0);
 
-        ResetModulationState(voices.modulation[i]);
-        NoteOnModulation(voices.modulation[i]);
+        SetSmoothingRange(ws.pitchSmoothing, 0.25, 4.0);
+        SetSmoothingSampleRate(ws.pitchSmoothing, sampleRate);
+        SetSmoothingTimeMs(ws.pitchSmoothing, wave->smoothing.pitchTimeMs);
+        ResetSmoothedParam(ws.pitchSmoothing, 1.0);
+
+        SetSmoothingRange(ws.filterCutoffSmoothing, 10.0, 20000.0);
+        SetSmoothingSampleRate(ws.filterCutoffSmoothing, sampleRate);
+        SetSmoothingTimeMs(ws.filterCutoffSmoothing, wave->smoothing.filterCutoffTimeMs);
+        ResetSmoothedParam(ws.filterCutoffSmoothing, wave->filterCutoffHz);
+
+        SetFilterSampleRate(ws.filter, sampleRate);
+        SetFilterMode(ws.filter, wave->filterMode);
+        SetFilterCutoffHz(ws.filter, wave->filterCutoffHz);
+        SetFilterResonance(ws.filter, wave->filterResonance);
+        ResetFilterState(ws.filter);
+
+        ResetModulationState(ws.modulation);
+        NoteOnModulation(ws.modulation);
     }
     else if (std::holds_alternative<FmConfig>(cfg.source))
     {
-        SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
-        ResetModulationState(voices.modulation[i]);
-        NoteOnModulation(voices.modulation[i]);
+        voices.sourceState[i] = FmVoiceState{};
+        auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
+        ResetModulationState(fs.modulation);
+        NoteOnModulation(fs.modulation);
+    }
+    else if (std::holds_alternative<NoiseConfig>(cfg.source))
+    {
+        voices.sourceState[i] = NoiseVoiceState{};
+    }
+    else if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
+    {
+        voices.sourceState[i] = DrumVoiceState{};
+        auto& ds = std::get<DrumVoiceState>(voices.sourceState[i]);
+        InitDrumVoice(*drum, ds, voices.phaseInc[i], sampleRate);
     }
     else
     {
-        SetFilterMode(voices.waveformFilter[i], FilterMode::Bypass);
-        ResetModulationState(voices.modulation[i]);
+        voices.sourceState[i] = DrumKitVoiceState{};
     }
 }
 
@@ -181,7 +183,7 @@ bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const M
             NoteOff(voices.env[i]);
             if (config::SourceCapabilityOf(voices.source[i]).hasModTargets)
             {
-                NoteOffModulation(voices.modulation[i]);
+                NoteOffVoiceModulation(voices.sourceState[i]);
             }
             voices.released[i] = 1;
         }
@@ -295,22 +297,7 @@ void Voice::reserve(size_t n)
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
-    fmCarrierPhase.reserve(n);
-    fmModPhase.reserve(n);
-    drumTime.reserve(n);
-    drumBaseFreq.reserve(n);
-    drumPitchDrop.reserve(n);
-    drumPitchDecaySec.reserve(n);
-    drumNoisePrev.reserve(n);
-    drumHpPrev.reserve(n);
-    drumHpAlpha.reserve(n);
-    drumLpPrev.reserve(n);
-    drumLpAlpha.reserve(n);
-    waveformFilter.reserve(n);
-    modulation.reserve(n);
-    waveformAmpSmoothing.reserve(n);
-    waveformPitchSmoothing.reserve(n);
-    waveformFilterCutoffSmoothing.reserve(n);
+    sourceState.reserve(n);
 }
 
 void Voice::clear()
@@ -331,22 +318,7 @@ void Voice::clear()
     env.clear();
     phase.clear();
     phaseInc.clear();
-    fmCarrierPhase.clear();
-    fmModPhase.clear();
-    drumTime.clear();
-    drumBaseFreq.clear();
-    drumPitchDrop.clear();
-    drumPitchDecaySec.clear();
-    drumNoisePrev.clear();
-    drumHpPrev.clear();
-    drumHpAlpha.clear();
-    drumLpPrev.clear();
-    drumLpAlpha.clear();
-    waveformFilter.clear();
-    modulation.clear();
-    waveformAmpSmoothing.clear();
-    waveformPitchSmoothing.clear();
-    waveformFilterCutoffSmoothing.clear();
+    sourceState.clear();
 }
 
 void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
@@ -379,23 +351,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
 
     phase.push_back(0.0);
     phaseInc.push_back(0.0);
-    fmCarrierPhase.push_back(0.0);
-    fmModPhase.push_back(0.0);
-
-    drumTime.push_back(0.0);
-    drumBaseFreq.push_back(0.0);
-    drumPitchDrop.push_back(1.0);
-    drumPitchDecaySec.push_back(0.0);
-    drumNoisePrev.push_back(0.0);
-    drumHpPrev.push_back(0.0);
-    drumHpAlpha.push_back(0.0);
-    drumLpPrev.push_back(0.0);
-    drumLpAlpha.push_back(0.0);
-    waveformFilter.emplace_back();
-    modulation.emplace_back();
-    waveformAmpSmoothing.emplace_back();
-    waveformPitchSmoothing.emplace_back();
-    waveformFilterCutoffSmoothing.emplace_back();
+    sourceState.emplace_back();
 
     const size_t i = size() - 1;
     InitializeVoiceAtIndex(*this, i, cfg, e, sampleRate);
@@ -419,7 +375,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
                 NoteOff(env[i]);
                 if (cap.hasModTargets)
                 {
-                    NoteOffModulation(modulation[i]);
+                    NoteOffVoiceModulation(sourceState[i]);
                 }
                 released[i] = 1;
                 return;
@@ -440,7 +396,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
             NoteOff(env[i]);
             if (cap.hasModTargets)
             {
-                NoteOffModulation(modulation[i]);
+                NoteOffVoiceModulation(sourceState[i]);
             }
             released[i] = 1;
             break;
@@ -487,22 +443,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);
-    CompactVectorByKeep(fmCarrierPhase, keepScratch);
-    CompactVectorByKeep(fmModPhase, keepScratch);
-    CompactVectorByKeep(drumTime, keepScratch);
-    CompactVectorByKeep(drumBaseFreq, keepScratch);
-    CompactVectorByKeep(drumPitchDrop, keepScratch);
-    CompactVectorByKeep(drumPitchDecaySec, keepScratch);
-    CompactVectorByKeep(drumNoisePrev, keepScratch);
-    CompactVectorByKeep(drumHpPrev, keepScratch);
-    CompactVectorByKeep(drumHpAlpha, keepScratch);
-    CompactVectorByKeep(drumLpPrev, keepScratch);
-    CompactVectorByKeep(drumLpAlpha, keepScratch);
-    CompactVectorByKeep(waveformFilter, keepScratch);
-    CompactVectorByKeep(modulation, keepScratch);
-    CompactVectorByKeep(waveformAmpSmoothing, keepScratch);
-    CompactVectorByKeep(waveformPitchSmoothing, keepScratch);
-    CompactVectorByKeep(waveformFilterCutoffSmoothing, keepScratch);
+    CompactVectorByKeep(sourceState, keepScratch);
 
     return removed;
 }

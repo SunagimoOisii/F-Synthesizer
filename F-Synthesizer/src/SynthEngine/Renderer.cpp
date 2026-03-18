@@ -30,43 +30,43 @@ double WrapPhase(double phase)
     return phase;
 }
 
-void EnsureDrumFilters(Voice& voices, size_t i, double hpCut, double lpCut, int sampleRate)
+void EnsureDrumFilters(DrumVoiceState& ds, double hpCut, double lpCut, int sampleRate)
 {
     // 初回のみ係数を計算し、同一voice中は再利用する。
-    if (voices.drumHpAlpha[i] <= 0.0)
+    if (ds.hpAlpha <= 0.0)
     {
-        voices.drumHpAlpha[i] = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        ds.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
     }
-    if (voices.drumLpAlpha[i] <= 0.0)
+    if (ds.lpAlpha <= 0.0)
     {
-        voices.drumLpAlpha[i] = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        ds.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
     }
 }
 
-void PrepareDrumRelease(Voice& voices, size_t i)
+void PrepareDrumRelease(Voice& voices, const DrumVoiceState& ds, size_t i)
 {
     // Drum は attack+decay 到達で自動 NoteOff へ移す。
-    if (voices.released[i] == 0 && voices.drumTime[i] >= (voices.attackSec[i] + voices.decaySec[i]))
+    if (voices.released[i] == 0 && ds.time >= (voices.attackSec[i] + voices.decaySec[i]))
     {
         NoteOff(voices.env[i]);
         voices.released[i] = 1;
     }
 }
 
-double RenderKickSample(const DrumConfig& src, Voice& voices, size_t i, int sampleRate)
+double RenderKickSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
 {
     double pitchFactor = 1.0;
-    if (voices.drumPitchDecaySec[i] > 0.0)
+    if (ds.pitchDecaySec > 0.0)
     {
-        pitchFactor += (voices.drumPitchDrop[i] - 1.0) * std::exp(-voices.drumTime[i] / voices.drumPitchDecaySec[i]);
+        pitchFactor += (ds.pitchDrop - 1.0) * std::exp(-ds.time / ds.pitchDecaySec);
     }
-    const double freq = voices.drumBaseFreq[i] * pitchFactor;
+    const double freq = ds.baseFreq * pitchFactor;
     voices.phase[i] += (freq / sampleRate);
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
     return SampleWavePhase(WaveType::Sine, voices.phase[i]);
 }
 
-double RenderSnareSample(const DrumConfig& src, Voice& voices, size_t i, int sampleRate)
+double RenderSnareSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
 {
     const double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.3;
     const double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 0.7;
@@ -74,21 +74,21 @@ double RenderSnareSample(const DrumConfig& src, Voice& voices, size_t i, int sam
     const double lpCut = (src.lpCut > 0.0) ? src.lpCut : 6000.0;
     const WaveType toneWave = static_cast<WaveType>(src.toneWave);
     const NoiseType noiseType = static_cast<NoiseType>(src.noiseType);
-    EnsureDrumFilters(voices, i, hpCut, lpCut, sampleRate);
-    voices.phase[i] += voices.drumBaseFreq[i] / sampleRate;
+    EnsureDrumFilters(ds, hpCut, lpCut, sampleRate);
+    voices.phase[i] += ds.baseFreq / sampleRate;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
-    const double toneInc = voices.drumBaseFreq[i] / sampleRate;
+    const double toneInc = ds.baseFreq / sampleRate;
     const double tone = SampleWavePhase(toneWave, voices.phase[i], toneInc);
     const double noise = SampleNoise(noiseType);
-    const double hp = voices.drumHpAlpha[i] * (voices.drumHpPrev[i] + noise - voices.drumNoisePrev[i]);
-    const double lp = (1.0 - voices.drumLpAlpha[i]) * hp + voices.drumLpAlpha[i] * voices.drumLpPrev[i];
-    voices.drumNoisePrev[i] = noise;
-    voices.drumHpPrev[i] = hp;
-    voices.drumLpPrev[i] = lp;
+    const double hp = ds.hpAlpha * (ds.hpPrev + noise - ds.noisePrev);
+    const double lp = (1.0 - ds.lpAlpha) * hp + ds.lpAlpha * ds.lpPrev;
+    ds.noisePrev = noise;
+    ds.hpPrev = hp;
+    ds.lpPrev = lp;
     return toneLevel * tone + noiseLevel * lp;
 }
 
-double RenderHatSample(const DrumConfig& src, Voice& voices, size_t i, int sampleRate)
+double RenderHatSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
 {
     const double noiseLevel = (src.noiseLevel > 0.0) ? src.noiseLevel : 1.0;
     const double hpCut = (src.hpCut > 0.0) ? src.hpCut : 6000.0;
@@ -97,13 +97,13 @@ double RenderHatSample(const DrumConfig& src, Voice& voices, size_t i, int sampl
     const double toneLevel = (src.toneLevel > 0.0) ? src.toneLevel : 0.2;
     const WaveType toneWave = static_cast<WaveType>(src.toneWave);
     const NoiseType noiseType = static_cast<NoiseType>(src.noiseType);
-    EnsureDrumFilters(voices, i, hpCut, lpCut, sampleRate);
+    EnsureDrumFilters(ds, hpCut, lpCut, sampleRate);
     const double noise = SampleNoise(noiseType);
-    const double hp = voices.drumHpAlpha[i] * (voices.drumHpPrev[i] + noise - voices.drumNoisePrev[i]);
-    const double lp = (1.0 - voices.drumLpAlpha[i]) * hp + voices.drumLpAlpha[i] * voices.drumLpPrev[i];
-    voices.drumNoisePrev[i] = noise;
-    voices.drumHpPrev[i] = hp;
-    voices.drumLpPrev[i] = lp;
+    const double hp = ds.hpAlpha * (ds.hpPrev + noise - ds.noisePrev);
+    const double lp = (1.0 - ds.lpAlpha) * hp + ds.lpAlpha * ds.lpPrev;
+    ds.noisePrev = noise;
+    ds.hpPrev = hp;
+    ds.lpPrev = lp;
     voices.phase[i] += toneFreq / sampleRate;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
     const double toneInc = toneFreq / sampleRate;
@@ -113,23 +113,24 @@ double RenderHatSample(const DrumConfig& src, Voice& voices, size_t i, int sampl
 
 double RenderDrumSample(const DrumConfig& src, Voice& voices, size_t i, double dt, int sampleRate)
 {
-    PrepareDrumRelease(voices, i);
+    auto& ds = std::get<DrumVoiceState>(voices.sourceState[i]);
+    PrepareDrumRelease(voices, ds, i);
 
     double w = 0.0;
     if (src.type == DrumType::Kick)
     {
-        w = RenderKickSample(src, voices, i, sampleRate);
+        w = RenderKickSample(src, voices, ds, i, sampleRate);
     }
     else if (src.type == DrumType::Snare)
     {
-        w = RenderSnareSample(src, voices, i, sampleRate);
+        w = RenderSnareSample(src, voices, ds, i, sampleRate);
     }
     else if (src.type == DrumType::Hat)
     {
-        w = RenderHatSample(src, voices, i, sampleRate);
+        w = RenderHatSample(src, voices, ds, i, sampleRate);
     }
 
-    voices.drumTime[i] += dt;
+    ds.time += dt;
     return w;
 }
 
@@ -140,15 +141,16 @@ void RenderWaveformSource(
     const VoiceRenderInput& in,
     SourceRenderFrame& frame)
 {
+    auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
     ModulationResult mod = EvaluateModulation(
-        voices.modulation[i],
+        ws.modulation,
         src.modulation,
         in.dt);
     double pitchMul = mod.pitchMul;
     if (src.smoothing.enabled && src.smoothing.pitchEnabled)
     {
-        SetSmoothedTarget(voices.waveformPitchSmoothing[i], pitchMul);
-        pitchMul = StepSmoothedParam(voices.waveformPitchSmoothing[i]);
+        SetSmoothedTarget(ws.pitchSmoothing, pitchMul);
+        pitchMul = StepSmoothedParam(ws.pitchSmoothing);
     }
 
     const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
@@ -199,8 +201,9 @@ void RenderFmSource(
     const VoiceRenderInput& in,
     SourceRenderFrame& frame)
 {
+    auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
     const ModulationResult mod = EvaluateModulation(
-        voices.modulation[i],
+        fs.modulation,
         src.modulation,
         in.dt);
     const double carrierInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.carrierRatio;
@@ -209,18 +212,18 @@ void RenderFmSource(
     frame.sample = SampleFmPhase(
         src.carrierWave,
         src.modWave,
-        voices.fmCarrierPhase[i],
-        voices.fmModPhase[i],
+        fs.carrierPhase,
+        fs.modPhase,
         carrierInc,
         modInc,
         fmIndex);
     frame.ampMul = mod.ampMul;
     frame.sourceGain = src.outLevel;
 
-    voices.fmCarrierPhase[i] += carrierInc;
-    if (voices.fmCarrierPhase[i] >= 1.0) voices.fmCarrierPhase[i] -= 1.0;
-    voices.fmModPhase[i] += modInc;
-    if (voices.fmModPhase[i] >= 1.0) voices.fmModPhase[i] -= 1.0;
+    fs.carrierPhase += carrierInc;
+    if (fs.carrierPhase >= 1.0) fs.carrierPhase -= 1.0;
+    fs.modPhase += modInc;
+    if (fs.modPhase >= 1.0) fs.modPhase -= 1.0;
 }
 
 void RenderDrumSource(
@@ -277,6 +280,7 @@ void ApplyCommonShaper(
         using T = std::decay_t<decltype(source)>;
         if constexpr (std::is_same_v<T, WaveformConfig>)
         {
+            auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
             if (frame.shaperKind != CommonShaperKind::WaveformFilter)
             {
                 return;
@@ -285,11 +289,11 @@ void ApplyCommonShaper(
             double filterCutoffHz = frame.shaperCutoffHz;
             if (source.smoothing.enabled)
             {
-                SetSmoothedTarget(voices.waveformFilterCutoffSmoothing[i], filterCutoffHz);
-                filterCutoffHz = StepSmoothedParam(voices.waveformFilterCutoffSmoothing[i]);
+                SetSmoothedTarget(ws.filterCutoffSmoothing, filterCutoffHz);
+                filterCutoffHz = StepSmoothedParam(ws.filterCutoffSmoothing);
             }
-            SetFilterCutoffHz(voices.waveformFilter[i], filterCutoffHz);
-            frame.sample = ProcessFilterSample(voices.waveformFilter[i], frame.sample);
+            SetFilterCutoffHz(ws.filter, filterCutoffHz);
+            frame.sample = ProcessFilterSample(ws.filter, frame.sample);
         }
     }, src);
 }
@@ -305,11 +309,12 @@ void ApplyModulationLayer(
         using T = std::decay_t<decltype(source)>;
         if constexpr (std::is_same_v<T, WaveformConfig>)
         {
+            auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
             double ampMul = frame.ampMul;
             if (source.smoothing.enabled)
             {
-                SetSmoothedTarget(voices.waveformAmpSmoothing[i], ampMul);
-                ampMul = StepSmoothedParam(voices.waveformAmpSmoothing[i]);
+                SetSmoothedTarget(ws.ampSmoothing, ampMul);
+                ampMul = StepSmoothedParam(ws.ampSmoothing);
             }
             frame.ampMul = ampMul;
         }
