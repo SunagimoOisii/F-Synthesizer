@@ -44,12 +44,19 @@ struct DrumVoiceState
 
 struct DrumKitVoiceState : DrumVoiceState {};
 
+struct PsgVoiceState
+{
+    double phase = 0.0;
+    uint16_t lfsrState = 0xACE1u; // noise用LFSR初期値（非ゼロ必須）
+};
+
 using PerSourceVoiceState = std::variant<
     WaveformVoiceState,
     FmVoiceState,
     NoiseVoiceState,
     DrumVoiceState,
-    DrumKitVoiceState>;
+    DrumKitVoiceState,
+    PsgVoiceState>;
 
 struct Voice
 {

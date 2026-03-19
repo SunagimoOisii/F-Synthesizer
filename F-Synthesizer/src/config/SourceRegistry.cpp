@@ -53,6 +53,13 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceCapability{ false, true, false, false, false, true, true },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Stack, SourceLifecycleSteal::RejectNew, false, true }
     },
+    {
+        SourceKind::Psg,
+        "psg",
+        "psg",
+        SourceCapability{ true, true, false, false, true, false, false },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
+    },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 7> kWaveformParameterSchema{ {
@@ -98,6 +105,12 @@ constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
 // DrumKit は note(0..127) ごとに DrumConfig を持つ可変構造のため、
 // 1本の schema 配列では表現しない。
 constexpr std::array<SourceParameterSchemaEntry, 0> kDrumKitParameterSchema{};
+
+constexpr std::array<SourceParameterSchemaEntry, 3> kPsgParameterSchema{ {
+    { "duty",        SourceParameterType::Int, 0.0, 7.0,  4.0 },
+    { "volumeSteps", SourceParameterType::Int, 0.0, 15.0, 15.0 },
+    { "maxVoices",   SourceParameterType::Int, 1.0, 8.0,  3.0 },
+} };
 
 } // namespace
 
@@ -160,6 +173,7 @@ SourceKind SourceConfigKind(const SourceConfig& src)
     if (std::holds_alternative<FmConfig>(src)) return SourceKind::Fm;
     if (std::holds_alternative<DrumConfig>(src)) return SourceKind::Drum;
     if (std::holds_alternative<DrumKitConfig>(src)) return SourceKind::DrumKit;
+    if (std::holds_alternative<PsgConfig>(src)) return SourceKind::Psg;
     return SourceKind::Waveform;
 }
 
@@ -227,6 +241,10 @@ bool TryGetParameterSchema(
         outEntries = kDrumKitParameterSchema.data();
         outCount = 0;
         return true;
+    case SourceKind::Psg:
+        outEntries = kPsgParameterSchema.data();
+        outCount = kPsgParameterSchema.size();
+        return true;
     case SourceKind::Count:
         return false;
     }
@@ -261,6 +279,8 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
         kit.map[36] = DrumConfig{ DrumType::Kick };
         return kit;
     }
+    case SourceKind::Psg:
+        return PsgConfig{};
     case SourceKind::Count:
         break;
     }

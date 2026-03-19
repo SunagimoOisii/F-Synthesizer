@@ -145,6 +145,10 @@ void InitializeVoiceAtIndex(
         auto& ds = std::get<DrumVoiceState>(voices.sourceState[i]);
         InitDrumVoice(*drum, ds, voices.phaseInc[i], sampleRate);
     }
+    else if (std::get_if<PsgConfig>(&cfg.source))
+    {
+        voices.sourceState[i] = PsgVoiceState{};
+    }
     else
     {
         voices.sourceState[i] = DrumKitVoiceState{};

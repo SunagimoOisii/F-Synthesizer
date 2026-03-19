@@ -16,6 +16,7 @@ enum class SourceKind
     Fm = 2,
     Drum = 3,
     DrumKit = 4,
+    Psg = 5,
     Count
 };
 
