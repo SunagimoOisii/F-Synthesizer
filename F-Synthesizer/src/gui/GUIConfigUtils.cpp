@@ -113,6 +113,13 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
+            else if constexpr (std::is_same_v<T, PsgConfig>)
+            {
+                return av.wave == bv->wave &&
+                    av.duty == bv->duty &&
+                    av.volumeSteps == bv->volumeSteps &&
+                    av.maxVoices == bv->maxVoices;
+            }
             else if constexpr (std::is_same_v<T, DrumKitConfig>)
             {
                 for (int i = 0; i < 128; i++)

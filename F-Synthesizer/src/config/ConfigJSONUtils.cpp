@@ -261,6 +261,18 @@ std::string NoiseTypeToString(NoiseType n)
     return "white";
 }
 
+std::string PsgWaveTypeToString(PsgWaveType w)
+{
+    switch (w)
+    {
+    case PsgWaveType::Square: return "square";
+    case PsgWaveType::Pulse: return "pulse";
+    case PsgWaveType::Triangle: return "triangle";
+    case PsgWaveType::Noise: return "noise";
+    }
+    return "square";
+}
+
 std::string DrumTypeToString(DrumType d)
 {
     switch (d)
@@ -616,6 +628,14 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
+        }
+        else if constexpr (std::is_same_v<T, PsgConfig>)
+        {
+            WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Psg) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"wave\": \"" << PsgWaveTypeToString(v.wave) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"duty\": " << v.duty << ",\n";
+            WriteIndent(out, indent + 2); out << "\"volumeSteps\": " << v.volumeSteps << ",\n";
+            WriteIndent(out, indent + 2); out << "\"maxVoices\": " << v.maxVoices << "\n";
         }
         else if constexpr (std::is_same_v<T, DrumKitConfig>)
         {

@@ -382,7 +382,7 @@ bool DrawChannelEditor(
         {
             updateHoverHelp(
                 "音源タイプを切り替えます。",
-                "Waveform/Noise/FM/DrumKit の編集対象に切り替わります。",
+                "Waveform/Noise/FM/DrumKit/PSG の編集対象に切り替わります。",
                 "切替時は該当タイプの既定設定で初期化されます。");
         }
 
@@ -530,6 +530,65 @@ bool DrawChannelEditor(
             if (updateHoverHelp) updateHoverHelp("FM OutLevel を調整します。", "FM経路の出力音量が変わります。", nullptr);
 
             changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true);
+        }
+        else if (auto* psg = std::get_if<PsgConfig>(&chCfg.source))
+        {
+            psg->duty = std::clamp(psg->duty, 0, 7);
+            psg->volumeSteps = std::clamp(psg->volumeSteps, 0, 15);
+            psg->maxVoices = std::clamp(psg->maxVoices, 1, 8);
+
+            int psgWaveIdx = 0;
+            switch (psg->wave)
+            {
+            case PsgWaveType::Square: psgWaveIdx = 0; break;
+            case PsgWaveType::Pulse: psgWaveIdx = 1; break;
+            case PsgWaveType::Triangle: psgWaveIdx = 2; break;
+            case PsgWaveType::Noise: psgWaveIdx = 3; break;
+            }
+            const char* psgWaves[] = { "Square", "Pulse", "Triangle", "Noise" };
+            if (ImGui::Combo("Wave", &psgWaveIdx, psgWaves, IM_ARRAYSIZE(psgWaves)))
+            {
+                switch (psgWaveIdx)
+                {
+                case 0: psg->wave = PsgWaveType::Square; break;
+                case 1: psg->wave = PsgWaveType::Pulse; break;
+                case 2: psg->wave = PsgWaveType::Triangle; break;
+                case 3: psg->wave = PsgWaveType::Noise; break;
+                default: psg->wave = PsgWaveType::Square; break;
+                }
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("PSG Wave を選択します。", "PSG波形（Square/Pulse/Triangle/Noise）が切り替わります。", nullptr);
+
+            if (psg->wave == PsgWaveType::Pulse)
+            {
+                int duty = psg->duty;
+                ImGui::SetNextItemWidth(220.0f);
+                if (ImGui::SliderInt("Duty", &duty, 0, 7))
+                {
+                    psg->duty = duty;
+                    changed = true;
+                }
+                if (updateHoverHelp) updateHoverHelp("Duty を調整します。", "Pulse波のパルス幅が変わります。", nullptr);
+            }
+
+            int volumeSteps = psg->volumeSteps;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Volume Steps", &volumeSteps, 0, 15))
+            {
+                psg->volumeSteps = volumeSteps;
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Volume Steps を調整します。", "PSGの離散音量ステップ数が変わります。", nullptr);
+
+            int maxVoices = psg->maxVoices;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Max Voices", &maxVoices, 1, 8))
+            {
+                psg->maxVoices = maxVoices;
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Max Voices を調整します。", "PSGの同時発音上限が変わります。", nullptr);
         }
         else if (auto* kit = std::get_if<DrumKitConfig>(&chCfg.source))
         {
