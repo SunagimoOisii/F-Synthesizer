@@ -1,6 +1,6 @@
-# FM（2オペレータ）
+# FM（4オペレータ）
 
-最終更新: 2026-03-19
+最終更新: 2026-03-25
 状態: 実装済み
 source type: `fm`
 
@@ -10,18 +10,25 @@ source type: `fm`
   - `include/SynthEngine/SynthEngine.h`
   - `src/SynthEngine/Renderer.cpp`
 - 実行経路:
-  - キャリア/モジュレータ位相を更新
-  - `index` と `outLevel` を適用して出力
+  - 4オペレータ位相を更新
+  - `algorithm` に応じて接続トポロジを切り替えて合成
+  - `feedback`（ops[0]自己帰還）を適用
   - ADSR とチャンネルミックスを適用
 - 現状仕様:
-  - 2オペレータ構成
-  - `carrierWave`, `modWave`, `carrierRatio`, `modRatio`, `index`, `outLevel`
+  - 4オペレータ構成（`ops[4]`）
+  - `algorithm`（0-3）
+  - `feedback`（0.0-1.0）
+  - `ops[i].wave`, `ops[i].ratio`, `ops[i].level`, `ops[i].index`
 
 ## B. 作れる音 / 向いている用途
 
 - 音のキャラクター:
   - 明るい、金属的、パーカッシブ、デジタル感
 - 得意用途:
+  - ブラス（Mega Drive 系）
+  - 80年代 FM 弦
+  - オルガン（1変調3キャリア）
+  - ディープベース（チェーンFM）
   - ベル
   - EP 系
   - プラック
@@ -31,7 +38,6 @@ source type: `fm`
 
 ## C. 問題点
 
-- 2オペ限定でアルゴリズム自由度が低い
 - パラメータ感度が高く、操作難度が上がりやすい
 - Parameter Smoothing は非適用（契約上 waveform 専用）
 
@@ -40,7 +46,7 @@ source type: `fm`
 - 短期:
   - 安全域プリセットと初期値整備
 - 中期:
-  - 4オペの限定トポロジ導入検討
+  - アルゴリズム別テンプレートの整理
   - `index` / `pitchMul` への smoothing 接続を再検討（下記条件を満たす場合のみ）
 - 長期:
   - 方式間共通の変調制御（LFO/Env 連携）へ統合

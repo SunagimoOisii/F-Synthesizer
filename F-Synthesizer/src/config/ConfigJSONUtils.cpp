@@ -617,12 +617,20 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Fm) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"carrierWave\": \"" << WaveTypeToString(v.carrierWave) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"modWave\": \"" << WaveTypeToString(v.modWave) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"carrierRatio\": " << v.carrierRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"modRatio\": " << v.modRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"index\": " << v.index << ",\n";
-            WriteIndent(out, indent + 2); out << "\"outLevel\": " << v.outLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"algorithm\": " << v.algorithm << ",\n";
+            WriteIndent(out, indent + 2); out << "\"feedback\": " << v.feedback << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ops\": [\n";
+            for (size_t i = 0; i < 4; i++)
+            {
+                const FmOperator& op = v.ops[i];
+                WriteIndent(out, indent + 4); out << "{ \"wave\": \"" << WaveTypeToString(op.wave)
+                    << "\", \"ratio\": " << op.ratio
+                    << ", \"level\": " << op.level
+                    << ", \"index\": " << op.index << " }";
+                if (i + 1 < 4) out << ",";
+                out << "\n";
+            }
+            WriteIndent(out, indent + 2); out << "],\n";
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";

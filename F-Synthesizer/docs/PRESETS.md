@@ -26,7 +26,11 @@ GUI:
 |---|---|---|---|
 | `drumkit_basic` | `drumkit` | `9` | 基本ドラムキット（kick/snare/hat） |
 | `fm_bass_pluck` | `fm` | `0` | FM系の短いベースプラック |
+| `fm_bass_deep` | `fm` | `0` | チェーンFMベース（4オペ algo3） |
 | `fm_bell_glass` | `fm` | `0` | FMベル系（ガラス質） |
+| `fm_brass_mega` | `fm` | `0` | Mega Drive系ブラス（4オペ algo1） |
+| `fm_organ_retro` | `fm` | `0` | 1変調3キャリアオルガン（algo2） |
+| `fm_string_retro` | `fm` | `0` | 80年代FM弦（4オペ algo1） |
 | `noise_hat_air` | `noise` | `0` | ノイズ主体のハット/空気感レイヤー |
 | `psg_bass_triangle` | `psg` | `0` | PSG三角波ベース |
 | `psg_lead_pulse` | `psg` | `0` | PSGパルス系リード |

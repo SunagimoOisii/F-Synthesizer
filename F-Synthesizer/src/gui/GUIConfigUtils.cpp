@@ -102,16 +102,28 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
             }
             else if constexpr (std::is_same_v<T, FmConfig>)
             {
-                return av.carrierWave == bv->carrierWave &&
-                    av.modWave == bv->modWave &&
-                    NearlyEq(av.carrierRatio, bv->carrierRatio) &&
-                    NearlyEq(av.modRatio, bv->modRatio) &&
-                    NearlyEq(av.index, bv->index) &&
-                    NearlyEq(av.outLevel, bv->outLevel) &&
-                    av.filterMode == bv->filterMode &&
-                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
-                    NearlyEq(av.filterResonance, bv->filterResonance) &&
-                    ModulationConfigEquals(av.modulation, bv->modulation);
+                if (av.algorithm != bv->algorithm ||
+                    !NearlyEq(av.feedback, bv->feedback) ||
+                    av.filterMode != bv->filterMode ||
+                    !NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) ||
+                    !NearlyEq(av.filterResonance, bv->filterResonance) ||
+                    !ModulationConfigEquals(av.modulation, bv->modulation))
+                {
+                    return false;
+                }
+                for (size_t i = 0; i < 4; i++)
+                {
+                    const FmOperator& ao = av.ops[i];
+                    const FmOperator& bo = bv->ops[i];
+                    if (ao.wave != bo.wave ||
+                        !NearlyEq(ao.ratio, bo.ratio) ||
+                        !NearlyEq(ao.level, bo.level) ||
+                        !NearlyEq(ao.index, bo.index))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
             else if constexpr (std::is_same_v<T, PsgConfig>)
             {

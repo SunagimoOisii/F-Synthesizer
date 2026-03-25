@@ -1,0 +1,25 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.30,
+      "attackSec": 0.003,
+      "decaySec": 0.18,
+      "sustainLevel": 0.4,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "fm",
+        "algorithm": 3,
+        "feedback": 0.35,
+        "ops": [
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 4.0 },
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 2.5 },
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 1.2 },
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 0.0 }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 3200,
+        "filterResonance": 0.6
+      }
+    }
+  }
+}

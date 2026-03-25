@@ -526,7 +526,8 @@ bool DrawChannelEditor(
             changed |= ImGui::Combo("FM Algorithm", &fm->algorithm, algoLabels, IM_ARRAYSIZE(algoLabels));
             if (updateHoverHelp) updateHoverHelp("FM アルゴリズムを選択します。", "オペレータの接続構造が変わります。", nullptr);
 
-            changed |= ImGui::SliderDouble("Feedback", &fm->feedback, 0.0, 1.0, "%.2f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Feedback", fm->feedback, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Op1 の自己フィードバック量です。", "大きくするとサチュレーション気味になります。", nullptr);
 
             const char* waves[] = { "sine", "square", "saw", "triangle" };
