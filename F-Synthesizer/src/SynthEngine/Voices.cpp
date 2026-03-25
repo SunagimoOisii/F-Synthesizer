@@ -127,6 +127,11 @@ void InitializeVoiceAtIndex(
     {
         voices.sourceState[i] = FmVoiceState{};
         auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
+        fs.op0FeedbackSample = 0.0;
+        for (int k = 0; k < 4; k++)
+        {
+            fs.opPhase[k] = 0.0;
+        }
         ResetModulationState(fs.modulation);
         NoteOnModulation(fs.modulation);
         SetFilterSampleRate(fs.filter, sampleRate);

@@ -1,6 +1,8 @@
 #include "Internal.h"
 
+#include <algorithm>
 #include <iomanip>
+#include <regex>
 #include <sstream>
 
 #include "../ConfigFileInternal.h"
@@ -185,12 +187,24 @@ bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEn
 
 bool FmSchemaValue(const FmConfig& fm, const SourceParameterSchemaEntry& e, double& outValue)
 {
-    if (std::string_view(e.id) == "carrierWave") { outValue = static_cast<double>(fm.carrierWave); return true; }
-    if (std::string_view(e.id) == "modWave") { outValue = static_cast<double>(fm.modWave); return true; }
-    if (std::string_view(e.id) == "carrierRatio") { outValue = fm.carrierRatio; return true; }
-    if (std::string_view(e.id) == "modRatio") { outValue = fm.modRatio; return true; }
-    if (std::string_view(e.id) == "index") { outValue = fm.index; return true; }
-    if (std::string_view(e.id) == "outLevel") { outValue = fm.outLevel; return true; }
+    if (std::string_view(e.id) == "algorithm") { outValue = static_cast<double>(fm.algorithm); return true; }
+    if (std::string_view(e.id) == "feedback") { outValue = fm.feedback; return true; }
+    if (std::string_view(e.id) == "op1Wave") { outValue = static_cast<double>(fm.ops[0].wave); return true; }
+    if (std::string_view(e.id) == "op1Ratio") { outValue = fm.ops[0].ratio; return true; }
+    if (std::string_view(e.id) == "op1Level") { outValue = fm.ops[0].level; return true; }
+    if (std::string_view(e.id) == "op1Index") { outValue = fm.ops[0].index; return true; }
+    if (std::string_view(e.id) == "op2Wave") { outValue = static_cast<double>(fm.ops[1].wave); return true; }
+    if (std::string_view(e.id) == "op2Ratio") { outValue = fm.ops[1].ratio; return true; }
+    if (std::string_view(e.id) == "op2Level") { outValue = fm.ops[1].level; return true; }
+    if (std::string_view(e.id) == "op2Index") { outValue = fm.ops[1].index; return true; }
+    if (std::string_view(e.id) == "op3Wave") { outValue = static_cast<double>(fm.ops[2].wave); return true; }
+    if (std::string_view(e.id) == "op3Ratio") { outValue = fm.ops[2].ratio; return true; }
+    if (std::string_view(e.id) == "op3Level") { outValue = fm.ops[2].level; return true; }
+    if (std::string_view(e.id) == "op3Index") { outValue = fm.ops[2].index; return true; }
+    if (std::string_view(e.id) == "op4Wave") { outValue = static_cast<double>(fm.ops[3].wave); return true; }
+    if (std::string_view(e.id) == "op4Ratio") { outValue = fm.ops[3].ratio; return true; }
+    if (std::string_view(e.id) == "op4Level") { outValue = fm.ops[3].level; return true; }
+    if (std::string_view(e.id) == "op4Index") { outValue = fm.ops[3].index; return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = fm.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = fm.filterResonance; return true; }
     return false;
@@ -297,18 +311,129 @@ bool ValidateFmBySchema(const FmConfig& fm, std::string& err)
             return false;
         }
     }
+    return true;
+}
 
-    // ratio は 0.0 を許容しない（無音化と不正設定の早期検出）。
-    if (fm.carrierRatio <= 0.0)
+bool ExtractArrayAt(const std::string& text, size_t openBracketPos, std::string& outArray, std::string& err)
+{
+    // 目的: openBracketPos から対応する ']' までを切り出す。
+    if (openBracketPos >= text.size() || text[openBracketPos] != '[')
     {
-        err = "fm.carrierRatio must be in range 0.0<..32.0";
+        err = "invalid array start";
         return false;
     }
-    if (fm.modRatio <= 0.0)
+    int depth = 0;
+    bool inString = false;
+    bool escaped = false;
+    for (size_t i = openBracketPos; i < text.size(); i++)
     {
-        err = "fm.modRatio must be in range 0.0<..32.0";
+        const char c = text[i];
+        if (inString)
+        {
+            if (escaped)
+            {
+                escaped = false;
+            }
+            else if (c == '\\')
+            {
+                escaped = true;
+            }
+            else if (c == '"')
+            {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (c == '"')
+        {
+            inString = true;
+            continue;
+        }
+        if (c == '[')
+        {
+            depth++;
+        }
+        else if (c == ']')
+        {
+            depth--;
+            if (depth == 0)
+            {
+                outArray = text.substr(openBracketPos, i - openBracketPos + 1);
+                return true;
+            }
+        }
+    }
+    err = "unterminated array";
+    return false;
+}
+
+bool ExtractArrayForKey(const std::string& text, const std::string& key, std::string& outArray, bool& found, std::string& err)
+{
+    found = false;
+    const std::regex keyPat("\"" + key + "\"\\s*:");
+    std::smatch m;
+    if (!std::regex_search(text, m, keyPat))
+    {
+        return true;
+    }
+
+    found = true;
+    size_t pos = static_cast<size_t>(m.position() + m.length());
+    while (pos < text.size() && (text[pos] == ' ' || text[pos] == '\t' || text[pos] == '\r' || text[pos] == '\n'))
+    {
+        pos++;
+    }
+    if (pos >= text.size() || text[pos] != '[')
+    {
+        err = "key '" + key + "' must be an array";
         return false;
     }
+    return ExtractArrayAt(text, pos, outArray, err);
+}
+
+bool ParseTopLevelArrayObjectEntries(
+    const std::string& arrText,
+    const std::function<bool(size_t, const std::string&)>& onEntry,
+    std::string& err)
+{
+    // 目的: [{...}, {...}] 形式の配列を1段だけ走査する。
+    if (arrText.size() < 2 || arrText.front() != '[' || arrText.back() != ']')
+    {
+        err = "invalid array";
+        return false;
+    }
+
+    size_t i = 1;
+    size_t index = 0;
+    while (i + 1 < arrText.size())
+    {
+        while (i < arrText.size() && (arrText[i] == ' ' || arrText[i] == '\t' || arrText[i] == '\r' || arrText[i] == '\n' || arrText[i] == ','))
+        {
+            i++;
+        }
+        if (i >= arrText.size() || arrText[i] == ']')
+        {
+            break;
+        }
+        if (arrText[i] != '{')
+        {
+            err = "array item must be object";
+            return false;
+        }
+        std::string valueObj;
+        if (!ExtractObjectAt(arrText, i, valueObj, err))
+        {
+            return false;
+        }
+        if (!onEntry(index, valueObj))
+        {
+            return false;
+        }
+        i += valueObj.size();
+        index++;
+    }
+
     return true;
 }
 
@@ -563,25 +688,143 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     }
     case SourceKind::Fm:
     {
-        // FM は必須6キー + 任意 modulation を受理する。
-        auto carrier = ReadJSONString(sourceObjText, "carrierWave");
-        auto mod = ReadJSONString(sourceObjText, "modWave");
-        auto carrierRatio = ReadJSONDouble(sourceObjText, "carrierRatio");
-        auto modRatio = ReadJSONDouble(sourceObjText, "modRatio");
-        auto index = ReadJSONDouble(sourceObjText, "index");
-        auto outLevel = ReadJSONDouble(sourceObjText, "outLevel");
-        if (!carrier || !mod || !carrierRatio || !modRatio || !index || !outLevel)
+        // FM は新4オペ形式(ops)を優先し、旧2オペ形式を自動変換する。
+        FmConfig fm{};
+        fm.algorithm = 0;
+        fm.feedback = 0.0;
+        for (int i = 0; i < 4; i++)
         {
-            err = "fm source requires carrierWave/modWave/carrierRatio/modRatio/index/outLevel";
+            fm.ops[i].wave = WaveType::Sine;
+            fm.ops[i].ratio = 1.0;
+            fm.ops[i].level = 0.0;
+            fm.ops[i].index = 0.0;
+        }
+
+        std::string opsArray;
+        bool foundOps = false;
+        if (!ExtractArrayForKey(sourceObjText, "ops", opsArray, foundOps, err))
+        {
             return false;
         }
-        WaveType cw{}, mw{};
-        if (!TryParseWaveType(*carrier, cw) || !TryParseWaveType(*mod, mw))
+        if (foundOps)
         {
-            err = "invalid fm wave type";
-            return false;
+            if (auto v = ReadJSONInt(sourceObjText, "algorithm"))
+            {
+                fm.algorithm = *v;
+            }
+            if (fm.algorithm < 0 || fm.algorithm > 3)
+            {
+                err = "fm.algorithm must be 0..3";
+                return false;
+            }
+            if (auto v = ReadJSONDouble(sourceObjText, "feedback"))
+            {
+                fm.feedback = std::clamp(*v, 0.0, 1.0);
+            }
+
+            size_t opCount = 0;
+            if (!ParseTopLevelArrayObjectEntries(opsArray, [&](size_t opIndex, const std::string& opObj) {
+                if (opIndex >= 4)
+                {
+                    err = "fm.ops must contain 1..4 elements";
+                    return false;
+                }
+
+                const auto wave = ReadJSONString(opObj, "wave");
+                if (!wave)
+                {
+                    err = "fm.ops[" + std::to_string(opIndex) + "].wave is required";
+                    return false;
+                }
+                WaveType parsedWave{};
+                if (!TryParseWaveType(*wave, parsedWave))
+                {
+                    err = "invalid fm.ops[" + std::to_string(opIndex) + "].wave: " + *wave;
+                    return false;
+                }
+                fm.ops[opIndex].wave = parsedWave;
+
+                const auto ratio = ReadJSONDouble(opObj, "ratio");
+                if (!ratio)
+                {
+                    err = "fm.ops[" + std::to_string(opIndex) + "].ratio is required";
+                    return false;
+                }
+                if (*ratio <= 0.0)
+                {
+                    err = "fm.ops[" + std::to_string(opIndex) + "].ratio must be > 0.0";
+                    return false;
+                }
+                fm.ops[opIndex].ratio = std::clamp(*ratio, 0.0, 32.0);
+
+                if (const auto level = ReadJSONDouble(opObj, "level"))
+                {
+                    fm.ops[opIndex].level = std::clamp(*level, 0.0, 1.0);
+                }
+                if (const auto index = ReadJSONDouble(opObj, "index"))
+                {
+                    fm.ops[opIndex].index = std::clamp(*index, 0.0, 32.0);
+                }
+
+                opCount = opIndex + 1;
+                return true;
+                }, err))
+            {
+                return false;
+            }
+            if (opCount < 1 || opCount > 4)
+            {
+                err = "fm.ops must contain 1..4 elements";
+                return false;
+            }
         }
-        FmConfig fm{ cw, mw, *carrierRatio, *modRatio, *index, *outLevel, FilterMode::Bypass, 8000.0, 0.707, {} };
+        else
+        {
+            const auto carrier = ReadJSONString(sourceObjText, "carrierWave");
+            if (!carrier)
+            {
+                err = "fm source requires 'ops' or carrierWave/modWave/carrierRatio/modRatio/index/outLevel";
+                return false;
+            }
+            const auto mod = ReadJSONString(sourceObjText, "modWave");
+            const auto carrierRatio = ReadJSONDouble(sourceObjText, "carrierRatio");
+            const auto modRatio = ReadJSONDouble(sourceObjText, "modRatio");
+            const auto index = ReadJSONDouble(sourceObjText, "index");
+            const auto outLevel = ReadJSONDouble(sourceObjText, "outLevel");
+            if (!mod || !carrierRatio || !modRatio || !index || !outLevel)
+            {
+                err = "fm source requires carrierWave/modWave/carrierRatio/modRatio/index/outLevel";
+                return false;
+            }
+            WaveType cw{}, mw{};
+            if (!TryParseWaveType(*carrier, cw) || !TryParseWaveType(*mod, mw))
+            {
+                err = "invalid fm wave type";
+                return false;
+            }
+            if (*carrierRatio <= 0.0)
+            {
+                err = "fm.carrierRatio must be in range 0.0<..32.0";
+                return false;
+            }
+            if (*modRatio <= 0.0)
+            {
+                err = "fm.modRatio must be in range 0.0<..32.0";
+                return false;
+            }
+
+            fm.algorithm = 0;
+            fm.feedback = 0.0;
+            fm.ops[0].wave = mw;
+            fm.ops[0].ratio = *modRatio;
+            fm.ops[0].level = 1.0;
+            fm.ops[0].index = *index;
+            fm.ops[1].wave = cw;
+            fm.ops[1].ratio = *carrierRatio;
+            fm.ops[1].level = *outLevel;
+            fm.ops[1].index = 0.0;
+        }
+
         if (auto v = ReadJSONString(sourceObjText, "filterMode"))
         {
             FilterMode mode{};

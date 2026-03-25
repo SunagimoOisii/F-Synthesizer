@@ -496,10 +496,16 @@ bool DrawChannelEditor(
         }
         else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
         {
-            fm->carrierRatio = std::clamp(fm->carrierRatio, 0.0, 32.0);
-            fm->modRatio = std::clamp(fm->modRatio, 0.0, 32.0);
-            fm->index = std::clamp(fm->index, 0.0, 20.0);
-            fm->outLevel = std::clamp(fm->outLevel, 0.0, 4.0);
+            fm->algorithm = std::clamp(fm->algorithm, 0, 3);
+            fm->feedback = std::clamp(fm->feedback, 0.0, 1.0);
+            for (auto& op : fm->ops)
+            {
+                op.ratio = std::clamp(op.ratio, 0.0, 32.0);
+                op.level = std::clamp(op.level, 0.0, 1.0);
+                op.index = std::clamp(op.index, 0.0, 32.0);
+            }
+            fm->filterCutoffHz = std::clamp(fm->filterCutoffHz, 10.0, 20000.0);
+            fm->filterResonance = std::clamp(fm->filterResonance, 0.1, 18.0);
             fm->modulation.lfo1.rateHz = std::clamp(fm->modulation.lfo1.rateHz, 0.0, 100.0);
             fm->modulation.lfo1.depth = std::clamp(fm->modulation.lfo1.depth, 0.0, 1.0);
             fm->modulation.env2.attackSec = std::clamp(fm->modulation.env2.attackSec, 0.0, 10.0);
@@ -511,23 +517,82 @@ bool DrawChannelEditor(
                 route.amount = std::clamp(route.amount, -1.0, 1.0);
             }
 
-            int cIdx = WaveToIndex(fm->carrierWave);
-            int mIdx = WaveToIndex(fm->modWave);
+            const char* algoLabels[] = {
+                "0: M->C  (2op compat)",
+                "1: [M->C]+[M->C]  (2-pair)",
+                "2: M->[C+C+C]  (1mod 3car)",
+                "3: M->M->M->C  (chain)"
+            };
+            changed |= ImGui::Combo("FM Algorithm", &fm->algorithm, algoLabels, IM_ARRAYSIZE(algoLabels));
+            if (updateHoverHelp) updateHoverHelp("FM アルゴリズムを選択します。", "オペレータの接続構造が変わります。", nullptr);
+
+            changed |= ImGui::SliderDouble("Feedback", &fm->feedback, 0.0, 1.0, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Op1 の自己フィードバック量です。", "大きくするとサチュレーション気味になります。", nullptr);
+
             const char* waves[] = { "sine", "square", "saw", "triangle" };
-            changed |= ImGui::Combo("Carrier Wave", &cIdx, waves, IM_ARRAYSIZE(waves));
-            if (updateHoverHelp) updateHoverHelp("Carrier Wave を選択します。", "FMの主音波形が変わります。", nullptr);
-            changed |= ImGui::Combo("Mod Wave", &mIdx, waves, IM_ARRAYSIZE(waves));
-            if (updateHoverHelp) updateHoverHelp("Mod Wave を選択します。", "FMの変調波形が変わります。", nullptr);
-            fm->carrierWave = WaveFromIndex(cIdx);
-            fm->modWave = WaveFromIndex(mIdx);
-            changed |= ImGui::InputDouble("Carrier Ratio", &fm->carrierRatio, 0.01, 0.1, "%.3f");
-            if (updateHoverHelp) updateHoverHelp("Carrier Ratio を調整します。", "主発振周波数比が変わります。", nullptr);
-            changed |= ImGui::InputDouble("Mod Ratio", &fm->modRatio, 0.01, 0.1, "%.3f");
-            if (updateHoverHelp) updateHoverHelp("Mod Ratio を調整します。", "変調発振周波数比が変わります。", nullptr);
-            changed |= ImGui::InputDouble("FM Index", &fm->index, 0.01, 0.1, "%.3f");
-            if (updateHoverHelp) updateHoverHelp("FM Index を調整します。", "倍音の強さが変わります。", nullptr);
-            changed |= ImGui::InputDouble("FM OutLevel", &fm->outLevel, 0.01, 0.1, "%.3f");
-            if (updateHoverHelp) updateHoverHelp("FM OutLevel を調整します。", "FM経路の出力音量が変わります。", nullptr);
+            const char* opHeadersAlgo0[] = { "Op 1 (Mod)", "Op 2 (Car)", "Op 3", "Op 4" };
+            const char* opHeadersDefault[] = { "Op 1", "Op 2", "Op 3", "Op 4" };
+            for (int opIdx = 0; opIdx < 4; opIdx++)
+            {
+                const char* header = (fm->algorithm == 0) ? opHeadersAlgo0[opIdx] : opHeadersDefault[opIdx];
+                if (ImGui::CollapsingHeader(header))
+                {
+                    FmOperator& op = fm->ops[static_cast<size_t>(opIdx)];
+
+                    int waveIdx = WaveToIndex(op.wave);
+                    const std::string waveId = "Wave##op" + std::to_string(opIdx);
+                    changed |= ImGui::Combo(waveId.c_str(), &waveIdx, waves, IM_ARRAYSIZE(waves));
+                    if (updateHoverHelp) updateHoverHelp("Wave を選択します。", "このオペレータの波形が変わります。", nullptr);
+                    op.wave = WaveFromIndex(waveIdx);
+
+                    const std::string ratioId = "Ratio##op" + std::to_string(opIdx);
+                    changed |= ImGui::InputDouble(ratioId.c_str(), &op.ratio, 0.01, 0.1, "%.3f");
+                    if (updateHoverHelp) updateHoverHelp("Ratio を調整します。", "このオペレータの周波数比が変わります。", nullptr);
+
+                    const std::string levelId = "Level##op" + std::to_string(opIdx);
+                    changed |= ImGui::InputDouble(levelId.c_str(), &op.level, 0.01, 0.1, "%.3f");
+                    if (updateHoverHelp) updateHoverHelp("Level を調整します。", "このオペレータの出力レベルが変わります。", nullptr);
+
+                    const std::string indexId = "Index##op" + std::to_string(opIdx);
+                    changed |= ImGui::InputDouble(indexId.c_str(), &op.index, 0.01, 0.1, "%.3f");
+                    if (updateHoverHelp) updateHoverHelp("Index を調整します。", "このオペレータの変調深さが変わります。", nullptr);
+                }
+            }
+
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            int filterModeIdx = 0;
+            switch (fm->filterMode)
+            {
+            case FilterMode::Bypass: filterModeIdx = 0; break;
+            case FilterMode::LowPass: filterModeIdx = 1; break;
+            case FilterMode::HighPass: filterModeIdx = 2; break;
+            case FilterMode::BandPass: filterModeIdx = 3; break;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
+            {
+                switch (filterModeIdx)
+                {
+                case 0: fm->filterMode = FilterMode::Bypass; break;
+                case 1: fm->filterMode = FilterMode::LowPass; break;
+                case 2: fm->filterMode = FilterMode::HighPass; break;
+                case 3: fm->filterMode = FilterMode::BandPass; break;
+                default: fm->filterMode = FilterMode::Bypass; break;
+                }
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Filter Mode を選択します。", "フィルタ有効/種別が変わります。", nullptr);
+            if (fm->filterMode != FilterMode::Bypass)
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "(active)");
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Cutoff (Hz)", fm->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
+            if (updateHoverHelp) updateHoverHelp("Filter Cutoff を調整します。", "通過帯域の中心が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Resonance (Q)", fm->filterResonance, 0.1f, 18.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
 
             changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true);
         }

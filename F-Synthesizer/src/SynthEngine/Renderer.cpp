@@ -30,6 +30,17 @@ double WrapPhase(double phase)
     return phase;
 }
 
+// オペレータ1個分の位相サンプリング（FM変調込み）。
+// modSample: 前段オペレータの出力。0.0 = 変調なし。
+double SampleOp(
+    WaveType wave,
+    double phase,
+    double modSample,
+    double index)
+{
+    return SampleWavePhase(wave, phase + modSample * index);
+}
+
 void EnsureDrumFilters(DrumVoiceState& ds, double hpCut, double lpCut, int sampleRate)
 {
     // 初回のみ係数を計算し、同一voice中は再利用する。
@@ -212,26 +223,62 @@ void RenderFmSource(
         fs.modulation,
         src.modulation,
         in.dt);
-    const double carrierInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.carrierRatio;
-    const double modInc = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.modRatio;
-    const double fmIndex = src.index * mod.fmIndexMul;
-    frame.sample = SampleFmPhase(
-        src.carrierWave,
-        src.modWave,
-        fs.carrierPhase,
-        fs.modPhase,
-        carrierInc,
-        modInc,
-        fmIndex);
-    frame.ampMul = mod.ampMul;
-    frame.sourceGain = src.outLevel;
+    const double indexScale = mod.fmIndexMul;
+    const double feedbackSample = fs.op0FeedbackSample * src.feedback;
+    const double outLevelScale = mod.ampMul;
+    const double op0 = SampleOp(src.ops[0].wave, fs.opPhase[0], feedbackSample, src.ops[0].index * indexScale);
+
+    switch (src.algorithm)
+    {
+    case 1:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out0 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out2 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out0 + out2) * 0.5 * outLevelScale;
+        break;
+    }
+    case 2:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod0, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out1 + out2 + out3) / 3.0 * outLevelScale;
+        break;
+    }
+    case 3:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod1, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = out * outLevelScale;
+        break;
+    }
+    case 0:
+    default:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        frame.sample = out * outLevelScale;
+        break;
+    }
+    }
+
+    fs.op0FeedbackSample = op0;
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz;
 
-    fs.carrierPhase += carrierInc;
-    if (fs.carrierPhase >= 1.0) fs.carrierPhase -= 1.0;
-    fs.modPhase += modInc;
-    if (fs.modPhase >= 1.0) fs.modPhase -= 1.0;
+    for (int k = 0; k < 4; k++)
+    {
+        fs.opPhase[k] += voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.ops[k].ratio;
+        if (fs.opPhase[k] >= 1.0)
+        {
+            fs.opPhase[k] -= 1.0;
+        }
+    }
 }
 
 void RenderDrumSource(
