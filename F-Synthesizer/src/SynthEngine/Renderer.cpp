@@ -201,6 +201,7 @@ void RenderWaveformSource(
         effectiveCutoff *= keytrackRatio;
     }
     frame.shaperCutoffHz = effectiveCutoff;
+    frame.shaperDrive = src.drive;
 
     voices.phase[i] += phaseInc;
     if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
@@ -270,6 +271,7 @@ void RenderFmSource(
     fs.op0FeedbackSample = op0;
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz;
+    frame.shaperDrive = src.drive;
 
     for (int k = 0; k < 4; k++)
     {
@@ -384,31 +386,40 @@ void ApplyCommonShaper(
     size_t i,
     SourceRenderFrame& frame)
 {
-    if (frame.shaperKind != CommonShaperKind::BiquadFilter)
+    if (frame.shaperKind == CommonShaperKind::BiquadFilter)
     {
-        return;
+        // filter を持つ方式のみ処理する（NoteOffVoiceModulation と同パターン）。
+        // filterCutoffSmoothing を持つ方式（現行: waveform）のみ smoothing を適用する。
+        std::visit([&](auto& st)
+        {
+            if constexpr (requires { st.filter; })
+            {
+                double filterCutoffHz = frame.shaperCutoffHz;
+                if constexpr (requires { st.filterCutoffSmoothing; })
+                {
+                    const auto* waveformSrc = std::get_if<WaveformConfig>(&src);
+                    if (waveformSrc && waveformSrc->smoothing.enabled)
+                    {
+                        SetSmoothedTarget(st.filterCutoffSmoothing, filterCutoffHz);
+                        filterCutoffHz = StepSmoothedParam(st.filterCutoffSmoothing);
+                    }
+                }
+                SetFilterCutoffHz(st.filter, filterCutoffHz);
+                frame.sample = ProcessFilterSample(st.filter, frame.sample);
+            }
+        }, voices.sourceState[i]);
     }
 
-    // filter を持つ方式のみ処理する（NoteOffVoiceModulation と同パターン）。
-    // filterCutoffSmoothing を持つ方式（現行: waveform）のみ smoothing を適用する。
-    std::visit([&](auto& st)
+    if (frame.shaperDrive > 0.0)
     {
-        if constexpr (requires { st.filter; })
+        // tanh ソフトクリップ: tanh(k*x) / tanh(k), k = drive * 20.0
+        const double k = frame.shaperDrive * 20.0;
+        const double tanhK = std::tanh(k);
+        if (tanhK > 1e-9)
         {
-            double filterCutoffHz = frame.shaperCutoffHz;
-            if constexpr (requires { st.filterCutoffSmoothing; })
-            {
-                const auto* waveformSrc = std::get_if<WaveformConfig>(&src);
-                if (waveformSrc && waveformSrc->smoothing.enabled)
-                {
-                    SetSmoothedTarget(st.filterCutoffSmoothing, filterCutoffHz);
-                    filterCutoffHz = StepSmoothedParam(st.filterCutoffSmoothing);
-                }
-            }
-            SetFilterCutoffHz(st.filter, filterCutoffHz);
-            frame.sample = ProcessFilterSample(st.filter, frame.sample);
+            frame.sample = std::tanh(k * frame.sample) / tanhK;
         }
-    }, voices.sourceState[i]);
+    }
 }
 
 void ApplyModulationLayer(

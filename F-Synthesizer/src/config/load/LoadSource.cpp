@@ -623,6 +623,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.filterKeytrack = *v;
         }
+        if (auto v = ReadJSONDouble(sourceObjText, "drive"))
+        {
+            wf.drive = std::clamp(*v, 0.0, 1.0);
+        }
         std::string smoothingObj;
         bool foundSmoothing = false;
         if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
@@ -842,6 +846,10 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
         {
             fm.filterResonance = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "drive"))
+        {
+            fm.drive = std::clamp(*v, 0.0, 1.0);
         }
         std::string modulationObj;
         bool foundModulation = false;

@@ -41,6 +41,8 @@ struct WaveformConfig
     double filterResonance = 0.707;
     // キートラック量（0.0=なし, 1.0=フルトラック）。基準ノートは C4(60)。
     double filterKeytrack = 0.0;
+    // ウェーブシェーパーのドライブ量（0.0=バイパス, 1.0=最大クリップ）。
+    double drive = 0.0;
     // 共通Smoothingレイヤー（amp/pitch/filterCutoff）。
     SmoothingConfig smoothing{};
     // 共通Modulationレイヤー（LFO/Env2/Matrix）。
@@ -84,6 +86,8 @@ struct FmConfig
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    // ウェーブシェーパーのドライブ量（0.0=バイパス, 1.0=最大クリップ）。
+    double drive = 0.0;
     // 共通 Modulation レイヤー（fm.index / pitchMul / amp をサポート）。
     ModulationConfig modulation{};
 };

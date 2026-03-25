@@ -1,0 +1,23 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.006,
+      "decaySec": 0.14,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.11,
+      "source": {
+        "type": "fm",
+        "algorithm": 1,
+        "feedback": 0.18,
+        "ops": [
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 3.0 },
+          { "wave": "sine", "ratio": 1.0, "level": 0.86, "index": 0.0 },
+          { "wave": "sine", "ratio": 1.0, "level": 0.95, "index": 2.6 },
+          { "wave": "sine", "ratio": 1.0, "level": 0.80, "index": 0.0 }
+        ],
+        "filterMode": "bypass"
+      }
+    }
+  }
+}

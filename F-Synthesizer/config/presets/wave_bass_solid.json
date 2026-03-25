@@ -1,15 +1,7 @@
 {
-  "midiPath": "../../assets/midi/smoothing_phaseF_ab.mid",
-  "wavPath": "../../output/wave_bass_solid_v2.wav",
-  "targetChannel": 0,
-  "defaultWave": "saw",
-  "initialSeconds": 10,
-  "bits": 16,
-  "sampleRate": 44100,
-  "extraReleaseSec": 0.5,
   "channels": {
     "0": {
-      "amp": 0.2,
+      "amp": 0.20,
       "attackSec": 0.004,
       "decaySec": 0.11,
       "sustainLevel": 0.74,
@@ -22,8 +14,9 @@
         "unisonSpread": 0.08,
         "subOscLevel": 0.95,
         "filterMode": "lowpass",
-        "filterCutoffHz": 2800.0,
+        "filterCutoffHz": 2800,
         "filterResonance": 0.9,
+        "filterKeytrack": 0.35,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": false,
@@ -32,31 +25,9 @@
           "filterCutoffTimeMs": 12.0
         },
         "modulation": {
-          "lfo1": {
-            "wave": "triangle",
-            "rateHz": 4.5,
-            "depth": 0.35,
-            "bipolar": true
-          },
-          "env2": {
-            "attackSec": 0.001,
-            "decaySec": 0.09,
-            "sustainLevel": 0.9,
-            "releaseSec": 0.08
-          },
+          "env2": { "attackSec": 0.0, "decaySec": 0.09, "sustainLevel": 0.0, "releaseSec": 0.06 },
           "routes": {
-            "0": {
-              "source": "env2",
-              "destination": "filterCutoff",
-              "amount": 0.28,
-              "enabled": true
-            },
-            "1": {
-              "source": "lfo1",
-              "destination": "amp",
-              "amount": 0.12,
-              "enabled": true
-            }
+            "0": { "source": "env2", "destination": "filterCutoffHz", "amount": 0.40, "enabled": true }
           }
         }
       }

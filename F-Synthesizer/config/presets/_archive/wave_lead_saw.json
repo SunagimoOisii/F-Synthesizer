@@ -1,0 +1,30 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.20,
+      "attackSec": 0.004,
+      "decaySec": 0.12,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "waveform",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 3.0,
+        "unisonSpread": 0.12,
+        "subOscLevel": 0.16,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 5600,
+        "filterResonance": 1.0,
+        "filterKeytrack": 0.35,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 10.0
+        }
+      }
+    }
+  }
+}

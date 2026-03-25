@@ -1,0 +1,18 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.65,
+      "releaseSec": 0.06,
+      "source": {
+        "type": "psg",
+        "wave": "pulse",
+        "duty": 2,
+        "volumeSteps": 14,
+        "maxVoices": 3
+      }
+    }
+  }
+}

@@ -3,17 +3,18 @@
 最終更新: 2026-03-25
 
 `config/presets/` 配下のプリセット一覧と用途メモ。
+80-90年代ゲーム音源（NES/GB/MD/PC-88）をイメージしたラインナップ。
 
 ## 使い方
 
 CLI:
 
 ```powershell
-# 例: FMベル
-F-Synthesizer.exe --cli --preset fm_bell_glass
+# 例: MD系FMブラス
+F-Synthesizer.exe --cli --preset fm_brass_md
 
-# 例: Wave pad
-F-Synthesizer.exe --cli --preset wave_pad_air
+# 例: NES風ドラム
+F-Synthesizer.exe --cli --preset drumkit_nes_style
 ```
 
 GUI:
@@ -22,29 +23,54 @@ GUI:
 
 ## プリセット一覧
 
-| Preset | 主な source.type | 対象ch | 用途メモ |
+### PSG（NES/GB系）
+
+| Preset | wave | 対象ch | 用途メモ |
 |---|---|---|---|
-| `drumkit_basic` | `drumkit` | `9` | 基本ドラムキット（kick/snare/hat） |
-| `fm_bass_pluck` | `fm` | `0` | FM系の短いベースプラック |
-| `fm_bass_deep` | `fm` | `0` | チェーンFMベース（4オペ algo3） |
-| `fm_bell_glass` | `fm` | `0` | FMベル系（ガラス質） |
-| `fm_brass_mega` | `fm` | `0` | Mega Drive系ブラス（4オペ algo1） |
-| `fm_organ_retro` | `fm` | `0` | 1変調3キャリアオルガン（algo2） |
-| `fm_string_retro` | `fm` | `0` | 80年代FM弦（4オペ algo1） |
-| `noise_hat_air` | `noise` | `0` | ノイズ主体のハット/空気感レイヤー |
-| `psg_bass_triangle` | `psg` | `0` | PSG三角波ベース |
-| `psg_lead_pulse` | `psg` | `0` | PSGパルス系リード |
-| `psg_lead_square` | `psg` | `0` | PSG矩形波リード |
-| `wave_bass_solid` | `waveform` | `0` | 低域重心のWaveベース |
-| `wave_bass_wide` | `waveform` + `drumkit` | `1,2,3,9,10` | ワイド系Waveセット |
-| `wave_lead_bright` | `waveform` + `drumkit` | `1,2,3,9,10` | 明るいWaveリードセット |
-| `wave_lead_soft` | `drumkit` | `9` | 既存プリセット（実データ準拠） |
-| `wave_pad_air` | `waveform` | `0` | ゆっくり立ち上がるPad |
-| `wave_sub_bass_warm` | `waveform` | `0` | サブ寄りウォームベース |
-| `wave_sub_lead_resonant` | `waveform` | `2,3` | レゾナント寄りのサブリード |
+| `psg_lead_sq50` | `square` | `0` | NES ch1相当・50%スクエアメロディリード |
+| `psg_lead_pulse25` | `pulse` | `0` | NES ch2相当・25%パルスブライトリード |
+| `psg_bass_tri` | `triangle` | `0` | NES ch3相当・トライアングルベース |
+| `psg_noise_sfx` | `noise` | `0` | NESノイズch相当・ハット/効果音用 |
+
+### FM（Mega Drive/PC-88系）
+
+FM プリセットはすべて `Env2 → fm.index` ルートを持ち、アタック時に倍音が広がって減衰する。
+
+| Preset | algorithm | 対象ch | 用途メモ |
+|---|---|---|---|
+| `fm_brass_md` | `1`（2+2ペア） | `0` | MD系ブラス・明るいアタックから減衰 |
+| `fm_lead_pierce` | `0`（2-op） | `0` | 抜けるリード・Env2+LFOビブラート |
+| `fm_bass_pick` | `3`（チェーン） | `0` | ピック感FMベース・瞬間的なindex増大 |
+| `fm_string_warm` | `2`（1mod+3car） | `0` | 温かみのある弦・緩やかなindex減衰 |
+| `fm_bell_ep` | `0`（2-op） | `0` | ベル/EP混合・ratio=3.5のindex全減衰 |
+
+### Waveform（SNES寄り・汎用補完）
+
+| Preset | wave | 対象ch | 用途メモ |
+|---|---|---|---|
+| `wave_lead_vib` | `saw` | `0` | LFOビブラート付きJRPG風リード |
+| `wave_pad_sweep` | `square` | `0` | Env2フィルタースイープPad（4ユニゾン） |
+| `wave_bass_solid` | `saw` | `0` | サブオシレータ強め・低域土台ベース |
+
+### Drumkit
+
+| Preset | 対象ch | 用途メモ |
+|---|---|---|
+| `drumkit_nes_style` | `9` | 短ADSR・triangleキック・NES感 |
+| `drumkit_md_style` | `9` | 深いsineキック・blueノイズスネア・MD感 |
+
+## modulation 設計メモ
+
+| route | 使用プリセット | 効果 |
+|---|---|---|
+| `Env2 → fm.index` | 全FMプリセット | アタックで倍音展開→減衰で音色変化 |
+| `LFO → pitchMul` | `fm_lead_pierce`, `wave_lead_vib` | ビブラート（±24cents, 5.5Hz） |
+| `Env2 → filterCutoffHz` | `wave_pad_sweep`, `wave_bass_solid` | アタックでフィルター開放→徐々に閉じる |
 
 ## 補足
 
 - プリセットは `base.json` に差分適用される。
 - `source.smoothing` は `waveform` のみ有効。
+- FM の `modulation` ブロックは `source` 内に記述する。
 - 各方式の仕様は `docs/synth-methods/` 配下を正本とする。
+- 旧プリセットは `config/presets/_archive/` に退避している。
