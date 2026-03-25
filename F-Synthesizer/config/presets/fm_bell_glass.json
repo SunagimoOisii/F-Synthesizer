@@ -1,0 +1,57 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.62,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.42,
+      "source": {
+        "type": "fm",
+        "carrierWave": "triangle",
+        "modWave": "square",
+        "carrierRatio": 0.5,
+        "modRatio": 7.01,
+        "index": 8.6,
+        "outLevel": 0.86,
+        "filterMode": "bandpass",
+        "filterCutoffHz": 2400,
+        "filterResonance": 5.2,
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 9.5,
+            "depth": 0.48,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.001,
+            "decaySec": 0.32,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.28
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": -0.82,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "fm.index",
+              "amount": 0.66,
+              "enabled": true
+            },
+            "2": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.11,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -55,22 +55,36 @@ struct NoiseConfig
     NoiseType noise;
 };
 
-// FM発振方式の設定集合。
-// modulation は FM専用 destination(fm.index) を含めて扱う。
+// FM オペレータ1個分の設定。
+struct FmOperator
+{
+    WaveType wave = WaveType::Sine;
+    // 基音に対する周波数比（0.0 < ratio <= 32.0）。
+    double ratio = 1.0;
+    // 出力レベル（0.0..1.0）。キャリアは音量、モジュレータは変調量への寄与。
+    double level = 1.0;
+    // 変調深さ（0.0..32.0）。モジュレータとして使われるときのみ有効。
+    double index = 0.0;
+};
+
+// FM 発振方式の設定集合（4オペレータ）。
+// algorithm によってオペレータ間の接続トポロジが変わる。
+// smoothing は非対応（契約上 waveform 専用）。
 struct FmConfig
 {
-    // 2オペレータFM用の最小パラメータ集合。
-    WaveType carrierWave;
-    WaveType modWave;
-    double carrierRatio;
-    double modRatio;
-    double index;
-    double outLevel;
+    // 接続アルゴリズム（0-3）。
+    //   0: ops[0]→ops[1]（旧2オペ互換。ops[2]/ops[3] は無視）
+    //   1: [ops[0]→ops[1]] + [ops[2]→ops[3]]（2ペア並列）
+    //   2: ops[0]→[ops[1]+ops[2]+ops[3]]（1変調→3キャリア）
+    //   3: ops[0]→ops[1]→ops[2]→ops[3]（チェーン）
+    int algorithm = 0;
+    // ops[0] の自己フィードバック量（0.0=なし, 1.0=最大）。
+    double feedback = 0.0;
+    FmOperator ops[4];
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
-    // 共通Modulationレイヤー（Phase1: fm.index / pitchMul / amp をサポート）。
-    // smoothing は非対応（契約上 waveform 専用）。
+    // 共通 Modulation レイヤー（fm.index / pitchMul / amp をサポート）。
     ModulationConfig modulation{};
 };
 

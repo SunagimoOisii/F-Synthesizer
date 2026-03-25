@@ -21,8 +21,8 @@ struct WaveformVoiceState
 
 struct FmVoiceState
 {
-    double carrierPhase = 0.0;
-    double modPhase = 0.0;
+    std::array<double, 4> opPhase{};
+    double op0FeedbackSample = 0.0;
     ModulationRuntimeState modulation;
     FilterInstance filter;
 };

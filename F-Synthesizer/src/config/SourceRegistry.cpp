@@ -76,13 +76,25 @@ constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
     { "noise", SourceParameterType::Int, 0.0, 3.0, 0.0 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 8> kFmParameterSchema{ {
-    { "carrierWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
-    { "modWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
-    { "carrierRatio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
-    { "modRatio", SourceParameterType::Float, 0.0, 32.0, 2.0 },
-    { "index", SourceParameterType::Float, 0.0, 20.0, 1.0 },
-    { "outLevel", SourceParameterType::Float, 0.0, 4.0, 1.0 },
+constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
+    { "algorithm", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "feedback", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "op1Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "op1Ratio", SourceParameterType::Float, 0.0, 32.0, 2.0 },
+    { "op1Level", SourceParameterType::Float, 0.0, 1.0, 1.0 },
+    { "op1Index", SourceParameterType::Float, 0.0, 32.0, 1.0 },
+    { "op2Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "op2Ratio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
+    { "op2Level", SourceParameterType::Float, 0.0, 1.0, 1.0 },
+    { "op2Index", SourceParameterType::Float, 0.0, 32.0, 0.0 },
+    { "op3Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "op3Ratio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
+    { "op3Level", SourceParameterType::Float, 0.0, 1.0, 1.0 },
+    { "op3Index", SourceParameterType::Float, 0.0, 32.0, 0.0 },
+    { "op4Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "op4Ratio", SourceParameterType::Float, 0.0, 32.0, 1.0 },
+    { "op4Level", SourceParameterType::Float, 0.0, 1.0, 1.0 },
+    { "op4Index", SourceParameterType::Float, 0.0, 32.0, 0.0 },
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
@@ -260,7 +272,31 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     case SourceKind::Noise:
         return NoiseConfig{ NoiseType::White };
     case SourceKind::Fm:
-        return FmConfig{ WaveType::Sine, WaveType::Sine, 1.0, 2.0, 1.0, 1.0, FilterMode::Bypass, 8000.0, 0.707, {} };
+    {
+        FmConfig fm{};
+        fm.algorithm = 0;
+        fm.feedback = 0.0;
+        fm.ops[0].wave = WaveType::Sine;
+        fm.ops[0].ratio = 2.0;
+        fm.ops[0].level = 1.0;
+        fm.ops[0].index = 1.0;
+        fm.ops[1].wave = WaveType::Sine;
+        fm.ops[1].ratio = 1.0;
+        fm.ops[1].level = 1.0;
+        fm.ops[1].index = 0.0;
+        fm.ops[2].wave = WaveType::Sine;
+        fm.ops[2].ratio = 1.0;
+        fm.ops[2].level = 1.0;
+        fm.ops[2].index = 0.0;
+        fm.ops[3].wave = WaveType::Sine;
+        fm.ops[3].ratio = 1.0;
+        fm.ops[3].level = 1.0;
+        fm.ops[3].index = 0.0;
+        fm.filterMode = FilterMode::Bypass;
+        fm.filterCutoffHz = 8000.0;
+        fm.filterResonance = 0.707;
+        return fm;
+    }
     case SourceKind::Drum:
     {
         // Drum kind はロード互換用途のみ。デフォルト生成は DrumKit と同じ形式で返す。
