@@ -676,6 +676,7 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     WriteIndent(out, 6); out << "\"decaySec\": " << cfg.decaySec << ",\n";
     WriteIndent(out, 6); out << "\"sustainLevel\": " << cfg.sustainLevel << ",\n";
     WriteIndent(out, 6); out << "\"releaseSec\": " << cfg.releaseSec << ",\n";
+    WriteIndent(out, 6); out << "\"portamentoTimeSec\": " << cfg.portamentoTimeSec << ",\n";
     WriteSourceConfig(out, cfg.source, 6);
     out << "\n";
     WriteIndent(out, 4); out << "}";

@@ -489,6 +489,22 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         in.pitchFactor = state.channelPitch[ch];
         in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
 
+        // ポルタメント: 現在ピッチをターゲットへ指数平滑しつつ pitchFactor へ反映する。
+        if (voices.portamentoTimeSec[i] > 0.0 &&
+            std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
+        {
+            const double tau = voices.portamentoTimeSec[i];
+            voices.portamentoPitchHz[i] +=
+                (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
+                (1.0 - std::exp(-in.dt / tau));
+        }
+        // portamentoPitchHz を phaseInc に対する倍率として pitchFactor へ乗算する。
+        // (phaseInc = targetHz / sampleRate なので比率で戻す)
+        if (voices.portamentoTimeSec[i] > 0.0 && voices.portamentoTargetHz[i] > 0.0)
+        {
+            in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
+        }
+
         SourceRenderFrame frame{};
         RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
         ApplyCommonShaper(voices.source[i], voices, i, frame);

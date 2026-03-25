@@ -1,5 +1,7 @@
 #include "Internal.h"
 
+#include <algorithm>
+
 #include "../ConfigFileInternal.h"
 
 namespace config::internal::load
@@ -13,6 +15,10 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
     if (auto v = ReadJSONDouble(channelObjText, "decaySec")) cfg.decaySec = *v;
     if (auto v = ReadJSONDouble(channelObjText, "sustainLevel")) cfg.sustainLevel = *v;
     if (auto v = ReadJSONDouble(channelObjText, "releaseSec")) cfg.releaseSec = *v;
+    if (auto v = ReadJSONDouble(channelObjText, "portamentoTimeSec"))
+    {
+        cfg.portamentoTimeSec = std::clamp(*v, 0.0, 30.0);
+    }
 
     std::string sourceObj;
     bool found = false;

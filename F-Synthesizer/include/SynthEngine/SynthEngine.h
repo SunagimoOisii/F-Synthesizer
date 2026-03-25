@@ -167,6 +167,8 @@ struct ChannelConfig
     double decaySec;
     double sustainLevel;
     double releaseSec;
+    // ポルタメント時定数（0.0=オフ, 秒単位）。0 より大きい場合に前ノートからスライドする。
+    double portamentoTimeSec = 0.0;
 };
 
 struct ChannelMixState

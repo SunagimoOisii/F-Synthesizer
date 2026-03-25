@@ -82,6 +82,9 @@ struct Voice
 
     std::vector<double> phase;
     std::vector<double> phaseInc;
+    std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
+    std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）
+    std::vector<double> portamentoTimeSec;  // チャンネル設定からコピーした時定数
     std::vector<PerSourceVoiceState> sourceState;
 
     size_t size() const;

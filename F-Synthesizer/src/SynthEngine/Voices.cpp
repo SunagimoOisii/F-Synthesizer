@@ -94,6 +94,30 @@ void InitializeVoiceAtIndex(
     voices.phase[i] = 0.0;
     voices.phaseInc[i] = NoteNumberToFreq(e.noteNumber) / sampleRate;
 
+    // ポルタメント初期化
+    const double targetHz = NoteNumberToFreq(e.noteNumber);
+    voices.portamentoTargetHz[i] = targetHz;
+    voices.portamentoTimeSec[i] = cfg.portamentoTimeSec;
+
+    if (cfg.portamentoTimeSec > 0.0)
+    {
+        // 同一チャンネルで直前に発音中のボイスのピッチを開始点にする。
+        double startHz = targetHz;
+        for (size_t j = 0; j < voices.size(); j++)
+        {
+            if (j == i) continue;
+            if (voices.pendingRemove[j] != 0) continue;
+            if (voices.channel[j] != e.channel) continue;
+            startHz = voices.portamentoPitchHz[j];
+            break;
+        }
+        voices.portamentoPitchHz[i] = startHz;
+    }
+    else
+    {
+        voices.portamentoPitchHz[i] = targetHz;
+    }
+
     if (const auto* wave = std::get_if<WaveformConfig>(&cfg.source))
     {
         voices.sourceState[i] = WaveformVoiceState{};
@@ -311,6 +335,9 @@ void Voice::reserve(size_t n)
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
+    portamentoPitchHz.reserve(n);
+    portamentoTargetHz.reserve(n);
+    portamentoTimeSec.reserve(n);
     sourceState.reserve(n);
 }
 
@@ -332,6 +359,9 @@ void Voice::clear()
     env.clear();
     phase.clear();
     phaseInc.clear();
+    portamentoPitchHz.clear();
+    portamentoTargetHz.clear();
+    portamentoTimeSec.clear();
     sourceState.clear();
 }
 
@@ -365,6 +395,9 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
 
     phase.push_back(0.0);
     phaseInc.push_back(0.0);
+    portamentoPitchHz.push_back(0.0);
+    portamentoTargetHz.push_back(0.0);
+    portamentoTimeSec.push_back(0.0);
     sourceState.emplace_back();
 
     const size_t i = size() - 1;
@@ -457,6 +490,9 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);
+    CompactVectorByKeep(portamentoPitchHz, keepScratch);
+    CompactVectorByKeep(portamentoTargetHz, keepScratch);
+    CompactVectorByKeep(portamentoTimeSec, keepScratch);
     CompactVectorByKeep(sourceState, keepScratch);
 
     return removed;
