@@ -1,0 +1,39 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.21,
+      "attackSec": 0.005,
+      "decaySec": 0.16,
+      "sustainLevel": 0.66,
+      "releaseSec": 0.14,
+      "portamentoTimeSec": 0.085,
+      "source": {
+        "type": "waveform",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.18,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 3600,
+        "filterResonance": 1.05,
+        "filterKeytrack": 0.28,
+        "drive": 0.47,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 12.0
+        },
+        "modulation": {
+          "lfo1": { "wave": "triangle", "rateHz": 4.3, "depth": 0.30, "bipolar": true },
+          "routes": {
+            "0": { "source": "lfo1", "destination": "pitchMul", "amount": 0.02, "enabled": true },
+            "1": { "source": "lfo1", "destination": "filterCutoffHz", "amount": 0.08, "enabled": true }
+          }
+        }
+      }
+    }
+  }
+}
