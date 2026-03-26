@@ -15,6 +15,7 @@ Branch: `main`
 - `source.type=analog` を追加（waveform同等の減算基盤 + drive + drift、GUI/Load/Save/Preset/Renderer/Voice初期化まで接続）
 - SubtractiveConfig を廃止し、filterKeytrack を WaveformConfig へ移行（method-boundaries 準拠）
 - `LoadSource.cpp` / `ConfigJSONUtils.cpp` の Waveform/Analog 重複処理をテンプレートヘルパーへ集約（共通パース・共通スキーマ値取得・共通JSON書き出し）
+- 優先度Aリファクタ: Waveform/Analog の重複を GUI編集 (`GUIChannelEditor.cpp`) / Renderer (`Renderer.cpp`) / Voice初期化 (`Voices.cpp`) で共通ヘルパー化（analog 固有 drift は分離維持）
 - architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
 - waveform / fm の modulation route 編集GUIを `0..7` まで拡張（サマリ表示含む）
 - Tier1 expression foundation（MIDI CC拡張 / sustain hold / velocity mod source）を実装完了し、tier1 roadmap を破棄

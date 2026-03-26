@@ -1,6 +1,7 @@
 #include "Internal.h"
 
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 #include "config/SourceRegistry.h"
@@ -65,6 +66,41 @@ void InitDrumVoice(const DrumConfig& drum, DrumVoiceState& drumState, double& ph
     }
 }
 
+template <typename SourceT, typename VoiceStateT>
+void InitWaveformLikeVoiceStateCommon(
+    const SourceT& src,
+    VoiceStateT& state,
+    int sampleRate)
+{
+    SetSmoothingRange(state.ampSmoothing, 0.0, 2.0);
+    SetSmoothingSampleRate(state.ampSmoothing, sampleRate);
+    SetSmoothingTimeMs(state.ampSmoothing, src.smoothing.ampTimeMs);
+    ResetSmoothedParam(state.ampSmoothing, 1.0);
+
+    SetSmoothingRange(state.pitchSmoothing, 0.25, 4.0);
+    SetSmoothingSampleRate(state.pitchSmoothing, sampleRate);
+    SetSmoothingTimeMs(state.pitchSmoothing, src.smoothing.pitchTimeMs);
+    ResetSmoothedParam(state.pitchSmoothing, 1.0);
+
+    SetSmoothingRange(state.filterCutoffSmoothing, 10.0, 20000.0);
+    SetSmoothingSampleRate(state.filterCutoffSmoothing, sampleRate);
+    SetSmoothingTimeMs(state.filterCutoffSmoothing, src.smoothing.filterCutoffTimeMs);
+    ResetSmoothedParam(state.filterCutoffSmoothing, src.filterCutoffHz);
+
+    SetFilterSampleRate(state.filter, sampleRate);
+    SetFilterMode(state.filter, src.filterMode);
+    SetFilterCutoffHz(state.filter, src.filterCutoffHz);
+    SetFilterResonance(state.filter, src.filterResonance);
+    ResetFilterState(state.filter);
+
+    state.syncPhase = 0.0;
+    state.ringPhase = 0.0;
+    state.arpStep = 0;
+    state.arpElapsedSec = 0.0;
+    ResetModulationState(state.modulation);
+    NoteOnModulation(state.modulation, src.modulation);
+}
+
 void InitializeVoiceAtIndex(
     Voice& voices,
     size_t i,
@@ -123,67 +159,13 @@ void InitializeVoiceAtIndex(
     {
         voices.sourceState[i] = WaveformVoiceState{};
         auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
-
-        SetSmoothingRange(ws.ampSmoothing, 0.0, 2.0);
-        SetSmoothingSampleRate(ws.ampSmoothing, sampleRate);
-        SetSmoothingTimeMs(ws.ampSmoothing, wave->smoothing.ampTimeMs);
-        ResetSmoothedParam(ws.ampSmoothing, 1.0);
-
-        SetSmoothingRange(ws.pitchSmoothing, 0.25, 4.0);
-        SetSmoothingSampleRate(ws.pitchSmoothing, sampleRate);
-        SetSmoothingTimeMs(ws.pitchSmoothing, wave->smoothing.pitchTimeMs);
-        ResetSmoothedParam(ws.pitchSmoothing, 1.0);
-
-        SetSmoothingRange(ws.filterCutoffSmoothing, 10.0, 20000.0);
-        SetSmoothingSampleRate(ws.filterCutoffSmoothing, sampleRate);
-        SetSmoothingTimeMs(ws.filterCutoffSmoothing, wave->smoothing.filterCutoffTimeMs);
-        ResetSmoothedParam(ws.filterCutoffSmoothing, wave->filterCutoffHz);
-
-        SetFilterSampleRate(ws.filter, sampleRate);
-        SetFilterMode(ws.filter, wave->filterMode);
-        SetFilterCutoffHz(ws.filter, wave->filterCutoffHz);
-        SetFilterResonance(ws.filter, wave->filterResonance);
-        ResetFilterState(ws.filter);
-
-        ws.syncPhase = 0.0;
-        ws.ringPhase = 0.0;
-        ws.arpStep = 0;
-        ws.arpElapsedSec = 0.0;
-        ResetModulationState(ws.modulation);
-        NoteOnModulation(ws.modulation, wave->modulation);
+        InitWaveformLikeVoiceStateCommon(*wave, ws, sampleRate);
     }
     else if (const auto* analog = std::get_if<AnalogConfig>(&cfg.source))
     {
         voices.sourceState[i] = AnalogVoiceState{};
         auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
-
-        SetSmoothingRange(as.ampSmoothing, 0.0, 2.0);
-        SetSmoothingSampleRate(as.ampSmoothing, sampleRate);
-        SetSmoothingTimeMs(as.ampSmoothing, analog->smoothing.ampTimeMs);
-        ResetSmoothedParam(as.ampSmoothing, 1.0);
-
-        SetSmoothingRange(as.pitchSmoothing, 0.25, 4.0);
-        SetSmoothingSampleRate(as.pitchSmoothing, sampleRate);
-        SetSmoothingTimeMs(as.pitchSmoothing, analog->smoothing.pitchTimeMs);
-        ResetSmoothedParam(as.pitchSmoothing, 1.0);
-
-        SetSmoothingRange(as.filterCutoffSmoothing, 10.0, 20000.0);
-        SetSmoothingSampleRate(as.filterCutoffSmoothing, sampleRate);
-        SetSmoothingTimeMs(as.filterCutoffSmoothing, analog->smoothing.filterCutoffTimeMs);
-        ResetSmoothedParam(as.filterCutoffSmoothing, analog->filterCutoffHz);
-
-        SetFilterSampleRate(as.filter, sampleRate);
-        SetFilterMode(as.filter, analog->filterMode);
-        SetFilterCutoffHz(as.filter, analog->filterCutoffHz);
-        SetFilterResonance(as.filter, analog->filterResonance);
-        ResetFilterState(as.filter);
-
-        as.syncPhase = 0.0;
-        as.ringPhase = 0.0;
-        as.arpStep = 0;
-        as.arpElapsedSec = 0.0;
-        ResetModulationState(as.modulation);
-        NoteOnModulation(as.modulation, analog->modulation);
+        InitWaveformLikeVoiceStateCommon(*analog, as, sampleRate);
 
         // ボイス固有のドリフト位相オフセット（0..1）を確定する。
         // 目的: 同時発音ボイスのドリフトが同位相にならないようにする。

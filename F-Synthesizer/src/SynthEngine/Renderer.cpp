@@ -183,36 +183,50 @@ double RenderDrumSample(const DrumConfig& src, Voice& voices, size_t i, double d
     return w;
 }
 
-void RenderWaveformSource(
-    const WaveformConfig& src,
+template <typename SourceT, typename StateT, bool EnableDrift>
+void RenderWaveformLikeSourceCommon(
+    const SourceT& src,
+    StateT& state,
     Voice& voices,
     size_t i,
     const VoiceRenderInput& in,
     SourceRenderFrame& frame)
 {
-    auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
     ModulationResult mod = EvaluateModulation(
-        ws.modulation,
+        state.modulation,
         src.modulation,
         in.dt,
         ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
     double pitchMul = mod.pitchMul;
+
+    if constexpr (EnableDrift)
+    {
+        if (src.driftDepthCents > 0.0)
+        {
+            const double driftSine = std::sin((state.driftPhase + state.driftPhaseOffset) * 2.0 * kPi);
+            const double driftCents = driftSine * src.driftDepthCents;
+            pitchMul *= std::pow(2.0, driftCents / 1200.0);
+            state.driftPhase += src.driftRateHz * in.dt;
+            if (state.driftPhase >= 1.0) state.driftPhase -= 1.0;
+        }
+    }
+
     if (src.smoothing.enabled && src.smoothing.pitchEnabled)
     {
-        SetSmoothedTarget(ws.pitchSmoothing, pitchMul);
-        pitchMul = StepSmoothedParam(ws.pitchSmoothing);
+        SetSmoothedTarget(state.pitchSmoothing, pitchMul);
+        pitchMul = StepSmoothedParam(state.pitchSmoothing);
     }
     if (src.arpeggio.enabled && src.arpeggio.steps > 0)
     {
-        ws.arpElapsedSec += in.dt;
+        state.arpElapsedSec += in.dt;
         const int steps = std::clamp(src.arpeggio.steps, 1, 8);
         const double stepDur = 1.0 / (std::max)(0.5, src.arpeggio.rateHz);
-        while (ws.arpElapsedSec >= stepDur)
+        while (state.arpElapsedSec >= stepDur)
         {
-            ws.arpElapsedSec -= stepDur;
-            ws.arpStep = (ws.arpStep + 1) % steps;
+            state.arpElapsedSec -= stepDur;
+            state.arpStep = (state.arpStep + 1) % steps;
         }
-        const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(ws.arpStep)];
+        const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(state.arpStep)];
         pitchMul *= std::pow(2.0, static_cast<double>(semitoneOffset) / 12.0);
     }
 
@@ -246,8 +260,8 @@ void RenderWaveformSource(
     if (src.ringModEnabled && src.ringModMix > 0.0)
     {
         const double ringInc = phaseInc * std::clamp(src.ringModRatio, 0.125, 16.0);
-        ws.ringPhase = WrapPhase(ws.ringPhase + ringInc);
-        const double ringSignal = std::sin(2.0 * kPi * ws.ringPhase);
+        state.ringPhase = WrapPhase(state.ringPhase + ringInc);
+        const double ringSignal = std::sin(2.0 * kPi * state.ringPhase);
         const double mix = std::clamp(src.ringModMix, 0.0, 1.0);
         mainWave *= (1.0 - mix) + mix * ringSignal;
     }
@@ -268,9 +282,9 @@ void RenderWaveformSource(
     if (src.hardSyncEnabled)
     {
         const double syncInc = phaseInc * std::clamp(src.hardSyncRatio, 0.5, 8.0);
-        const double prevSync = ws.syncPhase;
-        ws.syncPhase = WrapPhase(ws.syncPhase + syncInc);
-        if (ws.syncPhase < prevSync)
+        const double prevSync = state.syncPhase;
+        state.syncPhase = WrapPhase(state.syncPhase + syncInc);
+        if (state.syncPhase < prevSync)
         {
             voices.phase[i] = 0.0;
         }
@@ -285,6 +299,17 @@ void RenderWaveformSource(
     }
 }
 
+void RenderWaveformSource(
+    const WaveformConfig& src,
+    Voice& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    SourceRenderFrame& frame)
+{
+    auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
+    RenderWaveformLikeSourceCommon<WaveformConfig, WaveformVoiceState, false>(src, ws, voices, i, in, frame);
+}
+
 void RenderAnalogSource(
     const AnalogConfig& src,
     Voice& voices,
@@ -293,110 +318,7 @@ void RenderAnalogSource(
     SourceRenderFrame& frame)
 {
     auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
-    ModulationResult mod = EvaluateModulation(
-        as.modulation,
-        src.modulation,
-        in.dt,
-        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
-
-    double pitchMul = mod.pitchMul;
-
-    // ドリフト適用: ボイスごとの正弦LFOでピッチをゆらす。
-    if (src.driftDepthCents > 0.0)
-    {
-        const double driftSine = std::sin((as.driftPhase + as.driftPhaseOffset) * 2.0 * kPi);
-        const double driftCents = driftSine * src.driftDepthCents;
-        pitchMul *= std::pow(2.0, driftCents / 1200.0);
-        as.driftPhase += src.driftRateHz * in.dt;
-        if (as.driftPhase >= 1.0) as.driftPhase -= 1.0;
-    }
-
-    if (src.smoothing.enabled && src.smoothing.pitchEnabled)
-    {
-        SetSmoothedTarget(as.pitchSmoothing, pitchMul);
-        pitchMul = StepSmoothedParam(as.pitchSmoothing);
-    }
-    if (src.arpeggio.enabled && src.arpeggio.steps > 0)
-    {
-        as.arpElapsedSec += in.dt;
-        const int steps = std::clamp(src.arpeggio.steps, 1, 8);
-        const double stepDur = 1.0 / (std::max)(0.5, src.arpeggio.rateHz);
-        while (as.arpElapsedSec >= stepDur)
-        {
-            as.arpElapsedSec -= stepDur;
-            as.arpStep = (as.arpStep + 1) % steps;
-        }
-        const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(as.arpStep)];
-        pitchMul *= std::pow(2.0, static_cast<double>(semitoneOffset) / 12.0);
-    }
-
-    const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
-    const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
-    const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
-    const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
-    const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
-    const double effectivePW = std::clamp(src.pulseWidth + mod.pulseWidthAdd, 0.05, 0.95);
-
-    double unisonSum = 0.0;
-    for (int uv = 0; uv < unisonVoices; uv++)
-    {
-        const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
-        const double centered = (pos * 2.0) - 1.0;
-        const double cents = centered * detuneCents;
-        const double ratio = std::pow(2.0, cents / 1200.0);
-        const double phaseOffset = centered * spread * 0.08;
-        const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
-        const double uvInc = phaseInc * ratio;
-        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc, effectivePW);
-    }
-
-    double mainWave = unisonSum / unisonVoices;
-    if (subOscLevel > 0.0)
-    {
-        const double subPhase = WrapPhase(voices.phase[i] * 0.5);
-        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5, effectivePW);
-        mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
-    }
-    if (src.ringModEnabled && src.ringModMix > 0.0)
-    {
-        const double ringInc = phaseInc * std::clamp(src.ringModRatio, 0.125, 16.0);
-        as.ringPhase = WrapPhase(as.ringPhase + ringInc);
-        const double ringSignal = std::sin(2.0 * kPi * as.ringPhase);
-        const double mix = std::clamp(src.ringModMix, 0.0, 1.0);
-        mainWave *= (1.0 - mix) + mix * ringSignal;
-    }
-
-    frame.sample = mainWave;
-    frame.ampMul = mod.ampMul;
-    frame.shaperKind = CommonShaperKind::BiquadFilter;
-    double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;
-    if (src.filterKeytrack != 0.0)
-    {
-        const double keytrackRatio = std::pow(2.0, src.filterKeytrack * (voices.noteNumber[i] - 60) / 12.0);
-        effectiveCutoff *= keytrackRatio;
-    }
-    frame.shaperCutoffHz = effectiveCutoff;
-    frame.shaperResonanceMul = mod.resonanceMul;
-    frame.shaperDrive = src.drive;
-
-    if (src.hardSyncEnabled)
-    {
-        const double syncInc = phaseInc * std::clamp(src.hardSyncRatio, 0.5, 8.0);
-        const double prevSync = as.syncPhase;
-        as.syncPhase = WrapPhase(as.syncPhase + syncInc);
-        if (as.syncPhase < prevSync)
-        {
-            voices.phase[i] = 0.0;
-        }
-        else
-        {
-            voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
-        }
-    }
-    else
-    {
-        voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
-    }
+    RenderWaveformLikeSourceCommon<AnalogConfig, AnalogVoiceState, true>(src, as, voices, i, in, frame);
 }
 
 void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)
