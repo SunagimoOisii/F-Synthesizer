@@ -64,6 +64,7 @@ struct ModEnvelopeConfig
     double decaySec = 0.1;
     double sustainLevel = 1.0;
     double releaseSec = 0.1;
+    double curve = 0.0;
 };
 
 struct ModulationConfig

@@ -432,7 +432,7 @@ double StepLfoSample(ModulationRuntimeState& state, const LfoConfig& lfo, double
 
 ---
 
-## Tier D-2: Envelope curve（linear / exponential 切り替え）
+## Tier D-2: Envelope curve（linear / exponential 切り替え）(完了)
 
 ### 目的
 

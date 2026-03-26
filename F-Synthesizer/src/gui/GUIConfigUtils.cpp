@@ -45,7 +45,8 @@ bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b
     if (!NearlyEq(a.env2.attackSec, b.env2.attackSec) ||
         !NearlyEq(a.env2.decaySec, b.env2.decaySec) ||
         !NearlyEq(a.env2.sustainLevel, b.env2.sustainLevel) ||
-        !NearlyEq(a.env2.releaseSec, b.env2.releaseSec))
+        !NearlyEq(a.env2.releaseSec, b.env2.releaseSec) ||
+        !NearlyEq(a.env2.curve, b.env2.curve))
     {
         return false;
     }

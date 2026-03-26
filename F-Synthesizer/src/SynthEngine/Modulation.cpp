@@ -45,6 +45,18 @@ double SampleLfoWave(LfoWave wave, double phase)
     }
     return 0.0;
 }
+
+double ApplyEnvelopeCurve(double value, double curve)
+{
+    const double clampedValue = std::clamp(value, 0.0, 1.0);
+    const double clampedCurve = std::clamp(curve, 0.0, 1.0);
+    if (clampedCurve <= 0.0)
+    {
+        return clampedValue;
+    }
+    const double exponent = 1.0 / (1.0 + clampedCurve * 4.0);
+    return std::pow(clampedValue, exponent);
+}
 } // namespace
 
 void ResetModulationState(ModulationRuntimeState& state)
@@ -109,8 +121,9 @@ double StepEnv2Sample(ModulationRuntimeState& state, const ModEnvelopeConfig& en
         (std::max)(0.0, env2.decaySec),
         std::clamp(env2.sustainLevel, 0.0, 1.0),
         (std::max)(0.0, env2.releaseSec));
-    state.env2Value = v;
-    return v;
+    const double curved = ApplyEnvelopeCurve(v, env2.curve);
+    state.env2Value = curved;
+    return curved;
 }
 
 bool IsActiveRoute(const ModRoute& route)

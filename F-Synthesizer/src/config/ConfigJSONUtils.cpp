@@ -608,7 +608,8 @@ void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int ind
     WriteIndent(out, indent + 4); out << "\"attackSec\": " << m.env2.attackSec << ",\n";
     WriteIndent(out, indent + 4); out << "\"decaySec\": " << m.env2.decaySec << ",\n";
     WriteIndent(out, indent + 4); out << "\"sustainLevel\": " << m.env2.sustainLevel << ",\n";
-    WriteIndent(out, indent + 4); out << "\"releaseSec\": " << m.env2.releaseSec << "\n";
+    WriteIndent(out, indent + 4); out << "\"releaseSec\": " << m.env2.releaseSec << ",\n";
+    WriteIndent(out, indent + 4); out << "\"curve\": " << m.env2.curve << "\n";
     WriteIndent(out, indent + 2); out << "},\n";
 
     WriteIndent(out, indent + 2); out << "\"routes\": {\n";

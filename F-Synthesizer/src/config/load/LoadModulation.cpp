@@ -34,6 +34,7 @@ bool ParseEnv2Object(const std::string& text, ModEnvelopeConfig& env2)
     if (auto v = ReadJSONDouble(text, "decaySec")) env2.decaySec = *v;
     if (auto v = ReadJSONDouble(text, "sustainLevel")) env2.sustainLevel = *v;
     if (auto v = ReadJSONDouble(text, "releaseSec")) env2.releaseSec = *v;
+    if (auto v = ReadJSONDouble(text, "curve")) env2.curve = *v;
     return true;
 }
 
@@ -188,6 +189,11 @@ bool ValidateModulation(
     if (modulation.env2.sustainLevel < 0.0 || modulation.env2.sustainLevel > 1.0)
     {
         err = prefix + ".env2.sustainLevel must be in range 0.0..1.0";
+        return false;
+    }
+    if (modulation.env2.curve < 0.0 || modulation.env2.curve > 1.0)
+    {
+        err = prefix + ".env2.curve must be in range 0.0..1.0";
         return false;
     }
     for (size_t i = 0; i < modulation.matrix.routes.size(); i++)

@@ -335,6 +335,8 @@ bool DrawChannelEditor(
         localChanged |= sliderWaveParam("Env2 Sustain", modulation.env2.sustainLevel, 0.0f, 1.0f, "%.3f");
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Release", modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("Env2 Curve", modulation.env2.curve, 0.0f, 1.0f, "%.3f");
 
         const char* modSources[] = { "none", "lfo1", "env2", "velocity", "channelPressure", "polyPressure", "ModWheel" };
         struct DestinationChoice
@@ -560,6 +562,7 @@ bool DrawChannelEditor(
             wf->modulation.env2.decaySec = std::clamp(wf->modulation.env2.decaySec, 0.0, 10.0);
             wf->modulation.env2.sustainLevel = std::clamp(wf->modulation.env2.sustainLevel, 0.0, 1.0);
             wf->modulation.env2.releaseSec = std::clamp(wf->modulation.env2.releaseSec, 0.0, 10.0);
+            wf->modulation.env2.curve = std::clamp(wf->modulation.env2.curve, 0.0, 1.0);
             for (auto& route : wf->modulation.matrix.routes)
             {
                 route.amount = std::clamp(route.amount, -1.0, 1.0);
@@ -665,6 +668,7 @@ bool DrawChannelEditor(
             analog->modulation.env2.decaySec = std::clamp(analog->modulation.env2.decaySec, 0.0, 10.0);
             analog->modulation.env2.sustainLevel = std::clamp(analog->modulation.env2.sustainLevel, 0.0, 1.0);
             analog->modulation.env2.releaseSec = std::clamp(analog->modulation.env2.releaseSec, 0.0, 10.0);
+            analog->modulation.env2.curve = std::clamp(analog->modulation.env2.curve, 0.0, 1.0);
             for (auto& route : analog->modulation.matrix.routes)
             {
                 route.amount = std::clamp(route.amount, -1.0, 1.0);
@@ -823,6 +827,7 @@ bool DrawChannelEditor(
             fm->modulation.env2.decaySec = std::clamp(fm->modulation.env2.decaySec, 0.0, 10.0);
             fm->modulation.env2.sustainLevel = std::clamp(fm->modulation.env2.sustainLevel, 0.0, 1.0);
             fm->modulation.env2.releaseSec = std::clamp(fm->modulation.env2.releaseSec, 0.0, 10.0);
+            fm->modulation.env2.curve = std::clamp(fm->modulation.env2.curve, 0.0, 1.0);
             for (auto& route : fm->modulation.matrix.routes)
             {
                 route.amount = std::clamp(route.amount, -1.0, 1.0);
