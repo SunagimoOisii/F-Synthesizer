@@ -65,7 +65,7 @@ source type: `drum`, `drumkit`
 ## F. Wave/Drum Brushup Phase C
 
 - 追加プリセット:
-  - `config/presets/drumkit_basic.json`
+  - `config/presets/drumkit_nesgb_core.json`
 - 検証MIDI:
   - `assets/midi/wave_drum_phaseC_ab.mid`
 - 反映方針:

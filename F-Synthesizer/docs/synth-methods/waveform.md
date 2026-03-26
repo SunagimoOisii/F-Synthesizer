@@ -110,10 +110,10 @@ source type: `waveform`
 ## H. Phase B結果（Presetブラッシュアップ）
 
 - 更新プリセット:
-  - `config/presets/wave_bass_solid.json`
-  - `config/presets/wave_bass_wide.json`
-  - `config/presets/wave_lead_bright.json`
-  - `config/presets/wave_lead_soft.json`
+  - `config/presets/wave_snes_bass_sub.json`
+  - `config/presets/wave_snes_chord_glass.json`
+  - `config/presets/wave_snes_lead_vibrato.json`
+  - `config/presets/wave_snes_pluck_soft.json`
 - AB比較（before/after, 同一MIDI: `assets/midi/smoothing_phaseF_ab.mid`）:
   - bass: `diff_rms=0.011260`, clip `0 -> 0`
   - lead: `diff_rms=0.026905`, clip `0 -> 0`

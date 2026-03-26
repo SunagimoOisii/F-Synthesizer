@@ -74,8 +74,8 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     }
 
     std::sort(names.begin(), names.end());
-    // 既定の操作の流れを分かりやすくするため、basic_wave を先頭に寄せる。
-    const auto it = std::find(names.begin(), names.end(), "basic_wave");
+    // 既定の操作の流れを分かりやすくするため、標準leadを先頭に寄せる。
+    const auto it = std::find(names.begin(), names.end(), "wave_snes_lead_vibrato");
     if (it != names.end() && it != names.begin())
     {
         std::rotate(names.begin(), it, it + 1);

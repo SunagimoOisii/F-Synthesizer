@@ -112,24 +112,24 @@ try {
             throw "Expected nonZero=0 render stats for mix_all_mute.json."
         }
 
-        Write-Step "cli success run (preset: wave_lead_soft)"
-        $leadOut = & $exePath --cli --preset wave_lead_soft | Out-String
+        Write-Step "cli success run (preset: wave_snes_lead_vibrato)"
+        $leadOut = & $exePath --cli --preset wave_snes_lead_vibrato | Out-String
         $leadOut | Out-Host
         if ($LASTEXITCODE -ne 0) {
-            throw "Expected success for preset wave_lead_soft, but exit code was $LASTEXITCODE."
+            throw "Expected success for preset wave_snes_lead_vibrato, but exit code was $LASTEXITCODE."
         }
         if ($leadOut -notmatch "\[RenderStats\].*nonZero=[1-9]") {
-            throw "Expected non-zero render stats for preset wave_lead_soft."
+            throw "Expected non-zero render stats for preset wave_snes_lead_vibrato."
         }
 
-        Write-Step "cli success run (preset: wave_bass_solid)"
-        $bassOut = & $exePath --cli --preset wave_bass_solid | Out-String
+        Write-Step "cli success run (preset: wave_snes_bass_sub)"
+        $bassOut = & $exePath --cli --preset wave_snes_bass_sub | Out-String
         $bassOut | Out-Host
         if ($LASTEXITCODE -ne 0) {
-            throw "Expected success for preset wave_bass_solid, but exit code was $LASTEXITCODE."
+            throw "Expected success for preset wave_snes_bass_sub, but exit code was $LASTEXITCODE."
         }
         if ($bassOut -notmatch "\[RenderStats\].*nonZero=[1-9]") {
-            throw "Expected non-zero render stats for preset wave_bass_solid."
+            throw "Expected non-zero render stats for preset wave_snes_bass_sub."
         }
 
         Write-Step "cli failure run (channel_mix_invalid.json)"

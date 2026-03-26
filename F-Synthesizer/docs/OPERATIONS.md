@@ -37,8 +37,8 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 .\build\x64\Debug\F-Synthesizer.exe --config .\config\default.json
 
 # run (preset)
-.\build\x64\Debug\F-Synthesizer.exe --preset basic_wave
-.\build\x64\Debug\F-Synthesizer.exe --preset fm_default
+.\build\x64\Debug\F-Synthesizer.exe --preset wave_snes_lead_vibrato
+.\build\x64\Debug\F-Synthesizer.exe --preset fm_mdpc88_lead_pierce
 
 # help
 .\build\x64\Debug\F-Synthesizer.exe --help

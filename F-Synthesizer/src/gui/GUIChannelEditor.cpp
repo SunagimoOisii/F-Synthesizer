@@ -40,6 +40,79 @@ std::array<config::SourceKind, config::kSourceKindCount> BuildGuiSourceKindList(
     return kinds;
 }
 
+void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
+{
+    fm.algorithm = std::clamp(algorithm, 0, 3);
+    fm.filterMode = FilterMode::Bypass;
+    fm.filterCutoffHz = 8000.0;
+    fm.filterResonance = 0.707;
+    fm.feedback = 0.0;
+
+    for (auto& op : fm.ops)
+    {
+        op.wave = WaveType::Sine;
+        op.ratio = 1.0;
+        op.level = 1.0;
+        op.index = 0.0;
+    }
+
+    switch (fm.algorithm)
+    {
+    case 1:
+        // [M->C] + [M->C]
+        fm.feedback = 0.14;
+        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.2;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.88; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.95; fm.ops[2].index = 1.6;
+        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.80; fm.ops[3].index = 0.0;
+        break;
+    case 2:
+        // M -> [C + C + C]
+        fm.feedback = 0.08;
+        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.8;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.84; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.72; fm.ops[2].index = 0.0;
+        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.66; fm.ops[3].index = 0.0;
+        break;
+    case 3:
+        // M -> M -> M -> C
+        fm.feedback = 0.22;
+        fm.filterMode = FilterMode::LowPass;
+        fm.filterCutoffHz = 3600.0;
+        fm.filterResonance = 0.85;
+        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 3.2;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 1.0; fm.ops[1].index = 1.8;
+        fm.ops[2].ratio = 1.0; fm.ops[2].level = 0.9; fm.ops[2].index = 0.9;
+        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.82; fm.ops[3].index = 0.0;
+        break;
+    case 0:
+    default:
+        // M -> C
+        fm.feedback = 0.08;
+        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.4;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.88; fm.ops[1].index = 0.0;
+        fm.ops[2].level = 0.0;
+        fm.ops[3].level = 0.0;
+        break;
+    }
+
+    fm.modulation = ModulationConfig{};
+    fm.modulation.env2.attackSec = 0.0;
+    fm.modulation.env2.decaySec = 0.12;
+    fm.modulation.env2.sustainLevel = 0.0;
+    fm.modulation.env2.releaseSec = 0.08;
+    for (auto& route : fm.modulation.matrix.routes)
+    {
+        route = ModRoute{};
+    }
+    fm.modulation.matrix.routes[0] = ModRoute{
+        ModSource::Env2,
+        ModDestination::FmIndex,
+        0.8,
+        true
+    };
+}
+
 bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
 {
     bool changed = false;
@@ -531,6 +604,19 @@ bool DrawChannelEditor(
             };
             changed |= ImGui::Combo("FM Algorithm", &fm->algorithm, algoLabels, IM_ARRAYSIZE(algoLabels));
             if (updateHoverHelp) updateHoverHelp("FM アルゴリズムを選択します。", "オペレータの接続構造が変わります。", nullptr);
+            ImGui::SameLine();
+            if (ImGui::Button("テンプレートに戻す"))
+            {
+                ApplyFmTemplateByAlgorithm(*fm, fm->algorithm);
+                changed = true;
+            }
+            if (updateHoverHelp)
+            {
+                updateHoverHelp(
+                    "現在アルゴリズムの推奨テンプレートへ戻します。",
+                    "FMオペレータ/フィルタ/変調の初期値を安全域へ復帰します。",
+                    "現在の微調整値は上書きされます。");
+            }
 
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Feedback", fm->feedback, 0.0f, 1.0f, "%.2f");

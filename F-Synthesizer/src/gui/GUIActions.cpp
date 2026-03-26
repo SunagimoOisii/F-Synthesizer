@@ -197,7 +197,7 @@ bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind k
     switch (kind)
     {
     case config::SourceKind::Waveform:
-        return presetName.rfind("wave_", 0) == 0 || presetName == "basic_wave";
+        return presetName.rfind("wave_", 0) == 0;
     case config::SourceKind::Fm:
         return presetName.rfind("fm_", 0) == 0;
     case config::SourceKind::Psg:
@@ -406,13 +406,13 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
     }
     if (state.presetItems.empty())
     {
-        state.presetItems.push_back("basic_wave");
+        state.presetItems.push_back("wave_snes_lead_vibrato");
     }
 
     int idx = FindPresetIndex(state, preferName);
     if (idx < 0)
     {
-        idx = FindPresetIndex(state, "basic_wave");
+        idx = FindPresetIndex(state, "wave_snes_lead_vibrato");
     }
     state.presetIndex = (idx >= 0) ? idx : 0;
 }

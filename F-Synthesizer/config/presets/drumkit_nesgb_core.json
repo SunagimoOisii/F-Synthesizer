@@ -1,0 +1,19 @@
+{
+  "channels": {
+    "9": {
+      "amp": 0.23,
+      "attackSec": 0.001,
+      "decaySec": 0.06,
+      "sustainLevel": 0.00,
+      "releaseSec": 0.05,
+      "source": {
+        "type": "drumkit",
+        "map": {
+          "36": { "drumType": "kick",  "gain": 1.00, "baseFreq": 54.0, "pitchDrop": 2.9, "pitchDecaySec": 0.04, "toneFreq": 120.0, "toneLevel": 0.34, "noiseLevel": 0.08, "hpCut": 30.0,   "lpCut": 5000.0, "toneWave": "triangle", "noiseType": "white" },
+          "38": { "drumType": "snare", "gain": 0.86, "baseFreq": 180.0, "pitchDrop": 0.6, "pitchDecaySec": 0.00, "toneFreq": 210.0, "toneLevel": 0.30, "noiseLevel": 0.54, "hpCut": 1200.0, "lpCut": 7000.0, "toneWave": "triangle", "noiseType": "white" },
+          "42": { "drumType": "hat",   "gain": 0.72, "baseFreq": 0.0,   "pitchDrop": 0.0, "pitchDecaySec": 0.00, "toneFreq": 7000.0, "toneLevel": 0.18, "noiseLevel": 0.84, "hpCut": 4200.0, "lpCut": 9000.0, "toneWave": "square",   "noiseType": "white" }
+        }
+      }
+    }
+  }
+}

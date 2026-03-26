@@ -90,7 +90,7 @@ void InitializeGUIState(
     state.selectedDrumNote = 36;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
-    strncpy_s(state.presetName, sizeof(state.presetName), "basic_wave", _TRUNCATE);
+    strncpy_s(state.presetName, sizeof(state.presetName), "wave_snes_lead_vibrato", _TRUNCATE);
     state.running = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.hasRun = false;
