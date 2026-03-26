@@ -45,6 +45,7 @@ struct GUIState
     int initialSeconds = 6;
     int bits = 16;
     float extraReleaseSec = 0.3f;
+    MasterEffectConfig masterEffects{};
     int UIScaleIndex = 1; // 0=100%, 1=125%, 2=150%
     int UIModeTab = 0; // 0=Sound, 1=Music
     float logPanelHeight = 240.0f;

@@ -906,6 +906,102 @@ else
         "無効時は同名ファイルを上書きします。");
 
     ImGui::Separator();
+    ImGui::TextUnformatted("Master Effects");
+    ImGui::TextDisabled("Order: SampleRateReducer -> BitCrusher -> Chorus -> Delay -> Reverb");
+    const auto sliderFxDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
+    {
+        float v = static_cast<float>(value);
+        const bool edited = ImGui::SliderFloat(label, &v, minV, maxV, fmt);
+        if (edited)
+        {
+            value = static_cast<double>(v);
+        }
+        return edited;
+    };
+    if (ImGui::CollapsingHeader("Retro FX", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        int bits = std::clamp(state.masterEffects.bitCrusher.bits, 1, 16);
+        ImGui::SetNextItemWidth(260.0f);
+        if (ImGui::SliderInt("BitCrusher Bits", &bits, 1, 16))
+        {
+            state.masterEffects.bitCrusher.bits = bits;
+            state.presetDirty = true;
+        }
+        updateHoverHelp(
+            "ビットクラッシャーの量子化ビット数を調整します。",
+            "小さいほどザラついたレトロ感が強くなります。",
+            "16でバイパスされます。");
+
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("SampleRateReducer Ratio", state.masterEffects.sampleRateReducer.ratio, 0.0f, 1.0f, "%.3f"))
+        {
+            state.presetDirty = true;
+        }
+        updateHoverHelp(
+            "サンプル保持比率を調整します。",
+            "小さいほど粗いダウンサンプリング感になります。",
+            "1.0でバイパスされます。");
+    }
+
+    if (ImGui::CollapsingHeader("Chorus"))
+    {
+        state.presetDirty |= ImGui::Checkbox("Chorus Enabled", &state.masterEffects.chorus.enabled);
+        updateHoverHelp(
+            "コーラスの有効/無効を切り替えます。",
+            "厚みと揺らぎを加えます。",
+            "深くしすぎるとピッチ感がぼやけます。");
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Chorus Mix", state.masterEffects.chorus.mix, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Chorus Base Delay (ms)", state.masterEffects.chorus.baseDelayMs, 2.0f, 40.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Chorus Depth (ms)", state.masterEffects.chorus.depthMs, 0.0f, 20.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Chorus Rate (Hz)", state.masterEffects.chorus.rateHz, 0.05f, 8.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Chorus Feedback", state.masterEffects.chorus.feedback, 0.0f, 0.9f, "%.3f")) state.presetDirty = true;
+    }
+
+    if (ImGui::CollapsingHeader("Delay"))
+    {
+        state.presetDirty |= ImGui::Checkbox("Delay Enabled", &state.masterEffects.delay.enabled);
+        updateHoverHelp(
+            "ディレイの有効/無効を切り替えます。",
+            "反復エコーを加えます。",
+            "Feedbackを上げすぎると濁りやすくなります。");
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Delay Mix", state.masterEffects.delay.mix, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Delay Feedback", state.masterEffects.delay.feedback, 0.0f, 0.95f, "%.3f")) state.presetDirty = true;
+        state.presetDirty |= ImGui::Checkbox("Delay Tempo Sync", &state.masterEffects.delay.tempoSync);
+        if (state.masterEffects.delay.tempoSync)
+        {
+            ImGui::SetNextItemWidth(260.0f);
+            if (sliderFxDouble("Delay Sync Beats", state.masterEffects.delay.syncBeats, 0.125f, 4.0f, "%.3f")) state.presetDirty = true;
+        }
+        else
+        {
+            ImGui::SetNextItemWidth(260.0f);
+            if (sliderFxDouble("Delay Time (sec)", state.masterEffects.delay.timeSec, 0.01f, 2.0f, "%.3f")) state.presetDirty = true;
+        }
+    }
+
+    if (ImGui::CollapsingHeader("Reverb"))
+    {
+        state.presetDirty |= ImGui::Checkbox("Reverb Enabled", &state.masterEffects.reverb.enabled);
+        updateHoverHelp(
+            "リバーブの有効/無効を切り替えます。",
+            "残響感と奥行きを加えます。",
+            "Mixを上げるほど原音の輪郭が薄くなります。");
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Reverb Mix", state.masterEffects.reverb.mix, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Reverb Room Size", state.masterEffects.reverb.roomSize, 0.1f, 1.0f, "%.3f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Reverb Damping", state.masterEffects.reverb.damping, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
+    }
+
+    ImGui::Separator();
     ImGui::TextUnformatted("Music Mixer / Assignment");
     constexpr int drumMidiChannel = 9; // MIDI ch10 (0-based index)
     const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);

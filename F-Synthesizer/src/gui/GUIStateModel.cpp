@@ -50,6 +50,7 @@ AppConfig BuildConfigFromGUI(const GUIState& state)
     cfg.initialSeconds = state.initialSeconds;
     cfg.bits = state.bits;
     cfg.extraReleaseSec = state.extraReleaseSec;
+    cfg.masterEffects = state.masterEffects;
     if (state.channelConfigs)
     {
         auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
@@ -80,6 +81,7 @@ void InitializeGUIState(
     state.initialSeconds = cfg.initialSeconds;
     state.bits = cfg.bits;
     state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
+    state.masterEffects = cfg.masterEffects;
     state.UIScaleIndex = 1;
     state.UIModeTab = 0;
     state.logPanelHeight = 240.0f;
@@ -189,6 +191,91 @@ void RepairGUIStatePaths(
     if (state.bits != 16)
     {
         state.bits = 16;
+        repaired = true;
+    }
+    auto& fx = state.masterEffects;
+    const int clampedCrusherBits = std::clamp(fx.bitCrusher.bits, 1, 16);
+    if (fx.bitCrusher.bits != clampedCrusherBits)
+    {
+        fx.bitCrusher.bits = clampedCrusherBits;
+        repaired = true;
+    }
+    const double clampedSampleRateRatio = std::clamp(fx.sampleRateReducer.ratio, 0.0, 1.0);
+    if (fx.sampleRateReducer.ratio != clampedSampleRateRatio)
+    {
+        fx.sampleRateReducer.ratio = clampedSampleRateRatio;
+        repaired = true;
+    }
+    const double clampedChorusMix = std::clamp(fx.chorus.mix, 0.0, 1.0);
+    if (fx.chorus.mix != clampedChorusMix)
+    {
+        fx.chorus.mix = clampedChorusMix;
+        repaired = true;
+    }
+    const double clampedChorusBaseDelayMs = std::clamp(fx.chorus.baseDelayMs, 2.0, 40.0);
+    if (fx.chorus.baseDelayMs != clampedChorusBaseDelayMs)
+    {
+        fx.chorus.baseDelayMs = clampedChorusBaseDelayMs;
+        repaired = true;
+    }
+    const double clampedChorusDepthMs = std::clamp(fx.chorus.depthMs, 0.0, 20.0);
+    if (fx.chorus.depthMs != clampedChorusDepthMs)
+    {
+        fx.chorus.depthMs = clampedChorusDepthMs;
+        repaired = true;
+    }
+    const double clampedChorusRateHz = std::clamp(fx.chorus.rateHz, 0.05, 8.0);
+    if (fx.chorus.rateHz != clampedChorusRateHz)
+    {
+        fx.chorus.rateHz = clampedChorusRateHz;
+        repaired = true;
+    }
+    const double clampedChorusFeedback = std::clamp(fx.chorus.feedback, 0.0, 0.9);
+    if (fx.chorus.feedback != clampedChorusFeedback)
+    {
+        fx.chorus.feedback = clampedChorusFeedback;
+        repaired = true;
+    }
+    const double clampedDelayMix = std::clamp(fx.delay.mix, 0.0, 1.0);
+    if (fx.delay.mix != clampedDelayMix)
+    {
+        fx.delay.mix = clampedDelayMix;
+        repaired = true;
+    }
+    const double clampedDelayTimeSec = std::clamp(fx.delay.timeSec, 0.01, 2.0);
+    if (fx.delay.timeSec != clampedDelayTimeSec)
+    {
+        fx.delay.timeSec = clampedDelayTimeSec;
+        repaired = true;
+    }
+    const double clampedDelayFeedback = std::clamp(fx.delay.feedback, 0.0, 0.95);
+    if (fx.delay.feedback != clampedDelayFeedback)
+    {
+        fx.delay.feedback = clampedDelayFeedback;
+        repaired = true;
+    }
+    const double clampedDelaySyncBeats = std::clamp(fx.delay.syncBeats, 0.125, 4.0);
+    if (fx.delay.syncBeats != clampedDelaySyncBeats)
+    {
+        fx.delay.syncBeats = clampedDelaySyncBeats;
+        repaired = true;
+    }
+    const double clampedReverbMix = std::clamp(fx.reverb.mix, 0.0, 1.0);
+    if (fx.reverb.mix != clampedReverbMix)
+    {
+        fx.reverb.mix = clampedReverbMix;
+        repaired = true;
+    }
+    const double clampedReverbRoomSize = std::clamp(fx.reverb.roomSize, 0.1, 1.0);
+    if (fx.reverb.roomSize != clampedReverbRoomSize)
+    {
+        fx.reverb.roomSize = clampedReverbRoomSize;
+        repaired = true;
+    }
+    const double clampedReverbDamping = std::clamp(fx.reverb.damping, 0.0, 1.0);
+    if (fx.reverb.damping != clampedReverbDamping)
+    {
+        fx.reverb.damping = clampedReverbDamping;
         repaired = true;
     }
     if (state.UIScaleIndex < 0 || state.UIScaleIndex > 2)
