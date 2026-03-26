@@ -375,6 +375,42 @@ void RenderFmSource(
         frame.sample = out * outLevelScale;
         break;
     }
+    case 4:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out1 + out3) * 0.5 * outLevelScale;
+        break;
+    }
+    case 5:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod0, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out1 + out2 + out3) / 3.0 * outLevelScale;
+        break;
+    }
+    case 6:
+    {
+        const double mod0 = op0 * src.ops[0].level;
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], 0.0, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out1 + out2 + out3) / 3.0 * outLevelScale;
+        break;
+    }
+    case 7:
+    {
+        const double out0 = op0 * src.ops[0].level;
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], 0.0, src.ops[1].index * indexScale) * src.ops[1].level;
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, src.ops[2].index * indexScale) * src.ops[2].level;
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], 0.0, src.ops[3].index * indexScale) * src.ops[3].level;
+        frame.sample = (out0 + out1 + out2 + out3) * 0.25 * outLevelScale;
+        break;
+    }
     case 0:
     default:
     {

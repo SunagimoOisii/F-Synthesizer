@@ -42,7 +42,7 @@ std::array<config::SourceKind, config::kSourceKindCount> BuildGuiSourceKindList(
 
 void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
 {
-    fm.algorithm = std::clamp(algorithm, 0, 3);
+    fm.algorithm = std::clamp(algorithm, 0, 7);
     fm.filterMode = FilterMode::Bypass;
     fm.filterCutoffHz = 8000.0;
     fm.filterResonance = 0.707;
@@ -84,6 +84,38 @@ void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
         fm.ops[1].ratio = 1.0; fm.ops[1].level = 1.0; fm.ops[1].index = 1.8;
         fm.ops[2].ratio = 1.0; fm.ops[2].level = 0.9; fm.ops[2].index = 0.9;
         fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.82; fm.ops[3].index = 0.0;
+        break;
+    case 4:
+        // [M->C] + [M->C] (2ペア)
+        fm.feedback = 0.10;
+        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.0;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.85; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 2.0; fm.ops[2].level = 1.0; fm.ops[2].index = 1.6;
+        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.82; fm.ops[3].index = 0.0;
+        break;
+    case 5:
+        // M -> [C + C + C]
+        fm.feedback = 0.12;
+        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.4;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.80; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.74; fm.ops[2].index = 0.0;
+        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.68; fm.ops[3].index = 0.0;
+        break;
+    case 6:
+        // [M->C] + C + C
+        fm.feedback = 0.10;
+        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.0;
+        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.84; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.72; fm.ops[2].index = 0.0;
+        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.66; fm.ops[3].index = 0.0;
+        break;
+    case 7:
+        // C + C + C + C
+        fm.feedback = 0.08;
+        fm.ops[0].ratio = 1.0; fm.ops[0].level = 0.82; fm.ops[0].index = 0.0;
+        fm.ops[1].ratio = 2.0; fm.ops[1].level = 0.76; fm.ops[1].index = 0.0;
+        fm.ops[2].ratio = 3.0; fm.ops[2].level = 0.70; fm.ops[2].index = 0.0;
+        fm.ops[3].ratio = 4.0; fm.ops[3].level = 0.64; fm.ops[3].index = 0.0;
         break;
     case 0:
     default:
@@ -736,7 +768,7 @@ bool DrawChannelEditor(
         }
         else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
         {
-            fm->algorithm = std::clamp(fm->algorithm, 0, 3);
+            fm->algorithm = std::clamp(fm->algorithm, 0, 7);
             fm->feedback = std::clamp(fm->feedback, 0.0, 1.0);
             for (auto& op : fm->ops)
             {
@@ -761,7 +793,11 @@ bool DrawChannelEditor(
                 "0: M->C  (2op compat)",
                 "1: [M->C]+[M->C]  (2-pair)",
                 "2: M->[C+C+C]  (1mod 3car)",
-                "3: M->M->M->C  (chain)"
+                "3: M->M->M->C  (chain)",
+                "4: [M->C]+[M->C]  (dual pair)",
+                "5: M->[C+C+C]  (triple car)",
+                "6: [M->C]+C+C  (hybrid)",
+                "7: C+C+C+C  (all car)"
             };
             changed |= ImGui::Combo("FM Algorithm", &fm->algorithm, algoLabels, IM_ARRAYSIZE(algoLabels));
             if (updateHoverHelp) updateHoverHelp("FM アルゴリズムを選択します。", "オペレータの接続構造が変わります。", nullptr);

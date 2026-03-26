@@ -98,7 +98,7 @@ constexpr std::array<SourceParameterSchemaEntry, 3> kNoiseParameterSchema{ {
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
-    { "algorithm", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "algorithm", SourceParameterType::Int, 0.0, 7.0, 0.0 },
     { "feedback", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "op1Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
     { "op1Ratio", SourceParameterType::Float, 0.0, 32.0, 2.0 },

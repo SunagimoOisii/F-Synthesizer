@@ -901,9 +901,9 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             {
                 fm.algorithm = *v;
             }
-            if (fm.algorithm < 0 || fm.algorithm > 3)
+            if (fm.algorithm < 0 || fm.algorithm > 7)
             {
-                err = "fm.algorithm must be 0..3";
+                err = "fm.algorithm must be 0..7";
                 return false;
             }
             if (auto v = ReadJSONDouble(sourceObjText, "feedback"))

@@ -109,11 +109,15 @@ struct FmOperator
 // smoothing は非対応（契約上 waveform 専用）。
 struct FmConfig
 {
-    // 接続アルゴリズム（0-3）。
+    // 接続アルゴリズム（0-7）。
     //   0: ops[0]→ops[1]（旧2オペ互換。ops[2]/ops[3] は無視）
     //   1: [ops[0]→ops[1]] + [ops[2]→ops[3]]（2ペア並列）
     //   2: ops[0]→[ops[1]+ops[2]+ops[3]]（1変調→3キャリア）
     //   3: ops[0]→ops[1]→ops[2]→ops[3]（チェーン）
+    //   4: [ops[0]→ops[1]] + [ops[2]→ops[3]]（2ペア並列キャリア）
+    //   5: ops[0]→[ops[1]+ops[2]+ops[3]]（3並列キャリア）
+    //   6: [ops[0]→ops[1]] + ops[2] + ops[3]（1ペア + 2独立）
+    //   7: ops[0] + ops[1] + ops[2] + ops[3]（全独立キャリア）
     int algorithm = 0;
     // ops[0] の自己フィードバック量（0.0=なし, 1.0=最大）。
     double feedback = 0.0;

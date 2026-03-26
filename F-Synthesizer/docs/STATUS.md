@@ -24,6 +24,8 @@ Branch: `main`
 - Sound タブ左カラム末尾に波形ビューア追加: `previewRenderedSound` の PCM を 256 点にダウンサンプリングして `ImGui::PlotLines()` 表示、再生中は `frameCursor` でカーソル縦線をオーバーレイ（`MainWindow.inl` のみ変更、新規ファイルなし）
 - Tier A-2 実装: `NoiseConfig` に共通 filter（`filterMode/filterCutoffHz/filterResonance`）を追加し、Noise を `common shaper (BiquadFilter)` 経路へ接続（Load/Save/Registry/GUI/Voice 初期化まで反映）
 - Tier A-3 実装: Tone Preview ノート番号を `tonePreviewNoteNumber` として保存可能にし、Sound タブで `Preview Note` を手動選択（DrumKit 時は非表示、`ResolveSoundTonePreviewNote` は DrumKit 以外で手動値を優先）
+- Tier A-1 実装: Sound タブの Tone Preview にスペクトラムビューアを追加（Hann 窓付き簡易 DFT を 128 bin ヒストグラム表示、外部 FFT ライブラリ追加なし）
+- Tier B-1 実装: FM アルゴリズムを `0..7` へ拡張（Renderer に case 4〜7 を追加、GUI の選択肢/テンプレート範囲を 0..7 へ更新、Load/Schema も 0..7 を受理）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

@@ -183,7 +183,7 @@ waveform の filterMode/filterCutoffHz/filterResonance と同じ UI ウィジェ
 
 ---
 
-## Tier A-3: Tone Preview ノート選択
+## Tier A-3: Tone Preview ノート選択(完了)
 
 ### 目的
 
@@ -277,7 +277,7 @@ if (!isDrum)
 
 ---
 
-## Tier B-1: FM アルゴリズム 4〜7 追加
+## Tier B-1: FM アルゴリズム 4〜7 追加(完了)
 
 ### 目的
 

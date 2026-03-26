@@ -6,6 +6,8 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | FM アルゴリズムは既存 0..3 の挙動を維持したまま 4..7 を追加し、GUI/Load/Schema の許容範囲も 0..7 に統一する | Renderer だけ先行拡張して GUI/Config 制約を 0..3 のまま残す | 保存・再読込・GUI編集で同じアルゴリズム範囲を扱えない不整合を避け、既存プリセット互換を保った段階拡張にするため |
+| 2026-03-26 | Tone Preview スペクトラム表示は外部FFT依存を増やさず、`MainWindow.inl` 内で Hann 窓付き簡易 DFT（軽量サイズ）を実装する | kissFFT などの新規依存を導入して実装する | 既存ビルド構成を維持しつつ、Tone Preview の倍音可視化を最小変更で導入するため |
 | 2026-03-26 | Tone Preview ノートは `tonePreviewNoteNumber` を導入して GUI state へ永続化し、DrumKit 以外は手動指定値を優先する | 既存の自動決定（固定 C4 相当）を全 source で継続する | 音域別の聴感確認（C2〜C6 付近）を Sound タブだけで完結させ、再起動後も同じ検証条件を再現できるようにするため |
 | 2026-03-26 | Noise source も `common shaper (BiquadFilter)` を通す方針とし、`NoiseConfig` に `filterMode/filterCutoffHz/filterResonance` を追加する | Noise を従来どおりフィルタ非対応の単純発振に固定する | Waveform/Fm/Analog と同一の filter 契約に揃えることで、帯域絞りノイズ（hat/sfx）を GUI/Config/Renderer で一貫運用できるため |
 | 2026-03-26 | master effect の処理順を `SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb` に固定し、契約文書を同順に同期する | エフェクト順を未規定のまま実装依存にする / プリセットごとに順序可変とする | 既存プリセットの再現性と比較可能性を保ちつつ、Run/Config/GUI/Engine 間の挙動差異を防ぐため |
