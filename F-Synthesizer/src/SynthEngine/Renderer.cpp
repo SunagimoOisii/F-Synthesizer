@@ -18,7 +18,38 @@ struct VoiceRenderInput
     double ccGain = 1.0;
     double velGain = 1.0;
     double envGain = 1.0;
+    double modwheel = 0.0;
+    double brightness = 0.5;
+    double resonance = 0.5;
 };
+
+double TimeScaleFromOffset(double offset)
+{
+    return std::pow(2.0, std::clamp(offset, -1.0, 1.0) * 2.0);
+}
+
+double CutoffScaleFromBrightness(double brightness)
+{
+    return std::pow(2.0, (std::clamp(brightness, 0.0, 1.0) - 0.5) * 4.0);
+}
+
+double ResonanceScaleFromCc(double resonance)
+{
+    return std::pow(2.0, (std::clamp(resonance, 0.0, 1.0) - 0.5) * 2.0);
+}
+
+double SourceFilterResonance(const SourceConfig& src)
+{
+    return std::visit([](const auto& sourceCfg) -> double
+    {
+        using T = std::decay_t<decltype(sourceCfg)>;
+        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, FmConfig>)
+        {
+            return sourceCfg.filterResonance;
+        }
+        return 0.707;
+    }, src);
+}
 
 double WrapPhase(double phase)
 {
@@ -156,7 +187,8 @@ void RenderWaveformSource(
     ModulationResult mod = EvaluateModulation(
         ws.modulation,
         src.modulation,
-        in.dt);
+        in.dt,
+        ModulationInput{ in.velGain, in.modwheel });
     double pitchMul = mod.pitchMul;
     if (src.smoothing.enabled && src.smoothing.pitchEnabled)
     {
@@ -223,7 +255,8 @@ void RenderFmSource(
     const ModulationResult mod = EvaluateModulation(
         fs.modulation,
         src.modulation,
-        in.dt);
+        in.dt,
+        ModulationInput{ in.velGain, in.modwheel });
     const double indexScale = mod.fmIndexMul;
     const double feedbackSample = fs.op0FeedbackSample * src.feedback;
     const double outLevelScale = mod.ampMul;
@@ -384,6 +417,7 @@ void ApplyCommonShaper(
     const SourceConfig& src,
     Voice& voices,
     size_t i,
+    const VoiceRenderInput& in,
     SourceRenderFrame& frame)
 {
     if (frame.shaperKind == CommonShaperKind::BiquadFilter)
@@ -404,7 +438,10 @@ void ApplyCommonShaper(
                         filterCutoffHz = StepSmoothedParam(st.filterCutoffSmoothing);
                     }
                 }
+                filterCutoffHz *= CutoffScaleFromBrightness(in.brightness);
                 SetFilterCutoffHz(st.filter, filterCutoffHz);
+                const double baseResonance = SourceFilterResonance(src);
+                SetFilterResonance(st.filter, baseResonance * ResonanceScaleFromCc(in.resonance));
                 frame.sample = ProcessFilterSample(st.filter, frame.sample);
             }
         }, voices.sourceState[i]);
@@ -463,7 +500,15 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         }
 
         const double envGain = StepADSR(
-            voices.env[i], dt, voices.attackSec[i], voices.decaySec[i], voices.sustainLevel[i], voices.releaseSec[i]);
+            voices.env[i],
+            dt,
+            voices.attackSec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].attack),
+            voices.decaySec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].decay),
+            std::clamp(
+                voices.sustainLevel[i] + (state.channelAdsrOffset[voices.channelIndex[i]].sustain * 0.5),
+                0.0,
+                1.0),
+            voices.releaseSec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].release));
         if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
         {
             // 即時 erase は O(n) 連鎖になるため、削除フラグだけ立てて後段でまとめて圧縮する。
@@ -488,26 +533,32 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         in.mixGain = state.channelMixGain[ch];
         in.pitchFactor = state.channelPitch[ch];
         in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
+        in.modwheel = state.channelModwheel[ch];
+        in.brightness = state.channelBrightness[ch];
+        in.resonance = state.channelResonance[ch];
 
         // ポルタメント: 現在ピッチをターゲットへ指数平滑しつつ pitchFactor へ反映する。
-        if (voices.portamentoTimeSec[i] > 0.0 &&
+        const double effectivePortamentoTimeSec = state.channelPortamentoOn[ch]
+            ? (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch])
+            : 0.0;
+        if (effectivePortamentoTimeSec > 0.0 &&
             std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
         {
-            const double tau = voices.portamentoTimeSec[i];
+            const double tau = effectivePortamentoTimeSec;
             voices.portamentoPitchHz[i] +=
                 (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
                 (1.0 - std::exp(-in.dt / tau));
         }
         // portamentoPitchHz を phaseInc に対する倍率として pitchFactor へ乗算する。
         // (phaseInc = targetHz / sampleRate なので比率で戻す)
-        if (voices.portamentoTimeSec[i] > 0.0 && voices.portamentoTargetHz[i] > 0.0)
+        if (effectivePortamentoTimeSec > 0.0 && voices.portamentoTargetHz[i] > 0.0)
         {
             in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
         }
 
         SourceRenderFrame frame{};
         RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
-        ApplyCommonShaper(voices.source[i], voices, i, frame);
+        ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 
         sum += in.mixGain *

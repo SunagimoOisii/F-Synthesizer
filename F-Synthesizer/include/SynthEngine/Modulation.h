@@ -22,7 +22,8 @@ enum class ModSource
 {
     None,
     Lfo1,
-    Env2
+    Env2,
+    Velocity
 };
 
 enum class ModDestination
@@ -86,6 +87,12 @@ struct ModulationResult
     double fmIndexMul = 1.0;
 };
 
+struct ModulationInput
+{
+    double velGain = 1.0;
+    double modwheel = 0.0;
+};
+
 void ResetModulationState(ModulationRuntimeState& state);
 void NoteOnModulation(ModulationRuntimeState& state);
 void NoteOffModulation(ModulationRuntimeState& state);
@@ -94,4 +101,5 @@ double StepEnv2Sample(ModulationRuntimeState& state, const ModEnvelopeConfig& en
 ModulationResult EvaluateModulation(
     ModulationRuntimeState& state,
     const ModulationConfig& cfg,
-    double deltaTimeSec);
+    double deltaTimeSec,
+    const ModulationInput& input = {});

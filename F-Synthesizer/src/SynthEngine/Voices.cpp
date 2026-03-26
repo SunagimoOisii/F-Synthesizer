@@ -81,6 +81,7 @@ void InitializeVoiceAtIndex(
     voices.noteInstanceID[i] = e.noteInstanceID;
     voices.released[i] = 0;
     voices.pendingRemove[i] = 0;
+    voices.sustainedPendingOff[i] = 0;
 
     voices.amp[i] = cfg.amp;
     voices.attackSec[i] = cfg.attackSec;
@@ -327,6 +328,7 @@ void Voice::reserve(size_t n)
     noteInstanceID.reserve(n);
     released.reserve(n);
     pendingRemove.reserve(n);
+    sustainedPendingOff.reserve(n);
     amp.reserve(n);
     attackSec.reserve(n);
     decaySec.reserve(n);
@@ -351,6 +353,7 @@ void Voice::clear()
     noteInstanceID.clear();
     released.clear();
     pendingRemove.clear();
+    sustainedPendingOff.clear();
     amp.clear();
     attackSec.clear();
     decaySec.clear();
@@ -385,6 +388,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     noteInstanceID.push_back(-1);
     released.push_back(0);
     pendingRemove.push_back(0);
+    sustainedPendingOff.push_back(0);
 
     amp.push_back(0.0);
     attackSec.push_back(0.0);
@@ -404,8 +408,24 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     InitializeVoiceAtIndex(*this, i, cfg, e, sampleRate);
 }
 
-void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
+void Voice::MarkNoteOff(int ch, int note, int noteInstanceID, bool holdBySustain)
 {
+    auto applyRelease = [&](size_t i, const config::SourceCapability& cap)
+    {
+        if (holdBySustain)
+        {
+            sustainedPendingOff[i] = 1;
+            return;
+        }
+        NoteOff(env[i]);
+        if (cap.hasModTargets)
+        {
+            NoteOffVoiceModulation(sourceState[i]);
+        }
+        released[i] = 1;
+        sustainedPendingOff[i] = 0;
+    };
+
     // 原則: NoteOn/NoteOff の対応IDで閉じる。
     // 互換性: IDが無い/不一致の場合は旧ロジック(ch+note)へフォールバックする。
     if (noteInstanceID >= 0)
@@ -419,12 +439,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
             }
             if (released[i] == 0 && this->noteInstanceID[i] == noteInstanceID)
             {
-                NoteOff(env[i]);
-                if (cap.hasModTargets)
-                {
-                    NoteOffVoiceModulation(sourceState[i]);
-                }
-                released[i] = 1;
+                applyRelease(i, cap);
                 return;
             }
         }
@@ -440,14 +455,33 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID)
         }
         if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
         {
-            NoteOff(env[i]);
-            if (cap.hasModTargets)
-            {
-                NoteOffVoiceModulation(sourceState[i]);
-            }
-            released[i] = 1;
+            applyRelease(i, cap);
             break;
         }
+    }
+}
+
+void Voice::ReleaseSustained(int ch)
+{
+    for (size_t i = 0; i < size(); i++)
+    {
+        if (released[i] != 0 || sustainedPendingOff[i] == 0 || channel[i] != ch)
+        {
+            continue;
+        }
+        const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
+        if (cap.isOneShot)
+        {
+            sustainedPendingOff[i] = 0;
+            continue;
+        }
+        NoteOff(env[i]);
+        if (cap.hasModTargets)
+        {
+            NoteOffVoiceModulation(sourceState[i]);
+        }
+        released[i] = 1;
+        sustainedPendingOff[i] = 0;
     }
 }
 
@@ -482,6 +516,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(noteInstanceID, keepScratch);
     CompactVectorByKeep(released, keepScratch);
     CompactVectorByKeep(pendingRemove, keepScratch);
+    CompactVectorByKeep(sustainedPendingOff, keepScratch);
     CompactVectorByKeep(amp, keepScratch);
     CompactVectorByKeep(attackSec, keepScratch);
     CompactVectorByKeep(decaySec, keepScratch);

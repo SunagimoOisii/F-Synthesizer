@@ -1,35 +1,37 @@
 {
   "channels": {
     "0": {
-      "amp": 0.22,
-      "attackSec": 0.003,
-      "decaySec": 0.11,
-      "sustainLevel": 0.70,
-      "releaseSec": 0.10,
-      "portamentoTimeSec": 0.065,
+      "amp": 0.20,
+      "attackSec": 0.001,
+      "decaySec": 0.09,
+      "sustainLevel": 0.62,
+      "releaseSec": 0.07,
+      "portamentoTimeSec": 0.072,
       "source": {
         "type": "waveform",
-        "wave": "saw",
+        "wave": "square",
         "unisonVoices": 1,
         "unisonDetuneCents": 0.0,
         "unisonSpread": 0.0,
-        "subOscLevel": 0.08,
+        "subOscLevel": 0.12,
         "filterMode": "lowpass",
-        "filterCutoffHz": 5800,
-        "filterResonance": 1.15,
-        "filterKeytrack": 0.42,
-        "drive": 0.58,
+        "filterCutoffHz": 4200,
+        "filterResonance": 1.55,
+        "filterKeytrack": 0.48,
+        "drive": 0.72,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": false,
-          "ampTimeMs": 4.0,
+          "ampTimeMs": 3.0,
           "pitchTimeMs": 2.0,
-          "filterCutoffTimeMs": 10.0
+          "filterCutoffTimeMs": 8.0
         },
         "modulation": {
-          "lfo1": { "wave": "sine", "rateHz": 5.8, "depth": 0.45, "bipolar": true },
+          "lfo1": { "wave": "triangle", "rateHz": 6.8, "depth": 0.62, "bipolar": true },
+          "env2": { "attackSec": 0.0, "decaySec": 0.10, "sustainLevel": 0.0, "releaseSec": 0.05 },
           "routes": {
-            "0": { "source": "lfo1", "destination": "pitchMul", "amount": 0.03, "enabled": true }
+            "0": { "source": "lfo1", "destination": "pitchMul", "amount": 0.042, "enabled": true },
+            "1": { "source": "env2", "destination": "filterCutoffHz", "amount": 0.35, "enabled": true }
           }
         }
       }

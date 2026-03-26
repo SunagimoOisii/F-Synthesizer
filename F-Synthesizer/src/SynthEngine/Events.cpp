@@ -1,30 +1,76 @@
 #include "Internal.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace
 {
-    // 目的: CC7/CC11 を 0.0..1.0 のチャンネルゲインへ反映する。
-    void ApplyControlChange(const MIDIEvent& e, RenderState& state)
+    double NormalizeCc(int value)
     {
-        if (e.controller != 7 && e.controller != 11)
-        {
-            return;
-        }
-
-        int ch = ClampChannel(e.channel);
-        int v = e.value;
+        int v = value;
         if (v < 0) v = 0;
         if (v > 127) v = 127;
-        // 範囲外入力は 0..127 に丸め、0.0..1.0 へ変換してミックス計算を安定させる。
-        double norm = v / 127.0;
-        if (e.controller == 7)
+        return v / 127.0;
+    }
+
+    double NormalizeCcCentered(int value)
+    {
+        return std::clamp((value - 64) / 63.0, -1.0, 1.0);
+    }
+
+    // 目的: 主要CCをチャンネル状態へ反映する。
+    void ApplyControlChange(const MIDIEvent& e, RenderState& state)
+    {
+        int ch = ClampChannel(e.channel);
+        const double norm = NormalizeCc(e.value);
+        switch (e.controller)
         {
+        case 1:
+            state.channelModwheel[ch] = norm;
+            break;
+        case 5:
+            // CC5 0..127 を 0..2sec に変換（CC65 ON時のみ有効）。
+            state.channelPortamentoTimeSec[ch] = norm * 2.0;
+            break;
+        case 7:
             state.channelCc7[ch] = norm;
-        }
-        else
-        {
+            break;
+        case 11:
             state.channelCc11[ch] = norm;
+            break;
+        case 64:
+        {
+            const bool sustainOn = (e.value >= 64);
+            if (state.channelSustain[ch] && !sustainOn)
+            {
+                state.voices.ReleaseSustained(ch);
+            }
+            state.channelSustain[ch] = sustainOn;
+            break;
+        }
+        case 65:
+            state.channelPortamentoOn[ch] = (e.value >= 64);
+            break;
+        case 70:
+            state.channelAdsrOffset[ch].sustain = NormalizeCcCentered(e.value);
+            break;
+        case 71:
+            state.channelResonance[ch] = norm;
+            break;
+        case 72:
+            state.channelAdsrOffset[ch].release = NormalizeCcCentered(e.value);
+            break;
+        case 73:
+            state.channelAdsrOffset[ch].attack = NormalizeCcCentered(e.value);
+            break;
+        case 74:
+            state.channelBrightness[ch] = norm;
+            break;
+        case 75:
+            state.channelAdsrOffset[ch].decay = NormalizeCcCentered(e.value);
+            break;
+        default:
+            break;
         }
     }
 
@@ -41,9 +87,26 @@ namespace
         state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
     }
 
-    void HandleNoteOff(const MIDIEvent& e, Voice& voices)
+    void HandleNoteOff(const MIDIEvent& e, RenderState& state)
     {
-        voices.MarkNoteOff(e.channel, e.noteNumber, e.noteInstanceID);
+        const int ch = ClampChannel(e.channel);
+        const bool holdBySustain = state.channelSustain[ch];
+        state.voices.MarkNoteOff(e.channel, e.noteNumber, e.noteInstanceID, holdBySustain);
+    }
+
+    ChannelConfig ResolveRealtimeChannelConfig(const ChannelConfig& cfg, int channel, const RenderState& state)
+    {
+        ChannelConfig resolved = cfg;
+        const int ch = ClampChannel(channel);
+        if (state.channelPortamentoOn[ch])
+        {
+            resolved.portamentoTimeSec = (std::max)(cfg.portamentoTimeSec, state.channelPortamentoTimeSec[ch]);
+        }
+        else
+        {
+            resolved.portamentoTimeSec = 0.0;
+        }
+        return resolved;
     }
 }
 
@@ -85,19 +148,20 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
                 const DrumConfig& drum = kit->map[note];
                 if (drum.type != DrumType::None)
                 {
-                    ChannelConfig drumCfg = cfg;
+                    ChannelConfig drumCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
                     drumCfg.source = drum;
                     state.voices.AddVoice(drumCfg, e, sampleRate);
                 }
             }
             else
             {
-                state.voices.AddVoice(cfg, e, sampleRate);
+                const ChannelConfig resolvedCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
+                state.voices.AddVoice(resolvedCfg, e, sampleRate);
             }
         }
         else
         {
-            HandleNoteOff(e, state.voices);
+            HandleNoteOff(e, state);
         }
         state.eventIndex++;
     }

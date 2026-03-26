@@ -1,30 +1,31 @@
 {
   "channels": {
     "0": {
-      "amp": 0.24,
-      "attackSec": 0.002,
-      "decaySec": 0.10,
-      "sustainLevel": 0.50,
-      "releaseSec": 0.12,
-      "portamentoTimeSec": 0.035,
+      "amp": 0.23,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.40,
+      "releaseSec": 0.10,
+      "portamentoTimeSec": 0.042,
       "source": {
         "type": "fm",
-        "algorithm": 3,
-        "feedback": 0.32,
+        "algorithm": 0,
+        "feedback": 0.46,
         "ops": [
-          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 3.6 },
-          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 1.7 },
-          { "wave": "sine", "ratio": 1.0, "level": 0.92, "index": 0.9 },
-          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 0.0 }
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 5.4 },
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 0.0 },
+          { "wave": "sine", "ratio": 2.0, "level": 0.0, "index": 0.0 },
+          { "wave": "sine", "ratio": 3.0, "level": 0.0, "index": 0.0 }
         ],
         "filterMode": "lowpass",
-        "filterCutoffHz": 2800,
-        "filterResonance": 0.95,
-        "drive": 0.34,
+        "filterCutoffHz": 1800,
+        "filterResonance": 1.10,
+        "drive": 0.52,
         "modulation": {
-          "env2": { "attackSec": 0.0, "decaySec": 0.06, "sustainLevel": 0.0, "releaseSec": 0.05 },
+          "env2": { "attackSec": 0.0, "decaySec": 0.05, "sustainLevel": 0.0, "releaseSec": 0.04 },
           "routes": {
-            "0": { "source": "env2", "destination": "fm.index", "amount": 0.95, "enabled": true }
+            "0": { "source": "env2", "destination": "fm.index", "amount": 1.25, "enabled": true },
+            "1": { "source": "env2", "destination": "amp", "amount": 0.18, "enabled": true }
           }
         }
       }

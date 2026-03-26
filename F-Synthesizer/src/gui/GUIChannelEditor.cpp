@@ -200,7 +200,7 @@ bool DrawChannelEditor(
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Release", modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
 
-        const char* modSources[] = { "none", "lfo1", "env2" };
+        const char* modSources[] = { "none", "lfo1", "env2", "velocity" };
         struct DestinationChoice
         {
             const char* label;
@@ -286,6 +286,7 @@ bool DrawChannelEditor(
             case ModSource::None: srcIdx = 0; break;
             case ModSource::Lfo1: srcIdx = 1; break;
             case ModSource::Env2: srcIdx = 2; break;
+            case ModSource::Velocity: srcIdx = 3; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Source", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
@@ -295,6 +296,7 @@ bool DrawChannelEditor(
                 case 0: route.source = ModSource::None; break;
                 case 1: route.source = ModSource::Lfo1; break;
                 case 2: route.source = ModSource::Env2; break;
+                case 3: route.source = ModSource::Velocity; break;
                 default: route.source = ModSource::None; break;
                 }
                 localChanged = true;

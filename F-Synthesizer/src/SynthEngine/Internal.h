@@ -58,6 +58,14 @@ using PerSourceVoiceState = std::variant<
     DrumKitVoiceState,
     PsgVoiceState>;
 
+struct ChannelAdsrOffset
+{
+    double attack = 0.0;
+    double decay = 0.0;
+    double sustain = 0.0;
+    double release = 0.0;
+};
+
 struct Voice
 {
     // SoA 構造:
@@ -72,6 +80,7 @@ struct Voice
     std::vector<int> noteInstanceID;
     std::vector<uint8_t> released;
     std::vector<uint8_t> pendingRemove;
+    std::vector<uint8_t> sustainedPendingOff;
 
     std::vector<double> amp;
     std::vector<double> attackSec;
@@ -92,7 +101,8 @@ struct Voice
     void reserve(size_t n);
     void clear();
     void AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate);
-    void MarkNoteOff(int channel, int noteNumber, int noteInstanceID);
+    void MarkNoteOff(int channel, int noteNumber, int noteInstanceID, bool holdBySustain);
+    void ReleaseSustained(int channel);
     size_t CleanupPending(std::vector<uint8_t>& keepScratch);
 };
 
@@ -123,6 +133,13 @@ struct RenderState
     std::array<double, 16> channelCc7{};
     std::array<double, 16> channelCc11{};
     std::array<double, 16> channelPitch{};
+    std::array<double, 16> channelModwheel{};
+    std::array<bool, 16> channelSustain{};
+    std::array<double, 16> channelBrightness{};
+    std::array<double, 16> channelResonance{};
+    std::array<ChannelAdsrOffset, 16> channelAdsrOffset{};
+    std::array<double, 16> channelPortamentoTimeSec{};
+    std::array<bool, 16> channelPortamentoOn{};
     std::array<double, 16> channelMixGain{};
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};

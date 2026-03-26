@@ -1,11 +1,12 @@
 # DECISIONS
 
-最終更新: 2026-03-08
+最終更新: 2026-03-26
 
 重要な設計判断とトレードオフを記録する。
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier1 expression foundation は実装完了として roadmap ファイルを破棄し、進捗の正本を `STATUS.md` に一本化する | 完了済みTierを roadmap に残置する | 次アクション（Tier2）を明確化し、完了済み計画と実装済み状態の二重管理を避けるため |
 | 2026-03-19 | SubtractiveConfig を廃止し WaveformConfig に filterKeytrack を追加 | SubtractiveConfig を独立 source type として維持する | 減算合成は合成メソッドであり発振器種別ではない。method-boundaries.md の「発振器固有機能の再実装禁止」に違反するため |
 | 2026-03-08 | Source種別判定は GUI 直書きではなく `SourceCapabilityOf(...)` を正とし、`SourceRegistry` 契約へ集約する | GUIごとに `SourceKind` / `holds_alternative` 判定を個別維持する | 種別追加時の更新漏れを減らし、Config/GUI間の判定不整合を防ぐため |
 | 2026-03-08 | ParameterSchema の `displayName` / `smoothable` / `automatable` は当面導入せず、最小版（`id/type/range/default`）を契約の正とする | 先行してschema項目を拡張しGUI/自動化連携まで同時実装する | 個人開発規模では運用コスト増が先行しやすく、現時点の利用箇所（Config検証）に対して過剰なため |

@@ -199,6 +199,11 @@ bool TryParseModSource(const std::string& name, ModSource& outSource)
         outSource = ModSource::Env2;
         return true;
     }
+    if (name == "velocity")
+    {
+        outSource = ModSource::Velocity;
+        return true;
+    }
     return false;
 }
 
@@ -314,6 +319,7 @@ std::string ModSourceToString(ModSource source)
     case ModSource::None: return "none";
     case ModSource::Lfo1: return "lfo1";
     case ModSource::Env2: return "env2";
+    case ModSource::Velocity: return "velocity";
     }
     return "none";
 }
