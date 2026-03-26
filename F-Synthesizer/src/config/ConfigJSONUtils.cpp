@@ -666,6 +666,26 @@ void WriteArpeggioConfig(std::ostream& out, const ArpeggioT& arpeggio, int inden
     WriteIndent(out, indent); out << "}";
 }
 
+template <typename T>
+void WriteWaveformLikeCommonFields(std::ostream& out, const T& v, int indent)
+{
+    WriteIndent(out, indent); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
+    WriteIndent(out, indent); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
+    WriteIndent(out, indent); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
+    WriteIndent(out, indent); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+    WriteIndent(out, indent); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
+    WriteIndent(out, indent); out << "\"hardSyncEnabled\": " << (v.hardSyncEnabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent); out << "\"hardSyncRatio\": " << v.hardSyncRatio << ",\n";
+    WriteIndent(out, indent); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
+    WriteIndent(out, indent); out << "\"ringModMix\": " << v.ringModMix << ",\n";
+    WriteIndent(out, indent); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
+    WriteIndent(out, indent); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
+    WriteIndent(out, indent); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+    WriteIndent(out, indent); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
+    WriteIndent(out, indent); out << "\"drive\": " << v.drive << ",\n";
+}
+
 void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
 {
     WriteIndent(out, indent); out << "\"source\": {\n";
@@ -675,25 +695,9 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Waveform) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
-            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
-            WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
-            WriteIndent(out, indent + 2); out << "\"hardSyncEnabled\": " << (v.hardSyncEnabled ? "true" : "false") << ",\n";
-            WriteIndent(out, indent + 2); out << "\"hardSyncRatio\": " << v.hardSyncRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
-            WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
-            WriteArpeggioConfig(out, v.arpeggio, indent + 2);
-            out << ",\n";
-            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
-            out << ",\n";
+            WriteWaveformLikeCommonFields(out, v, indent + 2);
+            WriteArpeggioConfig(out, v.arpeggio, indent + 2); out << ",\n";
+            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2); out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
         }
@@ -701,27 +705,11 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"analog\",\n";
             WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
-            WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
-            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
-            WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
-            WriteIndent(out, indent + 2); out << "\"hardSyncEnabled\": " << (v.hardSyncEnabled ? "true" : "false") << ",\n";
-            WriteIndent(out, indent + 2); out << "\"hardSyncRatio\": " << v.hardSyncRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
-            WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
-            WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
+            WriteWaveformLikeCommonFields(out, v, indent + 2);
             WriteIndent(out, indent + 2); out << "\"driftDepthCents\": " << v.driftDepthCents << ",\n";
             WriteIndent(out, indent + 2); out << "\"driftRateHz\": " << v.driftRateHz << ",\n";
-            WriteArpeggioConfig(out, v.arpeggio, indent + 2);
-            out << ",\n";
-            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
-            out << ",\n";
+            WriteArpeggioConfig(out, v.arpeggio, indent + 2); out << ",\n";
+            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2); out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
         }

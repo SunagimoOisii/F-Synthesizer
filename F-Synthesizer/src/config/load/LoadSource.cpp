@@ -173,39 +173,104 @@ bool ValidateSchemaRange(
     return true;
 }
 
+template <typename T>
+bool WaveformLikeSchemaValue(const T& cfg, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(cfg.unisonVoices); return true; }
+    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = cfg.unisonDetuneCents; return true; }
+    if (std::string_view(e.id) == "unisonSpread") { outValue = cfg.unisonSpread; return true; }
+    if (std::string_view(e.id) == "subOscLevel") { outValue = cfg.subOscLevel; return true; }
+    if (std::string_view(e.id) == "pulseWidth") { outValue = cfg.pulseWidth; return true; }
+    if (std::string_view(e.id) == "hardSyncEnabled") { outValue = cfg.hardSyncEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "hardSyncRatio") { outValue = cfg.hardSyncRatio; return true; }
+    if (std::string_view(e.id) == "ringModEnabled") { outValue = cfg.ringModEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "ringModRatio") { outValue = cfg.ringModRatio; return true; }
+    if (std::string_view(e.id) == "ringModMix") { outValue = cfg.ringModMix; return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = cfg.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = cfg.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterKeytrack") { outValue = cfg.filterKeytrack; return true; }
+    return false;
+}
+
+bool ExtractArrayForKey(const std::string& text, const std::string& key, std::string& outArray, bool& found, std::string& err);
+bool ParseTopLevelIntArrayElements(const std::string& arrText, const std::function<bool(size_t, int)>& onElement, std::string& err);
+
+template <typename T>
+bool ParseWaveformLikeCommonFields(const std::string& text, T& cfg, std::string& err)
+{
+    if (auto v = ReadJSONInt(text, "unisonVoices")) { cfg.unisonVoices = *v; }
+    if (auto v = ReadJSONDouble(text, "unisonDetuneCents")) { cfg.unisonDetuneCents = *v; }
+    if (auto v = ReadJSONDouble(text, "unisonSpread")) { cfg.unisonSpread = *v; }
+    if (auto v = ReadJSONDouble(text, "subOscLevel")) { cfg.subOscLevel = *v; }
+    if (auto v = ReadJSONDouble(text, "pulseWidth")) { cfg.pulseWidth = std::clamp(*v, 0.05, 0.95); }
+    if (auto v = ReadJSONBool(text, "hardSyncEnabled")) { cfg.hardSyncEnabled = *v; }
+    if (auto v = ReadJSONDouble(text, "hardSyncRatio")) { cfg.hardSyncRatio = std::clamp(*v, 0.5, 8.0); }
+    if (auto v = ReadJSONBool(text, "ringModEnabled")) { cfg.ringModEnabled = *v; }
+    if (auto v = ReadJSONDouble(text, "ringModRatio")) { cfg.ringModRatio = std::clamp(*v, 0.125, 16.0); }
+    if (auto v = ReadJSONDouble(text, "ringModMix")) { cfg.ringModMix = std::clamp(*v, 0.0, 1.0); }
+    if (auto v = ReadJSONString(text, "filterMode")) {
+        FilterMode mode{};
+        if (!TryParseFilterMode(*v, mode)) { err = "invalid filterMode: " + *v; return false; }
+        cfg.filterMode = mode;
+    }
+    if (auto v = ReadJSONDouble(text, "filterCutoffHz")) { cfg.filterCutoffHz = *v; }
+    if (auto v = ReadJSONDouble(text, "filterResonance")) { cfg.filterResonance = *v; }
+    if (auto v = ReadJSONDouble(text, "filterKeytrack")) { cfg.filterKeytrack = *v; }
+    if (auto v = ReadJSONDouble(text, "drive")) { cfg.drive = std::clamp(*v, 0.0, 1.0); }
+
+    std::string arpeggioObj;
+    bool foundArpeggio = false;
+    if (!ExtractObjectForKey(text, "arpeggio", arpeggioObj, foundArpeggio, err)) { return false; }
+    if (foundArpeggio)
+    {
+        if (auto v = ReadJSONBool(arpeggioObj, "enabled")) { cfg.arpeggio.enabled = *v; }
+        if (auto v = ReadJSONDouble(arpeggioObj, "rateHz")) { cfg.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0); }
+        if (auto v = ReadJSONInt(arpeggioObj, "steps")) { cfg.arpeggio.steps = std::clamp(*v, 1, 8); }
+
+        std::string semitonesArray;
+        bool foundSemitones = false;
+        if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err)) { return false; }
+        if (foundSemitones)
+        {
+            if (!ParseTopLevelIntArrayElements(semitonesArray, [&](size_t semitoneIndex, int value) {
+                if (semitoneIndex >= cfg.arpeggio.semitones.size()) { return true; }
+                cfg.arpeggio.semitones[semitoneIndex] = std::clamp(value, -24, 24);
+                return true;
+                }, err))
+            { return false; }
+        }
+    }
+
+    std::string smoothingObj;
+    bool foundSmoothing = false;
+    if (!ExtractObjectForKey(text, "smoothing", smoothingObj, foundSmoothing, err)) { return false; }
+    if (foundSmoothing)
+    {
+        if (!ParseWaveformSmoothingObject(smoothingObj, cfg.smoothing))
+        {
+            err = "invalid smoothing object";
+            return false;
+        }
+    }
+
+    std::string modulationObj;
+    bool foundModulation = false;
+    if (!ExtractObjectForKey(text, "modulation", modulationObj, foundModulation, err)) { return false; }
+    if (foundModulation)
+    {
+        if (!ParseModulationObject(modulationObj, cfg.modulation, err)) { return false; }
+    }
+    return true;
+}
+
 bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEntry& e, double& outValue)
 {
-    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(wf.unisonVoices); return true; }
-    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = wf.unisonDetuneCents; return true; }
-    if (std::string_view(e.id) == "unisonSpread") { outValue = wf.unisonSpread; return true; }
-    if (std::string_view(e.id) == "subOscLevel") { outValue = wf.subOscLevel; return true; }
-    if (std::string_view(e.id) == "pulseWidth") { outValue = wf.pulseWidth; return true; }
-    if (std::string_view(e.id) == "hardSyncEnabled") { outValue = wf.hardSyncEnabled ? 1.0 : 0.0; return true; }
-    if (std::string_view(e.id) == "hardSyncRatio") { outValue = wf.hardSyncRatio; return true; }
-    if (std::string_view(e.id) == "ringModEnabled") { outValue = wf.ringModEnabled ? 1.0 : 0.0; return true; }
-    if (std::string_view(e.id) == "ringModRatio") { outValue = wf.ringModRatio; return true; }
-    if (std::string_view(e.id) == "ringModMix") { outValue = wf.ringModMix; return true; }
-    if (std::string_view(e.id) == "filterCutoffHz") { outValue = wf.filterCutoffHz; return true; }
-    if (std::string_view(e.id) == "filterResonance") { outValue = wf.filterResonance; return true; }
-    if (std::string_view(e.id) == "filterKeytrack") { outValue = wf.filterKeytrack; return true; }
-    return false;
+    return WaveformLikeSchemaValue(wf, e, outValue);
 }
 
 bool AnalogSchemaValue(const AnalogConfig& analog, const SourceParameterSchemaEntry& e, double& outValue)
 {
-    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(analog.unisonVoices); return true; }
-    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = analog.unisonDetuneCents; return true; }
-    if (std::string_view(e.id) == "unisonSpread") { outValue = analog.unisonSpread; return true; }
-    if (std::string_view(e.id) == "subOscLevel") { outValue = analog.subOscLevel; return true; }
-    if (std::string_view(e.id) == "pulseWidth") { outValue = analog.pulseWidth; return true; }
-    if (std::string_view(e.id) == "hardSyncEnabled") { outValue = analog.hardSyncEnabled ? 1.0 : 0.0; return true; }
-    if (std::string_view(e.id) == "hardSyncRatio") { outValue = analog.hardSyncRatio; return true; }
-    if (std::string_view(e.id) == "ringModEnabled") { outValue = analog.ringModEnabled ? 1.0 : 0.0; return true; }
-    if (std::string_view(e.id) == "ringModRatio") { outValue = analog.ringModRatio; return true; }
-    if (std::string_view(e.id) == "ringModMix") { outValue = analog.ringModMix; return true; }
-    if (std::string_view(e.id) == "filterCutoffHz") { outValue = analog.filterCutoffHz; return true; }
-    if (std::string_view(e.id) == "filterResonance") { outValue = analog.filterResonance; return true; }
-    if (std::string_view(e.id) == "filterKeytrack") { outValue = analog.filterKeytrack; return true; }
+    if (WaveformLikeSchemaValue(analog, e, outValue)) { return true; }
     if (std::string_view(e.id) == "driftDepthCents") { outValue = analog.driftDepthCents; return true; }
     if (std::string_view(e.id) == "driftRateHz") { outValue = analog.driftRateHz; return true; }
     return false;
@@ -679,141 +744,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         }
         WaveformConfig wf{};
         wf.wave = w;
-        if (auto v = ReadJSONInt(sourceObjText, "unisonVoices"))
-        {
-            wf.unisonVoices = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "unisonDetuneCents"))
-        {
-            wf.unisonDetuneCents = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "unisonSpread"))
-        {
-            wf.unisonSpread = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel"))
-        {
-            wf.subOscLevel = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "pulseWidth"))
-        {
-            wf.pulseWidth = std::clamp(*v, 0.05, 0.95);
-        }
-        if (auto v = ReadJSONBool(sourceObjText, "hardSyncEnabled"))
-        {
-            wf.hardSyncEnabled = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "hardSyncRatio"))
-        {
-            wf.hardSyncRatio = std::clamp(*v, 0.5, 8.0);
-        }
-        if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
-        {
-            wf.ringModEnabled = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "ringModRatio"))
-        {
-            wf.ringModRatio = std::clamp(*v, 0.125, 16.0);
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "ringModMix"))
-        {
-            wf.ringModMix = std::clamp(*v, 0.0, 1.0);
-        }
-        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
-        {
-            FilterMode mode{};
-            if (!TryParseFilterMode(*v, mode))
-            {
-                err = "invalid waveform.filterMode: " + *v;
-                return false;
-            }
-            wf.filterMode = mode;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
-        {
-            wf.filterCutoffHz = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
-        {
-            wf.filterResonance = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterKeytrack"))
-        {
-            wf.filterKeytrack = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "drive"))
-        {
-            wf.drive = std::clamp(*v, 0.0, 1.0);
-        }
-        std::string arpeggioObj;
-        bool foundArpeggio = false;
-        if (!ExtractObjectForKey(sourceObjText, "arpeggio", arpeggioObj, foundArpeggio, err))
-        {
-            return false;
-        }
-        if (foundArpeggio)
-        {
-            if (auto v = ReadJSONBool(arpeggioObj, "enabled"))
-            {
-                wf.arpeggio.enabled = *v;
-            }
-            if (auto v = ReadJSONDouble(arpeggioObj, "rateHz"))
-            {
-                wf.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0);
-            }
-            if (auto v = ReadJSONInt(arpeggioObj, "steps"))
-            {
-                wf.arpeggio.steps = std::clamp(*v, 1, 8);
-            }
-
-            std::string semitonesArray;
-            bool foundSemitones = false;
-            if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err))
-            {
-                return false;
-            }
-            if (foundSemitones)
-            {
-                if (!ParseTopLevelIntArrayElements(semitonesArray, [&](size_t semitoneIndex, int value) {
-                    if (semitoneIndex >= wf.arpeggio.semitones.size())
-                    {
-                        return true;
-                    }
-                    wf.arpeggio.semitones[semitoneIndex] = std::clamp(value, -24, 24);
-                    return true;
-                    }, err))
-                {
-                    return false;
-                }
-            }
-        }
-        std::string smoothingObj;
-        bool foundSmoothing = false;
-        if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
-        {
-            return false;
-        }
-        if (foundSmoothing)
-        {
-            if (!ParseWaveformSmoothingObject(smoothingObj, wf.smoothing))
-            {
-                err = "invalid waveform.smoothing object";
-                return false;
-            }
-        }
-        std::string modulationObj;
-        bool foundModulation = false;
-        if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
-        {
-            return false;
-        }
-        if (foundModulation)
-        {
-            if (!ParseModulationObject(modulationObj, wf.modulation, err))
-            {
-                return false;
-            }
-        }
+        if (!ParseWaveformLikeCommonFields(sourceObjText, wf, err)) { return false; }
         if (!ValidateWaveformBySchema(wf, err))
         {
             return false;
@@ -845,72 +776,7 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         }
         AnalogConfig analog{};
         analog.wave = w;
-        if (auto v = ReadJSONInt(sourceObjText, "unisonVoices"))
-        {
-            analog.unisonVoices = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "unisonDetuneCents"))
-        {
-            analog.unisonDetuneCents = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "unisonSpread"))
-        {
-            analog.unisonSpread = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel"))
-        {
-            analog.subOscLevel = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "pulseWidth"))
-        {
-            analog.pulseWidth = std::clamp(*v, 0.05, 0.95);
-        }
-        if (auto v = ReadJSONBool(sourceObjText, "hardSyncEnabled"))
-        {
-            analog.hardSyncEnabled = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "hardSyncRatio"))
-        {
-            analog.hardSyncRatio = std::clamp(*v, 0.5, 8.0);
-        }
-        if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
-        {
-            analog.ringModEnabled = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "ringModRatio"))
-        {
-            analog.ringModRatio = std::clamp(*v, 0.125, 16.0);
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "ringModMix"))
-        {
-            analog.ringModMix = std::clamp(*v, 0.0, 1.0);
-        }
-        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
-        {
-            FilterMode mode{};
-            if (!TryParseFilterMode(*v, mode))
-            {
-                err = "invalid analog.filterMode: " + *v;
-                return false;
-            }
-            analog.filterMode = mode;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
-        {
-            analog.filterCutoffHz = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
-        {
-            analog.filterResonance = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "filterKeytrack"))
-        {
-            analog.filterKeytrack = *v;
-        }
-        if (auto v = ReadJSONDouble(sourceObjText, "drive"))
-        {
-            analog.drive = std::clamp(*v, 0.0, 1.0);
-        }
+        if (!ParseWaveformLikeCommonFields(sourceObjText, analog, err)) { return false; }
         if (auto v = ReadJSONDouble(sourceObjText, "driftDepthCents"))
         {
             analog.driftDepthCents = *v;
@@ -918,75 +784,6 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "driftRateHz"))
         {
             analog.driftRateHz = *v;
-        }
-        std::string arpeggioObj;
-        bool foundArpeggio = false;
-        if (!ExtractObjectForKey(sourceObjText, "arpeggio", arpeggioObj, foundArpeggio, err))
-        {
-            return false;
-        }
-        if (foundArpeggio)
-        {
-            if (auto v = ReadJSONBool(arpeggioObj, "enabled"))
-            {
-                analog.arpeggio.enabled = *v;
-            }
-            if (auto v = ReadJSONDouble(arpeggioObj, "rateHz"))
-            {
-                analog.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0);
-            }
-            if (auto v = ReadJSONInt(arpeggioObj, "steps"))
-            {
-                analog.arpeggio.steps = std::clamp(*v, 1, 8);
-            }
-
-            std::string semitonesArray;
-            bool foundSemitones = false;
-            if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err))
-            {
-                return false;
-            }
-            if (foundSemitones)
-            {
-                if (!ParseTopLevelIntArrayElements(semitonesArray, [&](size_t semitoneIndex, int value) {
-                    if (semitoneIndex >= analog.arpeggio.semitones.size())
-                    {
-                        return true;
-                    }
-                    analog.arpeggio.semitones[semitoneIndex] = std::clamp(value, -24, 24);
-                    return true;
-                    }, err))
-                {
-                    return false;
-                }
-            }
-        }
-        std::string smoothingObj;
-        bool foundSmoothing = false;
-        if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
-        {
-            return false;
-        }
-        if (foundSmoothing)
-        {
-            if (!ParseWaveformSmoothingObject(smoothingObj, analog.smoothing))
-            {
-                err = "invalid analog.smoothing object";
-                return false;
-            }
-        }
-        std::string modulationObj;
-        bool foundModulation = false;
-        if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
-        {
-            return false;
-        }
-        if (foundModulation)
-        {
-            if (!ParseModulationObject(modulationObj, analog.modulation, err))
-            {
-                return false;
-            }
         }
         if (!ValidateAnalogBySchema(analog, err))
         {

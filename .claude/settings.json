@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -ExecutionPolicy Bypass -File scripts/check.ps1)"
+      "Bash(powershell -ExecutionPolicy Bypass -File scripts/check.ps1)",
+      "Bash(sort -k1 -rn)",
+      "Bash(xargs wc:*)",
+      "Bash(grep -o \"ReadJSON[A-Za-z]*\" src/config/load/*.cpp)",
+      "Bash(wc -l src/gui/main/*.inl src/gui/pianoroll/*.inl)"
     ]
   }
 }
