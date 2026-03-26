@@ -280,12 +280,28 @@ bool DrawChannelEditor(
         ImGui::Separator();
         ImGui::TextUnformatted("Modulation");
 
-        const char* lfoWaves[] = { "sine", "triangle" };
-        int lfoWaveIdx = (modulation.lfo1.wave == LfoWave::Triangle) ? 1 : 0;
+        const char* lfoWaves[] = { "Sine", "Triangle", "Square", "Saw", "S&H" };
+        int lfoWaveIdx = 0;
+        switch (modulation.lfo1.wave)
+        {
+        case LfoWave::Sine: lfoWaveIdx = 0; break;
+        case LfoWave::Triangle: lfoWaveIdx = 1; break;
+        case LfoWave::Square: lfoWaveIdx = 2; break;
+        case LfoWave::Saw: lfoWaveIdx = 3; break;
+        case LfoWave::SampleAndHold: lfoWaveIdx = 4; break;
+        }
         ImGui::SetNextItemWidth(220.0f);
         if (ImGui::Combo("LFO1 Wave", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
         {
-            modulation.lfo1.wave = (lfoWaveIdx == 1) ? LfoWave::Triangle : LfoWave::Sine;
+            switch (lfoWaveIdx)
+            {
+            case 0: modulation.lfo1.wave = LfoWave::Sine; break;
+            case 1: modulation.lfo1.wave = LfoWave::Triangle; break;
+            case 2: modulation.lfo1.wave = LfoWave::Square; break;
+            case 3: modulation.lfo1.wave = LfoWave::Saw; break;
+            case 4: modulation.lfo1.wave = LfoWave::SampleAndHold; break;
+            default: modulation.lfo1.wave = LfoWave::Sine; break;
+            }
             localChanged = true;
         }
         ImGui::SetNextItemWidth(220.0f);

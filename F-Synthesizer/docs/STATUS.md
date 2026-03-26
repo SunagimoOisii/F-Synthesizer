@@ -7,7 +7,7 @@ Branch: `main`
 
 ## Current
 
-- 優先: `doc-sync` / `gui-help`（実機確認） / 軽量運用の維持
+- 優先: `Tier C`（LFO拡張） / `gui-help`（実機確認） / 軽量運用の維持
 - 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
 - `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
 - Renderer 内部を `source render -> common shaper -> modulation apply -> mix` へ分離し、`SourceRenderFrame` で段間データを受け渡す構造へ整理
@@ -27,6 +27,7 @@ Branch: `main`
 - Tier A-1 実装: Sound タブの Tone Preview にスペクトラムビューアを追加（Hann 窓付き簡易 DFT を 128 bin ヒストグラム表示、外部 FFT ライブラリ追加なし）
 - Tier B-1 実装: FM アルゴリズムを `0..7` へ拡張（Renderer に case 4〜7 を追加、GUI の選択肢/テンプレート範囲を 0..7 へ更新、Load/Schema も 0..7 を受理）
 - Tier B-2 実装: `ModDestination::FilterResonance` を追加し、`resonanceMul` を modulation 経路で評価して common shaper の `SetFilterResonance` に乗算適用（GUI destination / JSON parse+save 文字列も対応）
+- Tier C-1 実装: `LfoWave` に `Square/Saw/SampleAndHold` を追加し、SynthEngine波形サンプル/Config parse+save/GUI LFO1 wave コンボを拡張
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

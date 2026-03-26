@@ -7,7 +7,10 @@
 enum class LfoWave
 {
     Sine,
-    Triangle
+    Triangle,
+    Square,
+    Saw,
+    SampleAndHold
 };
 
 struct LfoConfig

@@ -179,6 +179,21 @@ bool TryParseLfoWave(const std::string& name, LfoWave& outWave)
         outWave = LfoWave::Triangle;
         return true;
     }
+    if (name == "square")
+    {
+        outWave = LfoWave::Square;
+        return true;
+    }
+    if (name == "saw")
+    {
+        outWave = LfoWave::Saw;
+        return true;
+    }
+    if (name == "sampleAndHold")
+    {
+        outWave = LfoWave::SampleAndHold;
+        return true;
+    }
     return false;
 }
 
@@ -323,6 +338,9 @@ std::string LfoWaveToString(LfoWave wave)
     {
     case LfoWave::Sine: return "sine";
     case LfoWave::Triangle: return "triangle";
+    case LfoWave::Square: return "square";
+    case LfoWave::Saw: return "saw";
+    case LfoWave::SampleAndHold: return "sampleAndHold";
     }
     return "sine";
 }

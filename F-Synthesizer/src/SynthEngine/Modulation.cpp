@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 // Modulation matrix の実行部。
 // 呼び出し経路: Voices初期化/NoteOn・NoteOff -> Renderer内で EvaluateModulation を1sampleごとに評価。
@@ -22,13 +23,25 @@ double WrapPhase(double phase)
 
 double SampleLfoWave(LfoWave wave, double phase)
 {
-    phase = WrapPhase(phase);
+    const double wrappedPhase = WrapPhase(phase);
     switch (wave)
     {
     case LfoWave::Sine:
-        return std::sin(2.0 * kPi * phase);
+        return std::sin(2.0 * kPi * wrappedPhase);
     case LfoWave::Triangle:
-        return 1.0 - 4.0 * std::fabs(phase - 0.5);
+        return 1.0 - 4.0 * std::fabs(wrappedPhase - 0.5);
+    case LfoWave::Square:
+        return (wrappedPhase < 0.5) ? 1.0 : -1.0;
+    case LfoWave::Saw:
+        return 2.0 * wrappedPhase - 1.0;
+    case LfoWave::SampleAndHold:
+    {
+        uint32_t seed = static_cast<uint32_t>(std::floor(phase));
+        seed ^= seed << 13u;
+        seed ^= seed >> 17u;
+        seed ^= seed << 5u;
+        return static_cast<double>(seed) / 2147483647.5 - 1.0;
+    }
     }
     return 0.0;
 }
@@ -54,7 +67,7 @@ void NoteOffModulation(ModulationRuntimeState& state)
 double StepLfoSample(double& phase, const LfoConfig& lfo, double deltaTimeSec)
 {
     const double rate = std::clamp(lfo.rateHz, 0.0, 100.0);
-    phase = WrapPhase(phase + (rate * deltaTimeSec));
+    phase += (rate * deltaTimeSec);
     double raw = SampleLfoWave(lfo.wave, phase);
     if (!lfo.bipolar)
     {

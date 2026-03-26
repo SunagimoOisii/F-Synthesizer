@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier C-1 の `LfoWave::SampleAndHold` は `floor(phase)` ベースの決定論xorshift生成とし、LFO位相は `StepLfoSample` で連続加算（非wrap保持）してサイクル境界ごとに値を更新する | 既存どおり phase を毎サンプル wrap し続ける | wrap状態では `floor(phase)` が固定化し S&H が変化しないため、仕様どおりのステップ変調を成立させるため |
 | 2026-03-26 | modulation destination に `filterResonance` を追加し、`resonanceMul` を common shaper 適用時に乗算する設計とする | フィルタ共振の時間変化を CC のみで扱い、mod matrix には追加しない | Env2/LFO/Pressure から共振を直接駆動できるようにして、既存の filter cutoff modulation と同一経路で一貫実装するため |
 | 2026-03-26 | FM アルゴリズムは既存 0..3 の挙動を維持したまま 4..7 を追加し、GUI/Load/Schema の許容範囲も 0..7 に統一する | Renderer だけ先行拡張して GUI/Config 制約を 0..3 のまま残す | 保存・再読込・GUI編集で同じアルゴリズム範囲を扱えない不整合を避け、既存プリセット互換を保った段階拡張にするため |
 | 2026-03-26 | Tone Preview スペクトラム表示は外部FFT依存を増やさず、`MainWindow.inl` 内で Hann 窓付き簡易 DFT（軽量サイズ）を実装する | kissFFT などの新規依存を導入して実装する | 既存ビルド構成を維持しつつ、Tone Preview の倍音可視化を最小変更で導入するため |
