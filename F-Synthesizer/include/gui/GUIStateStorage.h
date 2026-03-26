@@ -24,6 +24,12 @@ struct GUIStateStorageData
     float fxChorusDepthMs = 6.0f;
     float fxChorusRateHz = 0.35f;
     float fxChorusFeedback = 0.08f;
+    bool fxFlangerEnabled = false;
+    float fxFlangerMix = 0.0f;
+    float fxFlangerBaseDelayMs = 1.5f;
+    float fxFlangerDepthMs = 1.0f;
+    float fxFlangerRateHz = 0.25f;
+    float fxFlangerFeedback = 0.15f;
     bool fxDelayEnabled = false;
     float fxDelayMix = 0.0f;
     float fxDelayTimeSec = 0.25f;

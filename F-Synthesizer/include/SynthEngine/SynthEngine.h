@@ -210,6 +210,16 @@ struct ChorusEffectConfig
     double feedback = 0.08;
 };
 
+struct FlangerEffectConfig
+{
+    bool enabled = false;
+    double mix = 0.0;
+    double baseDelayMs = 1.5;
+    double depthMs = 1.0;
+    double rateHz = 0.25;
+    double feedback = 0.15;
+};
+
 struct BitCrusherEffectConfig
 {
     // 1..16（16でバイパス）
@@ -227,6 +237,7 @@ struct MasterEffectConfig
     ReverbEffectConfig reverb{};
     DelayEffectConfig delay{};
     ChorusEffectConfig chorus{};
+    FlangerEffectConfig flanger{};
     BitCrusherEffectConfig bitCrusher{};
     SampleRateReducerEffectConfig sampleRateReducer{};
 };

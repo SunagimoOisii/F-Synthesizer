@@ -32,6 +32,12 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.fxChorusDepthMs = static_cast<float>(state.masterEffects.chorus.depthMs);
     data.fxChorusRateHz = static_cast<float>(state.masterEffects.chorus.rateHz);
     data.fxChorusFeedback = static_cast<float>(state.masterEffects.chorus.feedback);
+    data.fxFlangerEnabled = state.masterEffects.flanger.enabled;
+    data.fxFlangerMix = static_cast<float>(state.masterEffects.flanger.mix);
+    data.fxFlangerBaseDelayMs = static_cast<float>(state.masterEffects.flanger.baseDelayMs);
+    data.fxFlangerDepthMs = static_cast<float>(state.masterEffects.flanger.depthMs);
+    data.fxFlangerRateHz = static_cast<float>(state.masterEffects.flanger.rateHz);
+    data.fxFlangerFeedback = static_cast<float>(state.masterEffects.flanger.feedback);
     data.fxDelayEnabled = state.masterEffects.delay.enabled;
     data.fxDelayMix = static_cast<float>(state.masterEffects.delay.mix);
     data.fxDelayTimeSec = static_cast<float>(state.masterEffects.delay.timeSec);
@@ -99,6 +105,12 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.masterEffects.chorus.depthMs = data.fxChorusDepthMs;
     state.masterEffects.chorus.rateHz = data.fxChorusRateHz;
     state.masterEffects.chorus.feedback = data.fxChorusFeedback;
+    state.masterEffects.flanger.enabled = data.fxFlangerEnabled;
+    state.masterEffects.flanger.mix = data.fxFlangerMix;
+    state.masterEffects.flanger.baseDelayMs = data.fxFlangerBaseDelayMs;
+    state.masterEffects.flanger.depthMs = data.fxFlangerDepthMs;
+    state.masterEffects.flanger.rateHz = data.fxFlangerRateHz;
+    state.masterEffects.flanger.feedback = data.fxFlangerFeedback;
     state.masterEffects.delay.enabled = data.fxDelayEnabled;
     state.masterEffects.delay.mix = data.fxDelayMix;
     state.masterEffects.delay.timeSec = data.fxDelayTimeSec;

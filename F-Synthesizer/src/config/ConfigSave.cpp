@@ -70,6 +70,14 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     out << "      \"rateHz\": " << config.masterEffects.chorus.rateHz << ",\n";
     out << "      \"feedback\": " << config.masterEffects.chorus.feedback << "\n";
     out << "    },\n";
+    out << "    \"flanger\": {\n";
+    out << "      \"enabled\": " << (config.masterEffects.flanger.enabled ? "true" : "false") << ",\n";
+    out << "      \"mix\": " << config.masterEffects.flanger.mix << ",\n";
+    out << "      \"baseDelayMs\": " << config.masterEffects.flanger.baseDelayMs << ",\n";
+    out << "      \"depthMs\": " << config.masterEffects.flanger.depthMs << ",\n";
+    out << "      \"rateHz\": " << config.masterEffects.flanger.rateHz << ",\n";
+    out << "      \"feedback\": " << config.masterEffects.flanger.feedback << "\n";
+    out << "    },\n";
     out << "    \"bitCrusher\": {\n";
     out << "      \"bits\": " << config.masterEffects.bitCrusher.bits << "\n";
     out << "    },\n";

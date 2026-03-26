@@ -139,6 +139,15 @@ void EnsureEffectBuffers(RenderState& state, int sampleRate)
         state.chorusPhase = 0.0;
     }
 
+    const int flangerLen = (std::max)(sampleRate / 20, 1);
+    if (state.flangerBufferL.size() != static_cast<size_t>(flangerLen))
+    {
+        state.flangerBufferL.assign(flangerLen, 0.0);
+        state.flangerBufferR.assign(flangerLen, 0.0);
+        state.flangerWrite = 0;
+        state.flangerPhase = 0.0;
+    }
+
     const int combMs[4] = { 29, 37, 41, 53 };
     for (int i = 0; i < 4; i++)
     {
@@ -226,6 +235,45 @@ void ApplyChorus(RenderState& state, int sampleRate, double inL, double inR, dou
     state.chorusBufferL[state.chorusWrite] = inL + wetL * fb;
     state.chorusBufferR[state.chorusWrite] = inR + wetR * fb;
     state.chorusWrite = (state.chorusWrite + 1) % size;
+    outL = inL * (1.0 - mix) + wetL * mix;
+    outR = inR * (1.0 - mix) + wetR * mix;
+}
+
+void ApplyFlanger(RenderState& state, int sampleRate, double inL, double inR, double& outL, double& outR)
+{
+    outL = inL;
+    outR = inR;
+    const auto& cfg = state.effects.flanger;
+    if (!cfg.enabled || cfg.mix <= 0.0 || state.flangerBufferL.empty())
+    {
+        return;
+    }
+
+    const double mix = std::clamp(cfg.mix, 0.0, 1.0);
+    const double fb = std::clamp(cfg.feedback, 0.0, 0.95);
+    const double baseMs = std::clamp(cfg.baseDelayMs, 0.1, 8.0);
+    const double depthMs = std::clamp(cfg.depthMs, 0.0, 5.0);
+    const double rateHz = std::clamp(cfg.rateHz, 0.05, 8.0);
+    state.flangerPhase += (2.0 * kPi * rateHz) / sampleRate;
+    if (state.flangerPhase >= 2.0 * kPi)
+    {
+        state.flangerPhase -= 2.0 * kPi;
+    }
+
+    const double mod = 0.5 * (std::sin(state.flangerPhase) + 1.0);
+    const double delayMs = baseMs + depthMs * mod;
+    const int delaySamples = ClampDelaySamples(
+        delayMs * 0.001,
+        sampleRate,
+        static_cast<int>(state.flangerBufferL.size()));
+
+    const size_t size = state.flangerBufferL.size();
+    const size_t read = (state.flangerWrite + size - static_cast<size_t>(delaySamples)) % size;
+    const double wetL = state.flangerBufferL[read];
+    const double wetR = state.flangerBufferR[read];
+    state.flangerBufferL[state.flangerWrite] = inL + wetL * fb;
+    state.flangerBufferR[state.flangerWrite] = inR + wetR * fb;
+    state.flangerWrite = (state.flangerWrite + 1) % size;
     outL = inL * (1.0 - mix) + wetL * mix;
     outR = inR * (1.0 - mix) + wetR * mix;
 }
@@ -329,12 +377,16 @@ StereoFrame ApplyMasterEffects(RenderState& state, int sampleRate, StereoFrame i
 
     double l2 = 0.0;
     double r2 = 0.0;
-    ApplyDelay(state, sampleRate, l1, r1, l2, r2);
+    ApplyFlanger(state, sampleRate, l1, r1, l2, r2);
 
     double l3 = 0.0;
     double r3 = 0.0;
-    ApplyReverb(state, l2, r2, l3, r3);
-    return StereoFrame{ l3, r3 };
+    ApplyDelay(state, sampleRate, l2, r2, l3, r3);
+
+    double l4 = 0.0;
+    double r4 = 0.0;
+    ApplyReverb(state, l3, r3, l4, r4);
+    return StereoFrame{ l4, r4 };
 }
 } // namespace
 

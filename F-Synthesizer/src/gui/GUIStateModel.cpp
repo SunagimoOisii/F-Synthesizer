@@ -236,6 +236,36 @@ void RepairGUIStatePaths(
         fx.chorus.feedback = clampedChorusFeedback;
         repaired = true;
     }
+    const double clampedFlangerMix = std::clamp(fx.flanger.mix, 0.0, 1.0);
+    if (fx.flanger.mix != clampedFlangerMix)
+    {
+        fx.flanger.mix = clampedFlangerMix;
+        repaired = true;
+    }
+    const double clampedFlangerBaseDelayMs = std::clamp(fx.flanger.baseDelayMs, 0.1, 8.0);
+    if (fx.flanger.baseDelayMs != clampedFlangerBaseDelayMs)
+    {
+        fx.flanger.baseDelayMs = clampedFlangerBaseDelayMs;
+        repaired = true;
+    }
+    const double clampedFlangerDepthMs = std::clamp(fx.flanger.depthMs, 0.0, 5.0);
+    if (fx.flanger.depthMs != clampedFlangerDepthMs)
+    {
+        fx.flanger.depthMs = clampedFlangerDepthMs;
+        repaired = true;
+    }
+    const double clampedFlangerRateHz = std::clamp(fx.flanger.rateHz, 0.05, 8.0);
+    if (fx.flanger.rateHz != clampedFlangerRateHz)
+    {
+        fx.flanger.rateHz = clampedFlangerRateHz;
+        repaired = true;
+    }
+    const double clampedFlangerFeedback = std::clamp(fx.flanger.feedback, 0.0, 0.95);
+    if (fx.flanger.feedback != clampedFlangerFeedback)
+    {
+        fx.flanger.feedback = clampedFlangerFeedback;
+        repaired = true;
+    }
     const double clampedDelayMix = std::clamp(fx.delay.mix, 0.0, 1.0);
     if (fx.delay.mix != clampedDelayMix)
     {

@@ -65,6 +65,20 @@ bool ParseEffectsObject(const std::string& text, AppConfig& cfg, std::string& er
         if (auto v = ReadJSONDouble(obj, "feedback")) cfg.masterEffects.chorus.feedback = std::clamp(*v, 0.0, 0.9);
     }
 
+    if (!ExtractObjectForKey(effectsObj, "flanger", obj, found, err))
+    {
+        return false;
+    }
+    if (found)
+    {
+        if (auto v = ReadJSONBool(obj, "enabled")) cfg.masterEffects.flanger.enabled = *v;
+        if (auto v = ReadJSONDouble(obj, "mix")) cfg.masterEffects.flanger.mix = std::clamp(*v, 0.0, 1.0);
+        if (auto v = ReadJSONDouble(obj, "baseDelayMs")) cfg.masterEffects.flanger.baseDelayMs = std::clamp(*v, 0.1, 8.0);
+        if (auto v = ReadJSONDouble(obj, "depthMs")) cfg.masterEffects.flanger.depthMs = std::clamp(*v, 0.0, 5.0);
+        if (auto v = ReadJSONDouble(obj, "rateHz")) cfg.masterEffects.flanger.rateHz = std::clamp(*v, 0.05, 8.0);
+        if (auto v = ReadJSONDouble(obj, "feedback")) cfg.masterEffects.flanger.feedback = std::clamp(*v, 0.0, 0.95);
+    }
+
     if (!ExtractObjectForKey(effectsObj, "bitCrusher", obj, found, err))
     {
         return false;

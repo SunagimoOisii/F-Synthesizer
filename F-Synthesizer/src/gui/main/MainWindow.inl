@@ -907,7 +907,7 @@ else
 
     ImGui::Separator();
     ImGui::TextUnformatted("Master Effects");
-    ImGui::TextDisabled("Order: SampleRateReducer -> BitCrusher -> Chorus -> Delay -> Reverb");
+    ImGui::TextDisabled("Order: SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb");
     const auto sliderFxDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
     {
         float v = static_cast<float>(value);
@@ -960,6 +960,25 @@ else
         if (sliderFxDouble("Chorus Rate (Hz)", state.masterEffects.chorus.rateHz, 0.05f, 8.0f, "%.2f")) state.presetDirty = true;
         ImGui::SetNextItemWidth(260.0f);
         if (sliderFxDouble("Chorus Feedback", state.masterEffects.chorus.feedback, 0.0f, 0.9f, "%.3f")) state.presetDirty = true;
+    }
+
+    if (ImGui::CollapsingHeader("Flanger"))
+    {
+        state.presetDirty |= ImGui::Checkbox("Flanger Enabled", &state.masterEffects.flanger.enabled);
+        updateHoverHelp(
+            "フランジャーの有効/無効を切り替えます。",
+            "短ディレイの周期変調でジェット感を加えます。",
+            "Feedbackを上げすぎると耳障りになりやすいです。");
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Flanger Mix", state.masterEffects.flanger.mix, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Flanger Base Delay (ms)", state.masterEffects.flanger.baseDelayMs, 0.1f, 8.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Flanger Depth (ms)", state.masterEffects.flanger.depthMs, 0.0f, 5.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Flanger Rate (Hz)", state.masterEffects.flanger.rateHz, 0.05f, 8.0f, "%.2f")) state.presetDirty = true;
+        ImGui::SetNextItemWidth(260.0f);
+        if (sliderFxDouble("Flanger Feedback", state.masterEffects.flanger.feedback, 0.0f, 0.95f, "%.3f")) state.presetDirty = true;
     }
 
     if (ImGui::CollapsingHeader("Delay"))

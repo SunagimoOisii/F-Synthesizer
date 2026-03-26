@@ -248,6 +248,12 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJSONFloat(text, "fxChorusDepthMs")) data.fxChorusDepthMs = std::clamp(*v, 0.0f, 20.0f);
     if (auto v = ReadJSONFloat(text, "fxChorusRateHz")) data.fxChorusRateHz = std::clamp(*v, 0.05f, 8.0f);
     if (auto v = ReadJSONFloat(text, "fxChorusFeedback")) data.fxChorusFeedback = std::clamp(*v, 0.0f, 0.9f);
+    if (auto v = ReadJSONBool(text, "fxFlangerEnabled")) data.fxFlangerEnabled = *v;
+    if (auto v = ReadJSONFloat(text, "fxFlangerMix")) data.fxFlangerMix = std::clamp(*v, 0.0f, 1.0f);
+    if (auto v = ReadJSONFloat(text, "fxFlangerBaseDelayMs")) data.fxFlangerBaseDelayMs = std::clamp(*v, 0.1f, 8.0f);
+    if (auto v = ReadJSONFloat(text, "fxFlangerDepthMs")) data.fxFlangerDepthMs = std::clamp(*v, 0.0f, 5.0f);
+    if (auto v = ReadJSONFloat(text, "fxFlangerRateHz")) data.fxFlangerRateHz = std::clamp(*v, 0.05f, 8.0f);
+    if (auto v = ReadJSONFloat(text, "fxFlangerFeedback")) data.fxFlangerFeedback = std::clamp(*v, 0.0f, 0.95f);
     if (auto v = ReadJSONBool(text, "fxDelayEnabled")) data.fxDelayEnabled = *v;
     if (auto v = ReadJSONFloat(text, "fxDelayMix")) data.fxDelayMix = std::clamp(*v, 0.0f, 1.0f);
     if (auto v = ReadJSONFloat(text, "fxDelayTimeSec")) data.fxDelayTimeSec = std::clamp(*v, 0.01f, 2.0f);
@@ -349,6 +355,12 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"fxChorusDepthMs\": " << data.fxChorusDepthMs << ",\n";
     fout << "  \"fxChorusRateHz\": " << data.fxChorusRateHz << ",\n";
     fout << "  \"fxChorusFeedback\": " << data.fxChorusFeedback << ",\n";
+    fout << "  \"fxFlangerEnabled\": " << (data.fxFlangerEnabled ? "true" : "false") << ",\n";
+    fout << "  \"fxFlangerMix\": " << data.fxFlangerMix << ",\n";
+    fout << "  \"fxFlangerBaseDelayMs\": " << data.fxFlangerBaseDelayMs << ",\n";
+    fout << "  \"fxFlangerDepthMs\": " << data.fxFlangerDepthMs << ",\n";
+    fout << "  \"fxFlangerRateHz\": " << data.fxFlangerRateHz << ",\n";
+    fout << "  \"fxFlangerFeedback\": " << data.fxFlangerFeedback << ",\n";
     fout << "  \"fxDelayEnabled\": " << (data.fxDelayEnabled ? "true" : "false") << ",\n";
     fout << "  \"fxDelayMix\": " << data.fxDelayMix << ",\n";
     fout << "  \"fxDelayTimeSec\": " << data.fxDelayTimeSec << ",\n";
