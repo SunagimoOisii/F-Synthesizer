@@ -275,6 +275,7 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJSONBool(text, "autoTonePreviewEnabled")) data.autoTonePreviewEnabled = *v;
     if (auto v = ReadJSONInt(text, "selectedSoundSlot")) data.selectedSoundSlot = *v;
     if (auto v = ReadJSONInt(text, "selectedDrumNote")) data.selectedDrumNote = *v;
+    if (auto v = ReadJSONInt(text, "tonePreviewNoteNumber")) data.tonePreviewNoteNumber = *v;
     if (auto v = ReadJSONString(text, "presetName")) data.presetName = *v;
     if (auto v = ReadJSONString(text, "lastPresetPath")) data.lastPresetPath = *v;
     if (auto v = ReadJSONInt(text, "prDisplayChannel")) data.prDisplayChannel = *v;
@@ -381,6 +382,7 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"autoTonePreviewEnabled\": " << (data.autoTonePreviewEnabled ? "true" : "false") << ",\n";
     fout << "  \"selectedSoundSlot\": " << data.selectedSoundSlot << ",\n";
     fout << "  \"selectedDrumNote\": " << data.selectedDrumNote << ",\n";
+    fout << "  \"tonePreviewNoteNumber\": " << data.tonePreviewNoteNumber << ",\n";
     fout << "  \"presetName\": \"" << EscapeJSON(data.presetName) << "\",\n";
     fout << "  \"lastPresetPath\": \"" << EscapeJSON(data.lastPresetPath) << "\",\n";
     fout << "  \"prDisplayChannel\": " << data.prDisplayChannel << ",\n";

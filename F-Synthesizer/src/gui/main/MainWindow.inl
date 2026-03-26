@@ -726,6 +726,34 @@ if (state.UIModeTab == 0)
         ImGui::TextDisabled("Song export settings are in Music tab.");
         ImGui::EndDisabled();
 
+        // DrumKit 以外の音源では Tone Preview ノートを手動選択する。
+        {
+            bool isDrumSlot = false;
+            if (state.channelConfigs)
+            {
+                const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+                isDrumSlot = std::holds_alternative<DrumKitConfig>((*state.channelConfigs)[slot].source);
+            }
+
+            if (!isDrumSlot)
+            {
+                ImGui::SetNextItemWidth(160.0f);
+                if (ImGui::SliderInt("Preview Note", &state.tonePreviewNoteNumber, 24, 96))
+                {
+                    state.tonePreviewNoteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
+                    requestAutoTonePreview();
+                }
+                updateHoverHelp(
+                    "Tone Preview の再生音程を変更します。",
+                    "C2(24)〜C6(84) 付近の範囲で MIDI ノート番号を指定できます。");
+                ImGui::SameLine();
+                constexpr const char* kNoteNames[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+                const int noteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
+                const int oct = noteNumber / 12 - 1;
+                ImGui::TextDisabled("(%s%d)", kNoteNames[noteNumber % 12], oct);
+            }
+        }
+
         // Tone Preview 波形ビューア: 再生中は frameCursor を窓の中心に追従し、
         // エンベロープの振幅変化（アタック/サステイン/リリース）がそのまま波高に反映される。
         if (state.previewRenderedSound)

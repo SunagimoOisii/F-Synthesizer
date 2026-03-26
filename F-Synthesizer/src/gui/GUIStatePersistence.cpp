@@ -1,5 +1,6 @@
 #include "gui/GUIStatePersistence.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "AppCore.h"
@@ -57,6 +58,7 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.autoTonePreviewEnabled = state.autoTonePreviewEnabled;
     data.selectedSoundSlot = state.selectedSoundSlot;
     data.selectedDrumNote = state.selectedDrumNote;
+    data.tonePreviewNoteNumber = state.tonePreviewNoteNumber;
     data.presetName = state.presetName;
     data.lastPresetPath = state.lastPresetPath;
     data.prDisplayChannel = state.pianoRoll.displayChannel;
@@ -130,6 +132,7 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.autoTonePreviewEnabled = data.autoTonePreviewEnabled;
     state.selectedSoundSlot = data.selectedSoundSlot;
     state.selectedDrumNote = data.selectedDrumNote;
+    state.tonePreviewNoteNumber = std::clamp(data.tonePreviewNoteNumber, 0, 127);
     strncpy_s(state.presetName, sizeof(state.presetName), data.presetName.c_str(), _TRUNCATE);
     state.lastPresetPath = data.lastPresetPath;
     state.pianoRoll.displayChannel = data.prDisplayChannel;

@@ -94,7 +94,7 @@ Sound タブの Tone Preview に FFT スペクトラム表示を追加し、
 
 ---
 
-## Tier A-2: Noise → common shaper (filter) 接続
+## Tier A-2: Noise → common shaper (filter) 接続(完了)
 
 ### 目的
 
@@ -162,7 +162,6 @@ frame.shaperFilterMode = src.filterMode;
 ```
 
 デフォルト値は `FilterMode::Bypass / 8000.0 / 0.707`。
-フィールド未記載時はデフォルト値を使い、エラーにしない（後方互換）。
 
 #### Step 5: SourceRegistry の capability 更新
 

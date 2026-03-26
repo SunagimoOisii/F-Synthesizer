@@ -57,6 +57,7 @@ struct GUIState
     bool serialSave = false;
     int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
+    int tonePreviewNoteNumber = 60;
     char presetName[128]{ "custom" };
     bool presetDirty = false;
     std::vector<std::string> presetItems{};

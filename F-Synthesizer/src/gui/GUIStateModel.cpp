@@ -88,6 +88,7 @@ void InitializeGUIState(
     state.presetIndex = 0;
     state.selectedSoundSlot = 0;
     state.selectedDrumNote = 36;
+    state.tonePreviewNoteNumber = 60;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
     strncpy_s(state.presetName, sizeof(state.presetName), "wave_snes_lead_vibrato", _TRUNCATE);

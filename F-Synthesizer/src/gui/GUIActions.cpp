@@ -299,6 +299,10 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
 
     slot = std::clamp(slot, 0, 15);
     const SourceConfig& src = (*state.channelConfigs)[slot].source;
+    if (!std::holds_alternative<DrumKitConfig>(src))
+    {
+        return std::clamp(state.tonePreviewNoteNumber, 0, 127);
+    }
     if (const auto* kit = std::get_if<DrumKitConfig>(&src))
     {
         const int preferred = std::clamp(state.selectedDrumNote, 0, 127);
@@ -324,12 +328,7 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
         }
         return 36;
     }
-    const config::SourceCapability capability = config::SourceCapabilityOf(src);
-    if (capability.isPercussion)
-    {
-        return std::clamp(state.selectedDrumNote, 0, 127);
-    }
-    return 60;
+    return std::clamp(state.tonePreviewNoteNumber, 0, 127);
 }
 
 void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, AppConfig& cfg)
