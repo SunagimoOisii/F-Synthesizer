@@ -135,6 +135,19 @@ namespace
         state.voices.MarkNoteOff(e.channel, e.noteNumber, e.noteInstanceID, holdBySustain);
     }
 
+    void ApplyChannelPressure(const MIDIEvent& e, RenderState& state)
+    {
+        const int ch = ClampChannel(e.channel);
+        state.channelPressure[ch] = NormalizeCc(e.value);
+    }
+
+    void ApplyPolyPressure(const MIDIEvent& e, RenderState& state)
+    {
+        const int ch = ClampChannel(e.channel);
+        const int note = std::clamp(e.noteNumber, 0, 127);
+        state.channelPolyPressure[ch][note] = NormalizeCc(e.value);
+    }
+
     ChannelConfig ResolveRealtimeChannelConfig(const ChannelConfig& cfg, int channel, const RenderState& state)
     {
         ChannelConfig resolved = cfg;
@@ -173,6 +186,18 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
         if (e.type == MIDIEventType::PitchBend)
         {
             ApplyPitchBend(e, state);
+            state.eventIndex++;
+            continue;
+        }
+        if (e.type == MIDIEventType::ChannelPressure)
+        {
+            ApplyChannelPressure(e, state);
+            state.eventIndex++;
+            continue;
+        }
+        if (e.type == MIDIEventType::PolyPressure)
+        {
+            ApplyPolyPressure(e, state);
             state.eventIndex++;
             continue;
         }

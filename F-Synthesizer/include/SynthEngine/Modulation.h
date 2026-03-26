@@ -23,7 +23,9 @@ enum class ModSource
     None,
     Lfo1,
     Env2,
-    Velocity
+    Velocity,
+    ChannelPressure,
+    PolyPressure
 };
 
 enum class ModDestination
@@ -91,6 +93,8 @@ struct ModulationInput
 {
     double velGain = 1.0;
     double modwheel = 0.0;
+    double channelPressure = 0.0;
+    double polyPressure = 0.0;
 };
 
 void ResetModulationState(ModulationRuntimeState& state);

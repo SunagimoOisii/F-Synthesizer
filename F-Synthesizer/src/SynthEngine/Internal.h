@@ -134,6 +134,8 @@ struct RenderState
     std::array<double, 16> channelCc11{};
     std::array<double, 16> channelPitch{};
     std::array<double, 16> channelModwheel{};
+    std::array<double, 16> channelPressure{};
+    std::array<std::array<double, 128>, 16> channelPolyPressure{};
     std::array<bool, 16> channelSustain{};
     std::array<double, 16> channelBrightness{};
     std::array<double, 16> channelResonance{};

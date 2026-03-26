@@ -184,6 +184,47 @@ void AppendPitchBendEvent(std::vector<MIDIEventTick>& outEvents,
     outEvents.push_back(e);
 }
 
+void AppendChannelPressureEvent(std::vector<MIDIEventTick>& outEvents,
+    uint32_t currentTick,
+    int value,
+    unsigned char channel,
+    int& eventOrder)
+{
+    MIDIEventTick e{};
+    e.tick = static_cast<int>(currentTick);
+    e.type = MIDIEventType::ChannelPressure;
+    e.isNoteOn = false;
+    e.noteNumber = 0;
+    e.velocity = 0;
+    e.channel = channel;
+    e.controller = 0;
+    e.value = value;
+    e.noteInstanceID = -1;
+    e.order = eventOrder++;
+    outEvents.push_back(e);
+}
+
+void AppendPolyPressureEvent(std::vector<MIDIEventTick>& outEvents,
+    uint32_t currentTick,
+    int note,
+    int value,
+    unsigned char channel,
+    int& eventOrder)
+{
+    MIDIEventTick e{};
+    e.tick = static_cast<int>(currentTick);
+    e.type = MIDIEventType::PolyPressure;
+    e.isNoteOn = false;
+    e.noteNumber = note;
+    e.velocity = 0;
+    e.channel = channel;
+    e.controller = 0;
+    e.value = value;
+    e.noteInstanceID = -1;
+    e.order = eventOrder++;
+    outEvents.push_back(e);
+}
+
 bool ParseMetaEvent(const std::vector<unsigned char>& data,
     size_t& idx,
     uint32_t currentTick,
@@ -286,6 +327,29 @@ bool ParseChannelEvent(unsigned char type,
         if (targetChannel < 0 || ch == targetChannel)
         {
             AppendPitchBendEvent(outEvents, currentTick, value, ch, eventOrder);
+        }
+        return true;
+    }
+
+    if (type == 0xD0)
+    {
+        if (idx >= data.size()) return false;
+        const int value = data[idx++];
+        if (targetChannel < 0 || ch == targetChannel)
+        {
+            AppendChannelPressureEvent(outEvents, currentTick, value, ch, eventOrder);
+        }
+        return true;
+    }
+
+    if (type == 0xA0)
+    {
+        if (idx + 1 >= data.size()) return false;
+        const int note = data[idx++];
+        const int value = data[idx++];
+        if (targetChannel < 0 || ch == targetChannel)
+        {
+            AppendPolyPressureEvent(outEvents, currentTick, note, value, ch, eventOrder);
         }
         return true;
     }

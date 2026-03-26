@@ -1,5 +1,6 @@
 #include "midi/MIDIPipeline.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <limits>
@@ -17,9 +18,13 @@ std::vector<MIDIEvent> BuildWindowedEvents(
     std::array<bool, 16> hasCc7{};
     std::array<bool, 16> hasCc11{};
     std::array<bool, 16> hasPitch{};
+    std::array<bool, 16> hasChannelPressure{};
+    std::array<int, 16 * 128> hasPolyPressure{};
     std::array<int, 16> cc7{};
     std::array<int, 16> cc11{};
     std::array<int, 16> pitch{};
+    std::array<int, 16> channelPressure{};
+    std::array<int, 16 * 128> polyPressure{};
     std::vector<MIDIEvent> out;
     out.reserve(events.size());
 
@@ -42,6 +47,18 @@ std::vector<MIDIEvent> BuildWindowedEvents(
             {
                 hasPitch[ch] = true;
                 pitch[ch] = e.value;
+            }
+            else if (e.type == MIDIEventType::ChannelPressure)
+            {
+                hasChannelPressure[ch] = true;
+                channelPressure[ch] = e.value;
+            }
+            else if (e.type == MIDIEventType::PolyPressure)
+            {
+                const int note = std::clamp(e.noteNumber, 0, 127);
+                const int idx = ch * 128 + note;
+                hasPolyPressure[idx] = 1;
+                polyPressure[idx] = e.value;
             }
             continue;
         }
@@ -88,6 +105,32 @@ std::vector<MIDIEvent> BuildWindowedEvents(
             e.channel = ch;
             e.noteInstanceID = -1;
             e.value = pitch[ch];
+            prefix.push_back(e);
+        }
+        if (hasChannelPressure[ch])
+        {
+            MIDIEvent e{};
+            e.sample = 0;
+            e.type = MIDIEventType::ChannelPressure;
+            e.channel = ch;
+            e.noteInstanceID = -1;
+            e.value = channelPressure[ch];
+            prefix.push_back(e);
+        }
+        for (int note = 0; note < 128; note++)
+        {
+            const int idx = ch * 128 + note;
+            if (hasPolyPressure[idx] == 0)
+            {
+                continue;
+            }
+            MIDIEvent e{};
+            e.sample = 0;
+            e.type = MIDIEventType::PolyPressure;
+            e.channel = ch;
+            e.noteNumber = note;
+            e.noteInstanceID = -1;
+            e.value = polyPressure[idx];
             prefix.push_back(e);
         }
     }

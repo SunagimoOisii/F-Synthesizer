@@ -84,7 +84,10 @@ enum class TickPriority
 
 int PriorityValue(const MIDIEventTick& e)
 {
-    if (e.type == MIDIEventType::ControlChange || e.type == MIDIEventType::PitchBend)
+    if (e.type == MIDIEventType::ControlChange ||
+        e.type == MIDIEventType::PitchBend ||
+        e.type == MIDIEventType::ChannelPressure ||
+        e.type == MIDIEventType::PolyPressure)
     {
         return static_cast<int>(TickPriority::ControlChange);
     }
@@ -136,6 +139,36 @@ MIDIEvent MakePitchBendEvent(const MIDIEventTick& t, int sample)
     return e;
 }
 
+MIDIEvent MakeChannelPressureEvent(const MIDIEventTick& t, int sample)
+{
+    MIDIEvent e{};
+    e.type = MIDIEventType::ChannelPressure;
+    e.sample = sample;
+    e.noteNumber = 0;
+    e.velocity = 0;
+    e.channel = t.channel;
+    e.noteInstanceID = -1;
+    e.controller = 0;
+    e.value = t.value;
+    e.isNoteOn = false;
+    return e;
+}
+
+MIDIEvent MakePolyPressureEvent(const MIDIEventTick& t, int sample)
+{
+    MIDIEvent e{};
+    e.type = MIDIEventType::PolyPressure;
+    e.sample = sample;
+    e.noteNumber = t.noteNumber;
+    e.velocity = 0;
+    e.channel = t.channel;
+    e.noteInstanceID = -1;
+    e.controller = 0;
+    e.value = t.value;
+    e.isNoteOn = false;
+    return e;
+}
+
 void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     const std::vector<TempoEvent>& tempoEvents,
     int ticksPerQuarter,
@@ -167,6 +200,16 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
         if (t.type == MIDIEventType::PitchBend)
         {
             outEvents.push_back(MakePitchBendEvent(t, sample));
+            continue;
+        }
+        if (t.type == MIDIEventType::ChannelPressure)
+        {
+            outEvents.push_back(MakeChannelPressureEvent(t, sample));
+            continue;
+        }
+        if (t.type == MIDIEventType::PolyPressure)
+        {
+            outEvents.push_back(MakePolyPressureEvent(t, sample));
             continue;
         }
 

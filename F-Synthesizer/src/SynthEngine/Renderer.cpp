@@ -20,6 +20,8 @@ struct VoiceRenderInput
     double velGain = 1.0;
     double envGain = 1.0;
     double modwheel = 0.0;
+    double channelPressure = 0.0;
+    double polyPressure = 0.0;
     double brightness = 0.5;
     double resonance = 0.5;
 };
@@ -189,7 +191,7 @@ void RenderWaveformSource(
         ws.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel });
+        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
     double pitchMul = mod.pitchMul;
     if (src.smoothing.enabled && src.smoothing.pitchEnabled)
     {
@@ -257,7 +259,7 @@ void RenderFmSource(
         fs.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel });
+        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
     const double indexScale = mod.fmIndexMul;
     const double feedbackSample = fs.op0FeedbackSample * src.feedback;
     const double outLevelScale = mod.ampMul;
@@ -536,6 +538,9 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.pitchFactor = state.channelPitch[ch];
         in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
         in.modwheel = state.channelModwheel[ch];
+        in.channelPressure = state.channelPressure[ch];
+        const int note = std::clamp(voices.noteNumber[i], 0, 127);
+        in.polyPressure = state.channelPolyPressure[ch][note];
         in.brightness = state.channelBrightness[ch];
         in.resonance = state.channelResonance[ch];
 

@@ -29,6 +29,8 @@ void LogMIDITickSummary(
 {
     int noteCount = 0;
     int ccCount = 0;
+    int channelPressureCount = 0;
+    int polyPressureCount = 0;
     std::array<int, 16> noteByChannel{};
     std::array<int, 16> ccByChannel{};
     std::array<int, 128> ccByType{};
@@ -48,6 +50,14 @@ void LogMIDITickSummary(
             int c = std::clamp(t.controller, 0, 127);
             ccByType[c]++;
         }
+        else if (t.type == MIDIEventType::ChannelPressure)
+        {
+            channelPressureCount++;
+        }
+        else if (t.type == MIDIEventType::PolyPressure)
+        {
+            polyPressureCount++;
+        }
     }
 
     {
@@ -62,6 +72,8 @@ void LogMIDITickSummary(
         std::ostringstream oss;
         oss << "Event Counts: note=" << noteCount
             << ", cc=" << ccCount
+            << ", chPressure=" << channelPressureCount
+            << ", polyPressure=" << polyPressureCount
             << ", tempo=" << tempoEvents.size();
         LogLine(observer, oss.str());
     }

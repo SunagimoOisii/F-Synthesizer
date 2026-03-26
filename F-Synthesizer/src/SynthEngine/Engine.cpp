@@ -420,6 +420,8 @@ void RenderMIDIEvents(
         state.channelCc11[i] = 1.0;
         state.channelPitch[i] = 1.0;
         state.channelModwheel[i] = 0.0;
+        state.channelPressure[i] = 0.0;
+        state.channelPolyPressure[i].fill(0.0);
         state.channelSustain[i] = false;
         state.channelBrightness[i] = 0.5;
         state.channelResonance[i] = 0.5;
