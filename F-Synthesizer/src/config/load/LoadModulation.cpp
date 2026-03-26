@@ -22,6 +22,7 @@ bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
     if (auto v = ReadJSONDouble(text, "rateHz")) lfo.rateHz = *v;
     if (auto v = ReadJSONDouble(text, "depth")) lfo.depth = *v;
     if (auto v = ReadJSONBool(text, "bipolar")) lfo.bipolar = *v;
+    if (auto v = ReadJSONBool(text, "keySync")) lfo.keySync = *v;
     return true;
 }
 

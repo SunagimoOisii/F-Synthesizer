@@ -146,7 +146,7 @@ void InitializeVoiceAtIndex(
         ResetFilterState(ws.filter);
 
         ResetModulationState(ws.modulation);
-        NoteOnModulation(ws.modulation);
+        NoteOnModulation(ws.modulation, wave->modulation);
     }
     else if (const auto* analog = std::get_if<AnalogConfig>(&cfg.source))
     {
@@ -175,7 +175,7 @@ void InitializeVoiceAtIndex(
         ResetFilterState(as.filter);
 
         ResetModulationState(as.modulation);
-        NoteOnModulation(as.modulation);
+        NoteOnModulation(as.modulation, analog->modulation);
 
         // ボイス固有のドリフト位相オフセット（0..1）を確定する。
         // 目的: 同時発音ボイスのドリフトが同位相にならないようにする。
@@ -192,7 +192,7 @@ void InitializeVoiceAtIndex(
             fs.opPhase[k] = 0.0;
         }
         ResetModulationState(fs.modulation);
-        NoteOnModulation(fs.modulation);
+        NoteOnModulation(fs.modulation, fm->modulation);
         SetFilterSampleRate(fs.filter, sampleRate);
         SetFilterMode(fs.filter, fm->filterMode);
         SetFilterCutoffHz(fs.filter, fm->filterCutoffHz);

@@ -54,9 +54,13 @@ void ResetModulationState(ModulationRuntimeState& state)
     state.env2Value = 0.0;
 }
 
-void NoteOnModulation(ModulationRuntimeState& state)
+void NoteOnModulation(ModulationRuntimeState& state, const ModulationConfig& cfg)
 {
     NoteOn(state.env2);
+    if (cfg.lfo1.keySync)
+    {
+        state.lfo1Phase = 0.0;
+    }
 }
 
 void NoteOffModulation(ModulationRuntimeState& state)

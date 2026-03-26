@@ -312,6 +312,14 @@ bool DrawChannelEditor(
         if (updateHoverHelp) updateHoverHelp("LFO1 Depth を調整します。", "LFOの変調量が変わります。", nullptr);
         localChanged |= ImGui::Checkbox("LFO1 Bipolar", &modulation.lfo1.bipolar);
         if (updateHoverHelp) updateHoverHelp("LFO1 Bipolar を切り替えます。", "LFO出力の極性レンジが変わります。", nullptr);
+        localChanged |= ImGui::Checkbox("Key Sync", &modulation.lfo1.keySync);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "ノートオン時に LFO 位相を 0 にリセットします。",
+                "オフの場合は free-run（位相を引き継ぐ）です。",
+                "");
+        }
 
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Attack", modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");

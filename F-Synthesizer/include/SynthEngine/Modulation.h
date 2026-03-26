@@ -19,6 +19,7 @@ struct LfoConfig
     double rateHz = 5.0;
     double depth = 0.0;
     bool bipolar = true;
+    bool keySync = false;
 };
 
 enum class ModSource
@@ -103,7 +104,7 @@ struct ModulationInput
 };
 
 void ResetModulationState(ModulationRuntimeState& state);
-void NoteOnModulation(ModulationRuntimeState& state);
+void NoteOnModulation(ModulationRuntimeState& state, const ModulationConfig& cfg);
 void NoteOffModulation(ModulationRuntimeState& state);
 double StepLfoSample(double& phase, const LfoConfig& lfo, double deltaTimeSec);
 double StepEnv2Sample(ModulationRuntimeState& state, const ModEnvelopeConfig& env2, double deltaTimeSec);

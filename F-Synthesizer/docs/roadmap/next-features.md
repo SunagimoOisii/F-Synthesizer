@@ -113,7 +113,7 @@ enum との対応順が一致していることを確認する。
 
 ---
 
-## Tier C-2: LFO key sync
+## Tier C-2: LFO key sync(完了)
 
 ### 目的
 

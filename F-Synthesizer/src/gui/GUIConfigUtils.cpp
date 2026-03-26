@@ -35,7 +35,8 @@ bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b
     if (a.lfo1.wave != b.lfo1.wave ||
         !NearlyEq(a.lfo1.rateHz, b.lfo1.rateHz) ||
         !NearlyEq(a.lfo1.depth, b.lfo1.depth) ||
-        a.lfo1.bipolar != b.lfo1.bipolar)
+        a.lfo1.bipolar != b.lfo1.bipolar ||
+        a.lfo1.keySync != b.lfo1.keySync)
     {
         return false;
     }

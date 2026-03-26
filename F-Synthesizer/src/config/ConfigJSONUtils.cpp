@@ -592,7 +592,8 @@ void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int ind
     WriteIndent(out, indent + 4); out << "\"wave\": \"" << LfoWaveToString(m.lfo1.wave) << "\",\n";
     WriteIndent(out, indent + 4); out << "\"rateHz\": " << m.lfo1.rateHz << ",\n";
     WriteIndent(out, indent + 4); out << "\"depth\": " << m.lfo1.depth << ",\n";
-    WriteIndent(out, indent + 4); out << "\"bipolar\": " << (m.lfo1.bipolar ? "true" : "false") << "\n";
+    WriteIndent(out, indent + 4); out << "\"bipolar\": " << (m.lfo1.bipolar ? "true" : "false") << ",\n";
+    WriteIndent(out, indent + 4); out << "\"keySync\": " << (m.lfo1.keySync ? "true" : "false") << "\n";
     WriteIndent(out, indent + 2); out << "},\n";
 
     WriteIndent(out, indent + 2); out << "\"env2\": {\n";
