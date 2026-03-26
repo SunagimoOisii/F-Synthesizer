@@ -131,24 +131,25 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
     return true;
 }
 
+template <typename SmoothingT>
+bool ParseWaveformLikeSmoothingObject(const std::string& text, SmoothingT& smoothing)
+{
+    if (auto v = ReadJSONBool(text, "enabled")) { smoothing.enabled = *v; }
+    if (auto v = ReadJSONBool(text, "pitchEnabled")) { smoothing.pitchEnabled = *v; }
+    if (auto v = ReadJSONDouble(text, "ampTimeMs")) { smoothing.ampTimeMs = *v; }
+    if (auto v = ReadJSONDouble(text, "pitchTimeMs")) { smoothing.pitchTimeMs = *v; }
+    if (auto v = ReadJSONDouble(text, "filterCutoffTimeMs")) { smoothing.filterCutoffTimeMs = *v; }
+    return true;
+}
+
 bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing)
 {
-    if (auto v = ReadJSONBool(text, "enabled")) smoothing.enabled = *v;
-    if (auto v = ReadJSONBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
-    if (auto v = ReadJSONDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
-    if (auto v = ReadJSONDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
-    if (auto v = ReadJSONDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
-    return true;
+    return ParseWaveformLikeSmoothingObject(text, smoothing);
 }
 
 bool ParseWaveformSmoothingObject(const std::string& text, AnalogConfig::SmoothingConfig& smoothing)
 {
-    if (auto v = ReadJSONBool(text, "enabled")) smoothing.enabled = *v;
-    if (auto v = ReadJSONBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
-    if (auto v = ReadJSONDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
-    if (auto v = ReadJSONDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
-    if (auto v = ReadJSONDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
-    return true;
+    return ParseWaveformLikeSmoothingObject(text, smoothing);
 }
 
 bool ValidateModulation(
@@ -214,43 +215,23 @@ bool ValidateModulation(
     return true;
 }
 
+template <typename SmoothingT>
+bool ValidateWaveformLikeSmoothing(const SmoothingT& smoothing, const char* sourceName, std::string& err)
+{
+    const std::string prefix = std::string(sourceName) + ".smoothing.";
+    if (smoothing.ampTimeMs < 0.0 || smoothing.ampTimeMs > 1000.0) { err = prefix + "ampTimeMs must be in range 0.0..1000.0"; return false; }
+    if (smoothing.pitchTimeMs < 0.0 || smoothing.pitchTimeMs > 1000.0) { err = prefix + "pitchTimeMs must be in range 0.0..1000.0"; return false; }
+    if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0) { err = prefix + "filterCutoffTimeMs must be in range 0.0..1000.0"; return false; }
+    return true;
+}
+
 bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing, std::string& err)
 {
-    if (smoothing.ampTimeMs < 0.0 || smoothing.ampTimeMs > 1000.0)
-    {
-        err = "waveform.smoothing.ampTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    if (smoothing.pitchTimeMs < 0.0 || smoothing.pitchTimeMs > 1000.0)
-    {
-        err = "waveform.smoothing.pitchTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0)
-    {
-        err = "waveform.smoothing.filterCutoffTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    return true;
+    return ValidateWaveformLikeSmoothing(smoothing, "waveform", err);
 }
 
 bool ValidateWaveformSmoothing(const AnalogConfig::SmoothingConfig& smoothing, std::string& err)
 {
-    if (smoothing.ampTimeMs < 0.0 || smoothing.ampTimeMs > 1000.0)
-    {
-        err = "analog.smoothing.ampTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    if (smoothing.pitchTimeMs < 0.0 || smoothing.pitchTimeMs > 1000.0)
-    {
-        err = "analog.smoothing.pitchTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0)
-    {
-        err = "analog.smoothing.filterCutoffTimeMs must be in range 0.0..1000.0";
-        return false;
-    }
-    return true;
+    return ValidateWaveformLikeSmoothing(smoothing, "analog", err);
 }
 } // namespace config::internal::load

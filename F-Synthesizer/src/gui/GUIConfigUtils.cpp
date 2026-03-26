@@ -65,7 +65,8 @@ bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b
     return true;
 }
 
-bool WaveformSmoothingConfigEquals(const WaveformConfig::SmoothingConfig& a, const WaveformConfig::SmoothingConfig& b)
+template <typename SmoothingT>
+bool WaveformLikeSmoothingConfigEquals(const SmoothingT& a, const SmoothingT& b)
 {
     return a.enabled == b.enabled &&
         a.pitchEnabled == b.pitchEnabled &&
@@ -74,13 +75,14 @@ bool WaveformSmoothingConfigEquals(const WaveformConfig::SmoothingConfig& a, con
         NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
 }
 
+bool WaveformSmoothingConfigEquals(const WaveformConfig::SmoothingConfig& a, const WaveformConfig::SmoothingConfig& b)
+{
+    return WaveformLikeSmoothingConfigEquals(a, b);
+}
+
 bool AnalogSmoothingConfigEquals(const AnalogConfig::SmoothingConfig& a, const AnalogConfig::SmoothingConfig& b)
 {
-    return a.enabled == b.enabled &&
-        a.pitchEnabled == b.pitchEnabled &&
-        NearlyEq(a.ampTimeMs, b.ampTimeMs) &&
-        NearlyEq(a.pitchTimeMs, b.pitchTimeMs) &&
-        NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
+    return WaveformLikeSmoothingConfigEquals(a, b);
 }
 
 template <typename ArpeggioT>
@@ -102,6 +104,41 @@ bool ArpeggioConfigEquals(const ArpeggioT& a, const ArpeggioT& b)
     return true;
 }
 
+template <typename SourceT, typename SmoothingEqFn>
+bool WaveformLikeSourceConfigEqualsCommon(
+    const SourceT& a,
+    const SourceT& b,
+    bool compareDrive,
+    const SmoothingEqFn& smoothingEq)
+{
+    if (a.wave != b.wave ||
+        a.unisonVoices != b.unisonVoices ||
+        !NearlyEq(a.unisonDetuneCents, b.unisonDetuneCents) ||
+        !NearlyEq(a.unisonSpread, b.unisonSpread) ||
+        !NearlyEq(a.subOscLevel, b.subOscLevel) ||
+        !NearlyEq(a.pulseWidth, b.pulseWidth) ||
+        a.hardSyncEnabled != b.hardSyncEnabled ||
+        !NearlyEq(a.hardSyncRatio, b.hardSyncRatio) ||
+        a.ringModEnabled != b.ringModEnabled ||
+        !NearlyEq(a.ringModRatio, b.ringModRatio) ||
+        !NearlyEq(a.ringModMix, b.ringModMix) ||
+        a.filterMode != b.filterMode ||
+        !NearlyEq(a.filterCutoffHz, b.filterCutoffHz) ||
+        !NearlyEq(a.filterResonance, b.filterResonance) ||
+        !NearlyEq(a.filterKeytrack, b.filterKeytrack) ||
+        !ArpeggioConfigEquals(a.arpeggio, b.arpeggio) ||
+        !smoothingEq(a.smoothing, b.smoothing) ||
+        !ModulationConfigEquals(a.modulation, b.modulation))
+    {
+        return false;
+    }
+    if (compareDrive && !NearlyEq(a.drive, b.drive))
+    {
+        return false;
+    }
+    return true;
+}
+
 bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
 {
     if (a.index() != b.index())
@@ -116,48 +153,21 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
             if (bv == nullptr) return false;
             if constexpr (std::is_same_v<T, WaveformConfig>)
             {
-                return av.wave == bv->wave &&
-                    av.unisonVoices == bv->unisonVoices &&
-                    NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
-                    NearlyEq(av.unisonSpread, bv->unisonSpread) &&
-                    NearlyEq(av.subOscLevel, bv->subOscLevel) &&
-                    NearlyEq(av.pulseWidth, bv->pulseWidth) &&
-                    av.hardSyncEnabled == bv->hardSyncEnabled &&
-                    NearlyEq(av.hardSyncRatio, bv->hardSyncRatio) &&
-                    av.ringModEnabled == bv->ringModEnabled &&
-                    NearlyEq(av.ringModRatio, bv->ringModRatio) &&
-                    NearlyEq(av.ringModMix, bv->ringModMix) &&
-                    av.filterMode == bv->filterMode &&
-                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
-                    NearlyEq(av.filterResonance, bv->filterResonance) &&
-                    NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
-                    ArpeggioConfigEquals(av.arpeggio, bv->arpeggio) &&
-                    WaveformSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
-                    ModulationConfigEquals(av.modulation, bv->modulation);
+                return WaveformLikeSourceConfigEqualsCommon(
+                    av,
+                    *bv,
+                    false,
+                    [](const auto& lhs, const auto& rhs) { return WaveformSmoothingConfigEquals(lhs, rhs); });
             }
             else if constexpr (std::is_same_v<T, AnalogConfig>)
             {
-                return av.wave == bv->wave &&
-                    av.unisonVoices == bv->unisonVoices &&
-                    NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
-                    NearlyEq(av.unisonSpread, bv->unisonSpread) &&
-                    NearlyEq(av.subOscLevel, bv->subOscLevel) &&
-                    NearlyEq(av.pulseWidth, bv->pulseWidth) &&
-                    av.hardSyncEnabled == bv->hardSyncEnabled &&
-                    NearlyEq(av.hardSyncRatio, bv->hardSyncRatio) &&
-                    av.ringModEnabled == bv->ringModEnabled &&
-                    NearlyEq(av.ringModRatio, bv->ringModRatio) &&
-                    NearlyEq(av.ringModMix, bv->ringModMix) &&
-                    av.filterMode == bv->filterMode &&
-                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
-                    NearlyEq(av.filterResonance, bv->filterResonance) &&
-                    NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
-                    NearlyEq(av.drive, bv->drive) &&
+                return WaveformLikeSourceConfigEqualsCommon(
+                    av,
+                    *bv,
+                    true,
+                    [](const auto& lhs, const auto& rhs) { return AnalogSmoothingConfigEquals(lhs, rhs); }) &&
                     NearlyEq(av.driftDepthCents, bv->driftDepthCents) &&
-                    NearlyEq(av.driftRateHz, bv->driftRateHz) &&
-                    ArpeggioConfigEquals(av.arpeggio, bv->arpeggio) &&
-                    AnalogSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
-                    ModulationConfigEquals(av.modulation, bv->modulation);
+                    NearlyEq(av.driftRateHz, bv->driftRateHz);
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)
             {

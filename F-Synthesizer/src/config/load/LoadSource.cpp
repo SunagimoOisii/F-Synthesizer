@@ -338,13 +338,20 @@ bool IsDrumOptionalWhenNonPositive(std::string_view id)
         || id == "lpCut";
 }
 
-bool ValidateNoiseBySchema(const NoiseConfig& noise, std::string& err)
+template <typename SchemaValueFn, typename OptionalPredicateFn>
+bool ValidateSourceBySchemaCommon(
+    SourceKind sourceKind,
+    const char* sourcePrefix,
+    bool requireNonEmptySchema,
+    const SchemaValueFn& schemaValueFn,
+    const OptionalPredicateFn& optionalPredicateFn,
+    std::string& err)
 {
     const SourceParameterSchemaEntry* schema = nullptr;
     size_t schemaCount = 0;
-    if (!TryGetParameterSchema(SourceKind::Noise, schema, schemaCount) || schema == nullptr || schemaCount == 0)
+    if (!TryGetParameterSchema(sourceKind, schema, schemaCount) || schema == nullptr || (requireNonEmptySchema && schemaCount == 0))
     {
-        err = "noise schema is not defined";
+        err = std::string(sourcePrefix) + " schema is not defined";
         return false;
     }
 
@@ -352,100 +359,61 @@ bool ValidateNoiseBySchema(const NoiseConfig& noise, std::string& err)
     {
         const SourceParameterSchemaEntry& e = schema[i];
         double value = 0.0;
-        if (!NoiseSchemaValue(noise, e, value))
+        if (!schemaValueFn(e, value))
         {
-            err = "noise schema has unknown id: " + std::string(e.id);
+            err = std::string(sourcePrefix) + " schema has unknown id: " + std::string(e.id);
             return false;
         }
-        if (!ValidateSchemaRange("noise", e, value, false, err))
+        if (!ValidateSchemaRange(sourcePrefix, e, value, optionalPredicateFn(std::string_view(e.id)), err))
         {
             return false;
         }
     }
     return true;
+}
+
+bool ValidateNoiseBySchema(const NoiseConfig& noise, std::string& err)
+{
+    return ValidateSourceBySchemaCommon(
+        SourceKind::Noise,
+        "noise",
+        true,
+        [&](const SourceParameterSchemaEntry& e, double& outValue) { return NoiseSchemaValue(noise, e, outValue); },
+        [&](std::string_view) { return false; },
+        err);
 }
 
 bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
 {
-    const SourceParameterSchemaEntry* schema = nullptr;
-    size_t schemaCount = 0;
-    if (!TryGetParameterSchema(SourceKind::Waveform, schema, schemaCount) || schema == nullptr)
-    {
-        err = "waveform schema is not defined";
-        return false;
-    }
-
-    for (size_t i = 0; i < schemaCount; i++)
-    {
-        const SourceParameterSchemaEntry& e = schema[i];
-        double value = 0.0;
-        if (!WaveformSchemaValue(wf, e, value))
-        {
-            err = "waveform schema has unknown id: " + std::string(e.id);
-            return false;
-        }
-
-        if (!ValidateSchemaRange("waveform", e, value, false, err))
-        {
-            return false;
-        }
-    }
-    return true;
+    return ValidateSourceBySchemaCommon(
+        SourceKind::Waveform,
+        "waveform",
+        false,
+        [&](const SourceParameterSchemaEntry& e, double& outValue) { return WaveformSchemaValue(wf, e, outValue); },
+        [&](std::string_view) { return false; },
+        err);
 }
 
 bool ValidateAnalogBySchema(const AnalogConfig& analog, std::string& err)
 {
-    const SourceParameterSchemaEntry* schema = nullptr;
-    size_t schemaCount = 0;
-    if (!TryGetParameterSchema(SourceKind::Analog, schema, schemaCount) || schema == nullptr)
-    {
-        err = "analog schema is not defined";
-        return false;
-    }
-
-    for (size_t i = 0; i < schemaCount; i++)
-    {
-        const SourceParameterSchemaEntry& e = schema[i];
-        double value = 0.0;
-        if (!AnalogSchemaValue(analog, e, value))
-        {
-            err = "analog schema has unknown id: " + std::string(e.id);
-            return false;
-        }
-
-        if (!ValidateSchemaRange("analog", e, value, false, err))
-        {
-            return false;
-        }
-    }
-    return true;
+    return ValidateSourceBySchemaCommon(
+        SourceKind::Analog,
+        "analog",
+        false,
+        [&](const SourceParameterSchemaEntry& e, double& outValue) { return AnalogSchemaValue(analog, e, outValue); },
+        [&](std::string_view) { return false; },
+        err);
 }
 
 bool ValidateFmBySchema(const FmConfig& fm, std::string& err)
 {
-    const SourceParameterSchemaEntry* schema = nullptr;
-    size_t schemaCount = 0;
-    if (!TryGetParameterSchema(SourceKind::Fm, schema, schemaCount) || schema == nullptr)
-    {
-        err = "fm schema is not defined";
-        return false;
-    }
-
-    for (size_t i = 0; i < schemaCount; i++)
-    {
-        const SourceParameterSchemaEntry& e = schema[i];
-        double value = 0.0;
-        if (!FmSchemaValue(fm, e, value))
-        {
-            err = "fm schema has unknown id: " + std::string(e.id);
-            return false;
-        }
-        if (!ValidateSchemaRange("fm", e, value, false, err))
-        {
-            return false;
-        }
-    }
-    return true;
+    return ValidateSourceBySchemaCommon(
+        SourceKind::Fm,
+        "fm",
+        false,
+        [&](const SourceParameterSchemaEntry& e, double& outValue) { return FmSchemaValue(fm, e, outValue); },
+        [&](std::string_view) { return false; },
+        err);
 }
 
 bool ExtractArrayAt(const std::string& text, size_t openBracketPos, std::string& outArray, std::string& err)
@@ -598,27 +566,15 @@ bool ParseTopLevelIntArrayElements(
 
 bool ValidateDrumBySchema(const DrumConfig& drum, std::string& err)
 {
-    const SourceParameterSchemaEntry* schema = nullptr;
-    size_t schemaCount = 0;
-    if (!TryGetParameterSchema(SourceKind::Drum, schema, schemaCount) || schema == nullptr)
+    if (!ValidateSourceBySchemaCommon(
+        SourceKind::Drum,
+        "drum",
+        false,
+        [&](const SourceParameterSchemaEntry& e, double& outValue) { return DrumSchemaValue(drum, e, outValue); },
+        [&](std::string_view id) { return IsDrumOptionalWhenNonPositive(id); },
+        err))
     {
-        err = "drum schema is not defined";
         return false;
-    }
-
-    for (size_t i = 0; i < schemaCount; i++)
-    {
-        const SourceParameterSchemaEntry& e = schema[i];
-        double value = 0.0;
-        if (!DrumSchemaValue(drum, e, value))
-        {
-            err = "drum schema has unknown id: " + std::string(e.id);
-            return false;
-        }
-        if (!ValidateSchemaRange("drum", e, value, IsDrumOptionalWhenNonPositive(e.id), err))
-        {
-            return false;
-        }
     }
 
     if (drum.hpCut > 0.0 && drum.lpCut > 0.0 && drum.hpCut >= drum.lpCut)
