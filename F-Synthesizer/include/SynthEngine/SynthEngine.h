@@ -49,6 +49,37 @@ struct WaveformConfig
     ModulationConfig modulation{};
 };
 
+// アナログ模倣発振方式の設定集合。
+// WaveformConfig と同等のオシレータ基盤に、オシレータドリフトを加えた方式。
+// smoothing は waveform と同一契約で適用する。
+struct AnalogConfig
+{
+    struct SmoothingConfig
+    {
+        bool enabled = true;
+        bool pitchEnabled = false;
+        double ampTimeMs = 4.0;
+        double pitchTimeMs = 2.0;
+        double filterCutoffTimeMs = 8.0;
+    };
+
+    WaveType wave;
+    int unisonVoices = 1;
+    double unisonDetuneCents = 0.0;
+    double unisonSpread = 0.0;
+    double subOscLevel = 0.0;
+    FilterMode filterMode = FilterMode::Bypass;
+    double filterCutoffHz = 8000.0;
+    double filterResonance = 0.707;
+    double filterKeytrack = 0.0;
+    double drive = 0.0;
+    // アナログ固有: ボイスごとのピッチドリフト。
+    double driftDepthCents = 0.0;
+    double driftRateHz = 0.3;
+    SmoothingConfig smoothing{};
+    ModulationConfig modulation{};
+};
+
 // ノイズ発振方式の最小設定。
 struct NoiseConfig
 {
@@ -151,7 +182,7 @@ struct DrumKitConfig
     std::array<DrumConfig, 128> map;
 };
 
-using SourceConfig = std::variant<WaveformConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig, PsgConfig>;
+using SourceConfig = std::variant<WaveformConfig, AnalogConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig, PsgConfig>;
 
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。

@@ -185,6 +185,20 @@ bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEn
     return false;
 }
 
+bool AnalogSchemaValue(const AnalogConfig& analog, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "unisonVoices") { outValue = static_cast<double>(analog.unisonVoices); return true; }
+    if (std::string_view(e.id) == "unisonDetuneCents") { outValue = analog.unisonDetuneCents; return true; }
+    if (std::string_view(e.id) == "unisonSpread") { outValue = analog.unisonSpread; return true; }
+    if (std::string_view(e.id) == "subOscLevel") { outValue = analog.subOscLevel; return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = analog.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = analog.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterKeytrack") { outValue = analog.filterKeytrack; return true; }
+    if (std::string_view(e.id) == "driftDepthCents") { outValue = analog.driftDepthCents; return true; }
+    if (std::string_view(e.id) == "driftRateHz") { outValue = analog.driftRateHz; return true; }
+    return false;
+}
+
 bool FmSchemaValue(const FmConfig& fm, const SourceParameterSchemaEntry& e, double& outValue)
 {
     if (std::string_view(e.id) == "algorithm") { outValue = static_cast<double>(fm.algorithm); return true; }
@@ -280,6 +294,34 @@ bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
         }
 
         if (!ValidateSchemaRange("waveform", e, value, false, err))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ValidateAnalogBySchema(const AnalogConfig& analog, std::string& err)
+{
+    const SourceParameterSchemaEntry* schema = nullptr;
+    size_t schemaCount = 0;
+    if (!TryGetParameterSchema(SourceKind::Analog, schema, schemaCount) || schema == nullptr)
+    {
+        err = "analog schema is not defined";
+        return false;
+    }
+
+    for (size_t i = 0; i < schemaCount; i++)
+    {
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (!AnalogSchemaValue(analog, e, value))
+        {
+            err = "analog schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+
+        if (!ValidateSchemaRange("analog", e, value, false, err))
         {
             return false;
         }
@@ -529,12 +571,12 @@ bool ValidateSmoothingSupport(
     {
         return true;
     }
-    if (sourceKind == SourceKind::Waveform)
+    if (sourceKind == SourceKind::Waveform || sourceKind == SourceKind::Analog)
     {
         return true;
     }
 
-    err = "source.smoothing is allowed only for source.type=waveform";
+    err = "source.smoothing is allowed only for source.type=waveform/analog";
     return false;
 }
 
@@ -667,6 +709,114 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             return false;
         }
         outSource = wf;
+        return true;
+    }
+    case SourceKind::Analog:
+    {
+        auto wave = ReadJSONString(sourceObjText, "wave");
+        if (!wave)
+        {
+            err = "analog source requires 'wave'";
+            return false;
+        }
+        WaveType w{};
+        if (!TryParseWaveType(*wave, w))
+        {
+            err = "invalid wave: " + *wave;
+            return false;
+        }
+        AnalogConfig analog{};
+        analog.wave = w;
+        if (auto v = ReadJSONInt(sourceObjText, "unisonVoices"))
+        {
+            analog.unisonVoices = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonDetuneCents"))
+        {
+            analog.unisonDetuneCents = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "unisonSpread"))
+        {
+            analog.unisonSpread = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel"))
+        {
+            analog.subOscLevel = *v;
+        }
+        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+        {
+            FilterMode mode{};
+            if (!TryParseFilterMode(*v, mode))
+            {
+                err = "invalid analog.filterMode: " + *v;
+                return false;
+            }
+            analog.filterMode = mode;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
+        {
+            analog.filterCutoffHz = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
+        {
+            analog.filterResonance = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterKeytrack"))
+        {
+            analog.filterKeytrack = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "drive"))
+        {
+            analog.drive = std::clamp(*v, 0.0, 1.0);
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "driftDepthCents"))
+        {
+            analog.driftDepthCents = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "driftRateHz"))
+        {
+            analog.driftRateHz = *v;
+        }
+        std::string smoothingObj;
+        bool foundSmoothing = false;
+        if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
+        {
+            return false;
+        }
+        if (foundSmoothing)
+        {
+            if (!ParseWaveformSmoothingObject(smoothingObj, analog.smoothing))
+            {
+                err = "invalid analog.smoothing object";
+                return false;
+            }
+        }
+        std::string modulationObj;
+        bool foundModulation = false;
+        if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
+        {
+            return false;
+        }
+        if (foundModulation)
+        {
+            if (!ParseModulationObject(modulationObj, analog.modulation, err))
+            {
+                return false;
+            }
+        }
+        if (!ValidateAnalogBySchema(analog, err))
+        {
+            return false;
+        }
+        if (!ValidateModulation(analog.modulation, false, "analog.modulation", err))
+        {
+            return false;
+        }
+        if (!ValidateWaveformSmoothing(analog.smoothing, err))
+        {
+            return false;
+        }
+        outSource = analog;
         return true;
     }
     case SourceKind::Noise:

@@ -594,7 +594,8 @@ void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int ind
     WriteIndent(out, indent); out << "}";
 }
 
-void WriteWaveformSmoothingConfig(std::ostream& out, const WaveformConfig::SmoothingConfig& smoothing, int indent)
+template <typename SmoothingT>
+void WriteWaveformSmoothingConfig(std::ostream& out, const SmoothingT& smoothing, int indent)
 {
     WriteIndent(out, indent); out << "\"smoothing\": {\n";
     WriteIndent(out, indent + 2); out << "\"enabled\": " << (smoothing.enabled ? "true" : "false") << ",\n";
@@ -623,6 +624,26 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
             WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
+            WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
+            out << ",\n";
+            WriteModulationConfig(out, v.modulation, indent + 2);
+            out << "\n";
+        }
+        else if constexpr (std::is_same_v<T, AnalogConfig>)
+        {
+            WriteIndent(out, indent + 2); out << "\"type\": \"analog\",\n";
+            WriteIndent(out, indent + 2); out << "\"wave\": \"" << WaveTypeToString(v.wave) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonVoices\": " << v.unisonVoices << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
+            WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
+            WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
+            WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
+            WriteIndent(out, indent + 2); out << "\"driftDepthCents\": " << v.driftDepthCents << ",\n";
+            WriteIndent(out, indent + 2); out << "\"driftRateHz\": " << v.driftRateHz << ",\n";
             WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
             out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);

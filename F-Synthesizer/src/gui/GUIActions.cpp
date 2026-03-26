@@ -198,6 +198,8 @@ bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind k
     {
     case config::SourceKind::Waveform:
         return presetName.rfind("wave_", 0) == 0;
+    case config::SourceKind::Analog:
+        return presetName.rfind("analog_", 0) == 0;
     case config::SourceKind::Fm:
         return presetName.rfind("fm_", 0) == 0;
     case config::SourceKind::Psg:

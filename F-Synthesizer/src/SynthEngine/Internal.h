@@ -19,6 +19,19 @@ struct WaveformVoiceState
     SmoothedParam filterCutoffSmoothing;
 };
 
+struct AnalogVoiceState
+{
+    FilterInstance filter;
+    ModulationRuntimeState modulation;
+    SmoothedParam ampSmoothing;
+    SmoothedParam pitchSmoothing;
+    SmoothedParam filterCutoffSmoothing;
+    // ドリフトLFO状態。
+    double driftPhase = 0.0;
+    // ノートオン時に確定するボイス固有のドリフト位相オフセット [0..1)。
+    double driftPhaseOffset = 0.0;
+};
+
 struct FmVoiceState
 {
     std::array<double, 4> opPhase{};
@@ -52,6 +65,7 @@ struct PsgVoiceState
 
 using PerSourceVoiceState = std::variant<
     WaveformVoiceState,
+    AnalogVoiceState,
     FmVoiceState,
     NoiseVoiceState,
     DrumVoiceState,

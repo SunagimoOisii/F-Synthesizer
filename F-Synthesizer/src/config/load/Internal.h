@@ -11,6 +11,7 @@ namespace config::internal::load
 // 前提: text は { ... } 形式のオブジェクト文字列。
 bool ParseModulationObject(const std::string& text, ModulationConfig& modulation, std::string& err);
 bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing);
+bool ParseWaveformSmoothingObject(const std::string& text, AnalogConfig::SmoothingConfig& smoothing);
 // 目的: modulation の数値範囲と destination 許可範囲を検証する。
 // 前提: allowFmIndexDestination=false のとき fm.index は拒否する。
 bool ValidateModulation(
@@ -19,6 +20,7 @@ bool ValidateModulation(
     const char* contextPrefix,
     std::string& err);
 bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing, std::string& err);
+bool ValidateWaveformSmoothing(const AnalogConfig::SmoothingConfig& smoothing, std::string& err);
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 

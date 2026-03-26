@@ -137,6 +137,16 @@ bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::Smoot
     return true;
 }
 
+bool ParseWaveformSmoothingObject(const std::string& text, AnalogConfig::SmoothingConfig& smoothing)
+{
+    if (auto v = ReadJSONBool(text, "enabled")) smoothing.enabled = *v;
+    if (auto v = ReadJSONBool(text, "pitchEnabled")) smoothing.pitchEnabled = *v;
+    if (auto v = ReadJSONDouble(text, "ampTimeMs")) smoothing.ampTimeMs = *v;
+    if (auto v = ReadJSONDouble(text, "pitchTimeMs")) smoothing.pitchTimeMs = *v;
+    if (auto v = ReadJSONDouble(text, "filterCutoffTimeMs")) smoothing.filterCutoffTimeMs = *v;
+    return true;
+}
+
 bool ValidateModulation(
     const ModulationConfig& modulation,
     bool allowFmIndexDestination,
@@ -200,6 +210,26 @@ bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing,
     if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0)
     {
         err = "waveform.smoothing.filterCutoffTimeMs must be in range 0.0..1000.0";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateWaveformSmoothing(const AnalogConfig::SmoothingConfig& smoothing, std::string& err)
+{
+    if (smoothing.ampTimeMs < 0.0 || smoothing.ampTimeMs > 1000.0)
+    {
+        err = "analog.smoothing.ampTimeMs must be in range 0.0..1000.0";
+        return false;
+    }
+    if (smoothing.pitchTimeMs < 0.0 || smoothing.pitchTimeMs > 1000.0)
+    {
+        err = "analog.smoothing.pitchTimeMs must be in range 0.0..1000.0";
+        return false;
+    }
+    if (smoothing.filterCutoffTimeMs < 0.0 || smoothing.filterCutoffTimeMs > 1000.0)
+    {
+        err = "analog.smoothing.filterCutoffTimeMs must be in range 0.0..1000.0";
         return false;
     }
     return true;

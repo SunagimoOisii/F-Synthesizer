@@ -148,6 +148,40 @@ void InitializeVoiceAtIndex(
         ResetModulationState(ws.modulation);
         NoteOnModulation(ws.modulation);
     }
+    else if (const auto* analog = std::get_if<AnalogConfig>(&cfg.source))
+    {
+        voices.sourceState[i] = AnalogVoiceState{};
+        auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
+
+        SetSmoothingRange(as.ampSmoothing, 0.0, 2.0);
+        SetSmoothingSampleRate(as.ampSmoothing, sampleRate);
+        SetSmoothingTimeMs(as.ampSmoothing, analog->smoothing.ampTimeMs);
+        ResetSmoothedParam(as.ampSmoothing, 1.0);
+
+        SetSmoothingRange(as.pitchSmoothing, 0.25, 4.0);
+        SetSmoothingSampleRate(as.pitchSmoothing, sampleRate);
+        SetSmoothingTimeMs(as.pitchSmoothing, analog->smoothing.pitchTimeMs);
+        ResetSmoothedParam(as.pitchSmoothing, 1.0);
+
+        SetSmoothingRange(as.filterCutoffSmoothing, 10.0, 20000.0);
+        SetSmoothingSampleRate(as.filterCutoffSmoothing, sampleRate);
+        SetSmoothingTimeMs(as.filterCutoffSmoothing, analog->smoothing.filterCutoffTimeMs);
+        ResetSmoothedParam(as.filterCutoffSmoothing, analog->filterCutoffHz);
+
+        SetFilterSampleRate(as.filter, sampleRate);
+        SetFilterMode(as.filter, analog->filterMode);
+        SetFilterCutoffHz(as.filter, analog->filterCutoffHz);
+        SetFilterResonance(as.filter, analog->filterResonance);
+        ResetFilterState(as.filter);
+
+        ResetModulationState(as.modulation);
+        NoteOnModulation(as.modulation);
+
+        // ボイス固有のドリフト位相オフセット（0..1）を確定する。
+        // 目的: 同時発音ボイスのドリフトが同位相にならないようにする。
+        as.driftPhase = 0.0;
+        as.driftPhaseOffset = static_cast<double>((i * 37 + e.channel * 13) % 97) / 97.0;
+    }
     else if (const auto* fm = std::get_if<FmConfig>(&cfg.source))
     {
         voices.sourceState[i] = FmVoiceState{};

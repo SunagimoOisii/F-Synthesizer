@@ -70,6 +70,15 @@ bool WaveformSmoothingConfigEquals(const WaveformConfig::SmoothingConfig& a, con
         NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
 }
 
+bool AnalogSmoothingConfigEquals(const AnalogConfig::SmoothingConfig& a, const AnalogConfig::SmoothingConfig& b)
+{
+    return a.enabled == b.enabled &&
+        a.pitchEnabled == b.pitchEnabled &&
+        NearlyEq(a.ampTimeMs, b.ampTimeMs) &&
+        NearlyEq(a.pitchTimeMs, b.pitchTimeMs) &&
+        NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
+}
+
 bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
 {
     if (a.index() != b.index())
@@ -94,6 +103,23 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
                     NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
                     WaveformSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
+                    ModulationConfigEquals(av.modulation, bv->modulation);
+            }
+            else if constexpr (std::is_same_v<T, AnalogConfig>)
+            {
+                return av.wave == bv->wave &&
+                    av.unisonVoices == bv->unisonVoices &&
+                    NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
+                    NearlyEq(av.unisonSpread, bv->unisonSpread) &&
+                    NearlyEq(av.subOscLevel, bv->subOscLevel) &&
+                    av.filterMode == bv->filterMode &&
+                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
+                    NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
+                    NearlyEq(av.drive, bv->drive) &&
+                    NearlyEq(av.driftDepthCents, bv->driftDepthCents) &&
+                    NearlyEq(av.driftRateHz, bv->driftRateHz) &&
+                    AnalogSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)

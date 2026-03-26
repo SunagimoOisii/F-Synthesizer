@@ -464,7 +464,7 @@ bool DrawChannelEditor(
             {
                 updateHoverHelp(
                     "音源タイプを切り替えます。",
-                    "Waveform/Noise/FM/DrumKit/PSG の編集対象に切り替わります。",
+                    "Waveform/Analog/Noise/FM/DrumKit/PSG の編集対象に切り替わります。",
                     "切替時は該当タイプの既定設定で初期化されます。");
             }
         }
@@ -568,6 +568,125 @@ bool DrawChannelEditor(
             changed |= sliderWaveParam("Filter Smoothing (ms)", wf->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
 
             changed |= drawModulationEditor("waveform_modulation", wf->modulation, true, false);
+        }
+        else if (auto* analog = std::get_if<AnalogConfig>(&chCfg.source))
+        {
+            int idx = WaveToIndex(analog->wave);
+            const char* waves[] = { "sine", "square", "saw", "triangle" };
+            changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+            if (updateHoverHelp) updateHoverHelp("Wave を選択します。", "基本波形キャラクターが変わります。", nullptr);
+            analog->wave = WaveFromIndex(idx);
+
+            analog->unisonVoices = std::clamp(analog->unisonVoices, 1, 8);
+            analog->unisonDetuneCents = std::clamp(analog->unisonDetuneCents, 0.0, 120.0);
+            analog->unisonSpread = std::clamp(analog->unisonSpread, 0.0, 1.0);
+            analog->subOscLevel = std::clamp(analog->subOscLevel, 0.0, 2.0);
+            analog->filterCutoffHz = std::clamp(analog->filterCutoffHz, 10.0, 20000.0);
+            analog->filterResonance = std::clamp(analog->filterResonance, 0.1, 18.0);
+            analog->filterKeytrack = std::clamp(analog->filterKeytrack, 0.0, 1.0);
+            analog->drive = std::clamp(analog->drive, 0.0, 1.0);
+            analog->driftDepthCents = std::clamp(analog->driftDepthCents, 0.0, 20.0);
+            analog->driftRateHz = std::clamp(analog->driftRateHz, 0.01, 2.0);
+            analog->smoothing.ampTimeMs = std::clamp(analog->smoothing.ampTimeMs, 0.0, 1000.0);
+            analog->smoothing.pitchTimeMs = std::clamp(analog->smoothing.pitchTimeMs, 0.0, 1000.0);
+            analog->smoothing.filterCutoffTimeMs = std::clamp(analog->smoothing.filterCutoffTimeMs, 0.0, 1000.0);
+            analog->modulation.lfo1.rateHz = std::clamp(analog->modulation.lfo1.rateHz, 0.0, 100.0);
+            analog->modulation.lfo1.depth = std::clamp(analog->modulation.lfo1.depth, 0.0, 1.0);
+            analog->modulation.env2.attackSec = std::clamp(analog->modulation.env2.attackSec, 0.0, 10.0);
+            analog->modulation.env2.decaySec = std::clamp(analog->modulation.env2.decaySec, 0.0, 10.0);
+            analog->modulation.env2.sustainLevel = std::clamp(analog->modulation.env2.sustainLevel, 0.0, 1.0);
+            analog->modulation.env2.releaseSec = std::clamp(analog->modulation.env2.releaseSec, 0.0, 10.0);
+            for (auto& route : analog->modulation.matrix.routes)
+            {
+                route.amount = std::clamp(route.amount, -1.0, 1.0);
+            }
+
+            int unisonVoices = analog->unisonVoices;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Unison Voices", &unisonVoices, 1, 8))
+            {
+                analog->unisonVoices = unisonVoices;
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Unison Voices を調整します。", "重ねる発音数が変わり厚みが変わります。", "増やすほどCPU負荷が上がります。");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Unison Detune (cent)", analog->unisonDetuneCents, 0.0f, 120.0f, "%.1f");
+            if (updateHoverHelp) updateHoverHelp("Unison Detune を調整します。", "重ね音のピッチ差が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Unison Spread", analog->unisonSpread, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Unison Spread を調整します。", "ステレオの広がりが変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Sub Osc Level", analog->subOscLevel, 0.0f, 2.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
+
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            int filterModeIdx = 0;
+            switch (analog->filterMode)
+            {
+            case FilterMode::Bypass: filterModeIdx = 0; break;
+            case FilterMode::LowPass: filterModeIdx = 1; break;
+            case FilterMode::HighPass: filterModeIdx = 2; break;
+            case FilterMode::BandPass: filterModeIdx = 3; break;
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
+            {
+                switch (filterModeIdx)
+                {
+                case 0: analog->filterMode = FilterMode::Bypass; break;
+                case 1: analog->filterMode = FilterMode::LowPass; break;
+                case 2: analog->filterMode = FilterMode::HighPass; break;
+                case 3: analog->filterMode = FilterMode::BandPass; break;
+                default: analog->filterMode = FilterMode::Bypass; break;
+                }
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Filter Mode を選択します。", "フィルタ有効/種別が変わります。", nullptr);
+            if (analog->filterMode != FilterMode::Bypass)
+            {
+                ImGui::SameLine();
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "(active)");
+            }
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Cutoff (Hz)", analog->filterCutoffHz, 10.0f, 20000.0f, "%.1f");
+            if (updateHoverHelp) updateHoverHelp("Filter Cutoff を調整します。", "通過帯域の中心が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Resonance (Q)", analog->filterResonance, 0.1f, 18.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Keytrack", analog->filterKeytrack, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Keytrack を調整します。", "ノート音程に連動してカットオフが動く量が変わります。基準は C4(60)。", nullptr);
+
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Drive", analog->drive, 0.0f, 1.0f, "%.3f");
+            if (updateHoverHelp) updateHoverHelp("Drive を調整します。", "ソフトクリップ量が変わります。", "上げすぎると飽和が強くなります。");
+
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Drift Depth (cent)", analog->driftDepthCents, 0.0f, 20.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Drift Depth を調整します。", "ピッチ揺らぎ量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            float driftRateHz = static_cast<float>(analog->driftRateHz);
+            if (ImGui::SliderFloat("Drift Rate (Hz)", &driftRateHz, 0.01f, 2.0f, "%.3f", ImGuiSliderFlags_Logarithmic))
+            {
+                analog->driftRateHz = static_cast<double>(driftRateHz);
+                changed = true;
+            }
+            if (updateHoverHelp) updateHoverHelp("Drift Rate を調整します。", "ドリフトLFOの速度が変わります。", nullptr);
+
+            ImGui::Separator();
+            ImGui::TextUnformatted("Smoothing");
+            changed |= ImGui::Checkbox("Smoothing Enabled", &analog->smoothing.enabled);
+            if (updateHoverHelp) updateHoverHelp("Smoothing Enabled を切り替えます。", "パラメータ変化の段差を抑えます。", nullptr);
+            changed |= ImGui::Checkbox("Pitch Smoothing Enabled", &analog->smoothing.pitchEnabled);
+            if (updateHoverHelp) updateHoverHelp("Pitch Smoothing Enabled を切り替えます。", "ピッチ変化の滑らかさが変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Amp Smoothing (ms)", analog->smoothing.ampTimeMs, 0.0f, 1000.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Pitch Smoothing (ms)", analog->smoothing.pitchTimeMs, 0.0f, 1000.0f, "%.1f");
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Smoothing (ms)", analog->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
+
+            changed |= drawModulationEditor("analog_modulation", analog->modulation, true, false);
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {

@@ -26,6 +26,13 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
     },
     {
+        SourceKind::Analog,
+        "analog",
+        "analog",
+        SourceCapability{ true, true, true, true, true, false, false },
+        SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
+    },
+    {
         SourceKind::Noise,
         "noise",
         "noise",
@@ -70,6 +77,18 @@ constexpr std::array<SourceParameterSchemaEntry, 7> kWaveformParameterSchema{ {
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
     { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+} };
+
+constexpr std::array<SourceParameterSchemaEntry, 9> kAnalogParameterSchema{ {
+    { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
+    { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
+    { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "subOscLevel", SourceParameterType::Float, 0.0, 2.0, 0.0 },
+    { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
+    { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
+    { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "driftDepthCents", SourceParameterType::Float, 0.0, 20.0, 0.0 },
+    { "driftRateHz", SourceParameterType::Float, 0.01, 2.0, 0.3 },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
@@ -181,6 +200,7 @@ int SourceKindToIndex(SourceKind kind)
 SourceKind SourceConfigKind(const SourceConfig& src)
 {
     if (std::holds_alternative<WaveformConfig>(src)) return SourceKind::Waveform;
+    if (std::holds_alternative<AnalogConfig>(src)) return SourceKind::Analog;
     if (std::holds_alternative<NoiseConfig>(src)) return SourceKind::Noise;
     if (std::holds_alternative<FmConfig>(src)) return SourceKind::Fm;
     if (std::holds_alternative<DrumConfig>(src)) return SourceKind::Drum;
@@ -237,6 +257,10 @@ bool TryGetParameterSchema(
         outEntries = kWaveformParameterSchema.data();
         outCount = kWaveformParameterSchema.size();
         return true;
+    case SourceKind::Analog:
+        outEntries = kAnalogParameterSchema.data();
+        outCount = kAnalogParameterSchema.size();
+        return true;
     case SourceKind::Noise:
         outEntries = kNoiseParameterSchema.data();
         outCount = kNoiseParameterSchema.size();
@@ -269,6 +293,8 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     {
     case SourceKind::Waveform:
         return WaveformConfig{ WaveType::Saw };
+    case SourceKind::Analog:
+        return AnalogConfig{ WaveType::Saw };
     case SourceKind::Noise:
         return NoiseConfig{ NoiseType::White };
     case SourceKind::Fm:

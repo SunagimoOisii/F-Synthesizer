@@ -12,11 +12,12 @@ namespace config
 enum class SourceKind
 {
     Waveform = 0,
-    Noise = 1,
-    Fm = 2,
-    Drum = 3,
-    DrumKit = 4,
-    Psg = 5,
+    Analog = 1,
+    Noise = 2,
+    Fm = 3,
+    Drum = 4,
+    DrumKit = 5,
+    Psg = 6,
     Count
 };
 

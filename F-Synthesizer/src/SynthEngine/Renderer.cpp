@@ -46,7 +46,7 @@ double SourceFilterResonance(const SourceConfig& src)
     return std::visit([](const auto& sourceCfg) -> double
     {
         using T = std::decay_t<decltype(sourceCfg)>;
-        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, FmConfig>)
+        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, FmConfig> || std::is_same_v<T, AnalogConfig>)
         {
             return sourceCfg.filterResonance;
         }
@@ -197,6 +197,81 @@ void RenderWaveformSource(
     {
         SetSmoothedTarget(ws.pitchSmoothing, pitchMul);
         pitchMul = StepSmoothedParam(ws.pitchSmoothing);
+    }
+
+    const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
+    const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
+    const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
+    const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
+    const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+
+    double unisonSum = 0.0;
+    for (int uv = 0; uv < unisonVoices; uv++)
+    {
+        const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
+        const double centered = (pos * 2.0) - 1.0;
+        const double cents = centered * detuneCents;
+        const double ratio = std::pow(2.0, cents / 1200.0);
+        const double phaseOffset = centered * spread * 0.08;
+        const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
+        const double uvInc = phaseInc * ratio;
+        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
+    }
+
+    double mainWave = unisonSum / unisonVoices;
+    if (subOscLevel > 0.0)
+    {
+        const double subPhase = WrapPhase(voices.phase[i] * 0.5);
+        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
+        mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+    }
+
+    frame.sample = mainWave;
+    frame.ampMul = mod.ampMul;
+    frame.shaperKind = CommonShaperKind::BiquadFilter;
+    double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;
+    if (src.filterKeytrack != 0.0)
+    {
+        const double keytrackRatio = std::pow(2.0, src.filterKeytrack * (voices.noteNumber[i] - 60) / 12.0);
+        effectiveCutoff *= keytrackRatio;
+    }
+    frame.shaperCutoffHz = effectiveCutoff;
+    frame.shaperDrive = src.drive;
+
+    voices.phase[i] += phaseInc;
+    if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
+}
+
+void RenderAnalogSource(
+    const AnalogConfig& src,
+    Voice& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    SourceRenderFrame& frame)
+{
+    auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
+    ModulationResult mod = EvaluateModulation(
+        as.modulation,
+        src.modulation,
+        in.dt,
+        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
+
+    double pitchMul = mod.pitchMul;
+
+    // ドリフト適用: ボイスごとの正弦LFOでピッチをゆらす。
+    if (src.driftDepthCents > 0.0)
+    {
+        const double driftSine = std::sin((as.driftPhase + as.driftPhaseOffset) * 2.0 * kPi);
+        const double driftCents = driftSine * src.driftDepthCents;
+        pitchMul *= std::pow(2.0, driftCents / 1200.0);
+        as.driftPhase += src.driftRateHz * in.dt;
+        if (as.driftPhase >= 1.0) as.driftPhase -= 1.0;
+    }
+
+    if (src.smoothing.enabled && src.smoothing.pitchEnabled)
+    {
+        SetSmoothedTarget(as.pitchSmoothing, pitchMul);
+        pitchMul = StepSmoothedParam(as.pitchSmoothing);
     }
 
     const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
@@ -397,6 +472,10 @@ void RenderSourceFrame(
         {
             RenderWaveformSource(source, voices, i, in, frame);
         }
+        else if constexpr (std::is_same_v<T, AnalogConfig>)
+        {
+            RenderAnalogSource(source, voices, i, in, frame);
+        }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {
             RenderNoiseSource(source, frame);
@@ -435,7 +514,11 @@ void ApplyCommonShaper(
                 if constexpr (requires { st.filterCutoffSmoothing; })
                 {
                     const auto* waveformSrc = std::get_if<WaveformConfig>(&src);
-                    if (waveformSrc && waveformSrc->smoothing.enabled)
+                    const auto* analogSrc = std::get_if<AnalogConfig>(&src);
+                    const bool smoothingEnabled =
+                        (waveformSrc && waveformSrc->smoothing.enabled) ||
+                        (analogSrc && analogSrc->smoothing.enabled);
+                    if (smoothingEnabled)
                     {
                         SetSmoothedTarget(st.filterCutoffSmoothing, filterCutoffHz);
                         filterCutoffHz = StepSmoothedParam(st.filterCutoffSmoothing);
@@ -479,6 +562,17 @@ void ApplyModulationLayer(
             {
                 SetSmoothedTarget(ws.ampSmoothing, ampMul);
                 ampMul = StepSmoothedParam(ws.ampSmoothing);
+            }
+            frame.ampMul = ampMul;
+        }
+        else if constexpr (std::is_same_v<T, AnalogConfig>)
+        {
+            auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
+            double ampMul = frame.ampMul;
+            if (source.smoothing.enabled)
+            {
+                SetSmoothedTarget(as.ampSmoothing, ampMul);
+                ampMul = StepSmoothedParam(as.ampSmoothing);
             }
             frame.ampMul = ampMul;
         }
