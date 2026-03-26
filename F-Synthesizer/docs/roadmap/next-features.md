@@ -15,7 +15,7 @@
 
 ---
 
-## Tier A-1: Tone Preview スペクトラムビューア
+## Tier A-1: Tone Preview スペクトラムビューア(完了)
 
 ### 目的
 

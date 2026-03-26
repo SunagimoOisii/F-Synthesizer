@@ -652,7 +652,10 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Noise) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"noise\": \"" << NoiseTypeToString(v.noise) << "\"\n";
+            WriteIndent(out, indent + 2); out << "\"noise\": \"" << NoiseTypeToString(v.noise) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << "\n";
         }
         else if constexpr (std::is_same_v<T, FmConfig>)
         {

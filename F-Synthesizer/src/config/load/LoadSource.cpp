@@ -241,6 +241,14 @@ bool DrumSchemaValue(const DrumConfig& drum, const SourceParameterSchemaEntry& e
     return false;
 }
 
+bool NoiseSchemaValue(const NoiseConfig& noise, const SourceParameterSchemaEntry& e, double& outValue)
+{
+    if (std::string_view(e.id) == "noise") { outValue = static_cast<double>(noise.noise); return true; }
+    if (std::string_view(e.id) == "filterCutoffHz") { outValue = noise.filterCutoffHz; return true; }
+    if (std::string_view(e.id) == "filterResonance") { outValue = noise.filterResonance; return true; }
+    return false;
+}
+
 bool IsDrumOptionalWhenNonPositive(std::string_view id)
 {
     return id == "baseFreq"
@@ -253,7 +261,7 @@ bool IsDrumOptionalWhenNonPositive(std::string_view id)
         || id == "lpCut";
 }
 
-bool ValidateNoiseBySchema(NoiseType noise, std::string& err)
+bool ValidateNoiseBySchema(const NoiseConfig& noise, std::string& err)
 {
     const SourceParameterSchemaEntry* schema = nullptr;
     size_t schemaCount = 0;
@@ -263,14 +271,21 @@ bool ValidateNoiseBySchema(NoiseType noise, std::string& err)
         return false;
     }
 
-    const SourceParameterSchemaEntry& e = schema[0];
-    if (std::string_view(e.id) != "noise")
+    for (size_t i = 0; i < schemaCount; i++)
     {
-        err = "noise schema has unknown id: " + std::string(e.id);
-        return false;
+        const SourceParameterSchemaEntry& e = schema[i];
+        double value = 0.0;
+        if (!NoiseSchemaValue(noise, e, value))
+        {
+            err = "noise schema has unknown id: " + std::string(e.id);
+            return false;
+        }
+        if (!ValidateSchemaRange("noise", e, value, false, err))
+        {
+            return false;
+        }
     }
-    const double value = static_cast<double>(noise);
-    return ValidateSchemaRange("noise", e, value, false, err);
+    return true;
 }
 
 bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err)
@@ -833,11 +848,31 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
             err = "invalid noise: " + *noise;
             return false;
         }
-        if (!ValidateNoiseBySchema(n, err))
+        NoiseConfig nz{};
+        nz.noise = n;
+        if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+        {
+            FilterMode mode{};
+            if (!TryParseFilterMode(*v, mode))
+            {
+                err = "invalid noise.filterMode: " + *v;
+                return false;
+            }
+            nz.filterMode = mode;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
+        {
+            nz.filterCutoffHz = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
+        {
+            nz.filterResonance = *v;
+        }
+        if (!ValidateNoiseBySchema(nz, err))
         {
             return false;
         }
-        outSource = NoiseConfig{ n };
+        outSource = nz;
         return true;
     }
     case SourceKind::Fm:

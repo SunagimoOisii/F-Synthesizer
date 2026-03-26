@@ -199,9 +199,15 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(fs.filter, fm->filterResonance);
         ResetFilterState(fs.filter);
     }
-    else if (std::holds_alternative<NoiseConfig>(cfg.source))
+    else if (const auto* noise = std::get_if<NoiseConfig>(&cfg.source))
     {
         voices.sourceState[i] = NoiseVoiceState{};
+        auto& ns = std::get<NoiseVoiceState>(voices.sourceState[i]);
+        SetFilterSampleRate(ns.filter, sampleRate);
+        SetFilterMode(ns.filter, noise->filterMode);
+        SetFilterCutoffHz(ns.filter, noise->filterCutoffHz);
+        SetFilterResonance(ns.filter, noise->filterResonance);
+        ResetFilterState(ns.filter);
     }
     else if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
     {

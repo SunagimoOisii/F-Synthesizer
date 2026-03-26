@@ -36,7 +36,7 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
         SourceKind::Noise,
         "noise",
         "noise",
-        SourceCapability{ false, true, false, false, true, false, false },
+        SourceCapability{ false, true, true, false, true, false, false },
         SourceLifecyclePolicy{ SourceLifecycleRetrigger::Restart, SourceLifecycleSteal::Oldest, true, false }
     },
     {
@@ -91,8 +91,10 @@ constexpr std::array<SourceParameterSchemaEntry, 9> kAnalogParameterSchema{ {
     { "driftRateHz", SourceParameterType::Float, 0.01, 2.0, 0.3 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 1> kNoiseParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 3> kNoiseParameterSchema{ {
     { "noise", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
+    { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {

@@ -40,7 +40,10 @@ struct FmVoiceState
     FilterInstance filter;
 };
 
-struct NoiseVoiceState {};
+struct NoiseVoiceState
+{
+    FilterInstance filter;
+};
 
 struct DrumVoiceState
 {

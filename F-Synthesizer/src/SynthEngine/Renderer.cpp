@@ -46,7 +46,11 @@ double SourceFilterResonance(const SourceConfig& src)
     return std::visit([](const auto& sourceCfg) -> double
     {
         using T = std::decay_t<decltype(sourceCfg)>;
-        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, FmConfig> || std::is_same_v<T, AnalogConfig>)
+        if constexpr (
+            std::is_same_v<T, WaveformConfig> ||
+            std::is_same_v<T, FmConfig> ||
+            std::is_same_v<T, AnalogConfig> ||
+            std::is_same_v<T, NoiseConfig>)
         {
             return sourceCfg.filterResonance;
         }
@@ -320,6 +324,8 @@ void RenderAnalogSource(
 void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)
 {
     frame.sample = SampleNoise(src.noise);
+    frame.shaperKind = CommonShaperKind::BiquadFilter;
+    frame.shaperCutoffHz = src.filterCutoffHz;
 }
 
 void RenderFmSource(
