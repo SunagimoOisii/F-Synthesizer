@@ -65,6 +65,24 @@ bool ParseEffectsObject(const std::string& text, AppConfig& cfg, std::string& er
         if (auto v = ReadJSONDouble(obj, "feedback")) cfg.masterEffects.chorus.feedback = std::clamp(*v, 0.0, 0.9);
     }
 
+    if (!ExtractObjectForKey(effectsObj, "bitCrusher", obj, found, err))
+    {
+        return false;
+    }
+    if (found)
+    {
+        if (auto v = ReadJSONInt(obj, "bits")) cfg.masterEffects.bitCrusher.bits = std::clamp(*v, 1, 16);
+    }
+
+    if (!ExtractObjectForKey(effectsObj, "sampleRateReducer", obj, found, err))
+    {
+        return false;
+    }
+    if (found)
+    {
+        if (auto v = ReadJSONDouble(obj, "ratio")) cfg.masterEffects.sampleRateReducer.ratio = std::clamp(*v, 0.0, 1.0);
+    }
+
     return true;
 }
 } // namespace

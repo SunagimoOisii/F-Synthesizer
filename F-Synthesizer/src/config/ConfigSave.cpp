@@ -69,6 +69,12 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     out << "      \"depthMs\": " << config.masterEffects.chorus.depthMs << ",\n";
     out << "      \"rateHz\": " << config.masterEffects.chorus.rateHz << ",\n";
     out << "      \"feedback\": " << config.masterEffects.chorus.feedback << "\n";
+    out << "    },\n";
+    out << "    \"bitCrusher\": {\n";
+    out << "      \"bits\": " << config.masterEffects.bitCrusher.bits << "\n";
+    out << "    },\n";
+    out << "    \"sampleRateReducer\": {\n";
+    out << "      \"ratio\": " << config.masterEffects.sampleRateReducer.ratio << "\n";
     out << "    }\n";
     out << "  }\n";
     out << "}\n";

@@ -210,11 +210,25 @@ struct ChorusEffectConfig
     double feedback = 0.08;
 };
 
+struct BitCrusherEffectConfig
+{
+    // 1..16（16でバイパス）
+    int bits = 16;
+};
+
+struct SampleRateReducerEffectConfig
+{
+    // 0..1（1.0でバイパス）
+    double ratio = 1.0;
+};
+
 struct MasterEffectConfig
 {
     ReverbEffectConfig reverb{};
     DelayEffectConfig delay{};
     ChorusEffectConfig chorus{};
+    BitCrusherEffectConfig bitCrusher{};
+    SampleRateReducerEffectConfig sampleRateReducer{};
 };
 
 void RenderMIDIEvents(

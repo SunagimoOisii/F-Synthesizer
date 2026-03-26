@@ -105,6 +105,21 @@ int ClampDelaySamples(double sec, int sampleRate, int maxSamples)
     return std::clamp(s, 1, (std::max)(1, maxSamples - 1));
 }
 
+double QuantizeBitDepth(double sample, int bits)
+{
+    const int clampedBits = std::clamp(bits, 1, 16);
+    if (clampedBits >= 16)
+    {
+        return sample;
+    }
+
+    const int levels = 1 << clampedBits;
+    const double step = 2.0 / static_cast<double>((std::max)(1, levels - 1));
+    const double clamped = std::clamp(sample, -1.0, 1.0);
+    const double normalized = (clamped + 1.0) / step;
+    return std::clamp(std::round(normalized) * step - 1.0, -1.0, 1.0);
+}
+
 void EnsureEffectBuffers(RenderState& state, int sampleRate)
 {
     const int delayLen = (std::max)(sampleRate * 4, 1);
@@ -266,11 +281,51 @@ void ApplyReverb(RenderState& state, double inL, double inR, double& outL, doubl
     outR = inR * (1.0 - mix) + wetR * mix;
 }
 
+void ApplyRetroEffects(RenderState& state, double inL, double inR, double& outL, double& outR)
+{
+    outL = inL;
+    outR = inR;
+
+    const double ratio = std::clamp(state.effects.sampleRateReducer.ratio, 0.0, 1.0);
+    if (ratio < 1.0)
+    {
+        const int holdInterval = (std::max)(1, static_cast<int>(std::round(1.0 / (std::max)(ratio, 1e-6))));
+        if (state.sampleRateReduceCounter <= 0)
+        {
+            state.sampleRateReduceHoldL = outL;
+            state.sampleRateReduceHoldR = outR;
+            state.sampleRateReduceCounter = holdInterval - 1;
+        }
+        else
+        {
+            state.sampleRateReduceCounter--;
+        }
+
+        outL = state.sampleRateReduceHoldL;
+        outR = state.sampleRateReduceHoldR;
+    }
+    else
+    {
+        state.sampleRateReduceCounter = 0;
+    }
+
+    const int bits = std::clamp(state.effects.bitCrusher.bits, 1, 16);
+    if (bits < 16)
+    {
+        outL = QuantizeBitDepth(outL, bits);
+        outR = QuantizeBitDepth(outR, bits);
+    }
+}
+
 StereoFrame ApplyMasterEffects(RenderState& state, int sampleRate, StereoFrame in)
 {
+    double l0 = 0.0;
+    double r0 = 0.0;
+    ApplyRetroEffects(state, in.left, in.right, l0, r0);
+
     double l1 = 0.0;
     double r1 = 0.0;
-    ApplyChorus(state, sampleRate, in.left, in.right, l1, r1);
+    ApplyChorus(state, sampleRate, l0, r0, l1, r1);
 
     double l2 = 0.0;
     double r2 = 0.0;

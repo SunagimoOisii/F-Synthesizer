@@ -167,6 +167,9 @@ struct RenderState
     std::vector<double> chorusBufferR{};
     size_t chorusWrite = 0;
     double chorusPhase = 0.0;
+    int sampleRateReduceCounter = 0;
+    double sampleRateReduceHoldL = 0.0;
+    double sampleRateReduceHoldR = 0.0;
     bool hasAnySolo = false;
     std::vector<uint8_t> cleanupKeepScratch{};
 };
