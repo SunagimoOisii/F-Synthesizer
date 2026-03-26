@@ -313,7 +313,7 @@ enum との対応順が一致していることを確認する。
 
 ---
 
-## Tier D-1: LFO delay + fade-in
+## Tier D-1: LFO delay + fade-in(完了)
 
 ### 目的
 

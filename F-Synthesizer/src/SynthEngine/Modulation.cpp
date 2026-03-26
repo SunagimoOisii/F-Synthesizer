@@ -50,6 +50,7 @@ double SampleLfoWave(LfoWave wave, double phase)
 void ResetModulationState(ModulationRuntimeState& state)
 {
     state.lfo1Phase = 0.0;
+    state.lfo1ElapsedSec = 0.0;
     state.env2 = ADSRState{};
     state.env2Value = 0.0;
 }
@@ -57,6 +58,7 @@ void ResetModulationState(ModulationRuntimeState& state)
 void NoteOnModulation(ModulationRuntimeState& state, const ModulationConfig& cfg)
 {
     NoteOn(state.env2);
+    state.lfo1ElapsedSec = 0.0;
     if (cfg.lfo1.keySync)
     {
         state.lfo1Phase = 0.0;
@@ -68,17 +70,33 @@ void NoteOffModulation(ModulationRuntimeState& state)
     NoteOff(state.env2);
 }
 
-double StepLfoSample(double& phase, const LfoConfig& lfo, double deltaTimeSec)
+double StepLfoSample(ModulationRuntimeState& state, const LfoConfig& lfo, double deltaTimeSec)
 {
+    state.lfo1ElapsedSec += deltaTimeSec;
+
+    const double delayEndSec = (std::max)(0.0, lfo.delayMs) * 0.001;
+    if (state.lfo1ElapsedSec < delayEndSec)
+    {
+        return 0.0;
+    }
+
     const double rate = std::clamp(lfo.rateHz, 0.0, 100.0);
-    phase += (rate * deltaTimeSec);
-    double raw = SampleLfoWave(lfo.wave, phase);
+    state.lfo1Phase += (rate * deltaTimeSec);
+    double raw = SampleLfoWave(lfo.wave, state.lfo1Phase);
     if (!lfo.bipolar)
     {
         // unipolar 指定では -1..1 を 0..1 へ変換してから depth を適用する。
         raw = (raw * 0.5) + 0.5;
     }
     raw *= std::clamp(lfo.depth, 0.0, 1.0);
+
+    const double fadeTotalSec = (std::max)(0.0, lfo.fadeMs) * 0.001;
+    if (fadeTotalSec > 0.0)
+    {
+        const double activeElapsedSec = state.lfo1ElapsedSec - delayEndSec;
+        const double fadeFactor = std::clamp(activeElapsedSec / fadeTotalSec, 0.0, 1.0);
+        raw *= fadeFactor;
+    }
     return raw;
 }
 
@@ -140,7 +158,7 @@ ModulationResult EvaluateModulation(
         return out;
     }
 
-    double lfo1 = useLfo1 ? StepLfoSample(state.lfo1Phase, cfg.lfo1, deltaTimeSec) : 0.0;
+    double lfo1 = useLfo1 ? StepLfoSample(state, cfg.lfo1, deltaTimeSec) : 0.0;
     const double env2 = useEnv2 ? StepEnv2Sample(state, cfg.env2, deltaTimeSec) : 0.0;
     const double velocity = useVelocity ? std::clamp(input.velGain, 0.0, 1.0) : 0.0;
     const double channelPressure = useChannelPressure ? std::clamp(input.channelPressure, 0.0, 1.0) : 0.0;

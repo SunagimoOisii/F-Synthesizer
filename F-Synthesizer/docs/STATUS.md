@@ -7,7 +7,7 @@ Branch: `main`
 
 ## Current
 
-- 優先: `Tier C`（LFO拡張） / `gui-help`（実機確認） / 軽量運用の維持
+- 優先: `Tier D`（modulation表現拡張） / `gui-help`（実機確認） / 軽量運用の維持
 - 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
 - `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
 - Renderer 内部を `source render -> common shaper -> modulation apply -> mix` へ分離し、`SourceRenderFrame` で段間データを受け渡す構造へ整理
@@ -30,6 +30,7 @@ Branch: `main`
 - Tier C-1 実装: `LfoWave` に `Square/Saw/SampleAndHold` を追加し、SynthEngine波形サンプル/Config parse+save/GUI LFO1 wave コンボを拡張
 - Tier C-2 実装: `LfoConfig.keySync` と `NoteOnModulation(state, cfg)` を追加し、`keySync=true` 時はノートオンで `lfo1Phase=0` にリセット（Load/Save/GUI/比較関数まで反映）
 - Tier C-3 実装: `ModSource::ModWheel` を追加し、`EvaluateModulation` で `input.modwheel(0..1)` を独立ソースとして評価可能化（既存の `lfo1 *= (1+modwheel)` は後方互換として維持）
+- Tier D-1 実装: `LfoConfig` に `delayMs/fadeMs` と runtime の `lfo1ElapsedSec` を追加し、`StepLfoSample` で delay/fade-in を適用（Load/Save/GUI/比較関数まで反映）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

@@ -23,6 +23,8 @@ bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
     if (auto v = ReadJSONDouble(text, "depth")) lfo.depth = *v;
     if (auto v = ReadJSONBool(text, "bipolar")) lfo.bipolar = *v;
     if (auto v = ReadJSONBool(text, "keySync")) lfo.keySync = *v;
+    if (auto v = ReadJSONDouble(text, "delayMs")) lfo.delayMs = *v;
+    if (auto v = ReadJSONDouble(text, "fadeMs")) lfo.fadeMs = *v;
     return true;
 }
 
@@ -166,6 +168,16 @@ bool ValidateModulation(
     if (modulation.lfo1.depth < 0.0 || modulation.lfo1.depth > 1.0)
     {
         err = prefix + ".lfo1.depth must be in range 0.0..1.0";
+        return false;
+    }
+    if (modulation.lfo1.delayMs < 0.0 || modulation.lfo1.delayMs > 2000.0)
+    {
+        err = prefix + ".lfo1.delayMs must be in range 0.0..2000.0";
+        return false;
+    }
+    if (modulation.lfo1.fadeMs < 0.0 || modulation.lfo1.fadeMs > 2000.0)
+    {
+        err = prefix + ".lfo1.fadeMs must be in range 0.0..2000.0";
         return false;
     }
     if (modulation.env2.attackSec < 0.0 || modulation.env2.decaySec < 0.0 || modulation.env2.releaseSec < 0.0)

@@ -320,6 +320,12 @@ bool DrawChannelEditor(
                 "オフの場合は free-run（位相を引き継ぐ）です。",
                 "");
         }
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("LFO1 Delay (ms)", modulation.lfo1.delayMs, 0.0f, 2000.0f, "%.1f");
+        if (updateHoverHelp) updateHoverHelp("LFO1 Delay を調整します。", "ノートオン後にLFOが有効になるまでの待機時間が変わります。", nullptr);
+        ImGui::SetNextItemWidth(220.0f);
+        localChanged |= sliderWaveParam("LFO1 Fade (ms)", modulation.lfo1.fadeMs, 0.0f, 2000.0f, "%.1f");
+        if (updateHoverHelp) updateHoverHelp("LFO1 Fade を調整します。", "LFOが最大深さに達するまでの立ち上がり時間が変わります。", nullptr);
 
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Attack", modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
@@ -548,6 +554,8 @@ bool DrawChannelEditor(
             wf->smoothing.filterCutoffTimeMs = std::clamp(wf->smoothing.filterCutoffTimeMs, 0.0, 1000.0);
             wf->modulation.lfo1.rateHz = std::clamp(wf->modulation.lfo1.rateHz, 0.0, 100.0);
             wf->modulation.lfo1.depth = std::clamp(wf->modulation.lfo1.depth, 0.0, 1.0);
+            wf->modulation.lfo1.delayMs = std::clamp(wf->modulation.lfo1.delayMs, 0.0, 2000.0);
+            wf->modulation.lfo1.fadeMs = std::clamp(wf->modulation.lfo1.fadeMs, 0.0, 2000.0);
             wf->modulation.env2.attackSec = std::clamp(wf->modulation.env2.attackSec, 0.0, 10.0);
             wf->modulation.env2.decaySec = std::clamp(wf->modulation.env2.decaySec, 0.0, 10.0);
             wf->modulation.env2.sustainLevel = std::clamp(wf->modulation.env2.sustainLevel, 0.0, 1.0);
@@ -651,6 +659,8 @@ bool DrawChannelEditor(
             analog->smoothing.filterCutoffTimeMs = std::clamp(analog->smoothing.filterCutoffTimeMs, 0.0, 1000.0);
             analog->modulation.lfo1.rateHz = std::clamp(analog->modulation.lfo1.rateHz, 0.0, 100.0);
             analog->modulation.lfo1.depth = std::clamp(analog->modulation.lfo1.depth, 0.0, 1.0);
+            analog->modulation.lfo1.delayMs = std::clamp(analog->modulation.lfo1.delayMs, 0.0, 2000.0);
+            analog->modulation.lfo1.fadeMs = std::clamp(analog->modulation.lfo1.fadeMs, 0.0, 2000.0);
             analog->modulation.env2.attackSec = std::clamp(analog->modulation.env2.attackSec, 0.0, 10.0);
             analog->modulation.env2.decaySec = std::clamp(analog->modulation.env2.decaySec, 0.0, 10.0);
             analog->modulation.env2.sustainLevel = std::clamp(analog->modulation.env2.sustainLevel, 0.0, 1.0);
@@ -807,6 +817,8 @@ bool DrawChannelEditor(
             fm->filterResonance = std::clamp(fm->filterResonance, 0.1, 18.0);
             fm->modulation.lfo1.rateHz = std::clamp(fm->modulation.lfo1.rateHz, 0.0, 100.0);
             fm->modulation.lfo1.depth = std::clamp(fm->modulation.lfo1.depth, 0.0, 1.0);
+            fm->modulation.lfo1.delayMs = std::clamp(fm->modulation.lfo1.delayMs, 0.0, 2000.0);
+            fm->modulation.lfo1.fadeMs = std::clamp(fm->modulation.lfo1.fadeMs, 0.0, 2000.0);
             fm->modulation.env2.attackSec = std::clamp(fm->modulation.env2.attackSec, 0.0, 10.0);
             fm->modulation.env2.decaySec = std::clamp(fm->modulation.env2.decaySec, 0.0, 10.0);
             fm->modulation.env2.sustainLevel = std::clamp(fm->modulation.env2.sustainLevel, 0.0, 1.0);

@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier D-1 の LFO delay/fade は `lfo1ElapsedSec` を runtime state へ持ち、delay中は出力0・fade期間は深さへ乗算する実装とする（`delayMs/fadeMs` は 0..2000ms） | voice 側で別エンベロープを追加して LFO 深さを制御する | 既存LFO/ModMatrix経路を維持しつつ最小変更で自然なビブラート立ち上がりを導入し、旧プリセットは `0ms` 既定で互換維持できるため |
 | 2026-03-26 | Tier C-3 では `ModSource::ModWheel` を mod matrix に追加する一方、既存の `lfo1 *= (1 + modwheel)` 乗算も維持して後方互換を優先する | ModWheel追加にあわせて既存のLFO×modwheel乗算を削除する | 旧プリセットの音変化を避けつつ、新規プリセットでは `modWheel -> destination` の明示ルーティングを使える状態にするため |
 | 2026-03-26 | Tier C-2 の LFO key sync は `LfoConfig.keySync`（デフォルト `false`）で導入し、`NoteOnModulation(state, cfg)` で `true` 時のみ `lfo1Phase=0` を適用する | 既存free-run挙動を全体でkey syncへ変更する | 既存プリセット互換（フィールド未指定時のfree-run維持）を保ちつつ、必要な音色だけノートオン同期を有効化できるようにするため |
 | 2026-03-26 | Tier C-1 の `LfoWave::SampleAndHold` は `floor(phase)` ベースの決定論xorshift生成とし、LFO位相は `StepLfoSample` で連続加算（非wrap保持）してサイクル境界ごとに値を更新する | 既存どおり phase を毎サンプル wrap し続ける | wrap状態では `floor(phase)` が固定化し S&H が変化しないため、仕様どおりのステップ変調を成立させるため |
