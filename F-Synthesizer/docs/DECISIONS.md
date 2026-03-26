@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier D-2（next-features）の hard sync は waveform/analog 共通で `syncPhase` ラップ検出時に `voices.phase=0` を行う実装とし、マスター位相は `phaseInc * hardSyncRatio` で進める | ハードシンク専用の第2オシレータ出力を別途生成してクロスフェードする / sync を modulation destination 経由で疑似再現する | 既存オシレータ経路を大きく崩さず最小変更で同期リセット挙動を導入でき、設定項目も `enabled/ratio` の2軸で直感的に運用できるため |
 | 2026-03-26 | Tier D-1（next-features）の arpeggio は waveform/analog 共通で `voice state` に `arpStep/arpElapsedSec` を持たせ、`pitchMul` 決定後〜`phaseInc` 算出前に `pow(2, semitone/12)` を乗算適用する | arpeggio を別voice再トリガ（擬似シーケンサ）として実装する / modulation matrix に専用 destination を追加して間接制御する | 既存voiceライフサイクルや ADSR を崩さず、最小変更で音程ステップのみを安定追加でき、Load/Save/GUI の設定項目も単純化できるため |
 | 2026-03-26 | Tier C-2（next-features）の ring modulation は waveform/analog 共通で `mainWave *= ((1-mix) + mix * sin(2π*ringPhase))` を採用し、`ringPhase` は voice state で保持・NoteOnでリセットする | ring信号を別オシレータ音として加算する / 共通グローバル位相で全voice共有する | dry/wet 一体の制御で既存音量経路への影響を最小化でき、voice単位位相で発音ごとの再現性（再トリガ時の挙動）を維持できるため |
 | 2026-03-26 | Tier C-1（next-features）の PWM は `ModDestination::PulseWidth` を加算経路（`pulseWidthAdd`）として実装し、最終適用は Renderer で `effectivePW = clamp(base + add, 0.05..0.95)` に統一する | Oscillator 側で modulation 値を直接扱う / Modulation 側で固定クランプして各sourceへ配る | 波形生成器の責務を「位相→波形」に保ちつつ、sourceごとの最終値決定を Renderer に集約でき、waveform/analog の同一ルールで運用できるため |

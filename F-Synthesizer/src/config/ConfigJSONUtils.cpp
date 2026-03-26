@@ -680,6 +680,8 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
             WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
             WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
+            WriteIndent(out, indent + 2); out << "\"hardSyncEnabled\": " << (v.hardSyncEnabled ? "true" : "false") << ",\n";
+            WriteIndent(out, indent + 2); out << "\"hardSyncRatio\": " << v.hardSyncRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";
@@ -704,6 +706,8 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
             WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
             WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
+            WriteIndent(out, indent + 2); out << "\"hardSyncEnabled\": " << (v.hardSyncEnabled ? "true" : "false") << ",\n";
+            WriteIndent(out, indent + 2); out << "\"hardSyncRatio\": " << v.hardSyncRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
             WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";

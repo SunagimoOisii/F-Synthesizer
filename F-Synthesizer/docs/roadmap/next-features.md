@@ -401,7 +401,7 @@ if (ImGui::CollapsingHeader("Arpeggio"))
 
 ---
 
-## Tier D-2: Hard Sync
+## Tier D-2: Hard Sync(完了)
 
 ### 目的
 

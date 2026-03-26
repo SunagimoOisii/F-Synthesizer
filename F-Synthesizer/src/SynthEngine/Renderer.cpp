@@ -265,8 +265,24 @@ void RenderWaveformSource(
     frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
 
-    voices.phase[i] += phaseInc;
-    if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
+    if (src.hardSyncEnabled)
+    {
+        const double syncInc = phaseInc * std::clamp(src.hardSyncRatio, 0.5, 8.0);
+        const double prevSync = ws.syncPhase;
+        ws.syncPhase = WrapPhase(ws.syncPhase + syncInc);
+        if (ws.syncPhase < prevSync)
+        {
+            voices.phase[i] = 0.0;
+        }
+        else
+        {
+            voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
+        }
+    }
+    else
+    {
+        voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
+    }
 }
 
 void RenderAnalogSource(
@@ -363,8 +379,24 @@ void RenderAnalogSource(
     frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
 
-    voices.phase[i] += phaseInc;
-    if (voices.phase[i] >= 1.0) voices.phase[i] -= 1.0;
+    if (src.hardSyncEnabled)
+    {
+        const double syncInc = phaseInc * std::clamp(src.hardSyncRatio, 0.5, 8.0);
+        const double prevSync = as.syncPhase;
+        as.syncPhase = WrapPhase(as.syncPhase + syncInc);
+        if (as.syncPhase < prevSync)
+        {
+            voices.phase[i] = 0.0;
+        }
+        else
+        {
+            voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
+        }
+    }
+    else
+    {
+        voices.phase[i] = WrapPhase(voices.phase[i] + phaseInc);
+    }
 }
 
 void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)

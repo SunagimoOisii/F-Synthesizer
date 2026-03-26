@@ -145,6 +145,7 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(ws.filter, wave->filterResonance);
         ResetFilterState(ws.filter);
 
+        ws.syncPhase = 0.0;
         ws.ringPhase = 0.0;
         ws.arpStep = 0;
         ws.arpElapsedSec = 0.0;
@@ -177,6 +178,7 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(as.filter, analog->filterResonance);
         ResetFilterState(as.filter);
 
+        as.syncPhase = 0.0;
         as.ringPhase = 0.0;
         as.arpStep = 0;
         as.arpElapsedSec = 0.0;

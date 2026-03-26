@@ -69,12 +69,14 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
     },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 11> kWaveformParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 13> kWaveformParameterSchema{ {
     { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
     { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
     { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "subOscLevel", SourceParameterType::Float, 0.0, 2.0, 0.0 },
     { "pulseWidth", SourceParameterType::Float, 0.05, 0.95, 0.5 },
+    { "hardSyncEnabled", SourceParameterType::Int, 0.0, 1.0, 0.0 },
+    { "hardSyncRatio", SourceParameterType::Float, 0.5, 8.0, 2.0 },
     { "ringModEnabled", SourceParameterType::Int, 0.0, 1.0, 0.0 },
     { "ringModRatio", SourceParameterType::Float, 0.125, 16.0, 2.0 },
     { "ringModMix", SourceParameterType::Float, 0.0, 1.0, 1.0 },
@@ -83,12 +85,14 @@ constexpr std::array<SourceParameterSchemaEntry, 11> kWaveformParameterSchema{ {
     { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 13> kAnalogParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 15> kAnalogParameterSchema{ {
     { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
     { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
     { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "subOscLevel", SourceParameterType::Float, 0.0, 2.0, 0.0 },
     { "pulseWidth", SourceParameterType::Float, 0.05, 0.95, 0.5 },
+    { "hardSyncEnabled", SourceParameterType::Int, 0.0, 1.0, 0.0 },
+    { "hardSyncRatio", SourceParameterType::Float, 0.5, 8.0, 2.0 },
     { "ringModEnabled", SourceParameterType::Int, 0.0, 1.0, 0.0 },
     { "ringModRatio", SourceParameterType::Float, 0.125, 16.0, 2.0 },
     { "ringModMix", SourceParameterType::Float, 0.0, 1.0, 1.0 },

@@ -180,6 +180,8 @@ bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEn
     if (std::string_view(e.id) == "unisonSpread") { outValue = wf.unisonSpread; return true; }
     if (std::string_view(e.id) == "subOscLevel") { outValue = wf.subOscLevel; return true; }
     if (std::string_view(e.id) == "pulseWidth") { outValue = wf.pulseWidth; return true; }
+    if (std::string_view(e.id) == "hardSyncEnabled") { outValue = wf.hardSyncEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "hardSyncRatio") { outValue = wf.hardSyncRatio; return true; }
     if (std::string_view(e.id) == "ringModEnabled") { outValue = wf.ringModEnabled ? 1.0 : 0.0; return true; }
     if (std::string_view(e.id) == "ringModRatio") { outValue = wf.ringModRatio; return true; }
     if (std::string_view(e.id) == "ringModMix") { outValue = wf.ringModMix; return true; }
@@ -196,6 +198,8 @@ bool AnalogSchemaValue(const AnalogConfig& analog, const SourceParameterSchemaEn
     if (std::string_view(e.id) == "unisonSpread") { outValue = analog.unisonSpread; return true; }
     if (std::string_view(e.id) == "subOscLevel") { outValue = analog.subOscLevel; return true; }
     if (std::string_view(e.id) == "pulseWidth") { outValue = analog.pulseWidth; return true; }
+    if (std::string_view(e.id) == "hardSyncEnabled") { outValue = analog.hardSyncEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "hardSyncRatio") { outValue = analog.hardSyncRatio; return true; }
     if (std::string_view(e.id) == "ringModEnabled") { outValue = analog.ringModEnabled ? 1.0 : 0.0; return true; }
     if (std::string_view(e.id) == "ringModRatio") { outValue = analog.ringModRatio; return true; }
     if (std::string_view(e.id) == "ringModMix") { outValue = analog.ringModMix; return true; }
@@ -695,6 +699,14 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.pulseWidth = std::clamp(*v, 0.05, 0.95);
         }
+        if (auto v = ReadJSONBool(sourceObjText, "hardSyncEnabled"))
+        {
+            wf.hardSyncEnabled = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "hardSyncRatio"))
+        {
+            wf.hardSyncRatio = std::clamp(*v, 0.5, 8.0);
+        }
         if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
         {
             wf.ringModEnabled = *v;
@@ -852,6 +864,14 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "pulseWidth"))
         {
             analog.pulseWidth = std::clamp(*v, 0.05, 0.95);
+        }
+        if (auto v = ReadJSONBool(sourceObjText, "hardSyncEnabled"))
+        {
+            analog.hardSyncEnabled = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "hardSyncRatio"))
+        {
+            analog.hardSyncRatio = std::clamp(*v, 0.5, 8.0);
         }
         if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
         {

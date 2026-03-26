@@ -122,6 +122,8 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.unisonSpread, bv->unisonSpread) &&
                     NearlyEq(av.subOscLevel, bv->subOscLevel) &&
                     NearlyEq(av.pulseWidth, bv->pulseWidth) &&
+                    av.hardSyncEnabled == bv->hardSyncEnabled &&
+                    NearlyEq(av.hardSyncRatio, bv->hardSyncRatio) &&
                     av.ringModEnabled == bv->ringModEnabled &&
                     NearlyEq(av.ringModRatio, bv->ringModRatio) &&
                     NearlyEq(av.ringModMix, bv->ringModMix) &&
@@ -141,6 +143,8 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.unisonSpread, bv->unisonSpread) &&
                     NearlyEq(av.subOscLevel, bv->subOscLevel) &&
                     NearlyEq(av.pulseWidth, bv->pulseWidth) &&
+                    av.hardSyncEnabled == bv->hardSyncEnabled &&
+                    NearlyEq(av.hardSyncRatio, bv->hardSyncRatio) &&
                     av.ringModEnabled == bv->ringModEnabled &&
                     NearlyEq(av.ringModRatio, bv->ringModRatio) &&
                     NearlyEq(av.ringModMix, bv->ringModMix) &&

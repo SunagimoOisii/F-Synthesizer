@@ -35,6 +35,7 @@ Branch: `main`
 - Tier C-1 実装（next-features）: Waveform/Analog の square に `pulseWidth`（0.05..0.95）を追加し、`ModDestination::PulseWidth` で LFO/Env2 から PWM を加算制御可能化（Oscillator/Renderer/Load/Save/Schema/GUI 反映）
 - Tier C-2 実装（next-features）: Waveform/Analog に ring modulation（`ringModEnabled/ringModRatio/ringModMix`）を追加し、voice state の `ringPhase` を使って `mainWave` へ乗算適用（Renderer/Voices/Load/Save/Schema/GUI 反映）
 - Tier D-1 実装（next-features）: Waveform/Analog に arpeggio（`enabled/rateHz/steps/semitones[8]`）を追加し、voice state の `arpStep/arpElapsedSec` で step進行しながら `pitchMul` へ半音オフセットを乗算適用（Renderer/Voices/Load/Save/GUI/比較関数 反映）
+- Tier D-2 実装（next-features）: Waveform/Analog に hard sync（`hardSyncEnabled/hardSyncRatio`）を追加し、voice state の `syncPhase` ラップ時にスレーブ位相 `voices.phase` をリセットして倍音を生成（Renderer/Voices/Load/Save/Schema/GUI/比較関数 反映）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

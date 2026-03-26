@@ -561,6 +561,7 @@ bool DrawChannelEditor(
             wf->unisonSpread = std::clamp(wf->unisonSpread, 0.0, 1.0);
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
             wf->pulseWidth = std::clamp(wf->pulseWidth, 0.05, 0.95);
+            wf->hardSyncRatio = std::clamp(wf->hardSyncRatio, 0.5, 8.0);
             wf->ringModRatio = std::clamp(wf->ringModRatio, 0.125, 16.0);
             wf->ringModMix = std::clamp(wf->ringModMix, 0.0, 1.0);
             wf->arpeggio.rateHz = std::clamp(wf->arpeggio.rateHz, 0.5, 40.0);
@@ -606,6 +607,12 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Sub Osc Level", wf->subOscLevel, 0.0f, 2.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
+            changed |= ImGui::Checkbox("Hard Sync##wave", &wf->hardSyncEnabled);
+            if (wf->hardSyncEnabled)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Sync Ratio##wave", wf->hardSyncRatio, 0.5f, 8.0f, "%.3f");
+            }
             changed |= ImGui::Checkbox("Ring Mod", &wf->ringModEnabled);
             if (wf->ringModEnabled)
             {
@@ -706,6 +713,7 @@ bool DrawChannelEditor(
             analog->unisonSpread = std::clamp(analog->unisonSpread, 0.0, 1.0);
             analog->subOscLevel = std::clamp(analog->subOscLevel, 0.0, 2.0);
             analog->pulseWidth = std::clamp(analog->pulseWidth, 0.05, 0.95);
+            analog->hardSyncRatio = std::clamp(analog->hardSyncRatio, 0.5, 8.0);
             analog->ringModRatio = std::clamp(analog->ringModRatio, 0.125, 16.0);
             analog->ringModMix = std::clamp(analog->ringModMix, 0.0, 1.0);
             analog->arpeggio.rateHz = std::clamp(analog->arpeggio.rateHz, 0.5, 40.0);
@@ -754,6 +762,12 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Sub Osc Level", analog->subOscLevel, 0.0f, 2.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
+            changed |= ImGui::Checkbox("Hard Sync##analog", &analog->hardSyncEnabled);
+            if (analog->hardSyncEnabled)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Sync Ratio##analog", analog->hardSyncRatio, 0.5f, 8.0f, "%.3f");
+            }
             changed |= ImGui::Checkbox("Ring Mod", &analog->ringModEnabled);
             if (analog->ringModEnabled)
             {

@@ -45,6 +45,8 @@ struct WaveformConfig
     double subOscLevel = 0.0;
     // Square 波のパルス幅（0.05..0.95）。
     double pulseWidth = 0.5;
+    bool hardSyncEnabled = false;
+    double hardSyncRatio = 2.0;
     bool ringModEnabled = false;
     double ringModRatio = 2.0;
     double ringModMix = 1.0;
@@ -85,6 +87,8 @@ struct AnalogConfig
     double unisonSpread = 0.0;
     double subOscLevel = 0.0;
     double pulseWidth = 0.5;
+    bool hardSyncEnabled = false;
+    double hardSyncRatio = 2.0;
     bool ringModEnabled = false;
     double ringModRatio = 2.0;
     double ringModMix = 1.0;
