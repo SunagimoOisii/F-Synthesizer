@@ -116,6 +116,7 @@ ModulationResult EvaluateModulation(
     bool useVelocity = false;
     bool useChannelPressure = false;
     bool usePolyPressure = false;
+    bool useModWheel = false;
 
     // 目的: 未使用ソースのStep計算を省いて、1sampleあたりの固定コストを減らす。
     // 前提: route有効判定はこの関数呼び出し中に変化しない。
@@ -132,6 +133,7 @@ ModulationResult EvaluateModulation(
         useVelocity = useVelocity || route.source == ModSource::Velocity;
         useChannelPressure = useChannelPressure || route.source == ModSource::ChannelPressure;
         usePolyPressure = usePolyPressure || route.source == ModSource::PolyPressure;
+        useModWheel = useModWheel || route.source == ModSource::ModWheel;
     }
     if (!hasActiveRoute)
     {
@@ -143,6 +145,7 @@ ModulationResult EvaluateModulation(
     const double velocity = useVelocity ? std::clamp(input.velGain, 0.0, 1.0) : 0.0;
     const double channelPressure = useChannelPressure ? std::clamp(input.channelPressure, 0.0, 1.0) : 0.0;
     const double polyPressure = usePolyPressure ? std::clamp(input.polyPressure, 0.0, 1.0) : 0.0;
+    const double modWheel = useModWheel ? std::clamp(input.modwheel, 0.0, 1.0) : 0.0;
     lfo1 *= (1.0 + std::clamp(input.modwheel, 0.0, 1.0));
 
     for (const ModRoute& route : cfg.matrix.routes)
@@ -159,6 +162,7 @@ ModulationResult EvaluateModulation(
         case ModSource::Velocity: srcValue = velocity; break;
         case ModSource::ChannelPressure: srcValue = channelPressure; break;
         case ModSource::PolyPressure: srcValue = polyPressure; break;
+        case ModSource::ModWheel: srcValue = modWheel; break;
         case ModSource::None:
         default:
             break;

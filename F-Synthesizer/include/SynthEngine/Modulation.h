@@ -29,7 +29,8 @@ enum class ModSource
     Env2,
     Velocity,
     ChannelPressure,
-    PolyPressure
+    PolyPressure,
+    ModWheel
 };
 
 enum class ModDestination

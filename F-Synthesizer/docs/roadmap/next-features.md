@@ -216,7 +216,7 @@ updateHoverHelp(
 
 ---
 
-## Tier C-3: ModSource::ModWheel を Mod Matrix に追加
+## Tier C-3: ModSource::ModWheel を Mod Matrix に追加(完了)
 
 ### 目的
 

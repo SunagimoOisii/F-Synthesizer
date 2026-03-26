@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier C-3 では `ModSource::ModWheel` を mod matrix に追加する一方、既存の `lfo1 *= (1 + modwheel)` 乗算も維持して後方互換を優先する | ModWheel追加にあわせて既存のLFO×modwheel乗算を削除する | 旧プリセットの音変化を避けつつ、新規プリセットでは `modWheel -> destination` の明示ルーティングを使える状態にするため |
 | 2026-03-26 | Tier C-2 の LFO key sync は `LfoConfig.keySync`（デフォルト `false`）で導入し、`NoteOnModulation(state, cfg)` で `true` 時のみ `lfo1Phase=0` を適用する | 既存free-run挙動を全体でkey syncへ変更する | 既存プリセット互換（フィールド未指定時のfree-run維持）を保ちつつ、必要な音色だけノートオン同期を有効化できるようにするため |
 | 2026-03-26 | Tier C-1 の `LfoWave::SampleAndHold` は `floor(phase)` ベースの決定論xorshift生成とし、LFO位相は `StepLfoSample` で連続加算（非wrap保持）してサイクル境界ごとに値を更新する | 既存どおり phase を毎サンプル wrap し続ける | wrap状態では `floor(phase)` が固定化し S&H が変化しないため、仕様どおりのステップ変調を成立させるため |
 | 2026-03-26 | modulation destination に `filterResonance` を追加し、`resonanceMul` を common shaper 適用時に乗算する設計とする | フィルタ共振の時間変化を CC のみで扱い、mod matrix には追加しない | Env2/LFO/Pressure から共振を直接駆動できるようにして、既存の filter cutoff modulation と同一経路で一貫実装するため |

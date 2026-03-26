@@ -229,6 +229,11 @@ bool TryParseModSource(const std::string& name, ModSource& outSource)
         outSource = ModSource::PolyPressure;
         return true;
     }
+    if (name == "modWheel")
+    {
+        outSource = ModSource::ModWheel;
+        return true;
+    }
     return false;
 }
 
@@ -355,6 +360,7 @@ std::string ModSourceToString(ModSource source)
     case ModSource::Velocity: return "velocity";
     case ModSource::ChannelPressure: return "channelPressure";
     case ModSource::PolyPressure: return "polyPressure";
+    case ModSource::ModWheel: return "modWheel";
     }
     return "none";
 }
