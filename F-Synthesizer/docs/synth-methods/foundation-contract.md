@@ -129,12 +129,13 @@
 
 - 方式横断の適用方針:
   - `waveform`: `適用済み`（amp/pitch/filterCutoff を source 内 smoothing で適用）
+  - `analog`: `適用済み`（waveform と同一契約で amp/pitch/filterCutoff を source 内 smoothing で適用）
   - `fm`: `未適用`（読み込み/保存/GUIで smoothing 項目を持たない）
   - `noise`: `未適用`（読み込み/保存/GUIで smoothing 項目を持たない）
   - `drum` / `drumkit`: `未適用`（one-shot アタック保護のため非適用）
 - Config 契約:
-  - `source.smoothing` は `source.type=waveform` のみ受理する。
-  - `source.type` が `fm/noise/drum/drumkit` の場合、`source.smoothing` はロード時エラーにする（黙殺しない）。
+  - `source.smoothing` は `source.type=waveform/analog` で受理する。
+  - `source.type` が `fm/noise/drum/drumkit/psg` の場合、`source.smoothing` はロード時エラーにする（黙殺しない）。
 - 安全制約:
   - one-shot 系（drum/drumkit）はアタック破壊を避けるため smoothing 非適用を既定とする。
 - 再検討条件:
@@ -148,7 +149,7 @@
 - 2.4 Modulation Routing: 対応済み（`fm.index` phase 1）
 - 2.5 Voice Lifecycle: 対応済み（retrigger/steal/one-shot 一致）
 - 2.6 Test Harness: 個人運用の軽量手順へ圧縮
-- 2.7 Parameter Smoothing: 対応済み（waveform限定 + 非対応方式はロード拒否）
+- 2.7 Parameter Smoothing: 対応済み（waveform/analog 対応 + 非対応方式はロード拒否）
 
 履歴監査（アーカイブ）:
 - `docs-archive/synth-methods/foundation-audit-2026-03-05.md`

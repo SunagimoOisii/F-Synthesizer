@@ -726,6 +726,42 @@ if (state.UIModeTab == 0)
         ImGui::TextDisabled("Song export settings are in Music tab.");
         ImGui::EndDisabled();
 
+        // Tone Preview 波形ビューア: 再生中は frameCursor を窓の中心に追従し、
+        // エンベロープの振幅変化（アタック/サステイン/リリース）がそのまま波高に反映される。
+        if (state.previewRenderedSound)
+        {
+            const auto& src = state.previewRenderedSound->dataL.empty()
+                ? state.previewRenderedSound->data
+                : state.previewRenderedSound->dataL;
+            if (!src.empty())
+            {
+                constexpr int kBufSize = 256;
+                constexpr int kWindowSamples = 2048;
+                static float wfBuf[kBufSize];
+                const int srcSize = static_cast<int>(src.size());
+
+                // 再生中: cursor を窓の中心に / 停止中: 先頭固定
+                int windowStart = 0;
+                if (state.playback.playing.load(std::memory_order_relaxed))
+                {
+                    const int cursor = static_cast<int>(
+                        state.playback.frameCursor.load(std::memory_order_relaxed));
+                    windowStart = std::clamp(cursor - kWindowSamples / 2, 0,
+                                             std::max(0, srcSize - kWindowSamples));
+                }
+                const int total = std::min(srcSize - windowStart, kWindowSamples);
+
+                for (int i = 0; i < kBufSize; i++)
+                {
+                    const int idx = windowStart + std::clamp(i * total / kBufSize, 0, total - 1);
+                    wfBuf[i] = static_cast<float>(src[idx]);
+                }
+                ImGui::Separator();
+                ImGui::TextDisabled("Waveform (Tone Preview)");
+                ImGui::PlotLines("##wf", wfBuf, kBufSize, 0, nullptr, -1.0f, 1.0f, ImVec2(-1.0f, 64.0f));
+            }
+        }
+
         ImGui::TableSetColumnIndex(1);
         const bool channelEditorChanged = DrawChannelEditor(
             state,

@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-26 (Tier2 sound quality/playability 実装完了・roadmap破棄)
+Last Updated: 2026-03-26 (波形ビューア追加: Sound左カラムに Tone Preview 波形をオシロスコープ風表示)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -20,6 +20,7 @@ Branch: `main`
 - Tier2実装: stereoレンダリング（L/R分離, pan equal-power）, master effect layer（chorus/delay/reverb）, PitchBend RPN(0)対応を追加
 - Run/Config境界に `masterEffects` を追加し、delayの tempoSync を tempo map 追従で処理
 - Tier2 roadmap（`docs/roadmap/tier2-sound-quality-and-playability.md`）は完了に伴い破棄し、契約情報を正本ドキュメントへ移管
+- Sound タブ左カラム末尾に波形ビューア追加: `previewRenderedSound` の PCM を 256 点にダウンサンプリングして `ImGui::PlotLines()` 表示、再生中は `frameCursor` でカーソル縦線をオーバーレイ（`MainWindow.inl` のみ変更、新規ファイルなし）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
