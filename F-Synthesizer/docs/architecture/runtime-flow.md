@@ -146,6 +146,14 @@ flowchart TD
 - 影響範囲: app-core境界の契約が明確化され、delay tempoSync の追従性とPreview/Exportの一貫性を維持できる。
 - 関連ファイル: include/AppCore.h, include/core/RenderGateway.h, src/app/RunExecution.cpp, src/core/RenderGateway.cpp, src/SynthEngine/Engine.cpp
 
+#### 2026-03-26: master effect チェーン順序を固定
+- カテゴリ: 実行フロー/キャンセル
+- 背景: effect種類が増えると、適用順が未定義のままではプリセット再現性とAB比較の前提が崩れやすい。
+- 判断: 最終段は `SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb` の固定順で処理する。
+- 代替案: 実装依存順のまま維持する、または任意順にしてプリセット側へ責務を寄せる案。
+- 影響範囲: GUI表示順・Config契約・Engine処理順が一致し、音色比較と不具合切り分けが容易になる。
+- 関連ファイル: src/SynthEngine/Engine.cpp, src/gui/main/MainWindow.inl, src/config/load/LoadTopLevel.cpp, src/config/ConfigSave.cpp
+
 ### MIDI時間変換
 
 #### 2026-02-25: 同tickイベント順序を Control -> NoteOff -> NoteOn に固定

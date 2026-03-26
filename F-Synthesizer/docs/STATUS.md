@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-26 (波形ビューア追加: Sound左カラムに Tone Preview 波形をオシロスコープ風表示)
+Last Updated: 2026-03-26 (週次メンテ: masterEffects構成と表現拡張の文書同期)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -17,15 +17,16 @@ Branch: `main`
 - architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
 - waveform / fm の modulation route 編集GUIを `0..7` まで拡張（サマリ表示含む）
 - Tier1 expression foundation（MIDI CC拡張 / sustain hold / velocity mod source）を実装完了し、tier1 roadmap を破棄
-- Tier2実装: stereoレンダリング（L/R分離, pan equal-power）, master effect layer（chorus/delay/reverb）, PitchBend RPN(0)対応を追加
-- Run/Config境界に `masterEffects` を追加し、delayの tempoSync を tempo map 追従で処理
+- Tier2実装: stereoレンダリング（L/R分離, pan equal-power）, PitchBend RPN(0)対応を追加
+- master effect layer を `SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb` へ拡張し、Run/Config境界の `masterEffects` で一括制御（delay tempoSync は tempo map 追従）
+- 表現拡張として Aftertouch（Channel Pressure / Poly Pressure）を追加
 - Tier2 roadmap（`docs/roadmap/tier2-sound-quality-and-playability.md`）は完了に伴い破棄し、契約情報を正本ドキュメントへ移管
 - Sound タブ左カラム末尾に波形ビューア追加: `previewRenderedSound` の PCM を 256 点にダウンサンプリングして `ImGui::PlotLines()` 表示、再生中は `frameCursor` でカーソル縦線をオーバーレイ（`MainWindow.inl` のみ変更、新規ファイルなし）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
 
-1. `tier2-regression`: pan端点, effect端点, RPN±12 の回帰チェックを軽量スモークへ組み込む
+1. `tier2-regression`: pan端点, effect端点（SampleRateReducer/BitCrusher/Flanger含む）, RPN±12 の回帰チェックを軽量スモークへ組み込む
 2. `sub-verify`: `phaseE_sub_keytrack_A/B.json` と `wave_sub_bass_warm/lead_resonant.json` を実機レンダして耳確認する
 3. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
 

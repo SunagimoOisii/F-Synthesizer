@@ -759,6 +759,54 @@ if (state.UIModeTab == 0)
                 ImGui::Separator();
                 ImGui::TextDisabled("Waveform (Tone Preview)");
                 ImGui::PlotLines("##wf", wfBuf, kBufSize, 0, nullptr, -1.0f, 1.0f, ImVec2(-1.0f, 64.0f));
+                // --- Spectrum ---
+                {
+                    constexpr int kFftSize = 256;
+                    constexpr int kSpecBins = 128;
+                    static float specBuf[kSpecBins];
+                    static float timeBuf[kFftSize];
+
+                    std::fill(specBuf, specBuf + kSpecBins, 0.0f);
+                    const int fftLen = std::min(kFftSize, total);
+                    if (fftLen >= 2)
+                    {
+                        constexpr double kPi = 3.14159265358979323846;
+                        for (int n = 0; n < fftLen; ++n)
+                        {
+                            const double w = 0.5 * (1.0 - std::cos(2.0 * kPi * n / (fftLen - 1))); // Hann
+                            timeBuf[n] = static_cast<float>(src[windowStart + n] * w);
+                        }
+
+                        const int halfLen = fftLen / 2;
+                        for (int k = 0; k < halfLen; ++k)
+                        {
+                            double re = 0.0;
+                            double im = 0.0;
+                            for (int n = 0; n < fftLen; ++n)
+                            {
+                                const double phase = 2.0 * kPi * k * n / fftLen;
+                                re += timeBuf[n] * std::cos(phase);
+                                im -= timeBuf[n] * std::sin(phase);
+                            }
+
+                            const float mag = static_cast<float>(std::sqrt(re * re + im * im));
+                            const int bin = std::clamp(k * kSpecBins / std::max(1, halfLen), 0, kSpecBins - 1);
+                            specBuf[bin] = std::max(specBuf[bin], mag);
+                        }
+
+                        const float specMax = *std::max_element(specBuf, specBuf + kSpecBins);
+                        if (specMax > 0.0f)
+                        {
+                            for (int b = 0; b < kSpecBins; ++b)
+                            {
+                                specBuf[b] /= specMax;
+                            }
+                        }
+                    }
+
+                    ImGui::TextDisabled("Spectrum (Tone Preview)");
+                    ImGui::PlotHistogram("##spec", specBuf, kSpecBins, 0, nullptr, 0.0f, 1.0f, ImVec2(-1.0f, 48.0f));
+                }
             }
         }
 

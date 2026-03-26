@@ -1,6 +1,6 @@
 # Config And IO
 
-最終更新: 2026-03-08
+最終更新: 2026-03-26
 
 ## Data Path
 
@@ -136,4 +136,12 @@ ADR記法は `docs/architecture/README.md` の `ADR Card Template` を使用。
 - Alternatives: 呼び出し側（Load/GUI/実行層）で種別分岐と検証条件を個別維持する案。
 - Impact: 種別追加や契約変更時の更新点が集約され、Config互換の説明責任を一元化できる。ドキュメントと実装の同期も取りやすくなる。
 - Related Files: include/config/SourceRegistry.h, src/config/SourceRegistry.cpp
+
+#### 2026-03-26: `masterEffects` に flanger / bitCrusher / sampleRateReducer キーを追加
+- Category: Config Compatibility
+- Background: master effect の拡張実装に対してConfigキー定義が追従しないと、保存時欠落や読込時無視が発生する。
+- Decision: `masterEffects` の下位キーとして `flanger`, `bitCrusher.bits`, `sampleRateReducer.ratio` を正式受理し、既存キーとの後方互換を維持する。
+- Alternatives: 追加effectをGUI状態だけで保持し、Config本体には保存しない案。
+- Impact: GUI/CLI/プリセットで同一effect構成を再現でき、設定の往復（load/save）で情報欠落が起きにくくなる。
+- Related Files: src/config/load/LoadTopLevel.cpp, src/config/ConfigSave.cpp, include/AppCore.h
 

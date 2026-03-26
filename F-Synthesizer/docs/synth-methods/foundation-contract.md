@@ -63,7 +63,7 @@
   3. common shaper（filter / drive など共通処理）
   4. modulation 適用（後段乗算）
   5. mix（stereo pan / level/gain）
-  6. master effect layer（chorus -> delay -> reverb） / output
+  6. master effect layer（SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb） / output
 - source render 内で「発振に直結する modulation サンプリング（pitch など）」を行うことは許可する。
 - waveform/fm の現行マッピング:
   - waveform: `pitchMul` は 2 で参照、`filterCutoff` は 3、`amp` は 4
