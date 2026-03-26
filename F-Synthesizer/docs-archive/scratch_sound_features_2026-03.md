@@ -17,20 +17,16 @@
 
 ---
 
-## 実装済み確認（Tier 1〜2 完了）
+## 実装済み確認
 
-### Tier 1（完了）
+### Tier 1
 - [x] MIDI CC拡張: CC7/CC11（既存） + CC1(Modwheel)/CC64(Sustain)/CC74(Filter Cutoff)/CC71(Resonance)/ADSR/Portamento系
 - [x] Velocity → ModSource（ModMatrixからルーティング可能に）
 - [x] PitchBend 適用（±2半音固定）
 
-### Tier 2（完了）
+### Tier 2
 - [x] ステレオレンダリング（SoundData.dataL/dataR 対応、PreviewAudio済み）
 - [x] エフェクト層の追加（Reverb/Delay）※詳細は確認要
-
----
-
-## 未実装候補一覧
 
 ### A. フロー改善（UX起点）
 
@@ -43,8 +39,11 @@
   - 「ボタンを押す」という断絶が消える = 体験の根本改善
   - Opt-in（チェックボックス）にして、重い曲は手動に切り替えられるとよい
   - 対象は "Play Tone" 相当（単音）のみ。曲全体の自動再生は不要
+  - "Play Tone" ボタンは削除して、チェックボックスでの自動再生on, off のみにする
 
 ---
+
+## 未実装候補一覧
 
 ### B. 音響エフェクト（Shaper後段）
 

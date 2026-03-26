@@ -76,6 +76,9 @@ struct GUIState
     int soloPreviewChannel = 0;
     std::array<ChannelMixState, 16> soloPreviewBackup{};
     bool previewLoop = false;
+    bool autoTonePreviewEnabled = false;
+    bool autoTonePreviewPending = false;
+    double autoTonePreviewLastEditSec = 0.0;
     bool previewAudioReady = false;
     bool runIsPreview = false;
     bool autoPlayPreviewOnRunComplete = false;

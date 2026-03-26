@@ -45,6 +45,20 @@ auto updateHoverHelp = [&](const char* what, const char* impact, const char* cau
         hoverHelp = composeHoverHelp(what, impact, caution);
     }
 };
+constexpr double kAutoTonePreviewDebounceSec = 0.4;
+auto requestAutoTonePreview = [&]()
+{
+    if (!state.autoTonePreviewEnabled)
+    {
+        return;
+    }
+    state.autoTonePreviewPending = true;
+    state.autoTonePreviewLastEditSec = ImGui::GetTime();
+};
+auto clearAutoTonePreviewRequest = [&]()
+{
+    state.autoTonePreviewPending = false;
+};
 auto saveWorkspaceOnly = [&]() -> bool
 {
     std::string err;
@@ -98,6 +112,7 @@ auto applyPresetByIndex = [&](int idx)
     if (ApplySelectedPresetPaths(state, err))
     {
         state.presetDirty = false;
+        requestAutoTonePreview();
         AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[idx] +
             " -> slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
     }
@@ -170,6 +185,7 @@ if (state.UIModeTab != lastFrameTab)
         StopGUIRunAndPreview(state);
         AppendGUILog(state, "[GUI] Playback stopped by tab switch.");
     }
+    clearAutoTonePreviewRequest();
     lastFrameTab = state.UIModeTab;
 }
 ImGui::Separator();
@@ -323,6 +339,7 @@ if (state.UIModeTab == 0)
 {
     if (ImGui::Button("Play Preview (PR Channel using Selected Slot)"))
     {
+        clearAutoTonePreviewRequest();
         StartGUIRun(state, true);
     }
     updateHoverHelp(
@@ -330,14 +347,17 @@ if (state.UIModeTab == 0)
         "表示chを選択中Slotで再生成して再生します。",
         "WAVファイルは出力しません。");
     ImGui::SameLine();
-    if (ImGui::Button("Play Tone (C4)"))
+    if (ImGui::Checkbox("Auto Tone Preview", &state.autoTonePreviewEnabled))
     {
-        StartGUISoundTonePreview(state);
+        if (!state.autoTonePreviewEnabled)
+        {
+            clearAutoTonePreviewRequest();
+        }
     }
     updateHoverHelp(
-        "Play Tone (C4) を実行します。",
-        "現在音色を単音(C4)で試聴します。",
-        "楽曲バランス確認には Play Preview を使ってください。");
+        "Auto Tone Preview を切り替えます。",
+        "Sound編集後、400ms無操作で単音試聴を自動実行します。",
+        "重い環境ではOFFにして手動Previewを使ってください。");
     ImGui::SameLine();
     ImGui::Checkbox("Loop Preview", &state.previewLoop);
     updateHoverHelp(
@@ -557,6 +577,7 @@ if (state.UIModeTab == 0)
                     sourceKindUiIndex = static_cast<int>(i);
                     selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
                     state.presetDirty = true;
+                    requestAutoTonePreview();
                     RefreshPresetItems(state, state.presetName);
                     AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
                         config::SourceKindToTypeName(candidate) +
@@ -625,6 +646,7 @@ if (state.UIModeTab == 0)
             ClearGUIError(state);
             InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
             state.presetDirty = false;
+            clearAutoTonePreviewRequest();
         }
         updateHoverHelp(
             "設定を既定値へ戻します。",
@@ -689,6 +711,7 @@ if (state.UIModeTab == 0)
             {
                 (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
                 state.presetDirty = true;
+                requestAutoTonePreview();
                 AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
             }
         }
@@ -704,13 +727,18 @@ if (state.UIModeTab == 0)
         ImGui::EndDisabled();
 
         ImGui::TableSetColumnIndex(1);
-        state.presetDirty |= DrawChannelEditor(
+        const bool channelEditorChanged = DrawChannelEditor(
             state,
             false,
             [&](const char* what, const char* impact, const char* caution)
             {
                 updateHoverHelp(what, impact, caution);
             });
+        state.presetDirty |= channelEditorChanged;
+        if (channelEditorChanged)
+        {
+            requestAutoTonePreview();
+        }
         if (!state.lastOutputPath.empty())
         {
             ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
@@ -1144,5 +1172,17 @@ const ImVec2 helpPos = ImVec2(
     ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x - helpTextSize.x - helpPadding,
     ImGui::GetWindowPos().y + ImGui::GetWindowContentRegionMax().y - helpTextSize.y - helpPadding);
 ImGui::GetWindowDrawList()->AddText(helpPos, ImGui::GetColorU32(ImGuiCol_TextDisabled), helpLine.c_str());
+if (state.autoTonePreviewEnabled
+    && state.autoTonePreviewPending
+    && state.UIModeTab == 0
+    && !state.running
+    && !state.playback.playing.load(std::memory_order_relaxed))
+{
+    if ((ImGui::GetTime() - state.autoTonePreviewLastEditSec) >= kAutoTonePreviewDebounceSec)
+    {
+        clearAutoTonePreviewRequest();
+        StartGUISoundTonePreview(state);
+    }
+}
 ImGui::End();
 }

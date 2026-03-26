@@ -105,6 +105,9 @@ void InitializeGUIState(
     state.restorePreviewOnRunComplete = false;
     state.soloPreviewChannel = 0;
     state.previewLoop = false;
+    state.autoTonePreviewEnabled = false;
+    state.autoTonePreviewPending = false;
+    state.autoTonePreviewLastEditSec = 0.0;
     state.previewAudioReady = false;
     state.runIsPreview = false;
     state.autoPlayPreviewOnRunComplete = false;

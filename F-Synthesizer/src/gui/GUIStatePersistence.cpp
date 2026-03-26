@@ -30,6 +30,7 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.presetIndex = state.presetIndex;
     data.serialSave = state.serialSave;
     data.previewLoop = state.previewLoop;
+    data.autoTonePreviewEnabled = state.autoTonePreviewEnabled;
     data.selectedSoundSlot = state.selectedSoundSlot;
     data.selectedDrumNote = state.selectedDrumNote;
     data.presetName = state.presetName;
@@ -78,6 +79,7 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.presetIndex = data.presetIndex;
     state.serialSave = data.serialSave;
     state.previewLoop = data.previewLoop;
+    state.autoTonePreviewEnabled = data.autoTonePreviewEnabled;
     state.selectedSoundSlot = data.selectedSoundSlot;
     state.selectedDrumNote = data.selectedDrumNote;
     strncpy_s(state.presetName, sizeof(state.presetName), data.presetName.c_str(), _TRUNCATE);
