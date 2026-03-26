@@ -563,6 +563,12 @@ bool DrawChannelEditor(
             wf->pulseWidth = std::clamp(wf->pulseWidth, 0.05, 0.95);
             wf->ringModRatio = std::clamp(wf->ringModRatio, 0.125, 16.0);
             wf->ringModMix = std::clamp(wf->ringModMix, 0.0, 1.0);
+            wf->arpeggio.rateHz = std::clamp(wf->arpeggio.rateHz, 0.5, 40.0);
+            wf->arpeggio.steps = std::clamp(wf->arpeggio.steps, 1, 8);
+            for (int& semitone : wf->arpeggio.semitones)
+            {
+                semitone = std::clamp(semitone, -24, 24);
+            }
             wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
             wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
             wf->filterKeytrack = std::clamp(wf->filterKeytrack, 0.0, 1.0);
@@ -607,6 +613,25 @@ bool DrawChannelEditor(
                 changed |= sliderWaveParam("Ring Ratio", wf->ringModRatio, 0.125f, 16.0f, "%.3f");
                 ImGui::SetNextItemWidth(220.0f);
                 changed |= sliderWaveParam("Ring Mix", wf->ringModMix, 0.0f, 1.0f, "%.3f");
+            }
+            ImGui::Separator();
+            ImGui::TextUnformatted("Arpeggio");
+            changed |= ImGui::Checkbox("Enabled##wave_arp", &wf->arpeggio.enabled);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Rate Hz##wave_arp", wf->arpeggio.rateHz, 0.5f, 40.0f, "%.2f");
+            int waveArpSteps = wf->arpeggio.steps;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Steps##wave_arp", &waveArpSteps, 1, 8))
+            {
+                wf->arpeggio.steps = waveArpSteps;
+                changed = true;
+            }
+            for (int k = 0; k < wf->arpeggio.steps; k++)
+            {
+                char label[32];
+                snprintf(label, sizeof(label), "Note %d##wave_arp", k + 1);
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= ImGui::SliderInt(label, &wf->arpeggio.semitones[static_cast<size_t>(k)], -24, 24);
             }
 
             const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
@@ -683,6 +708,12 @@ bool DrawChannelEditor(
             analog->pulseWidth = std::clamp(analog->pulseWidth, 0.05, 0.95);
             analog->ringModRatio = std::clamp(analog->ringModRatio, 0.125, 16.0);
             analog->ringModMix = std::clamp(analog->ringModMix, 0.0, 1.0);
+            analog->arpeggio.rateHz = std::clamp(analog->arpeggio.rateHz, 0.5, 40.0);
+            analog->arpeggio.steps = std::clamp(analog->arpeggio.steps, 1, 8);
+            for (int& semitone : analog->arpeggio.semitones)
+            {
+                semitone = std::clamp(semitone, -24, 24);
+            }
             analog->filterCutoffHz = std::clamp(analog->filterCutoffHz, 10.0, 20000.0);
             analog->filterResonance = std::clamp(analog->filterResonance, 0.1, 18.0);
             analog->filterKeytrack = std::clamp(analog->filterKeytrack, 0.0, 1.0);
@@ -730,6 +761,25 @@ bool DrawChannelEditor(
                 changed |= sliderWaveParam("Ring Ratio", analog->ringModRatio, 0.125f, 16.0f, "%.3f");
                 ImGui::SetNextItemWidth(220.0f);
                 changed |= sliderWaveParam("Ring Mix", analog->ringModMix, 0.0f, 1.0f, "%.3f");
+            }
+            ImGui::Separator();
+            ImGui::TextUnformatted("Arpeggio");
+            changed |= ImGui::Checkbox("Enabled##analog_arp", &analog->arpeggio.enabled);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Rate Hz##analog_arp", analog->arpeggio.rateHz, 0.5f, 40.0f, "%.2f");
+            int analogArpSteps = analog->arpeggio.steps;
+            ImGui::SetNextItemWidth(220.0f);
+            if (ImGui::SliderInt("Steps##analog_arp", &analogArpSteps, 1, 8))
+            {
+                analog->arpeggio.steps = analogArpSteps;
+                changed = true;
+            }
+            for (int k = 0; k < analog->arpeggio.steps; k++)
+            {
+                char label[32];
+                snprintf(label, sizeof(label), "Note %d##analog_arp", k + 1);
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= ImGui::SliderInt(label, &analog->arpeggio.semitones[static_cast<size_t>(k)], -24, 24);
             }
 
             const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };

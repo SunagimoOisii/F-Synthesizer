@@ -256,7 +256,7 @@ if (src->ringModEnabled)
 
 ---
 
-## Tier D-1: Arpeggio
+## Tier D-1: Arpeggio(完了)
 
 ### 目的
 

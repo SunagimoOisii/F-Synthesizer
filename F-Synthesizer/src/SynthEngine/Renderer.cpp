@@ -202,6 +202,19 @@ void RenderWaveformSource(
         SetSmoothedTarget(ws.pitchSmoothing, pitchMul);
         pitchMul = StepSmoothedParam(ws.pitchSmoothing);
     }
+    if (src.arpeggio.enabled && src.arpeggio.steps > 0)
+    {
+        ws.arpElapsedSec += in.dt;
+        const int steps = std::clamp(src.arpeggio.steps, 1, 8);
+        const double stepDur = 1.0 / (std::max)(0.5, src.arpeggio.rateHz);
+        while (ws.arpElapsedSec >= stepDur)
+        {
+            ws.arpElapsedSec -= stepDur;
+            ws.arpStep = (ws.arpStep + 1) % steps;
+        }
+        const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(ws.arpStep)];
+        pitchMul *= std::pow(2.0, static_cast<double>(semitoneOffset) / 12.0);
+    }
 
     const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
     const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
@@ -286,6 +299,19 @@ void RenderAnalogSource(
     {
         SetSmoothedTarget(as.pitchSmoothing, pitchMul);
         pitchMul = StepSmoothedParam(as.pitchSmoothing);
+    }
+    if (src.arpeggio.enabled && src.arpeggio.steps > 0)
+    {
+        as.arpElapsedSec += in.dt;
+        const int steps = std::clamp(src.arpeggio.steps, 1, 8);
+        const double stepDur = 1.0 / (std::max)(0.5, src.arpeggio.rateHz);
+        while (as.arpElapsedSec >= stepDur)
+        {
+            as.arpElapsedSec -= stepDur;
+            as.arpStep = (as.arpStep + 1) % steps;
+        }
+        const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(as.arpStep)];
+        pitchMul *= std::pow(2.0, static_cast<double>(semitoneOffset) / 12.0);
     }
 
     const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;

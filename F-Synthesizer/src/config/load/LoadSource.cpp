@@ -502,6 +502,31 @@ bool ParseTopLevelArrayObjectEntries(
     return true;
 }
 
+bool ParseTopLevelIntArrayElements(
+    const std::string& arrText,
+    const std::function<bool(size_t, int)>& onElement,
+    std::string& err)
+{
+    if (arrText.size() < 2 || arrText.front() != '[' || arrText.back() != ']')
+    {
+        err = "invalid integer array";
+        return false;
+    }
+
+    const std::regex intPat("-?\\d+");
+    size_t index = 0;
+    for (std::sregex_iterator it(arrText.begin(), arrText.end(), intPat), end; it != end; ++it, ++index)
+    {
+        const int value = std::stoi((*it)[0].str());
+        if (!onElement(index, value))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ValidateDrumBySchema(const DrumConfig& drum, std::string& err)
 {
     const SourceParameterSchemaEntry* schema = nullptr;
@@ -708,6 +733,48 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.drive = std::clamp(*v, 0.0, 1.0);
         }
+        std::string arpeggioObj;
+        bool foundArpeggio = false;
+        if (!ExtractObjectForKey(sourceObjText, "arpeggio", arpeggioObj, foundArpeggio, err))
+        {
+            return false;
+        }
+        if (foundArpeggio)
+        {
+            if (auto v = ReadJSONBool(arpeggioObj, "enabled"))
+            {
+                wf.arpeggio.enabled = *v;
+            }
+            if (auto v = ReadJSONDouble(arpeggioObj, "rateHz"))
+            {
+                wf.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0);
+            }
+            if (auto v = ReadJSONInt(arpeggioObj, "steps"))
+            {
+                wf.arpeggio.steps = std::clamp(*v, 1, 8);
+            }
+
+            std::string semitonesArray;
+            bool foundSemitones = false;
+            if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err))
+            {
+                return false;
+            }
+            if (foundSemitones)
+            {
+                if (!ParseTopLevelIntArrayElements(semitonesArray, [&](size_t semitoneIndex, int value) {
+                    if (semitoneIndex >= wf.arpeggio.semitones.size())
+                    {
+                        return true;
+                    }
+                    wf.arpeggio.semitones[semitoneIndex] = std::clamp(value, -24, 24);
+                    return true;
+                    }, err))
+                {
+                    return false;
+                }
+            }
+        }
         std::string smoothingObj;
         bool foundSmoothing = false;
         if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
@@ -831,6 +898,48 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "driftRateHz"))
         {
             analog.driftRateHz = *v;
+        }
+        std::string arpeggioObj;
+        bool foundArpeggio = false;
+        if (!ExtractObjectForKey(sourceObjText, "arpeggio", arpeggioObj, foundArpeggio, err))
+        {
+            return false;
+        }
+        if (foundArpeggio)
+        {
+            if (auto v = ReadJSONBool(arpeggioObj, "enabled"))
+            {
+                analog.arpeggio.enabled = *v;
+            }
+            if (auto v = ReadJSONDouble(arpeggioObj, "rateHz"))
+            {
+                analog.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0);
+            }
+            if (auto v = ReadJSONInt(arpeggioObj, "steps"))
+            {
+                analog.arpeggio.steps = std::clamp(*v, 1, 8);
+            }
+
+            std::string semitonesArray;
+            bool foundSemitones = false;
+            if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err))
+            {
+                return false;
+            }
+            if (foundSemitones)
+            {
+                if (!ParseTopLevelIntArrayElements(semitonesArray, [&](size_t semitoneIndex, int value) {
+                    if (semitoneIndex >= analog.arpeggio.semitones.size())
+                    {
+                        return true;
+                    }
+                    analog.arpeggio.semitones[semitoneIndex] = std::clamp(value, -24, 24);
+                    return true;
+                    }, err))
+                {
+                    return false;
+                }
+            }
         }
         std::string smoothingObj;
         bool foundSmoothing = false;

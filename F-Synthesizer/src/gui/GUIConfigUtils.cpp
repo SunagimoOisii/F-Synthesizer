@@ -83,6 +83,25 @@ bool AnalogSmoothingConfigEquals(const AnalogConfig::SmoothingConfig& a, const A
         NearlyEq(a.filterCutoffTimeMs, b.filterCutoffTimeMs);
 }
 
+template <typename ArpeggioT>
+bool ArpeggioConfigEquals(const ArpeggioT& a, const ArpeggioT& b)
+{
+    if (a.enabled != b.enabled ||
+        !NearlyEq(a.rateHz, b.rateHz) ||
+        a.steps != b.steps)
+    {
+        return false;
+    }
+    for (size_t i = 0; i < a.semitones.size(); i++)
+    {
+        if (a.semitones[i] != b.semitones[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
 {
     if (a.index() != b.index())
@@ -110,6 +129,7 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
                     NearlyEq(av.filterKeytrack, bv->filterKeytrack) &&
+                    ArpeggioConfigEquals(av.arpeggio, bv->arpeggio) &&
                     WaveformSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }
@@ -131,6 +151,7 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.drive, bv->drive) &&
                     NearlyEq(av.driftDepthCents, bv->driftDepthCents) &&
                     NearlyEq(av.driftRateHz, bv->driftRateHz) &&
+                    ArpeggioConfigEquals(av.arpeggio, bv->arpeggio) &&
                     AnalogSmoothingConfigEquals(av.smoothing, bv->smoothing) &&
                     ModulationConfigEquals(av.modulation, bv->modulation);
             }

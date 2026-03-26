@@ -146,6 +146,8 @@ void InitializeVoiceAtIndex(
         ResetFilterState(ws.filter);
 
         ws.ringPhase = 0.0;
+        ws.arpStep = 0;
+        ws.arpElapsedSec = 0.0;
         ResetModulationState(ws.modulation);
         NoteOnModulation(ws.modulation, wave->modulation);
     }
@@ -176,6 +178,8 @@ void InitializeVoiceAtIndex(
         ResetFilterState(as.filter);
 
         as.ringPhase = 0.0;
+        as.arpStep = 0;
+        as.arpElapsedSec = 0.0;
         ResetModulationState(as.modulation);
         NoteOnModulation(as.modulation, analog->modulation);
 

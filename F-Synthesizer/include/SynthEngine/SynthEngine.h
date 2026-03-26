@@ -16,6 +16,14 @@
 // ConfigLoad / GUI編集 / Renderer の共通入力として使う。
 struct WaveformConfig
 {
+    struct ArpeggioConfig
+    {
+        bool enabled = false;
+        double rateHz = 8.0;
+        int steps = 1;
+        std::array<int, 8> semitones{};
+    };
+
     struct SmoothingConfig
     {
         bool enabled = true;
@@ -48,6 +56,7 @@ struct WaveformConfig
     double filterKeytrack = 0.0;
     // ウェーブシェーパーのドライブ量（0.0=バイパス, 1.0=最大クリップ）。
     double drive = 0.0;
+    ArpeggioConfig arpeggio{};
     // 共通Smoothingレイヤー（amp/pitch/filterCutoff）。
     SmoothingConfig smoothing{};
     // 共通Modulationレイヤー（LFO/Env2/Matrix）。
@@ -59,6 +68,8 @@ struct WaveformConfig
 // smoothing は waveform と同一契約で適用する。
 struct AnalogConfig
 {
+    using ArpeggioConfig = WaveformConfig::ArpeggioConfig;
+
     struct SmoothingConfig
     {
         bool enabled = true;
@@ -85,6 +96,7 @@ struct AnalogConfig
     // アナログ固有: ボイスごとのピッチドリフト。
     double driftDepthCents = 0.0;
     double driftRateHz = 0.3;
+    ArpeggioConfig arpeggio{};
     SmoothingConfig smoothing{};
     ModulationConfig modulation{};
 };

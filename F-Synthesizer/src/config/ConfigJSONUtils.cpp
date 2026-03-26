@@ -646,6 +646,26 @@ void WriteWaveformSmoothingConfig(std::ostream& out, const SmoothingT& smoothing
     WriteIndent(out, indent); out << "}";
 }
 
+template <typename ArpeggioT>
+void WriteArpeggioConfig(std::ostream& out, const ArpeggioT& arpeggio, int indent)
+{
+    WriteIndent(out, indent); out << "\"arpeggio\": {\n";
+    WriteIndent(out, indent + 2); out << "\"enabled\": " << (arpeggio.enabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent + 2); out << "\"rateHz\": " << arpeggio.rateHz << ",\n";
+    WriteIndent(out, indent + 2); out << "\"steps\": " << arpeggio.steps << ",\n";
+    WriteIndent(out, indent + 2); out << "\"semitones\": [";
+    for (size_t i = 0; i < arpeggio.semitones.size(); i++)
+    {
+        out << arpeggio.semitones[i];
+        if (i + 1 < arpeggio.semitones.size())
+        {
+            out << ", ";
+        }
+    }
+    out << "]\n";
+    WriteIndent(out, indent); out << "}";
+}
+
 void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
 {
     WriteIndent(out, indent); out << "\"source\": {\n";
@@ -668,6 +688,8 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
             WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
+            WriteArpeggioConfig(out, v.arpeggio, indent + 2);
+            out << ",\n";
             WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
             out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
@@ -692,6 +714,8 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
             WriteIndent(out, indent + 2); out << "\"driftDepthCents\": " << v.driftDepthCents << ",\n";
             WriteIndent(out, indent + 2); out << "\"driftRateHz\": " << v.driftRateHz << ",\n";
+            WriteArpeggioConfig(out, v.arpeggio, indent + 2);
+            out << ",\n";
             WriteWaveformSmoothingConfig(out, v.smoothing, indent + 2);
             out << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
