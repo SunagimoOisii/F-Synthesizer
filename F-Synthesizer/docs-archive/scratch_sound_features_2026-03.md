@@ -93,6 +93,20 @@
 - 優先カテゴリ: FM-ブラス / FM-ベース / FM-ベル / PSG-lead / PSG-bass / Drum系
 - メモ: 「狙ったレトロ感が出せた」成功指標への直結
 
+### F. MIDI表現力拡張
+
+#### F-1. Modwheel (CC1) → LFO depth 連動
+- **触変: ★★ / 安全: ★★ / レトロ: ★**
+- 概要: CC1受信をModMatrixのLFO depth変調にルーティング
+- 実装コスト: 低（CC1値をchannelModwheelとして保持 → Renderer内でlfo.depthに掛ける）
+- メモ: Tier1でCC1は`RenderState`に入ったはず。あとはRenderer側でModulationConfigへの適用のみ
+
+#### F-2. PitchBend レンジ可変（RPN0）
+- **触変: − / 安全: − / レトロ: ★**
+- 概要: MIDIのRPN0でPitchBendレンジを±2〜±12半音で変更可能に
+- 実装コスト: 低
+- メモ: 現状±2半音固定。一部レトロゲームMIDIに必要なケースがある
+
 ---
 
 ## 未実装候補一覧
@@ -131,44 +145,45 @@
 
 ### F. MIDI表現力拡張
 
-#### F-1. Modwheel (CC1) → LFO depth 連動
+#### F-3. Channel Pressure（Aftertouch）対応
 - **触変: ★★ / 安全: ★★ / レトロ: ★**
-- 概要: CC1受信をModMatrixのLFO depth変調にルーティング
-- 実装コスト: 低（CC1値をchannelModwheelとして保持 → Renderer内でlfo.depthに掛ける）
-- メモ: Tier1でCC1は`RenderState`に入ったはず。あとはRenderer側でModulationConfigへの適用のみ
+- 概要: `0xD0` をパースし、チャンネル単位の表現量として ModMatrix に入力
+- 実装コスト: 中（Parser/Sequencer/Event処理/Modulation source 追加）
+- メモ: Poly Aftertouch より先に対応すると実装量を抑えやすい
 
-#### F-2. PitchBend レンジ可変（RPN0）
-- **触変: − / 安全: − / レトロ: ★**
-- 概要: MIDIのRPN0でPitchBendレンジを±2〜±12半音で変更可能に
-- 実装コスト: 低
-- メモ: 現状±2半音固定。一部レトロゲームMIDIに必要なケースがある
+#### F-4. Polyphonic Key Pressure（Poly Aftertouch）対応
+- **触変: ★★★ / 安全: ★★ / レトロ: ★**
+- 概要: `0xA0` をノート単位の圧力値として保持し、voiceごとに反映
+- 実装コスト: 中〜高（noteInstanceID 単位の状態管理が必要）
+- メモ: Voice lifecycle（NoteOn/Off）との整合を優先設計
 
----
+#### F-5. NRPN 一般対応（RPN0以外含む）
+- **触変: ★★★ / 安全: ★★ / レトロ: ★**
+- 概要: `CC99/98 + CC6/38` の組み合わせを汎用デコードし、目的地にマップ
+- 実装コスト: 中
+- メモ: まずは「受信・保持のみ」→ 次段で音源パラメータ適用の2段階実装
 
-## 優先度サマリー
+#### F-6. SysEx（0xF0/0xF7）受信ポリシー整備
+- **触変: ★ / 安全: ★★★ / レトロ: ★★**
+- 概要: 破棄のみから、ログ可視化/ベンダ別許可などの扱い方針を定義
+- 実装コスト: 低〜中
+- メモ: 当面は音源制御に使わず「安全に無視 + 診断可能化」を優先
 
-```
-最優先: A-1（Auto Preview）
-  → 体験の根本改善。実装コスト最小。
+#### F-7. Meta Event 拡張（Tempo以外）
+- **触変: ★ / 安全: ★★★ / レトロ: ★**
+- 概要: `0x51`/`0x2F` 以外の主要Meta（Time Signature等）を最低限パース
+- 実装コスト: 低〜中
+- メモ: まずは再生挙動に使わず統計/ログ出力に反映
 
-高優先:
-  B-1 + B-2（ビットクラッシャー + サンプルレートリデューサー）
-  → MVPの「レトロ感」直結。セットで実装。
-  C-1 + C-2（FMテンプレート + リセットボタン）
-  → MVPの核心であるFMを初心者が使える状態にする。
+#### F-8. SMPTE division MIDI 対応
+- **触変: ★★ / 安全: ★★★ / レトロ: ★**
+- 概要: ヘッダ division の SMPTE 形式を tick->time 変換できるようにする
+- 実装コスト: 中
+- メモ: 現状は PPQ のみ対応。Parser 側の早期リターンを解消する
 
-中優先:
-  D-1（プリセット充実）→ 成功指標「レトロ感が出せた」直結
-  F-1（Modwheel連動）→ CC1の実効活用
+#### F-9. MIDI Format 2 対応
+- **触変: ★★ / 安全: ★★★ / レトロ: ★**
+- 概要: format 2（独立パターン群）を受理し、再生方針を定義
+- 実装コスト: 中
+- メモ: 互換性重視なら「単一パターン選択」から段階導入
 
-低優先:
-  C-3（FM Smoothing）/ B-3（コーラス）/ E-1〜3（新合成方式）
-```
-
----
-
-## 未解決・要確認
-
-- Tier 2 で実装した Reverb/Delay の仕様（パラメータ・GUI導線）を確認して上記評価に反映する
-- ビットクラッシャーを `RetroFX` 層として独立させるか、既存 Shaper 層に追加するか → method-boundaries.md の「Shaper Layer」の範囲解釈による
-- Auto Preview の debounce 時間: 400ms は仮値。単音レンダの実測時間に合わせて調整要

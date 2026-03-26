@@ -5,6 +5,9 @@
 
 namespace
 {
+    constexpr int kPitchBendRangeMinSemis = 2;
+    constexpr int kPitchBendRangeMaxSemis = 12;
+
     double NormalizeCc(int value)
     {
         int v = value;
@@ -89,9 +92,10 @@ namespace
         case 6:
             if (IsPitchBendRpnSelected(ch, state))
             {
-                const int coarse = std::clamp(e.value, 0, 24);
+                const int coarse = std::clamp(e.value, kPitchBendRangeMinSemis, kPitchBendRangeMaxSemis);
                 const int fine = static_cast<int>(std::round((state.channelPitchBendRangeSemis[ch] - coarse) * 100.0));
-                const int clampedFine = std::clamp(fine, 0, 99);
+                // F-2仕様: レンジは ±2..±12 半音。上限時の fine は 0 に固定する。
+                const int clampedFine = (coarse >= kPitchBendRangeMaxSemis) ? 0 : std::clamp(fine, 0, 99);
                 state.channelPitchBendRangeSemis[ch] = coarse + clampedFine / 100.0;
                 RecomputePitchFactor(ch, state);
             }
@@ -99,8 +103,11 @@ namespace
         case 38:
             if (IsPitchBendRpnSelected(ch, state))
             {
-                const int coarse = std::clamp(static_cast<int>(state.channelPitchBendRangeSemis[ch]), 0, 24);
-                const int fine = std::clamp((e.value * 100) / 127, 0, 99);
+                const int coarse = std::clamp(
+                    static_cast<int>(state.channelPitchBendRangeSemis[ch]),
+                    kPitchBendRangeMinSemis,
+                    kPitchBendRangeMaxSemis);
+                const int fine = (coarse >= kPitchBendRangeMaxSemis) ? 0 : std::clamp((e.value * 100) / 127, 0, 99);
                 state.channelPitchBendRangeSemis[ch] = coarse + fine / 100.0;
                 RecomputePitchFactor(ch, state);
             }
