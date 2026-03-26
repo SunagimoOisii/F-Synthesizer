@@ -20,7 +20,8 @@ enum class NoiseType
 double SampleWavePhase(
     WaveType type,
     double phase,
-    double phaseInc = 0.0);
+    double phaseInc = 0.0,
+    double pulseWidth = 0.5);
 // 目的: FM位相変調つきで1サンプルを生成する。
 // 前提: carrierPhase/modPhase は周期位相。modIndex はラジアン換算の変調量として扱う。
 double SampleFmPhase(

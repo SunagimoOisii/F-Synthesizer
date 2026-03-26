@@ -179,6 +179,10 @@ bool WaveformSchemaValue(const WaveformConfig& wf, const SourceParameterSchemaEn
     if (std::string_view(e.id) == "unisonDetuneCents") { outValue = wf.unisonDetuneCents; return true; }
     if (std::string_view(e.id) == "unisonSpread") { outValue = wf.unisonSpread; return true; }
     if (std::string_view(e.id) == "subOscLevel") { outValue = wf.subOscLevel; return true; }
+    if (std::string_view(e.id) == "pulseWidth") { outValue = wf.pulseWidth; return true; }
+    if (std::string_view(e.id) == "ringModEnabled") { outValue = wf.ringModEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "ringModRatio") { outValue = wf.ringModRatio; return true; }
+    if (std::string_view(e.id) == "ringModMix") { outValue = wf.ringModMix; return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = wf.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = wf.filterResonance; return true; }
     if (std::string_view(e.id) == "filterKeytrack") { outValue = wf.filterKeytrack; return true; }
@@ -191,6 +195,10 @@ bool AnalogSchemaValue(const AnalogConfig& analog, const SourceParameterSchemaEn
     if (std::string_view(e.id) == "unisonDetuneCents") { outValue = analog.unisonDetuneCents; return true; }
     if (std::string_view(e.id) == "unisonSpread") { outValue = analog.unisonSpread; return true; }
     if (std::string_view(e.id) == "subOscLevel") { outValue = analog.subOscLevel; return true; }
+    if (std::string_view(e.id) == "pulseWidth") { outValue = analog.pulseWidth; return true; }
+    if (std::string_view(e.id) == "ringModEnabled") { outValue = analog.ringModEnabled ? 1.0 : 0.0; return true; }
+    if (std::string_view(e.id) == "ringModRatio") { outValue = analog.ringModRatio; return true; }
+    if (std::string_view(e.id) == "ringModMix") { outValue = analog.ringModMix; return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = analog.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = analog.filterResonance; return true; }
     if (std::string_view(e.id) == "filterKeytrack") { outValue = analog.filterKeytrack; return true; }
@@ -658,6 +666,22 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         {
             wf.subOscLevel = *v;
         }
+        if (auto v = ReadJSONDouble(sourceObjText, "pulseWidth"))
+        {
+            wf.pulseWidth = std::clamp(*v, 0.05, 0.95);
+        }
+        if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
+        {
+            wf.ringModEnabled = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "ringModRatio"))
+        {
+            wf.ringModRatio = std::clamp(*v, 0.125, 16.0);
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "ringModMix"))
+        {
+            wf.ringModMix = std::clamp(*v, 0.0, 1.0);
+        }
         if (auto v = ReadJSONString(sourceObjText, "filterMode"))
         {
             FilterMode mode{};
@@ -757,6 +781,22 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
         if (auto v = ReadJSONDouble(sourceObjText, "subOscLevel"))
         {
             analog.subOscLevel = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "pulseWidth"))
+        {
+            analog.pulseWidth = std::clamp(*v, 0.05, 0.95);
+        }
+        if (auto v = ReadJSONBool(sourceObjText, "ringModEnabled"))
+        {
+            analog.ringModEnabled = *v;
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "ringModRatio"))
+        {
+            analog.ringModRatio = std::clamp(*v, 0.125, 16.0);
+        }
+        if (auto v = ReadJSONDouble(sourceObjText, "ringModMix"))
+        {
+            analog.ringModMix = std::clamp(*v, 0.0, 1.0);
         }
         if (auto v = ReadJSONString(sourceObjText, "filterMode"))
         {

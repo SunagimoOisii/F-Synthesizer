@@ -208,6 +208,7 @@ void RenderWaveformSource(
     const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
     const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
     const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+    const double effectivePW = std::clamp(src.pulseWidth + mod.pulseWidthAdd, 0.05, 0.95);
 
     double unisonSum = 0.0;
     for (int uv = 0; uv < unisonVoices; uv++)
@@ -219,15 +220,23 @@ void RenderWaveformSource(
         const double phaseOffset = centered * spread * 0.08;
         const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
         const double uvInc = phaseInc * ratio;
-        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
+        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc, effectivePW);
     }
 
     double mainWave = unisonSum / unisonVoices;
     if (subOscLevel > 0.0)
     {
         const double subPhase = WrapPhase(voices.phase[i] * 0.5);
-        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
+        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5, effectivePW);
         mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+    }
+    if (src.ringModEnabled && src.ringModMix > 0.0)
+    {
+        const double ringInc = phaseInc * std::clamp(src.ringModRatio, 0.125, 16.0);
+        ws.ringPhase = WrapPhase(ws.ringPhase + ringInc);
+        const double ringSignal = std::sin(2.0 * kPi * ws.ringPhase);
+        const double mix = std::clamp(src.ringModMix, 0.0, 1.0);
+        mainWave *= (1.0 - mix) + mix * ringSignal;
     }
 
     frame.sample = mainWave;
@@ -284,6 +293,7 @@ void RenderAnalogSource(
     const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
     const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
     const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
+    const double effectivePW = std::clamp(src.pulseWidth + mod.pulseWidthAdd, 0.05, 0.95);
 
     double unisonSum = 0.0;
     for (int uv = 0; uv < unisonVoices; uv++)
@@ -295,15 +305,23 @@ void RenderAnalogSource(
         const double phaseOffset = centered * spread * 0.08;
         const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
         const double uvInc = phaseInc * ratio;
-        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc);
+        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc, effectivePW);
     }
 
     double mainWave = unisonSum / unisonVoices;
     if (subOscLevel > 0.0)
     {
         const double subPhase = WrapPhase(voices.phase[i] * 0.5);
-        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5);
+        const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5, effectivePW);
         mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+    }
+    if (src.ringModEnabled && src.ringModMix > 0.0)
+    {
+        const double ringInc = phaseInc * std::clamp(src.ringModRatio, 0.125, 16.0);
+        as.ringPhase = WrapPhase(as.ringPhase + ringInc);
+        const double ringSignal = std::sin(2.0 * kPi * as.ringPhase);
+        const double mix = std::clamp(src.ringModMix, 0.0, 1.0);
+        mainWave *= (1.0 - mix) + mix * ringSignal;
     }
 
     frame.sample = mainWave;

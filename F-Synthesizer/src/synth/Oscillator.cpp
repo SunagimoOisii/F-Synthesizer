@@ -1,5 +1,6 @@
 #include "synth/Oscillator.h"
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 
@@ -38,7 +39,7 @@ double PolyBlep(double t, double dt)
 }
 } // namespace
 
-double SampleWavePhase(WaveType type, double phase, double phaseInc)
+double SampleWavePhase(WaveType type, double phase, double phaseInc, double pulseWidth)
 {
     const double p = NormalizePhase(phase);
     // polyBLEP補正は位相増分を0..1の周期比として受け取る想定。
@@ -51,9 +52,10 @@ double SampleWavePhase(WaveType type, double phase, double phaseInc)
 
     case WaveType::Square:
     {
-        double w = (p < 0.5) ? 1.0 : -1.0;
+        const double pw = std::clamp(pulseWidth, 0.05, 0.95);
+        double w = (p < pw) ? 1.0 : -1.0;
         w += PolyBlep(p, dt);
-        w -= PolyBlep(NormalizePhase(p + 0.5), dt);
+        w -= PolyBlep(NormalizePhase(p + 1.0 - pw), dt);
         return w;
     }
         

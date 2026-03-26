@@ -274,7 +274,8 @@ bool DrawChannelEditor(
     auto drawModulationEditor = [&](const char* idPrefix,
         ModulationConfig& modulation,
         bool allowFilterCutoff,
-        bool allowFmIndex) -> bool
+        bool allowFmIndex,
+        bool allowPulseWidth) -> bool
     {
         bool localChanged = false;
         ImGui::Separator();
@@ -344,18 +345,23 @@ bool DrawChannelEditor(
             const char* label;
             ModDestination value;
         };
-        std::array<DestinationChoice, 6> destinationChoices{ {
+        std::array<DestinationChoice, 7> destinationChoices{ {
             { "none", ModDestination::None },
             { "pitchMul", ModDestination::Pitch },
             { "amp", ModDestination::Amp },
             { "filterCutoffHz", ModDestination::FilterCutoff },
             { "filterResonance", ModDestination::FilterResonance },
+            { "PulseWidth", ModDestination::PulseWidth },
             { "fm.index", ModDestination::FmIndex },
         } };
         int destinationCount = 3;
         if (allowFilterCutoff)
         {
             destinationCount += 2;
+        }
+        if (allowPulseWidth)
+        {
+            destinationChoices[destinationCount++] = { "PulseWidth", ModDestination::PulseWidth };
         }
         if (allowFmIndex)
         {
@@ -449,7 +455,7 @@ bool DrawChannelEditor(
             if (updateHoverHelp) updateHoverHelp("Route Source を選択します。", "変調元が変わります。", nullptr);
 
             int dstIdx = destinationIndex(route.destination);
-            const char* destinationLabels[5] = {};
+            const char* destinationLabels[7] = {};
             for (int i = 0; i < destinationCount; i++)
             {
                 destinationLabels[i] = destinationChoices[i].label;
@@ -543,11 +549,20 @@ bool DrawChannelEditor(
             changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
             if (updateHoverHelp) updateHoverHelp("Wave を選択します。", "基本波形キャラクターが変わります。", nullptr);
             wf->wave = WaveFromIndex(idx);
+            if (wf->wave == WaveType::Square)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Pulse Width", wf->pulseWidth, 0.05f, 0.95f, "%.2f");
+                if (updateHoverHelp) updateHoverHelp("Pulse Width を調整します。", "Square波のデューティ幅が変わります。", nullptr);
+            }
 
             wf->unisonVoices = std::clamp(wf->unisonVoices, 1, 8);
             wf->unisonDetuneCents = std::clamp(wf->unisonDetuneCents, 0.0, 120.0);
             wf->unisonSpread = std::clamp(wf->unisonSpread, 0.0, 1.0);
             wf->subOscLevel = std::clamp(wf->subOscLevel, 0.0, 2.0);
+            wf->pulseWidth = std::clamp(wf->pulseWidth, 0.05, 0.95);
+            wf->ringModRatio = std::clamp(wf->ringModRatio, 0.125, 16.0);
+            wf->ringModMix = std::clamp(wf->ringModMix, 0.0, 1.0);
             wf->filterCutoffHz = std::clamp(wf->filterCutoffHz, 10.0, 20000.0);
             wf->filterResonance = std::clamp(wf->filterResonance, 0.1, 18.0);
             wf->filterKeytrack = std::clamp(wf->filterKeytrack, 0.0, 1.0);
@@ -585,6 +600,14 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Sub Osc Level", wf->subOscLevel, 0.0f, 2.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
+            changed |= ImGui::Checkbox("Ring Mod", &wf->ringModEnabled);
+            if (wf->ringModEnabled)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Ring Ratio", wf->ringModRatio, 0.125f, 16.0f, "%.3f");
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Ring Mix", wf->ringModMix, 0.0f, 1.0f, "%.3f");
+            }
 
             const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
             int filterModeIdx = 0;
@@ -637,7 +660,7 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Smoothing (ms)", wf->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
 
-            changed |= drawModulationEditor("waveform_modulation", wf->modulation, true, false);
+            changed |= drawModulationEditor("waveform_modulation", wf->modulation, true, false, true);
         }
         else if (auto* analog = std::get_if<AnalogConfig>(&chCfg.source))
         {
@@ -646,11 +669,20 @@ bool DrawChannelEditor(
             changed |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
             if (updateHoverHelp) updateHoverHelp("Wave を選択します。", "基本波形キャラクターが変わります。", nullptr);
             analog->wave = WaveFromIndex(idx);
+            if (analog->wave == WaveType::Square)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Pulse Width", analog->pulseWidth, 0.05f, 0.95f, "%.2f");
+                if (updateHoverHelp) updateHoverHelp("Pulse Width を調整します。", "Square波のデューティ幅が変わります。", nullptr);
+            }
 
             analog->unisonVoices = std::clamp(analog->unisonVoices, 1, 8);
             analog->unisonDetuneCents = std::clamp(analog->unisonDetuneCents, 0.0, 120.0);
             analog->unisonSpread = std::clamp(analog->unisonSpread, 0.0, 1.0);
             analog->subOscLevel = std::clamp(analog->subOscLevel, 0.0, 2.0);
+            analog->pulseWidth = std::clamp(analog->pulseWidth, 0.05, 0.95);
+            analog->ringModRatio = std::clamp(analog->ringModRatio, 0.125, 16.0);
+            analog->ringModMix = std::clamp(analog->ringModMix, 0.0, 1.0);
             analog->filterCutoffHz = std::clamp(analog->filterCutoffHz, 10.0, 20000.0);
             analog->filterResonance = std::clamp(analog->filterResonance, 0.1, 18.0);
             analog->filterKeytrack = std::clamp(analog->filterKeytrack, 0.0, 1.0);
@@ -691,6 +723,14 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Sub Osc Level", analog->subOscLevel, 0.0f, 2.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
+            changed |= ImGui::Checkbox("Ring Mod", &analog->ringModEnabled);
+            if (analog->ringModEnabled)
+            {
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Ring Ratio", analog->ringModRatio, 0.125f, 16.0f, "%.3f");
+                ImGui::SetNextItemWidth(220.0f);
+                changed |= sliderWaveParam("Ring Mix", analog->ringModMix, 0.0f, 1.0f, "%.3f");
+            }
 
             const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
             int filterModeIdx = 0;
@@ -759,7 +799,7 @@ bool DrawChannelEditor(
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Smoothing (ms)", analog->smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
 
-            changed |= drawModulationEditor("analog_modulation", analog->modulation, true, false);
+            changed |= drawModulationEditor("analog_modulation", analog->modulation, true, false, true);
         }
         else if (auto* nz = std::get_if<NoiseConfig>(&chCfg.source))
         {
@@ -928,7 +968,7 @@ bool DrawChannelEditor(
             changed |= sliderWaveParam("Filter Resonance (Q)", fm->filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
 
-            changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true);
+            changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true, false);
         }
         else if (auto* psg = std::get_if<PsgConfig>(&chCfg.source))
         {

@@ -214,6 +214,9 @@ ModulationResult EvaluateModulation(
         case ModDestination::FilterResonance:
             out.resonanceMul *= (1.0 + value);
             break;
+        case ModDestination::PulseWidth:
+            out.pulseWidthAdd += value * 0.45;
+            break;
         case ModDestination::FmIndex:
             out.fmIndexMul *= (1.0 + value);
             break;

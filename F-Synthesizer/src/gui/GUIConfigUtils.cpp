@@ -102,6 +102,10 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
                     NearlyEq(av.unisonSpread, bv->unisonSpread) &&
                     NearlyEq(av.subOscLevel, bv->subOscLevel) &&
+                    NearlyEq(av.pulseWidth, bv->pulseWidth) &&
+                    av.ringModEnabled == bv->ringModEnabled &&
+                    NearlyEq(av.ringModRatio, bv->ringModRatio) &&
+                    NearlyEq(av.ringModMix, bv->ringModMix) &&
                     av.filterMode == bv->filterMode &&
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
                     NearlyEq(av.filterResonance, bv->filterResonance) &&
@@ -116,6 +120,10 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     NearlyEq(av.unisonDetuneCents, bv->unisonDetuneCents) &&
                     NearlyEq(av.unisonSpread, bv->unisonSpread) &&
                     NearlyEq(av.subOscLevel, bv->subOscLevel) &&
+                    NearlyEq(av.pulseWidth, bv->pulseWidth) &&
+                    av.ringModEnabled == bv->ringModEnabled &&
+                    NearlyEq(av.ringModRatio, bv->ringModRatio) &&
+                    NearlyEq(av.ringModMix, bv->ringModMix) &&
                     av.filterMode == bv->filterMode &&
                     NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
                     NearlyEq(av.filterResonance, bv->filterResonance) &&

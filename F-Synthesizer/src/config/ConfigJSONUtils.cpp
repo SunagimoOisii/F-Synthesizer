@@ -269,6 +269,11 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
         outDestination = ModDestination::FilterResonance;
         return true;
     }
+    if (name == "pulseWidth")
+    {
+        outDestination = ModDestination::PulseWidth;
+        return true;
+    }
     if (name == "fm.index")
     {
         outDestination = ModDestination::FmIndex;
@@ -374,6 +379,7 @@ std::string ModDestinationToString(ModDestination destination)
     case ModDestination::Amp: return "amp";
     case ModDestination::FilterCutoff: return "filterCutoffHz";
     case ModDestination::FilterResonance: return "filterResonance";
+    case ModDestination::PulseWidth: return "pulseWidth";
     case ModDestination::FmIndex: return "fm.index";
     }
     return "none";
@@ -653,6 +659,10 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
             WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
             WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
@@ -671,6 +681,10 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             WriteIndent(out, indent + 2); out << "\"unisonDetuneCents\": " << v.unisonDetuneCents << ",\n";
             WriteIndent(out, indent + 2); out << "\"unisonSpread\": " << v.unisonSpread << ",\n";
             WriteIndent(out, indent + 2); out << "\"subOscLevel\": " << v.subOscLevel << ",\n";
+            WriteIndent(out, indent + 2); out << "\"pulseWidth\": " << v.pulseWidth << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
+            WriteIndent(out, indent + 2); out << "\"ringModMix\": " << v.ringModMix << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
             WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";

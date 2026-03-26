@@ -35,6 +35,11 @@ struct WaveformConfig
     double unisonSpread = 0.0;
     // Sub-osc (-1 octave) の混合量。
     double subOscLevel = 0.0;
+    // Square 波のパルス幅（0.05..0.95）。
+    double pulseWidth = 0.5;
+    bool ringModEnabled = false;
+    double ringModRatio = 2.0;
+    double ringModMix = 1.0;
     // 共通Filterレイヤー（Waveform向け初期接続）。
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
@@ -68,6 +73,10 @@ struct AnalogConfig
     double unisonDetuneCents = 0.0;
     double unisonSpread = 0.0;
     double subOscLevel = 0.0;
+    double pulseWidth = 0.5;
+    bool ringModEnabled = false;
+    double ringModRatio = 2.0;
+    double ringModMix = 1.0;
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;

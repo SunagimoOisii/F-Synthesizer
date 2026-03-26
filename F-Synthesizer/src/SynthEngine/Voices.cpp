@@ -145,6 +145,7 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(ws.filter, wave->filterResonance);
         ResetFilterState(ws.filter);
 
+        ws.ringPhase = 0.0;
         ResetModulationState(ws.modulation);
         NoteOnModulation(ws.modulation, wave->modulation);
     }
@@ -174,6 +175,7 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(as.filter, analog->filterResonance);
         ResetFilterState(as.filter);
 
+        as.ringPhase = 0.0;
         ResetModulationState(as.modulation);
         NoteOnModulation(as.modulation, analog->modulation);
 
