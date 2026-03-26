@@ -123,6 +123,7 @@ namespace gui
 {
 bool DrawChannelEditor(
     GUIState& state,
+    bool showSourceTypeSelector,
     const std::function<void(const char* what, const char* impact, const char* caution)>& updateHoverHelp)
 {
     bool changed = false;
@@ -349,43 +350,46 @@ bool DrawChannelEditor(
 
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
-        size_t guiSourceKindCount = 0;
-        const auto guiSourceKinds = BuildGuiSourceKindList(guiSourceKindCount);
-        int srcType = 0;
-        for (size_t i = 0; i < guiSourceKindCount; i++)
+        if (showSourceTypeSelector)
         {
-            if (guiSourceKinds[i] == selectedKind)
-            {
-                srcType = static_cast<int>(i);
-                break;
-            }
-        }
-        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiSourceKinds[static_cast<size_t>(srcType)])))
-        {
+            const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
+            size_t guiSourceKindCount = 0;
+            const auto guiSourceKinds = BuildGuiSourceKindList(guiSourceKindCount);
+            int srcType = 0;
             for (size_t i = 0; i < guiSourceKindCount; i++)
             {
-                const config::SourceKind candidate = guiSourceKinds[i];
-                const bool selected = (srcType == static_cast<int>(i));
-                if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                if (guiSourceKinds[i] == selectedKind)
                 {
                     srcType = static_cast<int>(i);
-                    changed = true;
-                    chCfg.source = DefaultSourceByType(config::SourceKindToIndex(candidate));
-                }
-                if (selected)
-                {
-                    ImGui::SetItemDefaultFocus();
+                    break;
                 }
             }
-            ImGui::EndCombo();
-        }
-        if (updateHoverHelp)
-        {
-            updateHoverHelp(
-                "音源タイプを切り替えます。",
-                "Waveform/Noise/FM/DrumKit/PSG の編集対象に切り替わります。",
-                "切替時は該当タイプの既定設定で初期化されます。");
+            if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiSourceKinds[static_cast<size_t>(srcType)])))
+            {
+                for (size_t i = 0; i < guiSourceKindCount; i++)
+                {
+                    const config::SourceKind candidate = guiSourceKinds[i];
+                    const bool selected = (srcType == static_cast<int>(i));
+                    if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                    {
+                        srcType = static_cast<int>(i);
+                        changed = true;
+                        chCfg.source = DefaultSourceByType(config::SourceKindToIndex(candidate));
+                    }
+                    if (selected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if (updateHoverHelp)
+            {
+                updateHoverHelp(
+                    "音源タイプを切り替えます。",
+                    "Waveform/Noise/FM/DrumKit/PSG の編集対象に切り替わります。",
+                    "切替時は該当タイプの既定設定で初期化されます。");
+            }
         }
 
         if (auto* wf = std::get_if<WaveformConfig>(&chCfg.source))

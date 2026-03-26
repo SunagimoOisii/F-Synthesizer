@@ -6,6 +6,7 @@
 
 | 日付 | 判断内容 | 選ばなかった選択肢 | 理由 |
 |---|---|---|---|
+| 2026-03-26 | Tier2（stereo/effects/pitchbend-rpn）は実装完了として roadmap を破棄し、設計の正本（`architecture/*`, `synth-methods/*`, `STATUS.md`）へ集約する | Tier2 roadmap を残したまま運用する | 実装済み仕様と計画メモの二重管理を避け、現在有効な契約だけを追跡できる状態を維持するため |
 | 2026-03-26 | Tier1 expression foundation は実装完了として roadmap ファイルを破棄し、進捗の正本を `STATUS.md` に一本化する | 完了済みTierを roadmap に残置する | 次アクション（Tier2）を明確化し、完了済み計画と実装済み状態の二重管理を避けるため |
 | 2026-03-19 | SubtractiveConfig を廃止し WaveformConfig に filterKeytrack を追加 | SubtractiveConfig を独立 source type として維持する | 減算合成は合成メソッドであり発振器種別ではない。method-boundaries.md の「発振器固有機能の再実装禁止」に違反するため |
 | 2026-03-08 | Source種別判定は GUI 直書きではなく `SourceCapabilityOf(...)` を正とし、`SourceRegistry` 契約へ集約する | GUIごとに `SourceKind` / `holds_alternative` 判定を個別維持する | 種別追加時の更新漏れを減らし、Config/GUI間の判定不整合を防ぐため |

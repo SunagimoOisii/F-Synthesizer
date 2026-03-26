@@ -140,10 +140,33 @@ struct RenderState
     std::array<ChannelAdsrOffset, 16> channelAdsrOffset{};
     std::array<double, 16> channelPortamentoTimeSec{};
     std::array<bool, 16> channelPortamentoOn{};
-    std::array<double, 16> channelMixGain{};
+    std::array<double, 16> channelMixGainL{};
+    std::array<double, 16> channelMixGainR{};
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};
     std::array<bool, 16> channelRenderable{};
+    std::array<double, 16> channelPitchBendNorm{};
+    std::array<double, 16> channelPitchBendRangeSemis{};
+    std::array<int, 16> channelRpnMsb{};
+    std::array<int, 16> channelRpnLsb{};
+    MasterEffectConfig effects{};
+    std::vector<int> tempoChangeSamples{};
+    std::vector<double> tempoChangeBpms{};
+    size_t tempoChangeIndex = 0;
+    double currentBpm = 120.0;
+    std::vector<double> delayBufferL{};
+    std::vector<double> delayBufferR{};
+    size_t delayWrite = 0;
+    std::vector<double> reverbCombL[4];
+    std::vector<double> reverbCombR[4];
+    std::array<size_t, 4> reverbCombWrite{};
+    std::vector<double> reverbAllpassL[2];
+    std::vector<double> reverbAllpassR[2];
+    std::array<size_t, 2> reverbAllpassWrite{};
+    std::vector<double> chorusBufferL{};
+    std::vector<double> chorusBufferR{};
+    size_t chorusWrite = 0;
+    double chorusPhase = 0.0;
     bool hasAnySolo = false;
     std::vector<uint8_t> cleanupKeepScratch{};
 };
@@ -159,4 +182,10 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleRate,
     RenderState& state);
 
-double RenderVoices(RenderState& state, const SoundData& sound);
+struct StereoFrame
+{
+    double left = 0.0;
+    double right = 0.0;
+};
+
+StereoFrame RenderVoices(RenderState& state, const SoundData& sound);

@@ -13,7 +13,8 @@ constexpr double kPi = 3.14159265358979323846;
 struct VoiceRenderInput
 {
     double dt = 0.0;
-    double mixGain = 1.0;
+    double mixGainL = 1.0;
+    double mixGainR = 1.0;
     double pitchFactor = 1.0;
     double ccGain = 1.0;
     double velGain = 1.0;
@@ -483,10 +484,10 @@ void ApplyModulationLayer(
 }
 } // namespace
 
-double RenderVoices(RenderState& state, const SoundData& sound)
+StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 {
     // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
-    double sum = 0.0;
+    StereoFrame sum{};
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;
 
@@ -530,7 +531,8 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         {
             continue;
         }
-        in.mixGain = state.channelMixGain[ch];
+        in.mixGainL = state.channelMixGainL[ch];
+        in.mixGainR = state.channelMixGainR[ch];
         in.pitchFactor = state.channelPitch[ch];
         in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
         in.modwheel = state.channelModwheel[ch];
@@ -561,7 +563,7 @@ double RenderVoices(RenderState& state, const SoundData& sound)
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 
-        sum += in.mixGain *
+        const double mono = 
             frame.sourceGain *
             voices.amp[i] *
             in.ccGain *
@@ -569,6 +571,8 @@ double RenderVoices(RenderState& state, const SoundData& sound)
             frame.sample *
             in.envGain *
             frame.ampMul;
+        sum.left += in.mixGainL * mono;
+        sum.right += in.mixGainR * mono;
     }
 
     return sum;

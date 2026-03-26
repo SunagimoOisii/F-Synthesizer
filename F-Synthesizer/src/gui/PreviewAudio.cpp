@@ -67,7 +67,9 @@ bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, st
     }
 
     // sampleRate変更時はデバイスを作り直し、再生ピッチずれを防ぐ。
-    if (playback.deviceReady && playback.sampleRate != static_cast<ma_uint32>(sampleRate))
+    if (playback.deviceReady &&
+        (playback.sampleRate != static_cast<ma_uint32>(sampleRate) ||
+            playback.device.playback.channels != playback.channels))
     {
         ma_device_uninit(&playback.device);
         playback.deviceReady = false;
@@ -120,11 +122,12 @@ void ShutdownPreviewAudio(PreviewPlaybackState& playback)
 
 bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err)
 {
-    if (sound.data.empty())
+    if (sound.length <= 0 || (sound.dataL.empty() && sound.data.empty()))
     {
         err = "Preview buffer is empty.";
         return false;
     }
+    playback.channels = (sound.channels >= 2) ? 2 : 1;
     if (!EnsurePreviewAudioDevice(playback, sound.fs, err))
     {
         return false;
@@ -132,11 +135,23 @@ bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bo
 
     // PCM書き換え中だけロックし、コールバック側は読み取り専用で動かす。
     std::lock_guard<std::mutex> lock(playback.mutex);
-    playback.pcm.resize(sound.data.size());
-    for (size_t i = 0; i < sound.data.size(); i++)
+    playback.pcm.resize(static_cast<size_t>(sound.length) * playback.channels);
+    for (int i = 0; i < sound.length; i++)
     {
-        const double clamped = (std::max)(-1.0, (std::min)(1.0, sound.data[i]));
-        playback.pcm[i] = static_cast<float>(clamped);
+        const double lRaw = (i < static_cast<int>(sound.dataL.size())) ? sound.dataL[i] : sound.data[i];
+        const double rRaw = (i < static_cast<int>(sound.dataR.size())) ? sound.dataR[i] : sound.data[i];
+        const double l = (std::max)(-1.0, (std::min)(1.0, lRaw));
+        const double r = (std::max)(-1.0, (std::min)(1.0, rRaw));
+        if (playback.channels == 1)
+        {
+            playback.pcm[i] = static_cast<float>((l + r) * 0.5);
+        }
+        else
+        {
+            const size_t base = static_cast<size_t>(i) * 2;
+            playback.pcm[base + 0] = static_cast<float>(l);
+            playback.pcm[base + 1] = static_cast<float>(r);
+        }
     }
     playback.frameCursor.store(0, std::memory_order_relaxed);
     playback.loop.store(loop, std::memory_order_relaxed);

@@ -96,7 +96,7 @@ double PreviewRangeDurationSec(const GUIState& state)
 
 void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
 {
-    if (durationSec <= 0.0 || sound.fs <= 0 || sound.data.empty())
+    if (durationSec <= 0.0 || sound.fs <= 0 || sound.length <= 0)
     {
         return;
     }
@@ -104,13 +104,18 @@ void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
     if (keepSamples == 0)
     {
         sound.data.clear();
+        sound.dataL.clear();
+        sound.dataR.clear();
         sound.length = 0;
         return;
     }
-    if (keepSamples < sound.data.size())
+    if (keepSamples < static_cast<uint64_t>(sound.length))
     {
-        sound.data.resize(static_cast<size_t>(keepSamples));
-        sound.length = static_cast<int>(sound.data.size());
+        const size_t keep = static_cast<size_t>(keepSamples);
+        sound.data.resize(keep);
+        sound.dataL.resize(keep);
+        sound.dataR.resize(keep);
+        sound.length = static_cast<int>(keep);
     }
 }
 
@@ -185,6 +190,27 @@ int FindPresetIndex(const GUIState& state, const std::string& name)
         }
     }
     return -1;
+}
+
+bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind kind)
+{
+    switch (kind)
+    {
+    case config::SourceKind::Waveform:
+        return presetName.rfind("wave_", 0) == 0 || presetName == "basic_wave";
+    case config::SourceKind::Fm:
+        return presetName.rfind("fm_", 0) == 0;
+    case config::SourceKind::Psg:
+        return presetName.rfind("psg_", 0) == 0;
+    case config::SourceKind::DrumKit:
+        return presetName.rfind("drumkit_", 0) == 0;
+    case config::SourceKind::Noise:
+        return presetName.rfind("noise_", 0) == 0 || presetName.rfind("psg_noise_", 0) == 0;
+    case config::SourceKind::Drum:
+    case config::SourceKind::Count:
+    default:
+        return false;
+    }
 }
 
 bool ValidateBeforeRun(const GUIState& state, std::string& err)
@@ -361,7 +387,23 @@ void AppendGUILog(GUIState& state, const std::string& line)
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
     // preset一覧は毎回ファイル一覧を読み直し、追加/削除を再起動なしで反映する。
-    state.presetItems = CollectPresetItems(FindProjectRootPath());
+    std::vector<std::string> all = CollectPresetItems(FindProjectRootPath());
+    EnsureChannelConfigs(state);
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
+    state.presetItems.clear();
+    state.presetItems.reserve(all.size());
+    for (const auto& name : all)
+    {
+        if (PresetMatchesSourceKind(name, kind))
+        {
+            state.presetItems.push_back(name);
+        }
+    }
+    if (state.presetItems.empty())
+    {
+        state.presetItems = std::move(all);
+    }
     if (state.presetItems.empty())
     {
         state.presetItems.push_back("basic_wave");

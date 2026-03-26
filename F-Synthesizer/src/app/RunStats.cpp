@@ -230,22 +230,42 @@ void LogRenderStats(IRunObserver* observer, const SoundData& sound)
     double peak = 0.0;
     double sumSq = 0.0;
     int nonZero = 0;
-    for (double v : sound.data)
+    const bool hasStereo = !sound.dataL.empty() && !sound.dataR.empty();
+    const size_t frames = static_cast<size_t>((std::max)(0, sound.length));
+    const size_t sampleCount = hasStereo ? (frames * 2) : sound.data.size();
+    if (hasStereo)
     {
-        double a = std::abs(v);
-        peak = (std::max)(peak, a);
-        sumSq += v * v;
-        if (a > 1e-8)
+        for (size_t i = 0; i < frames; i++)
         {
-            nonZero++;
+            const double vL = sound.dataL[i];
+            const double vR = sound.dataR[i];
+            const double aL = std::abs(vL);
+            const double aR = std::abs(vR);
+            peak = (std::max)(peak, (std::max)(aL, aR));
+            sumSq += (vL * vL) + (vR * vR);
+            if (aL > 1e-8) nonZero++;
+            if (aR > 1e-8) nonZero++;
         }
     }
-    double rms = sound.data.empty() ? 0.0 : std::sqrt(sumSq / (double)sound.data.size());
+    else
+    {
+        for (double v : sound.data)
+        {
+            const double a = std::abs(v);
+            peak = (std::max)(peak, a);
+            sumSq += v * v;
+            if (a > 1e-8)
+            {
+                nonZero++;
+            }
+        }
+    }
+    double rms = (sampleCount == 0) ? 0.0 : std::sqrt(sumSq / static_cast<double>(sampleCount));
     std::ostringstream oss;
     oss << "[RenderStats] peak=" << peak
         << " rms=" << rms
         << " nonZero=" << nonZero
-        << "/" << sound.data.size();
+        << "/" << sampleCount;
     LogLine(observer, oss.str());
 }
 } // namespace app::run

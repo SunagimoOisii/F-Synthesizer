@@ -1,6 +1,6 @@
 # 合成方式の責務境界（重複防止ガイド）
 
-最終更新: 2026-03-19  
+最終更新: 2026-03-26  
 状態: Draft（運用開始）
 
 ## 1. 目的
@@ -19,14 +19,17 @@
 - `Modulation Layer`:
   - source/shaper 後段で効く変調量の適用（例: ampMul）
 - `Mixer/Output Layer`:
-  - mute/solo/level/pan/gain、最終出力
+  - mute/solo/level/pan/gain（equal-power pan）
+  - master effect layer（chorus/delay/reverb）
+  - stereo最終出力
 
 現行Rendererでの契約順（2026-03-19）:
 1. voice state 更新
 2. source render（方式固有）
 3. common shaper
 4. modulation apply（後段乗算）
-5. mix / output
+5. mix
+6. master effect / output
 
 ## 3. 方式ごとの責務範囲（In / Out）
 

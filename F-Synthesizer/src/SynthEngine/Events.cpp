@@ -18,6 +18,17 @@ namespace
         return std::clamp((value - 64) / 63.0, -1.0, 1.0);
     }
 
+    void RecomputePitchFactor(int ch, RenderState& state)
+    {
+        const double bendSemis = state.channelPitchBendNorm[ch] * state.channelPitchBendRangeSemis[ch];
+        state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
+    }
+
+    bool IsPitchBendRpnSelected(int ch, const RenderState& state)
+    {
+        return state.channelRpnMsb[ch] == 0 && state.channelRpnLsb[ch] == 0;
+    }
+
     // 目的: 主要CCをチャンネル状態へ反映する。
     void ApplyControlChange(const MIDIEvent& e, RenderState& state)
     {
@@ -69,6 +80,31 @@ namespace
         case 75:
             state.channelAdsrOffset[ch].decay = NormalizeCcCentered(e.value);
             break;
+        case 101:
+            state.channelRpnMsb[ch] = std::clamp(e.value, 0, 127);
+            break;
+        case 100:
+            state.channelRpnLsb[ch] = std::clamp(e.value, 0, 127);
+            break;
+        case 6:
+            if (IsPitchBendRpnSelected(ch, state))
+            {
+                const int coarse = std::clamp(e.value, 0, 24);
+                const int fine = static_cast<int>(std::round((state.channelPitchBendRangeSemis[ch] - coarse) * 100.0));
+                const int clampedFine = std::clamp(fine, 0, 99);
+                state.channelPitchBendRangeSemis[ch] = coarse + clampedFine / 100.0;
+                RecomputePitchFactor(ch, state);
+            }
+            break;
+        case 38:
+            if (IsPitchBendRpnSelected(ch, state))
+            {
+                const int coarse = std::clamp(static_cast<int>(state.channelPitchBendRangeSemis[ch]), 0, 24);
+                const int fine = std::clamp((e.value * 100) / 127, 0, 99);
+                state.channelPitchBendRangeSemis[ch] = coarse + fine / 100.0;
+                RecomputePitchFactor(ch, state);
+            }
+            break;
         default:
             break;
         }
@@ -81,10 +117,8 @@ namespace
         int v = e.value;
         if (v < 0) v = 0;
         if (v > 16383) v = 16383;
-        double bend = (v - 8192) / 8192.0;
-        // 現実装は ±2 半音を基準に、ピッチ比へ変換する。
-        double bendSemis = bend * 2.0;
-        state.channelPitch[ch] = std::pow(2.0, bendSemis / 12.0);
+        state.channelPitchBendNorm[ch] = (v - 8192) / 8192.0;
+        RecomputePitchFactor(ch, state);
     }
 
     void HandleNoteOff(const MIDIEvent& e, RenderState& state)

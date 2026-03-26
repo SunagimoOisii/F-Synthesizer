@@ -489,6 +489,54 @@ if (state.UIModeTab == 0)
         ImGui::TableNextRow();
 
         ImGui::TableSetColumnIndex(0);
+        gui::EnsureChannelConfigs(state);
+        state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+        ChannelConfig& selectedSlotCfg = (*state.channelConfigs)[state.selectedSoundSlot];
+        auto buildGuiSourceKinds = [](std::array<config::SourceKind, config::kSourceKindCount>& kinds, size_t& count)
+        {
+            kinds = {};
+            count = 0;
+            for (int i = 0; i < config::kSourceKindCount; i++)
+            {
+                const config::SourceKind kind = config::SourceKindFromIndex(i);
+                if (kind == config::SourceKind::Count)
+                {
+                    continue;
+                }
+                const config::SourceCapability capability = config::SourceCapabilityOf(kind);
+                if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
+                {
+                    kinds[count++] = kind;
+                }
+            }
+            if (count == 0)
+            {
+                kinds[count++] = config::SourceKind::Waveform;
+            }
+        };
+        std::array<config::SourceKind, config::kSourceKindCount> guiKinds{};
+        size_t guiKindCount = 0;
+        buildGuiSourceKinds(guiKinds, guiKindCount);
+        const config::SourceKind currentKind = config::SourceConfigKind(selectedSlotCfg.source);
+        int sourceKindUiIndex = 0;
+        for (size_t i = 0; i < guiKindCount; i++)
+        {
+            if (guiKinds[i] == currentKind)
+            {
+                sourceKindUiIndex = static_cast<int>(i);
+                break;
+            }
+        }
+
+        static int lastPresetFilterKey = -1;
+        const int filterKey = std::clamp(state.selectedSoundSlot, 0, 15) * 100 +
+            config::SourceKindToIndex(currentKind);
+        if (filterKey != lastPresetFilterKey)
+        {
+            RefreshPresetItems(state, state.presetName);
+            lastPresetFilterKey = filterKey;
+        }
+
         if (state.presetDirty)
         {
             ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
@@ -498,6 +546,34 @@ if (state.UIModeTab == 0)
             ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
         }
         ImGui::BeginDisabled(state.running);
+        if (ImGui::BeginCombo("Source Type (Preset Scope)", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
+        {
+            for (size_t i = 0; i < guiKindCount; i++)
+            {
+                const config::SourceKind candidate = guiKinds[i];
+                const bool selected = (sourceKindUiIndex == static_cast<int>(i));
+                if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                {
+                    sourceKindUiIndex = static_cast<int>(i);
+                    selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                    state.presetDirty = true;
+                    RefreshPresetItems(state, state.presetName);
+                    AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
+                        config::SourceKindToTypeName(candidate) +
+                        " @ slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
+                }
+                if (selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        updateHoverHelp(
+            "Source Type を選択します。",
+            "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
+            "切替時は選択中スロットを該当sourceTypeの初期値で再初期化します。");
+
         auto presetGetter = [](void* data, int idx, const char** outText) -> bool
         {
             auto* items = static_cast<std::vector<std::string>*>(data);
@@ -630,6 +706,7 @@ if (state.UIModeTab == 0)
         ImGui::TableSetColumnIndex(1);
         state.presetDirty |= DrawChannelEditor(
             state,
+            false,
             [&](const char* what, const char* impact, const char* caution)
             {
                 updateHoverHelp(what, impact, caution);

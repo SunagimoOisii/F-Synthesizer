@@ -181,11 +181,51 @@ struct ChannelMixState
     double gain = 1.0;
 };
 
+struct ReverbEffectConfig
+{
+    bool enabled = false;
+    double mix = 0.0;
+    double roomSize = 0.45;
+    double damping = 0.30;
+};
+
+struct DelayEffectConfig
+{
+    bool enabled = false;
+    double mix = 0.0;
+    double timeSec = 0.25;
+    double feedback = 0.25;
+    bool tempoSync = false;
+    // 1.0=4分音符, 0.5=8分音符。
+    double syncBeats = 1.0;
+};
+
+struct ChorusEffectConfig
+{
+    bool enabled = false;
+    double mix = 0.0;
+    double baseDelayMs = 14.0;
+    double depthMs = 6.0;
+    double rateHz = 0.35;
+    double feedback = 0.08;
+};
+
+struct MasterEffectConfig
+{
+    ReverbEffectConfig reverb{};
+    DelayEffectConfig delay{};
+    ChorusEffectConfig chorus{};
+};
+
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs,
     const std::array<ChannelMixState, 16>& channelMixStates,
+    const MasterEffectConfig& effects = MasterEffectConfig{},
+    const std::vector<TempoEvent>* tempoEvents = nullptr,
+    int ticksPerQuarter = 0,
+    double renderStartSec = 0.0,
     // shouldCancel が true を返した時点でレンダを中断する。
     // canceled が null でない場合は、中断時のみ true を書き戻す。
     const std::function<bool()>& shouldCancel = {},

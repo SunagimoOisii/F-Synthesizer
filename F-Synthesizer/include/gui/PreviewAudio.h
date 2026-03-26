@@ -20,7 +20,7 @@ struct PreviewPlaybackState
     std::atomic<int> playStartTick{ 0 };
     std::atomic<bool> playing{ false };
     std::atomic<bool> loop{ false };
-    ma_uint32 channels = 1;
+    ma_uint32 channels = 2;
     ma_uint32 sampleRate = 44100;
 };
 

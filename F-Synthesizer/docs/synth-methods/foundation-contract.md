@@ -1,6 +1,6 @@
 # 合成基盤契約（方式横断）
 
-最終更新: 2026-03-19
+最終更新: 2026-03-26
 状態: Frozen（2026-03-08 契約凍結）
 
 ## 1. 目的
@@ -57,12 +57,13 @@
 ### 2.3 Render Contract 契約
 
 - 1サンプル処理順を固定する。
-- 現行順序（2026-03-19）:
+- 現行順序（2026-03-26）:
   1. voice state 更新
   2. source render（方式固有）
   3. common shaper（filter / drive など共通処理）
   4. modulation 適用（後段乗算）
-  5. mix / output
+  5. mix（stereo pan / level/gain）
+  6. master effect layer（chorus -> delay -> reverb） / output
 - source render 内で「発振に直結する modulation サンプリング（pitch など）」を行うことは許可する。
 - waveform/fm の現行マッピング:
   - waveform: `pitchMul` は 2 で参照、`filterCutoff` は 3、`amp` は 4
@@ -75,13 +76,13 @@
   - `pitchMul`
   - `amp`
   - `filterCutoffHz`
-- `pan` の扱い（2026-03-08 確定）:
-  - 現行は `非採用`（ConfigLoad で受理しない）。
+- `pan` の扱い（2026-03-26 更新）:
+  - 現行は `mod destinationとしては非採用`（ConfigLoad で受理しない）。
   - 理由:
-    - 現レンダがモノラル前提で、voice 単位の pan 変調を適用しても出力意味が不明確。
-    - `channelMix.pan` と競合しやすく、契約境界を曖昧にする。
+    - ステレオレンダは `channelMix.pan`（equal-power）を mix 層で適用する契約に固定したため。
+    - voice単位 pan modulation を導入すると、mix層の責務と競合しやすい。
   - 再検討条件:
-    - ステレオレンダ経路と voice pan 合成規約（pre/post mix）を先に確定した場合のみ採用検討する。
+    - voice pan を導入する場合、`source/render層` と `mix層` の合成規約（優先順位・合成式）を先に明文化する。
 - 方式固有 destination の拡張規約（2026-03-08 確定）:
   - 命名: `<sourceKind>.<parameterId>`（例: `fm.index`）。
   - `sourceKind` は `source.type` と同じ小文字名を使う（`fm`, `noise`, `drum` など）。

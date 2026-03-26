@@ -10,9 +10,15 @@ public:
     // 既定は 1秒分(44.1kHz)の16bitバッファを確保する。
     SoundData();
     SoundData(int length, int bits, int fs);
+    SoundData(int length, int bits, int fs, int channels);
 
+    // length はフレーム数（1chあたりサンプル数）。
     int length;
     int bits;
     int fs; //サンプリングレート(Hz)
+    int channels;
+    // 互換維持用のモノラル合成バッファ（(L+R)*0.5）。
     std::vector<double> data;
+    std::vector<double> dataL;
+    std::vector<double> dataR;
 };

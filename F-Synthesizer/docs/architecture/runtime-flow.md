@@ -1,6 +1,6 @@
 # Runtime Flow
 
-最終更新: 2026-02-25
+最終更新: 2026-03-26
 
 ## End-to-End
 
@@ -79,6 +79,7 @@ flowchart TD
 | 実行入口 | `Run(...)` 公開APIが `RunMain` へ集約される | `include/AppCore.h`, `src/SoundGenerate.cpp`, `src/app/RunExecution.cpp` |
 | モード分岐 | `RenderOptions.mode` が Export/Preview を分岐する | `src/app/RunExecution.cpp`, `src/app/RunSave.cpp` |
 | 中断仕様 | `allowCancel && observer` のときだけ `ShouldCancel()` を使う | `src/app/RunExecution.cpp` |
+| Tier2境界 | `masterEffects` と tempo情報を app->core->engine で通線する | `include/AppCore.h`, `include/core/RenderGateway.h`, `src/core/RenderGateway.cpp` |
 
 ## MIDI Pipeline
 
@@ -136,6 +137,14 @@ flowchart TD
 - 代替案: app層から `RenderMIDIEvents` を直接呼ぶ案。
 - 影響範囲: 将来の実装差し替え（エンジン変更/テストダブル導入）時も呼び出し側の変更を最小化できる。
 - 関連ファイル: include/core/AudioBuffer.h, include/core/RenderGateway.h, src/core/AudioBuffer.cpp
+
+#### 2026-03-26: Tier2でRun境界を stereo/effects/tempo-sync に拡張
+- カテゴリ: 実行フロー/キャンセル
+- 背景: stereoレンダ、master effect、tempo-sync delay を導入するには、app側で確定したtempo情報とeffect設定をSynthEngineへ渡す必要がある。
+- 判断: `RunExecution -> RenderGateway -> RenderMIDIEvents` で `tempoEvents` / `ticksPerQuarter` / `startSec` / `masterEffects` を明示的に通線する。
+- 代替案: SynthEngine側で再度tempo推定する、またはeffect設定をグローバル状態で参照する案。
+- 影響範囲: app-core境界の契約が明確化され、delay tempoSync の追従性とPreview/Exportの一貫性を維持できる。
+- 関連ファイル: include/AppCore.h, include/core/RenderGateway.h, src/app/RunExecution.cpp, src/core/RenderGateway.cpp, src/SynthEngine/Engine.cpp
 
 ### MIDI時間変換
 

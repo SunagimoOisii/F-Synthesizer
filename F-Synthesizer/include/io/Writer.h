@@ -17,7 +17,7 @@ struct WAVWriteError
     unsigned long systemError = 0;
 };
 
-// 目的: SoundData をモノラルPCM WAVとして保存する。
+// 目的: SoundData をPCM WAVとして保存する（channels>=2 の場合はステレオ）。
 // 前提: outError を使わない経路。失敗理由は戻り値のみで判定する。
 bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePath);
 // 目的: SaveWAVFilePath の詳細診断付き関数。

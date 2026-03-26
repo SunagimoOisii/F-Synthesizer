@@ -101,7 +101,7 @@ int RunMain(
     {
         soundLength = neededSamples;
     }
-    SoundData sound(soundLength, config.bits, config.sampleRate);
+    SoundData sound(soundLength, config.bits, config.sampleRate, 2);
 
     {
         std::ostringstream oss;
@@ -118,12 +118,32 @@ int RunMain(
     if (canCancel)
     {
         auto shouldCancelObserver = [&]() -> bool { return observer->ShouldCancel(); };
-        RenderWithEngine(sound, events, *channelConfigs, *channelMixStates, shouldCancelObserver, &canceled);
+        RenderWithEngine(
+            sound,
+            events,
+            midiOut.tempoEvents,
+            midiOut.ticksPerQuarter,
+            options.startSec,
+            *channelConfigs,
+            *channelMixStates,
+            config.masterEffects,
+            shouldCancelObserver,
+            &canceled);
     }
     else
     {
         auto neverCancel = []() -> bool { return false; };
-        RenderWithEngine(sound, events, *channelConfigs, *channelMixStates, neverCancel, &canceled);
+        RenderWithEngine(
+            sound,
+            events,
+            midiOut.tempoEvents,
+            midiOut.ticksPerQuarter,
+            options.startSec,
+            *channelConfigs,
+            *channelMixStates,
+            config.masterEffects,
+            neverCancel,
+            &canceled);
     }
     if (canceled)
     {

@@ -71,16 +71,31 @@ bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePa
         return false;
     }
 
-    std::vector<short> wdata(sound.data.size());
+    const int channels = (sound.channels >= 2) ? 2 : 1;
+    std::vector<short> wdata(static_cast<size_t>(sound.length) * channels);
     for (int i = 0; i < sound.length; i++)
     {
-        // WAV 16bit PCM の範囲外を書かないため、-1.0..1.0 に丸めてから整数化する。
-        double amp = (sound.data[i] > 1.0) ? 1.0 : sound.data[i];
-        amp = (amp < -1.0) ? -1.0 : amp;
-        wdata[i] = (short)(amp * SHRT_MAX);
+        const double l = (i < static_cast<int>(sound.dataL.size())) ? sound.dataL[i] : sound.data[i];
+        const double r = (i < static_cast<int>(sound.dataR.size())) ? sound.dataR[i] : sound.data[i];
+        auto toPcm16 = [](double x) -> short
+        {
+            double amp = (x > 1.0) ? 1.0 : x;
+            amp = (amp < -1.0) ? -1.0 : amp;
+            return static_cast<short>(amp * SHRT_MAX);
+        };
+        if (channels == 1)
+        {
+            wdata[i] = toPcm16(sound.data[i]);
+        }
+        else
+        {
+            const size_t base = static_cast<size_t>(i) * 2;
+            wdata[base + 0] = toPcm16(l);
+            wdata[base + 1] = toPcm16(r);
+        }
     }
 
-    int32_t wsize = (int32_t)(sizeof(short) * sound.length);
+    int32_t wsize = static_cast<int32_t>(sizeof(short) * wdata.size());
     Chunk riffChunk = { 'R', 'I', 'F', 'F' };
     int32_t riffSize = 12 + (int32_t)sizeof(PCMWAVEFORMAT) + 8 + wsize;
     Chunk waveChunk = { 'W', 'A', 'V', 'E' };
@@ -88,10 +103,10 @@ bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePa
     int32_t fsize = (int32_t)sizeof(PCMWAVEFORMAT);
     PCMWAVEFORMAT wform{};
     wform.wf.wFormatTag = 1;
-    wform.wf.nChannels = 1;
+    wform.wf.nChannels = static_cast<WORD>(channels);
     wform.wf.nSamplesPerSec = (DWORD)sound.fs;
-    wform.wf.nAvgBytesPerSec = (DWORD)(sound.bits * sound.fs / 8);
-    wform.wf.nBlockAlign = (WORD)(sound.bits / 8);
+    wform.wf.nAvgBytesPerSec = (DWORD)(sound.bits * sound.fs * channels / 8);
+    wform.wf.nBlockAlign = static_cast<WORD>((sound.bits / 8) * channels);
     wform.wBitsPerSample = (WORD)sound.bits;
     Chunk dataChunk = { 'd', 'a', 't', 'a' };
     int32_t dsize = wsize;

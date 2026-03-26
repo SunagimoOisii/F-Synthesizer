@@ -46,6 +46,30 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     {
         WriteChannelMixState(out, ch, channelMix[ch], ch != 15);
     }
+    out << "  },\n";
+    out << "  \"effects\": {\n";
+    out << "    \"reverb\": {\n";
+    out << "      \"enabled\": " << (config.masterEffects.reverb.enabled ? "true" : "false") << ",\n";
+    out << "      \"mix\": " << config.masterEffects.reverb.mix << ",\n";
+    out << "      \"roomSize\": " << config.masterEffects.reverb.roomSize << ",\n";
+    out << "      \"damping\": " << config.masterEffects.reverb.damping << "\n";
+    out << "    },\n";
+    out << "    \"delay\": {\n";
+    out << "      \"enabled\": " << (config.masterEffects.delay.enabled ? "true" : "false") << ",\n";
+    out << "      \"mix\": " << config.masterEffects.delay.mix << ",\n";
+    out << "      \"timeSec\": " << config.masterEffects.delay.timeSec << ",\n";
+    out << "      \"feedback\": " << config.masterEffects.delay.feedback << ",\n";
+    out << "      \"tempoSync\": " << (config.masterEffects.delay.tempoSync ? "true" : "false") << ",\n";
+    out << "      \"syncBeats\": " << config.masterEffects.delay.syncBeats << "\n";
+    out << "    },\n";
+    out << "    \"chorus\": {\n";
+    out << "      \"enabled\": " << (config.masterEffects.chorus.enabled ? "true" : "false") << ",\n";
+    out << "      \"mix\": " << config.masterEffects.chorus.mix << ",\n";
+    out << "      \"baseDelayMs\": " << config.masterEffects.chorus.baseDelayMs << ",\n";
+    out << "      \"depthMs\": " << config.masterEffects.chorus.depthMs << ",\n";
+    out << "      \"rateHz\": " << config.masterEffects.chorus.rateHz << ",\n";
+    out << "      \"feedback\": " << config.masterEffects.chorus.feedback << "\n";
+    out << "    }\n";
     out << "  }\n";
     out << "}\n";
 

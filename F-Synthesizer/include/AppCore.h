@@ -40,6 +40,7 @@ struct AppConfig
     int bits;
     int sampleRate;
     double extraReleaseSec;
+    MasterEffectConfig masterEffects;
     std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
     std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
     // GUI編集のNoteイベント差し替え用（nullならMIDIファイルのNoteをそのまま使用）。
