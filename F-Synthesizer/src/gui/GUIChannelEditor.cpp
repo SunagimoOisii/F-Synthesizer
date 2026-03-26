@@ -312,17 +312,18 @@ bool DrawChannelEditor(
             const char* label;
             ModDestination value;
         };
-        std::array<DestinationChoice, 5> destinationChoices{ {
+        std::array<DestinationChoice, 6> destinationChoices{ {
             { "none", ModDestination::None },
             { "pitchMul", ModDestination::Pitch },
             { "amp", ModDestination::Amp },
             { "filterCutoffHz", ModDestination::FilterCutoff },
+            { "filterResonance", ModDestination::FilterResonance },
             { "fm.index", ModDestination::FmIndex },
         } };
         int destinationCount = 3;
         if (allowFilterCutoff)
         {
-            destinationCount++;
+            destinationCount += 2;
         }
         if (allowFmIndex)
         {

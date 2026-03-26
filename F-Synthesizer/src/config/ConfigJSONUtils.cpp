@@ -244,6 +244,11 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
         outDestination = ModDestination::FilterCutoff;
         return true;
     }
+    if (name == "filterResonance")
+    {
+        outDestination = ModDestination::FilterResonance;
+        return true;
+    }
     if (name == "fm.index")
     {
         outDestination = ModDestination::FmIndex;
@@ -344,6 +349,7 @@ std::string ModDestinationToString(ModDestination destination)
     case ModDestination::Pitch: return "pitchMul";
     case ModDestination::Amp: return "amp";
     case ModDestination::FilterCutoff: return "filterCutoffHz";
+    case ModDestination::FilterResonance: return "filterResonance";
     case ModDestination::FmIndex: return "fm.index";
     }
     return "none";

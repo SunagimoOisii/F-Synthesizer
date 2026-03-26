@@ -26,6 +26,7 @@ Branch: `main`
 - Tier A-3 実装: Tone Preview ノート番号を `tonePreviewNoteNumber` として保存可能にし、Sound タブで `Preview Note` を手動選択（DrumKit 時は非表示、`ResolveSoundTonePreviewNote` は DrumKit 以外で手動値を優先）
 - Tier A-1 実装: Sound タブの Tone Preview にスペクトラムビューアを追加（Hann 窓付き簡易 DFT を 128 bin ヒストグラム表示、外部 FFT ライブラリ追加なし）
 - Tier B-1 実装: FM アルゴリズムを `0..7` へ拡張（Renderer に case 4〜7 を追加、GUI の選択肢/テンプレート範囲を 0..7 へ更新、Load/Schema も 0..7 を受理）
+- Tier B-2 実装: `ModDestination::FilterResonance` を追加し、`resonanceMul` を modulation 経路で評価して common shaper の `SetFilterResonance` に乗算適用（GUI destination / JSON parse+save 文字列も対応）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

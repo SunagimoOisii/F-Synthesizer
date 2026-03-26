@@ -137,6 +137,7 @@ struct SourceRenderFrame
     double ampMul = 1.0;
     double sourceGain = 1.0;
     double shaperCutoffHz = 0.0;
+    double shaperResonanceMul = 1.0;
     double shaperDrive = 0.0;
     CommonShaperKind shaperKind = CommonShaperKind::None;
 };

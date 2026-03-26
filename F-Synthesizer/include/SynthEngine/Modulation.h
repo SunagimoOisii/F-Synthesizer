@@ -34,6 +34,7 @@ enum class ModDestination
     Pitch,
     Amp,
     FilterCutoff,
+    FilterResonance,
     FmIndex
 };
 
@@ -86,6 +87,7 @@ struct ModulationResult
     double pitchMul = 1.0;
     double ampMul = 1.0;
     double filterCutoffMul = 1.0;
+    double resonanceMul = 1.0;
     double fmIndexMul = 1.0;
 };
 

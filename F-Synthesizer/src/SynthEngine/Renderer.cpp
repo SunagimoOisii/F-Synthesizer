@@ -240,6 +240,7 @@ void RenderWaveformSource(
         effectiveCutoff *= keytrackRatio;
     }
     frame.shaperCutoffHz = effectiveCutoff;
+    frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
 
     voices.phase[i] += phaseInc;
@@ -315,6 +316,7 @@ void RenderAnalogSource(
         effectiveCutoff *= keytrackRatio;
     }
     frame.shaperCutoffHz = effectiveCutoff;
+    frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
 
     voices.phase[i] += phaseInc;
@@ -424,6 +426,7 @@ void RenderFmSource(
     fs.op0FeedbackSample = op0;
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz;
+    frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
 
     for (int k = 0; k < 4; k++)
@@ -569,7 +572,7 @@ void ApplyCommonShaper(
                 filterCutoffHz *= CutoffScaleFromBrightness(in.brightness);
                 SetFilterCutoffHz(st.filter, filterCutoffHz);
                 const double baseResonance = SourceFilterResonance(src);
-                SetFilterResonance(st.filter, baseResonance * ResonanceScaleFromCc(in.resonance));
+                SetFilterResonance(st.filter, baseResonance * ResonanceScaleFromCc(in.resonance) * frame.shaperResonanceMul);
                 frame.sample = ProcessFilterSample(st.filter, frame.sample);
             }
         }, voices.sourceState[i]);

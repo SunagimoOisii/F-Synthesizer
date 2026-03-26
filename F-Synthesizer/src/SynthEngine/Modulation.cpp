@@ -159,6 +159,9 @@ ModulationResult EvaluateModulation(
         case ModDestination::FilterCutoff:
             out.filterCutoffMul *= (1.0 + value);
             break;
+        case ModDestination::FilterResonance:
+            out.resonanceMul *= (1.0 + value);
+            break;
         case ModDestination::FmIndex:
             out.fmIndexMul *= (1.0 + value);
             break;
@@ -170,6 +173,7 @@ ModulationResult EvaluateModulation(
 
     out.ampMul = (std::max)(0.0, out.ampMul);
     out.filterCutoffMul = (std::max)(0.0, out.filterCutoffMul);
+    out.resonanceMul = std::clamp(out.resonanceMul, 0.0, 10.0);
     out.fmIndexMul = (std::max)(0.0, out.fmIndexMul);
     return out;
 }
