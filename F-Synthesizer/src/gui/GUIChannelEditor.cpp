@@ -8,6 +8,7 @@
 
 #include "config/SourceRegistry.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIMacroMapping.h"
 #include "gui/GUIStateModel.h"
 
 namespace
@@ -293,8 +294,10 @@ bool DrawChannelEditor(
         if (updateHoverHelp) updateHoverHelp("Release を調整します。", "ノートオフ後の余韻時間が変わります。", nullptr);
     }
 
+    bool layer3Changed = false;
     if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        const bool changedBeforeSourceDetails = changed;
         if (showSourceTypeSelector)
         {
             const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
@@ -343,6 +346,13 @@ bool DrawChannelEditor(
 #include "channeleditor/ChannelEditorNoise.inl"
 #include "channeleditor/ChannelEditorFm.inl"
 #include "channeleditor/ChannelEditorDrum.inl"
+        layer3Changed = (changed != changedBeforeSourceDetails);
+    }
+    if (layer3Changed)
+    {
+        // Layer2 マクロスライダーを Layer3 編集に追従させる。
+        const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
+        state.macroSliders[ch] = ReadMacroSliders((*state.channelConfigs)[ch], state.macroSliders[ch]);
     }
     return changed;
 }
