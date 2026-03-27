@@ -595,51 +595,6 @@ if (state.UIModeTab == 0)
             "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
             "切替時は選択中スロットを該当sourceTypeの初期値で再初期化します。");
 
-        auto presetGetter = [](void* data, int idx, const char** outText) -> bool
-        {
-            auto* items = static_cast<std::vector<std::string>*>(data);
-            if (items == nullptr || idx < 0 || idx >= static_cast<int>(items->size()))
-            {
-                return false;
-            }
-            *outText = (*items)[idx].c_str();
-            return true;
-        };
-        const int beforePresetIndex = state.presetIndex;
-        if (ImGui::Combo("Preset", &state.presetIndex, presetGetter, &state.presetItems, static_cast<int>(state.presetItems.size())))
-        {
-            if (state.presetDirty)
-            {
-                pendingPresetOriginalIndex = beforePresetIndex;
-                pendingPresetIndex = state.presetIndex;
-                openUnsavedPopupNextFrame = true;
-            }
-            else
-            {
-                applyPresetByIndex(state.presetIndex);
-            }
-        }
-        updateHoverHelp(
-            "読み込むPresetを選択します。",
-            "Sound設定の読み込み対象が変わります。",
-            "未保存変更がある場合は確認ダイアログを表示します。");
-        ImGui::SameLine();
-        if (ImGui::Button("Apply Preset Paths"))
-        {
-            if (state.presetDirty)
-            {
-                pendingPresetOriginalIndex = state.presetIndex;
-                pendingPresetIndex = state.presetIndex;
-                openUnsavedPopupNextFrame = true;
-            }
-            else
-            {
-                applyPresetByIndex(state.presetIndex);
-            }
-        }
-        updateHoverHelp(
-            "選択中Presetを再適用します。",
-            "Preset由来の設定パスを現在状態へ反映します。");
         ImGui::SameLine();
         if (ImGui::Button("Reset Defaults"))
         {

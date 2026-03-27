@@ -42,6 +42,7 @@ Branch: `main`
 - Tier D-1 実装（next-features）: Waveform/Analog に arpeggio（`enabled/rateHz/steps/semitones[8]`）を追加し、voice state の `arpStep/arpElapsedSec` で step進行しながら `pitchMul` へ半音オフセットを乗算適用（Renderer/Voices/Load/Save/GUI/比較関数 反映）
 - Tier D-2 実装（next-features）: Waveform/Analog に hard sync（`hardSyncEnabled/hardSyncRatio`）を追加し、voice state の `syncPhase` ラップ時にスレーブ位相 `voices.phase` をリセットして倍音を生成（Renderer/Voices/Load/Save/Schema/GUI/比較関数 反映）
 - Fix B-1 実装: Layer2 マクロ操作時の `autoTonePreviewPending` 直書きを廃止し、`autoTonePreviewEnabled` 時のみ `autoTonePreviewLastEditSec` を更新してデバウンスが正しく機能するよう修正
+- Fix A-1 実装: Sound左カラムの重複 `Preset` コンボと `Apply Preset Paths` ボタンを削除し、プリセット選択導線を右カラム Layer1 Discovery に一本化
 - `gui-help` 手動受け入れの記録を `docs/gui-help-hover-acceptance-checklist.md` に追加し、`GUI_REQUIREMENTS.md` と同期
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
