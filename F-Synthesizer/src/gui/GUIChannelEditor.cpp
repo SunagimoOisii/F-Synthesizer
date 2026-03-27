@@ -346,7 +346,7 @@ bool DrawChannelEditor(
 #include "channeleditor/ChannelEditorNoise.inl"
 #include "channeleditor/ChannelEditorFm.inl"
 #include "channeleditor/ChannelEditorDrum.inl"
-        layer3Changed = (changed != changedBeforeSourceDetails);
+        layer3Changed = (changed && !changedBeforeSourceDetails);
     }
     if (layer3Changed)
     {

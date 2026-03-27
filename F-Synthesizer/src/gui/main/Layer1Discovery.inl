@@ -1,5 +1,7 @@
 #include <cctype>
 
+#include "gui/GUIMacroSliders.h"
+
 namespace
 {
 static constexpr const char* kMacroTags[] = {
@@ -7,7 +9,6 @@ static constexpr const char* kMacroTags[] = {
     "ノイジー", "シンプル", "複雑", "アタック", "パッド",
     "FM", "アナログ", "ドラム", "ノイズ"
 };
-static constexpr int kMacroTagCount = 14;
 
 bool PresetMatchesTag(const std::string& name, int tagIdx)
 {
@@ -46,11 +47,22 @@ void DrawLayer1Discovery(
     state.layer1Expanded = true;
 
     ImGui::TextDisabled("タグ:");
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const float contentWidth = ImGui::GetContentRegionAvail().x;
+    float cursorX = 0.0f;
     for (int i = 0; i < kMacroTagCount; ++i)
     {
-        if (i > 0)
+        const float btnWidth = ImGui::CalcTextSize(kMacroTags[i]).x
+            + style.FramePadding.x * 2.0f
+            + style.ItemSpacing.x;
+        cursorX += btnWidth;
+        if (i > 0 && cursorX < contentWidth)
         {
             ImGui::SameLine();
+        }
+        else
+        {
+            cursorX = btnWidth;
         }
         const bool active = state.macroTagFilters[i];
         if (active)

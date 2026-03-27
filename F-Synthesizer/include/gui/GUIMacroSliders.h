@@ -1,5 +1,7 @@
 #pragma once
 
+static constexpr int kMacroTagCount = 14;
+
 // 1チャンネル分のマクロスライダー状態。
 // brightness/roughness/movement/envelope は 0..1 の正規化値。
 // lastLayer2* はγポリシー用: Layer2 で最後に操作した値。
