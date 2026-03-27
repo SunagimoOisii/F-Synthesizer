@@ -122,7 +122,7 @@ void ShutdownPreviewAudio(PreviewPlaybackState& playback)
 
 bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err)
 {
-    if (sound.length <= 0 || (sound.dataL.empty() && sound.data.empty()))
+    if (sound.length <= 0)
     {
         err = "Preview buffer is empty.";
         return false;
@@ -138,8 +138,9 @@ bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bo
     playback.pcm.resize(static_cast<size_t>(sound.length) * playback.channels);
     for (int i = 0; i < sound.length; i++)
     {
-        const double lRaw = (i < static_cast<int>(sound.dataL.size())) ? sound.dataL[i] : sound.data[i];
-        const double rRaw = (i < static_cast<int>(sound.dataR.size())) ? sound.dataR[i] : sound.data[i];
+        const size_t index = static_cast<size_t>(i);
+        const double lRaw = sound.SampleL(index);
+        const double rRaw = sound.SampleR(index);
         const double l = (std::max)(-1.0, (std::min)(1.0, lRaw));
         const double r = (std::max)(-1.0, (std::min)(1.0, rRaw));
         if (playback.channels == 1)

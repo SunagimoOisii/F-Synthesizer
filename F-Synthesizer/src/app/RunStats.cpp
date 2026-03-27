@@ -242,15 +242,15 @@ void LogRenderStats(IRunObserver* observer, const SoundData& sound)
     double peak = 0.0;
     double sumSq = 0.0;
     int nonZero = 0;
-    const bool hasStereo = !sound.dataL.empty() && !sound.dataR.empty();
+    const bool hasStereo = (sound.channels >= 2);
     const size_t frames = static_cast<size_t>((std::max)(0, sound.length));
-    const size_t sampleCount = hasStereo ? (frames * 2) : sound.data.size();
+    const size_t sampleCount = hasStereo ? (frames * 2) : frames;
     if (hasStereo)
     {
         for (size_t i = 0; i < frames; i++)
         {
-            const double vL = sound.dataL[i];
-            const double vR = sound.dataR[i];
+            const double vL = sound.SampleL(i);
+            const double vR = sound.SampleR(i);
             const double aL = std::abs(vL);
             const double aR = std::abs(vR);
             peak = (std::max)(peak, (std::max)(aL, aR));
@@ -261,8 +261,9 @@ void LogRenderStats(IRunObserver* observer, const SoundData& sound)
     }
     else
     {
-        for (double v : sound.data)
+        for (size_t i = 0; i < frames; i++)
         {
+            const double v = sound.SampleL(i);
             const double a = std::abs(v);
             peak = (std::max)(peak, a);
             sumSq += v * v;

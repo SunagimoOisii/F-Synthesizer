@@ -100,8 +100,11 @@ void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
     if (keepSamples == 0)
     {
         sound.data.clear();
-        sound.dataL.clear();
-        sound.dataR.clear();
+        if (sound.channels >= 2)
+        {
+            sound.dataL.clear();
+            sound.dataR.clear();
+        }
         sound.length = 0;
         return;
     }
@@ -109,8 +112,11 @@ void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
     {
         const size_t keep = static_cast<size_t>(keepSamples);
         sound.data.resize(keep);
-        sound.dataL.resize(keep);
-        sound.dataR.resize(keep);
+        if (sound.channels >= 2)
+        {
+            sound.dataL.resize(keep);
+            sound.dataR.resize(keep);
+        }
         sound.length = static_cast<int>(keep);
     }
 }
