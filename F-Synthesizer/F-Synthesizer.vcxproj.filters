@@ -51,6 +51,21 @@
     <ClCompile Include="src\\config\\load\\LoadModulation.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\config\\load\\LoadSourceCommon.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\load\\LoadSourceDrum.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\load\\LoadSourceFm.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\load\\LoadSourceNoise.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\config\\load\\LoadSourceWaveform.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\config\\load\\LoadSource.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>

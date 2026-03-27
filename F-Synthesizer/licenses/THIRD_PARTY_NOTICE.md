@@ -25,6 +25,11 @@
 - Text: `licenses/SPDX-Unlicense.txt` (Unlicense を選択した場合)
 - URL: https://github.com/mackron/miniaudio
 
+5. nlohmann/json
+- License: MIT
+- Text: `licenses/SPDX-MIT.txt`
+- URL: https://github.com/nlohmann/json
+
 ## 運用
 
 1. 依存追加時はこの対応表を更新する

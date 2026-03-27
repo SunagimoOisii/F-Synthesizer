@@ -1,9 +1,11 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <string>
 
 #include "AppCore.h"
+#include "config/SourceRegistry.h"
 
 namespace config::internal::load
 {
@@ -23,6 +25,36 @@ bool ValidateWaveformSmoothing(const WaveformConfig::SmoothingConfig& smoothing,
 bool ValidateWaveformSmoothing(const AnalogConfig::SmoothingConfig& smoothing, std::string& err);
 
 bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseWaveformSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseAnalogSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseDrumSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+bool ParsePsgSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
+
+bool ValidateLifecycleContract(const std::string& sourceObjText, SourceKind sourceKind, std::string& err);
+bool ValidateSmoothingSupport(const std::string& sourceObjText, SourceKind sourceKind, std::string& err);
+
+bool ParseWaveformCommonFields(const std::string& text, WaveformConfig& cfg, std::string& err);
+bool ParseAnalogCommonFields(const std::string& text, AnalogConfig& cfg, std::string& err);
+
+bool ValidateNoiseBySchema(const NoiseConfig& noise, std::string& err);
+bool ValidateWaveformBySchema(const WaveformConfig& wf, std::string& err);
+bool ValidateAnalogBySchema(const AnalogConfig& analog, std::string& err);
+bool ValidateFmBySchema(const FmConfig& fm, std::string& err);
+bool ValidateDrumBySchema(const DrumConfig& drum, std::string& err);
+
+bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::string& err);
+bool ExtractArrayForKey(const std::string& text, const std::string& key, std::string& outArray, bool& found, std::string& err);
+bool ParseTopLevelArrayObjectEntries(
+    const std::string& arrText,
+    const std::function<bool(size_t, const std::string&)>& onEntry,
+    std::string& err);
+bool ParseTopLevelIntArrayElements(
+    const std::string& arrText,
+    const std::function<bool(size_t, int)>& onElement,
+    std::string& err);
 
 bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err);
 bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& err);

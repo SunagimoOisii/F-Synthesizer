@@ -157,6 +157,11 @@
     <ClCompile Include="src\\config\\ConfigLoad.cpp" />
     <ClCompile Include="src\\config\\load\\LoadChannel.cpp" />
     <ClCompile Include="src\\config\\load\\LoadModulation.cpp" />
+    <ClCompile Include="src\\config\\load\\LoadSourceCommon.cpp" />
+    <ClCompile Include="src\\config\\load\\LoadSourceDrum.cpp" />
+    <ClCompile Include="src\\config\\load\\LoadSourceFm.cpp" />
+    <ClCompile Include="src\\config\\load\\LoadSourceNoise.cpp" />
+    <ClCompile Include="src\\config\\load\\LoadSourceWaveform.cpp" />
     <ClCompile Include="src\\config\\load\\LoadSource.cpp" />
     <ClCompile Include="src\\config\\load\\LoadTopLevel.cpp" />
     <ClCompile Include="src\\config\\SourceJSON.cpp" />

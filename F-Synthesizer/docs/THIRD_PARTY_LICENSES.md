@@ -18,3 +18,4 @@
    本リポジトリに実装本体は同梱しない
 2. `miniaudio` は導入時に採用ライセンス（Unlicense または MIT）を
    `licenses/THIRD_PARTY_NOTICE.md` に明記する
+3. `nlohmann/json` は MIT として採用し、`licenses/THIRD_PARTY_NOTICE.md` に記載する

@@ -1,16 +1,38 @@
 #include "ConfigFileInternal.h"
 
 #include <fstream>
-#include <regex>
 #include <sstream>
 #include <type_traits>
 
+#include "third_party/nlohmann/json.hpp"
 #include "config/SourceRegistry.h"
 
 namespace config::internal
 {
+namespace
+{
+using Json = nlohmann::json;
+
+std::optional<Json> ParseJSONObject(const std::string& text)
+{
+    try
+    {
+        Json parsed = Json::parse(text, nullptr, false);
+        if (!parsed.is_object())
+        {
+            return std::nullopt;
+        }
+        return parsed;
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+}
+} // namespace
+
 // 目的: 設定ファイルを文字列ベースで読み書きする共通ユーティリティ群。
-// 前提: 本実装は軽量運用を優先し、正規JSONパーサではなく正規表現/手書き走査を使う。
+// 前提: 読み取りは正規JSONパーサ(nlohmann/json)を使い、書き出しは既存フォーマットを維持する。
 std::string ReadTextFile(const std::filesystem::path& filePath)
 {
     std::ifstream fin(filePath, std::ios::binary);
@@ -25,46 +47,62 @@ std::string ReadTextFile(const std::filesystem::path& filePath)
 
 std::optional<std::string> ReadJSONString(const std::string& text, const std::string& key)
 {
-    const std::regex pat("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    const auto root = ParseJSONObject(text);
+    if (!root)
     {
-        return m[1].str();
+        return std::nullopt;
     }
-    return std::nullopt;
+    const auto it = root->find(key);
+    if (it == root->end() || !it->is_string())
+    {
+        return std::nullopt;
+    }
+    return it->get<std::string>();
 }
 
 std::optional<int> ReadJSONInt(const std::string& text, const std::string& key)
 {
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    const auto root = ParseJSONObject(text);
+    if (!root)
     {
-        return std::stoi(m[1].str());
+        return std::nullopt;
     }
-    return std::nullopt;
+    const auto it = root->find(key);
+    if (it == root->end() || !it->is_number_integer())
+    {
+        return std::nullopt;
+    }
+    return it->get<int>();
 }
 
 std::optional<double> ReadJSONDouble(const std::string& text, const std::string& key)
 {
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    const auto root = ParseJSONObject(text);
+    if (!root)
     {
-        return std::stod(m[1].str());
+        return std::nullopt;
     }
-    return std::nullopt;
+    const auto it = root->find(key);
+    if (it == root->end() || !it->is_number())
+    {
+        return std::nullopt;
+    }
+    return it->get<double>();
 }
 
 std::optional<bool> ReadJSONBool(const std::string& text, const std::string& key)
 {
-    const std::regex pat("\"" + key + "\"\\s*:\\s*(true|false)");
-    std::smatch m;
-    if (std::regex_search(text, m, pat) && m.size() >= 2)
+    const auto root = ParseJSONObject(text);
+    if (!root)
     {
-        return m[1].str() == "true";
+        return std::nullopt;
     }
-    return std::nullopt;
+    const auto it = root->find(key);
+    if (it == root->end() || !it->is_boolean())
+    {
+        return std::nullopt;
+    }
+    return it->get<bool>();
 }
 
 bool TryParseWaveType(const std::string& name, WaveType& outWave)
@@ -457,25 +495,25 @@ bool ExtractObjectAt(const std::string& text, size_t openBracePos, std::string& 
 bool ExtractObjectForKey(const std::string& text, const std::string& key, std::string& outObject, bool& found, std::string& err)
 {
     found = false;
-    const std::regex keyPat("\"" + key + "\"\\s*:");
-    std::smatch m;
-    if (!std::regex_search(text, m, keyPat))
+    const auto root = ParseJSONObject(text);
+    if (!root)
+    {
+        err = "invalid object";
+        return false;
+    }
+    const auto it = root->find(key);
+    if (it == root->end())
     {
         return true;
     }
-
     found = true;
-    size_t pos = static_cast<size_t>(m.position() + m.length());
-    while (pos < text.size() && (text[pos] == ' ' || text[pos] == '\t' || text[pos] == '\r' || text[pos] == '\n'))
-    {
-        pos++;
-    }
-    if (pos >= text.size() || text[pos] != '{')
+    if (!it->is_object())
     {
         err = "key '" + key + "' must be an object";
         return false;
     }
-    return ExtractObjectAt(text, pos, outObject, err);
+    outObject = it->dump();
+    return true;
 }
 
 bool ParseTopLevelObjectEntries(
@@ -484,70 +522,23 @@ bool ParseTopLevelObjectEntries(
     std::string& err)
 {
     // 目的: {"k": {...}, ...} 形式の top-level object を1段だけ走査する。
-    // 制約: value は object を前提とし、配列やプリミティブ値はここでは扱わない。
-    if (objText.size() < 2 || objText.front() != '{' || objText.back() != '}')
+    const auto root = ParseJSONObject(objText);
+    if (!root)
     {
         err = "invalid object";
         return false;
     }
-
-    size_t i = 1;
-    while (i + 1 < objText.size())
+    for (const auto& [entryKey, entryValue] : root->items())
     {
-        while (i < objText.size() && (objText[i] == ' ' || objText[i] == '\t' || objText[i] == '\r' || objText[i] == '\n' || objText[i] == ','))
+        if (!entryValue.is_object())
         {
-            i++;
-        }
-        if (i >= objText.size() || objText[i] == '}')
-        {
-            break;
-        }
-        if (objText[i] != '"')
-        {
-            err = "expected key string";
+            err = "expected object value for key '" + entryKey + "'";
             return false;
         }
-        const size_t keyStart = ++i;
-        while (i < objText.size() && objText[i] != '"')
-        {
-            i++;
-        }
-        if (i >= objText.size())
-        {
-            err = "unterminated key";
-            return false;
-        }
-        const std::string key = objText.substr(keyStart, i - keyStart);
-        i++;
-        while (i < objText.size() && (objText[i] == ' ' || objText[i] == '\t' || objText[i] == '\r' || objText[i] == '\n'))
-        {
-            i++;
-        }
-        if (i >= objText.size() || objText[i] != ':')
-        {
-            err = "expected ':' after key";
-            return false;
-        }
-        i++;
-        while (i < objText.size() && (objText[i] == ' ' || objText[i] == '\t' || objText[i] == '\r' || objText[i] == '\n'))
-        {
-            i++;
-        }
-        if (i >= objText.size() || objText[i] != '{')
-        {
-            err = "expected object value for key '" + key + "'";
-            return false;
-        }
-        std::string valueObj;
-        if (!ExtractObjectAt(objText, i, valueObj, err))
+        if (!onEntry(entryKey, entryValue.dump()))
         {
             return false;
         }
-        if (!onEntry(key, valueObj))
-        {
-            return false;
-        }
-        i += valueObj.size();
     }
 
     return true;

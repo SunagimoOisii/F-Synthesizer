@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-27 (週次メンテ: gui-help受け入れ記録と build-only 運用へ更新)
+Last Updated: 2026-03-27 (改善案A完了: nlohmann/json導入 + LoadSource分割)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -15,6 +15,7 @@ Branch: `main`
 - `source.type=analog` を追加（waveform同等の減算基盤 + drive + drift、GUI/Load/Save/Preset/Renderer/Voice初期化まで接続）
 - SubtractiveConfig を廃止し、filterKeytrack を WaveformConfig へ移行（method-boundaries 準拠）
 - `LoadSource.cpp` / `ConfigJSONUtils.cpp` の Waveform/Analog 重複処理をテンプレートヘルパーへ集約（共通パース・共通スキーマ値取得・共通JSON書き出し）
+- 改善案A完了: `include/third_party/nlohmann/json.hpp` を導入し、`ConfigJSONUtils` の `ReadJSON*`/`ExtractObjectForKey`/`ParseTopLevelObjectEntries` を正規JSONパーサ実装へ移行、`LoadSource` を `LoadSourceCommon/Waveform/Fm/Drum/Noise` へ分割して `LoadSource.cpp` をディスパッチ専用化
 - 優先度Aリファクタ: Waveform/Analog の重複を GUI編集 (`GUIChannelEditor.cpp`) / Renderer (`Renderer.cpp`) / Voice初期化 (`Voices.cpp`) で共通ヘルパー化（analog 固有 drift は分離維持）
 - 優先度Bリファクタ: `LoadModulation.cpp` の smoothing parse/validate、`LoadSource.cpp` の schema 検証ループ、`GUIConfigUtils.cpp` の Waveform/Analog 等価比較を共通ヘルパー化
 - architecture と SOUND_PARAMETERS の重複整理を進行中（正本一本化 + 履歴は `docs-archive/`）
