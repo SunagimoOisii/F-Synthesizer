@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "AppCore.h"
+#include "gui/GUIMacroSliders.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
 
@@ -96,5 +97,12 @@ struct GUIState
     std::vector<std::string> musicLogs{};
     int runLogTab = 0;
     GUIRunObserver observer{};
+    // Layer2 マクロスライダーの状態（チャンネル数分）
+    std::array<MacroSliderState, 16> macroSliders{};
+    // Layer1 タグフィルターの選択状態（タグ数分）
+    // タグ定義は Layer1Discovery.inl で管理する
+    std::array<bool, 16> macroTagFilters{};
+    bool layer1Expanded = true;
+    bool layer2Expanded = true;
     gui::PianoRollState pianoRoll{};
 };
