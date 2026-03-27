@@ -320,6 +320,24 @@
     <ClInclude Include="src\\SynthEngine\\Internal.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderCommon.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderWaveform.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderFm.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderDrum.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderNoise.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderMix.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\io\\Writer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

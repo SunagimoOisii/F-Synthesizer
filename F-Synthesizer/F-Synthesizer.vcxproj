@@ -251,6 +251,12 @@
     <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
     <ClInclude Include="include\\io\\Writer.h" />
     <ClInclude Include="src\\SynthEngine\\Internal.h" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderCommon.inl" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderWaveform.inl" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderFm.inl" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderDrum.inl" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderNoise.inl" />
+    <ClInclude Include="src\\SynthEngine\\renderer\\RenderMix.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
