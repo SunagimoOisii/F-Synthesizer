@@ -839,6 +839,13 @@ if (state.UIModeTab == 0)
         }
 
         ImGui::TableSetColumnIndex(1);
+        DrawLayer1Discovery(
+            state,
+            pendingPresetIndex,
+            pendingPresetOriginalIndex,
+            openUnsavedPopupNextFrame,
+            applyPresetByIndex);
+        ImGui::Separator();
         DrawLayer2Macros(state);
         ImGui::Separator();
         const bool channelEditorChanged = DrawChannelEditor(
