@@ -1,10 +1,53 @@
 #include "gui/GUIPresetIO.h"
 
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 
 #include "config/SourceJSON.h"
+#include "config/SourceRegistry.h"
+#include "gui/GUIActions.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIStateModel.h"
+#include "io/PlatformPaths.h"
+
+namespace
+{
+int FindPresetIndex(const GUIState& state, const std::string& name)
+{
+    for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
+    {
+        if (state.presetItems[i] == name)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind kind)
+{
+    switch (kind)
+    {
+    case config::SourceKind::Waveform:
+        return presetName.rfind("wave_", 0) == 0;
+    case config::SourceKind::Analog:
+        return presetName.rfind("analog_", 0) == 0;
+    case config::SourceKind::Fm:
+        return presetName.rfind("fm_", 0) == 0;
+    case config::SourceKind::Psg:
+        return presetName.rfind("psg_", 0) == 0;
+    case config::SourceKind::DrumKit:
+        return presetName.rfind("drumkit_", 0) == 0;
+    case config::SourceKind::Noise:
+        return presetName.rfind("noise_", 0) == 0 || presetName.rfind("psg_noise_", 0) == 0;
+    case config::SourceKind::Drum:
+    case config::SourceKind::Count:
+    default:
+        return false;
+    }
+}
+} // namespace
 
 namespace gui
 {
@@ -29,7 +72,6 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     out << "{\n";
     out << "  \"channels\": {\n";
 
-    // 既定値との差分のみを書き出し、presetファイルの保守コストを抑える。
     bool first = true;
     for (int ch = 0; ch < 16; ch++)
     {
@@ -74,7 +116,6 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     }
 
     std::sort(names.begin(), names.end());
-    // 既定の操作の流れを分かりやすくするため、標準leadを先頭に寄せる。
     const auto it = std::find(names.begin(), names.end(), "wave_snes_lead_vibrato");
     if (it != names.end() && it != names.begin())
     {
@@ -92,7 +133,6 @@ bool LoadPresetConfig(
     const std::filesystem::path basePath = projectRoot / "config" / "base.json";
     const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (presetName + ".json");
 
-    // base -> preset の順で後から読んだ値を優先し、CLI経路と同じ合成規則にする。
     cfg = DefaultConfig();
     if (std::filesystem::exists(basePath))
     {
@@ -108,5 +148,100 @@ bool LoadPresetConfig(
         return false;
     }
     return true;
+}
+
+void RefreshPresetItems(GUIState& state, const std::string& preferName)
+{
+    std::vector<std::string> all = CollectPresetItems(FindProjectRootPath());
+    EnsureChannelConfigs(state);
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
+    state.presetItems.clear();
+    state.presetItems.reserve(all.size());
+    for (const auto& name : all)
+    {
+        if (PresetMatchesSourceKind(name, kind))
+        {
+            state.presetItems.push_back(name);
+        }
+    }
+    if (state.presetItems.empty())
+    {
+        state.presetItems = std::move(all);
+    }
+    if (state.presetItems.empty())
+    {
+        state.presetItems.push_back("wave_snes_lead_vibrato");
+    }
+
+    int idx = FindPresetIndex(state, preferName);
+    if (idx < 0)
+    {
+        idx = FindPresetIndex(state, "wave_snes_lead_vibrato");
+    }
+    state.presetIndex = (idx >= 0) ? idx : 0;
+}
+
+bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
+{
+    if (state.presetItems.empty())
+    {
+        err = "preset list is empty";
+        return false;
+    }
+    if (state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
+    {
+        err = "invalid preset index";
+        return false;
+    }
+
+    const std::string& presetName = state.presetItems[state.presetIndex];
+    strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
+    AppConfig cfg{};
+    if (!LoadPresetConfig(FindProjectRootPath(), presetName, cfg, err))
+    {
+        return false;
+    }
+
+    EnsureChannelConfigs(state);
+    if (cfg.channelConfigs)
+    {
+        AppConfig def = DefaultConfig();
+        std::vector<int> changedChannels;
+        if (def.channelConfigs)
+        {
+            for (int ch = 0; ch < 16; ch++)
+            {
+                if (!ChannelConfigEquals((*cfg.channelConfigs)[ch], (*def.channelConfigs)[ch]))
+                {
+                    changedChannels.push_back(ch);
+                }
+            }
+        }
+
+        if (changedChannels.size() == 1)
+        {
+            const int dstSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+            const int srcCh = changedChannels.front();
+            (*state.channelConfigs)[dstSlot] = (*cfg.channelConfigs)[srcCh];
+        }
+        else
+        {
+            *state.channelConfigs = *cfg.channelConfigs;
+        }
+    }
+    return true;
+}
+
+bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path& presetPath, std::string& err)
+{
+    if (!state.channelConfigs)
+    {
+        err = "channel configs are not initialized";
+        return false;
+    }
+    GUIPresetSnapshot snapshot{};
+    snapshot.channelConfigs = *state.channelConfigs;
+    return SavePresetDiffFile(snapshot, presetPath, err);
 }
 } // namespace gui

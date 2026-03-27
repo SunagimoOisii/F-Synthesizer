@@ -96,6 +96,12 @@
     <ClCompile Include="src\\gui\\GUIActions.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\gui\\GUIPreviewActions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="src\\gui\\GUIRunActions.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\gui\\GUIChannelEditor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -215,6 +221,9 @@
     <ClInclude Include="include\\gui\\GUIActions.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\gui\\GUIActionsInternal.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\gui\\GUIConfigUtils.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -249,6 +258,24 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\\gui\\main\\TopBar.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorCommon.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorWaveform.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorNoise.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorFm.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorDrum.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl">
@@ -298,6 +325,7 @@
     </ClInclude>
   </ItemGroup>
 </Project>
+
 
 
 

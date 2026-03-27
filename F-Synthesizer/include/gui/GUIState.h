@@ -38,6 +38,7 @@ struct GUIState
         }
     };
 
+
     char midiPath[1024]{};
     char wavPath[1024]{};
     int targetChannel = -1;

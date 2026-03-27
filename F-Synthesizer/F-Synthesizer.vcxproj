@@ -171,6 +171,8 @@
     <ClCompile Include="src\\synth\\Envelope.cpp" />
     <ClCompile Include="src\\gui\\GUIMain.cpp" />
     <ClCompile Include="src\\gui\\GUIActions.cpp" />
+    <ClCompile Include="src\\gui\\GUIPreviewActions.cpp" />
+    <ClCompile Include="src\\gui\\GUIRunActions.cpp" />
     <ClCompile Include="src\\gui\\GUIChannelEditor.cpp" />
     <ClCompile Include="src\\gui\\GUIPianoRoll.cpp" />
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
@@ -215,6 +217,7 @@
     <ClInclude Include="include\\gui\\GUIChannelEditor.h" />
     <ClInclude Include="include\\gui\\GUIPianoRoll.h" />
     <ClInclude Include="include\\gui\\GUIActions.h" />
+    <ClInclude Include="include\\gui\\GUIActionsInternal.h" />
     <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />
@@ -227,6 +230,12 @@
     <ClInclude Include="src\\gui\\main\\MainWindow.inl" />
     <ClInclude Include="src\\gui\\main\\RunLoop.inl" />
     <ClInclude Include="src\\gui\\main\\TopBar.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorCommon.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorWaveform.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorNoise.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorFm.inl" />
+    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorDrum.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollInput.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollRender.inl" />
@@ -247,6 +256,7 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
 
 
 
