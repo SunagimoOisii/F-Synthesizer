@@ -28,17 +28,32 @@ struct VoiceRenderInput
 
 double TimeScaleFromOffset(double offset)
 {
-    return std::pow(2.0, std::clamp(offset, -1.0, 1.0) * 2.0);
+    return std::exp2(std::clamp(offset, -1.0, 1.0) * 2.0);
 }
 
 double CutoffScaleFromBrightness(double brightness)
 {
-    return std::pow(2.0, (std::clamp(brightness, 0.0, 1.0) - 0.5) * 4.0);
+    return std::exp2((std::clamp(brightness, 0.0, 1.0) - 0.5) * 4.0);
 }
 
 double ResonanceScaleFromCc(double resonance)
 {
-    return std::pow(2.0, (std::clamp(resonance, 0.0, 1.0) - 0.5) * 2.0);
+    return std::exp2((std::clamp(resonance, 0.0, 1.0) - 0.5) * 2.0);
+}
+
+double ArpSemitoneRatio(int semitoneOffset)
+{
+    static const std::array<double, 49> kRatioLut = []()
+    {
+        std::array<double, 49> t{};
+        for (int s = -24; s <= 24; s++)
+        {
+            t[static_cast<size_t>(s + 24)] = std::exp2(static_cast<double>(s) / 12.0);
+        }
+        return t;
+    }();
+    const int clamped = std::clamp(semitoneOffset, -24, 24);
+    return kRatioLut[static_cast<size_t>(clamped + 24)];
 }
 
 double SourceFilterResonance(const SourceConfig& src)
@@ -205,7 +220,7 @@ void RenderWaveformLikeSourceCommon(
         {
             const double driftSine = std::sin((state.driftPhase + state.driftPhaseOffset) * 2.0 * kPi);
             const double driftCents = driftSine * src.driftDepthCents;
-            pitchMul *= std::pow(2.0, driftCents / 1200.0);
+            pitchMul *= std::exp2(driftCents / 1200.0);
             state.driftPhase += src.driftRateHz * in.dt;
             if (state.driftPhase >= 1.0) state.driftPhase -= 1.0;
         }
@@ -227,12 +242,11 @@ void RenderWaveformLikeSourceCommon(
             state.arpStep = (state.arpStep + 1) % steps;
         }
         const int semitoneOffset = src.arpeggio.semitones[static_cast<size_t>(state.arpStep)];
-        pitchMul *= std::pow(2.0, static_cast<double>(semitoneOffset) / 12.0);
+        pitchMul *= ArpSemitoneRatio(semitoneOffset);
     }
 
     const double phaseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
     const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
-    const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
     const double spread = std::clamp(src.unisonSpread, 0.0, 1.0);
     const double subOscLevel = std::clamp(src.subOscLevel, 0.0, 2.0);
     const double effectivePW = std::clamp(src.pulseWidth + mod.pulseWidthAdd, 0.05, 0.95);
@@ -242,8 +256,7 @@ void RenderWaveformLikeSourceCommon(
     {
         const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
         const double centered = (pos * 2.0) - 1.0;
-        const double cents = centered * detuneCents;
-        const double ratio = std::pow(2.0, cents / 1200.0);
+        const double ratio = state.unisonDetuneRatio[static_cast<size_t>(uv)];
         const double phaseOffset = centered * spread * 0.08;
         const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
         const double uvInc = phaseInc * ratio;
@@ -272,12 +285,12 @@ void RenderWaveformLikeSourceCommon(
     double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;
     if (src.filterKeytrack != 0.0)
     {
-        const double keytrackRatio = std::pow(2.0, src.filterKeytrack * (voices.noteNumber[i] - 60) / 12.0);
-        effectiveCutoff *= keytrackRatio;
+        effectiveCutoff *= state.filterKeytrackRatio;
     }
     frame.shaperCutoffHz = effectiveCutoff;
     frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
+    frame.shaperDriveNorm = state.driveNorm;
 
     if (src.hardSyncEnabled)
     {
@@ -426,6 +439,7 @@ void RenderFmSource(
     frame.shaperCutoffHz = src.filterCutoffHz;
     frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
+    frame.shaperDriveNorm = fs.driveNorm;
 
     for (int k = 0; k < 4; k++)
     {
@@ -580,10 +594,9 @@ void ApplyCommonShaper(
     {
         // tanh ソフトクリップ: tanh(k*x) / tanh(k), k = drive * 20.0
         const double k = frame.shaperDrive * 20.0;
-        const double tanhK = std::tanh(k);
-        if (tanhK > 1e-9)
+        if (frame.shaperDriveNorm > 0.0)
         {
-            frame.sample = std::tanh(k * frame.sample) / tanhK;
+            frame.sample = std::tanh(k * frame.sample) * frame.shaperDriveNorm;
         }
     }
 }

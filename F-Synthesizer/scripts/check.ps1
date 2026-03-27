@@ -2,7 +2,8 @@ param(
     [string]$Configuration = "Debug",
     [string]$Platform = "x64",
     [ValidateSet("off", "warn", "error")]
-    [string]$DocRules = "warn"
+    [string]$DocRules = "warn",
+    [switch]$RunRuntimeSmoke
 )
 
 Set-StrictMode -Version Latest
@@ -373,6 +374,311 @@ function Run-QuickSmoke {
     Write-Host "Quick smoke: OK (peak=$($stats.Peak), rms=$($stats.Rms), nonZero=$($stats.NonZero)/$($stats.Total))"
 }
 
+function Write-BytesFile {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes
+    )
+
+    [System.IO.File]::WriteAllBytes($Path, $Bytes)
+}
+
+function New-MIDIFileBytes {
+    param(
+        [byte[]]$TrackData
+    )
+
+    $header = [byte[]](
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60
+    )
+    $len = [uint32]$TrackData.Length
+    $trackHeader = [byte[]](
+        0x4D, 0x54, 0x72, 0x6B,
+        [byte](($len -shr 24) -band 0xFF),
+        [byte](($len -shr 16) -band 0xFF),
+        [byte](($len -shr 8) -band 0xFF),
+        [byte]($len -band 0xFF)
+    )
+    return ($header + $trackHeader + $TrackData)
+}
+
+function Parse-WavStereoMetrics {
+    param(
+        [string]$WavPath
+    )
+
+    if (-not (Test-Path $WavPath)) {
+        throw "WAV not found: $WavPath"
+    }
+
+    $bytes = [System.IO.File]::ReadAllBytes($WavPath)
+    if ($bytes.Length -lt 44) {
+        throw "WAV too short: $WavPath"
+    }
+
+    $channels = [BitConverter]::ToUInt16($bytes, 22)
+    $sampleRate = [BitConverter]::ToUInt32($bytes, 24)
+    $bitsPerSample = [BitConverter]::ToUInt16($bytes, 34)
+    if ($channels -ne 2 -or $bitsPerSample -ne 16) {
+        throw "Unsupported WAV format for smoke parse (expected stereo 16-bit): ch=$channels bits=$bitsPerSample path=$WavPath"
+    }
+
+    $dataStart = 44
+    $dataBytes = [BitConverter]::ToUInt32($bytes, 40)
+    $maxReadableBytes = [Math]::Min([int]$dataBytes, $bytes.Length - $dataStart)
+    $frameCount = [int]($maxReadableBytes / 4)
+    if ($frameCount -le 0) {
+        throw "WAV has no PCM frames: $WavPath"
+    }
+
+    $sumSqL = 0.0
+    $sumSqR = 0.0
+    $nonZeroL = 0
+    $nonZeroR = 0
+    for ($i = 0; $i -lt $frameCount; $i++) {
+        $offset = $dataStart + ($i * 4)
+        $l = [BitConverter]::ToInt16($bytes, $offset) / 32768.0
+        $r = [BitConverter]::ToInt16($bytes, $offset + 2) / 32768.0
+        $sumSqL += $l * $l
+        $sumSqR += $r * $r
+        if ([Math]::Abs($l) -gt 1e-8) { $nonZeroL++ }
+        if ([Math]::Abs($r) -gt 1e-8) { $nonZeroR++ }
+    }
+
+    return [PSCustomObject]@{
+        Frames = $frameCount
+        SampleRate = [int]$sampleRate
+        RmsL = [Math]::Sqrt($sumSqL / $frameCount)
+        RmsR = [Math]::Sqrt($sumSqR / $frameCount)
+        NonZeroL = $nonZeroL
+        NonZeroR = $nonZeroR
+    }
+}
+
+function Estimate-WavPitchHz {
+    param(
+        [string]$WavPath
+    )
+
+    $bytes = [System.IO.File]::ReadAllBytes($WavPath)
+    if ($bytes.Length -lt 44) {
+        throw "WAV too short: $WavPath"
+    }
+
+    $sampleRate = [BitConverter]::ToUInt32($bytes, 24)
+    $dataStart = 44
+    $dataBytes = [BitConverter]::ToUInt32($bytes, 40)
+    $maxReadableBytes = [Math]::Min([int]$dataBytes, $bytes.Length - $dataStart)
+    $frameCount = [int]($maxReadableBytes / 4)
+    if ($frameCount -lt 2048) {
+        throw "WAV too short for pitch estimate: $WavPath"
+    }
+
+    $startFrame = [Math]::Min([int]($sampleRate * 0.10), $frameCount - 2048)
+    $windowFrames = [Math]::Min([int]($sampleRate * 0.25), $frameCount - $startFrame)
+    if ($windowFrames -lt 1024) {
+        throw "WAV window too short for pitch estimate: $WavPath"
+    }
+
+    $crossings = 0
+    $prev = [BitConverter]::ToInt16($bytes, $dataStart + ($startFrame * 4)) / 32768.0
+    for ($i = 1; $i -lt $windowFrames; $i++) {
+        $curr = [BitConverter]::ToInt16($bytes, $dataStart + (($startFrame + $i) * 4)) / 32768.0
+        if ($prev -le 0.0 -and $curr -gt 0.0) {
+            $crossings++
+        }
+        $prev = $curr
+    }
+
+    $durationSec = $windowFrames / [double]$sampleRate
+    if ($durationSec -le 0.0) {
+        throw "Invalid WAV duration for pitch estimate: $WavPath"
+    }
+    return $crossings / $durationSec
+}
+
+function Invoke-SmokeCaseFromConfigObject {
+    param(
+        [string]$ExePath,
+        [string]$WorkDir,
+        [string]$Name,
+        [hashtable]$ConfigObject
+    )
+
+    $configPath = Join-Path $WorkDir "$Name.json"
+    $wavPath = Join-Path $WorkDir "$Name.wav"
+    $configObject["wavPath"] = ($wavPath -replace "\\", "/")
+    $configJson = $ConfigObject | ConvertTo-Json -Depth 10
+    Set-Content -Path $configPath -Value $configJson -Encoding UTF8
+
+    $result = Invoke-CLI -ExePath $ExePath -Args @("--cli", "--config", $configPath)
+    if ($result.ExitCode -ne 0) {
+        throw "tier2 smoke case failed: $Name (exit=$($result.ExitCode))"
+    }
+
+    $stats = Parse-RenderStats -Text $result.Output
+    if ($stats.NonZero -le 0) {
+        throw "tier2 smoke case produced silent output: $Name"
+    }
+    if (-not (Test-Path $wavPath)) {
+        throw "tier2 smoke case wav missing: $wavPath"
+    }
+
+    return [PSCustomObject]@{
+        Name = $Name
+        WavPath = $wavPath
+        Peak = $stats.Peak
+        Rms = $stats.Rms
+        NonZero = $stats.NonZero
+        Total = $stats.Total
+    }
+}
+
+function New-Tier2SmokeConfigObject {
+    param(
+        [string]$MidiPath,
+        [double]$Pan = 0.0,
+        [hashtable]$MasterEffects = $null
+    )
+
+    $cfg = [ordered]@{
+        midiPath = ($MidiPath -replace "\\", "/")
+        wavPath = ""
+        targetChannel = 0
+        defaultWave = "sine"
+        initialSeconds = 2
+        bits = 16
+        sampleRate = 44100
+        extraReleaseSec = 0.05
+        channels = [ordered]@{
+            "0" = [ordered]@{
+                amp = 0.22
+                attackSec = 0.002
+                decaySec = 0.05
+                sustainLevel = 0.9
+                releaseSec = 0.1
+                source = [ordered]@{
+                    type = "waveform"
+                    wave = "sine"
+                }
+            }
+        }
+        channelMix = [ordered]@{
+            "0" = [ordered]@{
+                mute = $false
+                solo = $false
+                level = 1.0
+                pan = $Pan
+                gain = 1.0
+            }
+        }
+    }
+
+    if ($null -ne $MasterEffects) {
+        $cfg["masterEffects"] = $MasterEffects
+    }
+    return $cfg
+}
+
+function Run-Tier2RegressionSmoke {
+    param(
+        [string]$RepoRoot,
+        [string]$ExePath
+    )
+
+    $smokeDir = Join-Path $RepoRoot "output/check/tier2_smoke"
+    New-Item -ItemType Directory -Path $smokeDir -Force | Out-Null
+
+    $noteMidiPath = Join-Path $smokeDir "tier2_note.mid"
+    $noteTrack = [byte[]](0x00,0x90,0x3C,0x64, 0x60,0x80,0x3C,0x00, 0x00,0xFF,0x2F,0x00)
+    Write-BytesFile -Path $noteMidiPath -Bytes (New-MIDIFileBytes -TrackData $noteTrack)
+
+    $dryCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan 0.0
+    $dry = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "dry_center" -ConfigObject $dryCfg
+
+    $panLeftCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan -1.0
+    $panLeft = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "pan_left" -ConfigObject $panLeftCfg
+    $panLeftMetrics = Parse-WavStereoMetrics -WavPath $panLeft.WavPath
+    if ($panLeftMetrics.RmsL -le 1e-6 -or $panLeftMetrics.RmsR -gt ($panLeftMetrics.RmsL * 0.05)) {
+        throw "tier2 pan endpoint regression: pan=-1 did not bias to left enough (L=$($panLeftMetrics.RmsL), R=$($panLeftMetrics.RmsR))"
+    }
+
+    $panRightCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan 1.0
+    $panRight = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "pan_right" -ConfigObject $panRightCfg
+    $panRightMetrics = Parse-WavStereoMetrics -WavPath $panRight.WavPath
+    if ($panRightMetrics.RmsR -le 1e-6 -or $panRightMetrics.RmsL -gt ($panRightMetrics.RmsR * 0.05)) {
+        throw "tier2 pan endpoint regression: pan=1 did not bias to right enough (L=$($panRightMetrics.RmsL), R=$($panRightMetrics.RmsR))"
+    }
+
+    $fxSrrCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan 0.0 -MasterEffects ([ordered]@{
+        sampleRateReducer = [ordered]@{ ratio = 0.0 }
+    })
+    $fxSrr = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "fx_srr_min" -ConfigObject $fxSrrCfg
+    if ([Math]::Abs($fxSrr.Rms - $dry.Rms) -lt 1e-4) {
+        throw "tier2 effect endpoint regression: sampleRateReducer(ratio=0.0) changed too little against dry"
+    }
+
+    $fxBitCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan 0.0 -MasterEffects ([ordered]@{
+        bitCrusher = [ordered]@{ bits = 1 }
+    })
+    $fxBit = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "fx_bitcrusher_min" -ConfigObject $fxBitCfg
+    if ([Math]::Abs($fxBit.Rms - $dry.Rms) -lt 1e-4) {
+        throw "tier2 effect endpoint regression: bitCrusher(bits=1) changed too little against dry"
+    }
+
+    $fxFlangerCfg = New-Tier2SmokeConfigObject -MidiPath $noteMidiPath -Pan 0.0 -MasterEffects ([ordered]@{
+        flanger = [ordered]@{
+            enabled = $true
+            mix = 1.0
+            baseDelayMs = 0.1
+            depthMs = 5.0
+            rateHz = 8.0
+            feedback = 0.95
+        }
+    })
+    $fxFlanger = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "fx_flanger_extreme" -ConfigObject $fxFlangerCfg
+    if ([Math]::Abs($fxFlanger.Rms - $dry.Rms) -lt 1e-4) {
+        throw "tier2 effect endpoint regression: flanger(extreme) changed too little against dry"
+    }
+
+    $rpnCenterMidiPath = Join-Path $smokeDir "rpn_center.mid"
+    $rpnPlusMidiPath = Join-Path $smokeDir "rpn_plus12.mid"
+    $rpnMinusMidiPath = Join-Path $smokeDir "rpn_minus12.mid"
+    $rpnSetup = [byte[]](0x00,0xB0,0x65,0x00, 0x00,0xB0,0x64,0x00, 0x00,0xB0,0x06,0x0C, 0x00,0xB0,0x26,0x00)
+    $noteBody = [byte[]](0x00,0x90,0x3C,0x64, 0x60,0x80,0x3C,0x00, 0x00,0xFF,0x2F,0x00)
+    Write-BytesFile -Path $rpnCenterMidiPath -Bytes (New-MIDIFileBytes -TrackData ([byte[]]($rpnSetup + [byte[]](0x00,0xE0,0x00,0x40) + $noteBody)))
+    Write-BytesFile -Path $rpnPlusMidiPath -Bytes (New-MIDIFileBytes -TrackData ([byte[]]($rpnSetup + [byte[]](0x00,0xE0,0x7F,0x7F) + $noteBody)))
+    Write-BytesFile -Path $rpnMinusMidiPath -Bytes (New-MIDIFileBytes -TrackData ([byte[]]($rpnSetup + [byte[]](0x00,0xE0,0x00,0x00) + $noteBody)))
+
+    $rpnCenter = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "rpn_center" -ConfigObject (New-Tier2SmokeConfigObject -MidiPath $rpnCenterMidiPath -Pan 0.0)
+    $rpnPlus = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "rpn_plus12" -ConfigObject (New-Tier2SmokeConfigObject -MidiPath $rpnPlusMidiPath -Pan 0.0)
+    $rpnMinus = Invoke-SmokeCaseFromConfigObject -ExePath $ExePath -WorkDir $smokeDir -Name "rpn_minus12" -ConfigObject (New-Tier2SmokeConfigObject -MidiPath $rpnMinusMidiPath -Pan 0.0)
+
+    $hzCenter = Estimate-WavPitchHz -WavPath $rpnCenter.WavPath
+    $hzPlus = Estimate-WavPitchHz -WavPath $rpnPlus.WavPath
+    $hzMinus = Estimate-WavPitchHz -WavPath $rpnMinus.WavPath
+    if ($hzPlus -lt ($hzCenter * 1.7)) {
+        throw "tier2 RPN regression: +12 bend too small (centerHz=$hzCenter plusHz=$hzPlus)"
+    }
+    if ($hzMinus -gt ($hzCenter * 0.65)) {
+        throw "tier2 RPN regression: -12 bend too small (centerHz=$hzCenter minusHz=$hzMinus)"
+    }
+    if ($hzPlus -lt ($hzMinus * 2.5)) {
+        throw "tier2 RPN regression: +/-12 separation too small (minusHz=$hzMinus plusHz=$hzPlus)"
+    }
+
+    Write-Host ("Tier2 regression smoke: OK " +
+        "(panL=[L:{0:N6},R:{1:N6}] panR=[L:{2:N6},R:{3:N6}] " +
+        "fxDelta=[SRR:{4:N6},Bit:{5:N6},Flanger:{6:N6}] " +
+        "rpnHz=[-12:{7:N2},0:{8:N2},+12:{9:N2}])" -f
+        $panLeftMetrics.RmsL, $panLeftMetrics.RmsR,
+        $panRightMetrics.RmsL, $panRightMetrics.RmsR,
+        [Math]::Abs($fxSrr.Rms - $dry.Rms),
+        [Math]::Abs($fxBit.Rms - $dry.Rms),
+        [Math]::Abs($fxFlanger.Rms - $dry.Rms),
+        $hzMinus, $hzCenter, $hzPlus)
+}
+
 function Invoke-GuiLaunchSmoke {
     param(
         [string]$ExePath,
@@ -519,9 +825,20 @@ try {
         Write-Host "Build skipped (no compile-target changes)."
     }
 
-    Write-Host "Runtime smoke: skipped (fast default)"
-    Write-Host "AB regression: skipped (fast default)"
-    Write-Host "MIDI regression: skipped (fast default)"
+    if ($RunRuntimeSmoke) {
+        $exePath = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
+        if (Test-Path $exePath) {
+            Ensure-RuntimeDependencies -ExePath $exePath -Configuration $Configuration
+            Run-QuickSmoke -RepoRoot $repoRoot -ExePath $exePath
+            Run-Tier2RegressionSmoke -RepoRoot $repoRoot -ExePath $exePath
+        }
+        else {
+            Write-Host "Runtime smoke: skipped (executable not found: $exePath)"
+        }
+    }
+    else {
+        Write-Host "Runtime smoke: skipped (build-only mode, use -RunRuntimeSmoke to enable)"
+    }
 
     if ($docCheckFailed) {
         throw "Documentation check failed."

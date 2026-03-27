@@ -203,7 +203,7 @@ ModulationResult EvaluateModulation(
         {
         case ModDestination::Pitch:
             // value をオクターブ比へ変換し、Pitchへ乗算で合成する。
-            out.pitchMul *= std::pow(2.0, value);
+            out.pitchMul *= std::exp2(value);
             break;
         case ModDestination::Amp:
             out.ampMul *= (1.0 + value);

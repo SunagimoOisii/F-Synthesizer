@@ -1,14 +1,14 @@
 # STATUS
 
-Last Updated: 2026-03-26 (週次メンテ: masterEffects構成と表現拡張の文書同期)
+Last Updated: 2026-03-27 (週次メンテ: gui-help受け入れ記録と build-only 運用へ更新)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
 
 ## Current
 
-- 優先: `Tier D`（modulation表現拡張） / `gui-help`（実機確認） / 軽量運用の維持
-- 通常検証フローは `check.ps1` 1本化済み（必要時のみ `full + MIDI regression`）
+- 優先: `Tier D`（modulation表現拡張） / `sub-verify`（実機レンダ耳確認） / 軽量運用の維持
+- 通常検証フローは `check.ps1` 1本化済み（既定は build-only、必要時のみ `-RunRuntimeSmoke`）
 - `foundation` 契約（capability / lifecycle / schema）は `foundation-contract.md` を正本として凍結運用
 - Renderer 内部を `source render -> common shaper -> modulation apply -> mix` へ分離し、`SourceRenderFrame` で段間データを受け渡す構造へ整理
 - smoothing 方針を `waveform=適用` / `fm,noise,drum=非適用` に統一し、非対応方式の `source.smoothing` は load 時エラー化
@@ -39,13 +39,14 @@ Branch: `main`
 - Tier C-2 実装（next-features）: Waveform/Analog に ring modulation（`ringModEnabled/ringModRatio/ringModMix`）を追加し、voice state の `ringPhase` を使って `mainWave` へ乗算適用（Renderer/Voices/Load/Save/Schema/GUI 反映）
 - Tier D-1 実装（next-features）: Waveform/Analog に arpeggio（`enabled/rateHz/steps/semitones[8]`）を追加し、voice state の `arpStep/arpElapsedSec` で step進行しながら `pitchMul` へ半音オフセットを乗算適用（Renderer/Voices/Load/Save/GUI/比較関数 反映）
 - Tier D-2 実装（next-features）: Waveform/Analog に hard sync（`hardSyncEnabled/hardSyncRatio`）を追加し、voice state の `syncPhase` ラップ時にスレーブ位相 `voices.phase` をリセットして倍音を生成（Renderer/Voices/Load/Save/Schema/GUI/比較関数 反映）
+- `gui-help` 手動受け入れの記録を `docs/gui-help-hover-acceptance-checklist.md` に追加し、`GUI_REQUIREMENTS.md` と同期
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
 
-1. `tier2-regression`: pan端点, effect端点（SampleRateReducer/BitCrusher/Flanger含む）, RPN±12 の回帰チェックを軽量スモークへ組み込む
-2. `sub-verify`: `phaseE_sub_keytrack_A/B.json` と `wave_sub_bass_warm/lead_resonant.json` を実機レンダして耳確認する
-3. `gui-help`: 手動ホバー受け入れ確認（実機GUI操作）を実施し、必要なら `GUI_REQUIREMENTS.md` へ追記する
+1. `sub-verify`: `phaseE_sub_keytrack_A/B.json` と `wave_sub_bass_warm`（`lead_resonant` はファイル実在確認）を実機レンダして耳確認する
+2. `tier2-regression`: `-RunRuntimeSmoke` 実行時の閾値/実行時間を見直し、軽量運用と両立させる
+3. `docs-sync`: `Architecture.md` と `SOUND_PARAMETERS.md` の重複整理を継続する
 
 ## Blockers
 

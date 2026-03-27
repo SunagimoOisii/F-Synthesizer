@@ -70,7 +70,8 @@ template <typename SourceT, typename VoiceStateT>
 void InitWaveformLikeVoiceStateCommon(
     const SourceT& src,
     VoiceStateT& state,
-    int sampleRate)
+    int sampleRate,
+    int noteNumber)
 {
     SetSmoothingRange(state.ampSmoothing, 0.0, 2.0);
     SetSmoothingSampleRate(state.ampSmoothing, sampleRate);
@@ -97,6 +98,35 @@ void InitWaveformLikeVoiceStateCommon(
     state.ringPhase = 0.0;
     state.arpStep = 0;
     state.arpElapsedSec = 0.0;
+    state.filterKeytrackRatio = std::exp2(src.filterKeytrack * (noteNumber - 60) / 12.0);
+    {
+        const double detuneCents = std::clamp(src.unisonDetuneCents, 0.0, 120.0);
+        const int unisonVoices = std::clamp(src.unisonVoices, 1, 8);
+        for (int uv = 0; uv < 8; uv++)
+        {
+            if (uv < unisonVoices)
+            {
+                const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
+                const double centered = (pos * 2.0) - 1.0;
+                const double cents = centered * detuneCents;
+                state.unisonDetuneRatio[uv] = std::exp2(cents / 1200.0);
+            }
+            else
+            {
+                state.unisonDetuneRatio[uv] = 1.0;
+            }
+        }
+    }
+    if (src.drive > 0.0)
+    {
+        const double k = src.drive * 20.0;
+        const double tanhK = std::tanh(k);
+        state.driveNorm = (tanhK > 1e-9) ? (1.0 / tanhK) : 1.0;
+    }
+    else
+    {
+        state.driveNorm = 1.0;
+    }
     ResetModulationState(state.modulation);
     NoteOnModulation(state.modulation, src.modulation);
 }
@@ -159,13 +189,13 @@ void InitializeVoiceAtIndex(
     {
         voices.sourceState[i] = WaveformVoiceState{};
         auto& ws = std::get<WaveformVoiceState>(voices.sourceState[i]);
-        InitWaveformLikeVoiceStateCommon(*wave, ws, sampleRate);
+        InitWaveformLikeVoiceStateCommon(*wave, ws, sampleRate, e.noteNumber);
     }
     else if (const auto* analog = std::get_if<AnalogConfig>(&cfg.source))
     {
         voices.sourceState[i] = AnalogVoiceState{};
         auto& as = std::get<AnalogVoiceState>(voices.sourceState[i]);
-        InitWaveformLikeVoiceStateCommon(*analog, as, sampleRate);
+        InitWaveformLikeVoiceStateCommon(*analog, as, sampleRate, e.noteNumber);
 
         // ボイス固有のドリフト位相オフセット（0..1）を確定する。
         // 目的: 同時発音ボイスのドリフトが同位相にならないようにする。
@@ -188,6 +218,16 @@ void InitializeVoiceAtIndex(
         SetFilterCutoffHz(fs.filter, fm->filterCutoffHz);
         SetFilterResonance(fs.filter, fm->filterResonance);
         ResetFilterState(fs.filter);
+        if (fm->drive > 0.0)
+        {
+            const double k = fm->drive * 20.0;
+            const double tanhK = std::tanh(k);
+            fs.driveNorm = (tanhK > 1e-9) ? (1.0 / tanhK) : 1.0;
+        }
+        else
+        {
+            fs.driveNorm = 1.0;
+        }
     }
     else if (const auto* noise = std::get_if<NoiseConfig>(&cfg.source))
     {

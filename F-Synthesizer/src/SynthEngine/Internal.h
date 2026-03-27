@@ -21,6 +21,12 @@ struct WaveformVoiceState
     double ringPhase = 0.0;
     int arpStep = 0;
     double arpElapsedSec = 0.0;
+    // ノートオン時に確定する、ユニゾン各voiceのdetune比率キャッシュ。
+    std::array<double, 8> unisonDetuneRatio{};
+    // filter keytrack の固定比率（noteNumberとfilterKeytrackから算出）。
+    double filterKeytrackRatio = 1.0;
+    // drive正規化定数 1/tanh(k)（k=drive*20）。
+    double driveNorm = 1.0;
 };
 
 struct AnalogVoiceState
@@ -38,6 +44,9 @@ struct AnalogVoiceState
     double ringPhase = 0.0;
     int arpStep = 0;
     double arpElapsedSec = 0.0;
+    std::array<double, 8> unisonDetuneRatio{};
+    double filterKeytrackRatio = 1.0;
+    double driveNorm = 1.0;
 };
 
 struct FmVoiceState
@@ -46,6 +55,7 @@ struct FmVoiceState
     double op0FeedbackSample = 0.0;
     ModulationRuntimeState modulation;
     FilterInstance filter;
+    double driveNorm = 1.0;
 };
 
 struct NoiseVoiceState
@@ -147,6 +157,7 @@ struct SourceRenderFrame
     double shaperCutoffHz = 0.0;
     double shaperResonanceMul = 1.0;
     double shaperDrive = 0.0;
+    double shaperDriveNorm = 1.0;
     CommonShaperKind shaperKind = CommonShaperKind::None;
 };
 
