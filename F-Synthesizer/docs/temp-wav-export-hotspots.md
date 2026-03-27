@@ -86,6 +86,9 @@
   - 現状: `EvaluateModulation`（LFO/Env2 含む）を毎サンプル × ボイス数だけ実行。
   - 改善: LFO/Env2 は数Hz〜数十Hzで動作するため、1/4〜1/8 レートで評価して線形補間することでボイス数×モジュレーション評価コストを大幅削減できる（control-rate / audio-rate 分離）。知覚上の劣化はほぼない。
   - **実施可否**: ⚠️ 設計変更が伴う。`EvaluateModulation` のインターフェース変更と補間バッファの追加が必要。効果は大きいが、別途設計を検討すること。
+  - **実施状況**: ✅ 最終フェーズまで実施済み。  
+    `fast group (pitch/pulseWidth/fmIndex)` を 2 サンプル更新 + 線形補間、  
+    `slow group (amp/filter/resonance)` を 4 サンプル更新 + 線形補間に分離して適用。
 
 ## 3. マスターエフェクト（中〜重）
 - 対象:

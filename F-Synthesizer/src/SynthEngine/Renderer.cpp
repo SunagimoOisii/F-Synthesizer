@@ -207,11 +207,12 @@ void RenderWaveformLikeSourceCommon(
     const VoiceRenderInput& in,
     SourceRenderFrame& frame)
 {
-    ModulationResult mod = EvaluateModulation(
+    ModulationResult mod = EvaluateModulationSplitRate(
         state.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
+        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure },
+        4);
     double pitchMul = mod.pitchMul;
 
     if constexpr (EnableDrift)
@@ -349,11 +350,12 @@ void RenderFmSource(
     SourceRenderFrame& frame)
 {
     auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
-    const ModulationResult mod = EvaluateModulation(
+    const ModulationResult mod = EvaluateModulationSplitRate(
         fs.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure });
+        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure },
+        4);
     const double indexScale = mod.fmIndexMul;
     const double feedbackSample = fs.op0FeedbackSample * src.feedback;
     const double outLevelScale = mod.ampMul;

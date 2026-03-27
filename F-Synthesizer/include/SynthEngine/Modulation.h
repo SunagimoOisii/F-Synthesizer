@@ -90,6 +90,35 @@ struct ModulationRuntimeState
     double lfo1ElapsedSec = 0.0;
     ADSRState env2{};
     double env2Value = 0.0;
+    // split-rate modulation state:
+    // fast group: pitch/pulseWidth/fmIndex
+    // slow group: amp/filterCutoff/resonance
+    bool splitRatePrepared = false;
+    bool splitRateHasFastDest = false;
+    bool splitRateHasSlowDest = false;
+    bool splitRateUseLfo = false;
+    bool splitRateUseEnv = false;
+    int splitRateFastIntervalSamples = 2;
+    int splitRateSlowIntervalSamples = 4;
+    int splitRateSamplesUntilFastUpdate = 0;
+    int splitRateSamplesUntilSlowUpdate = 0;
+    double splitRateElapsedSec = 0.0;
+    double splitRateLastLfo1 = 0.0;
+    double splitRateLastEnv2 = 0.0;
+    bool splitRateFastInitialized = false;
+    bool splitRateSlowInitialized = false;
+    double splitRatePitchCurrent = 1.0;
+    double splitRatePitchStep = 0.0;
+    double splitRatePulseWidthCurrent = 0.0;
+    double splitRatePulseWidthStep = 0.0;
+    double splitRateFmIndexCurrent = 1.0;
+    double splitRateFmIndexStep = 0.0;
+    double splitRateAmpCurrent = 1.0;
+    double splitRateAmpStep = 0.0;
+    double splitRateFilterCurrent = 1.0;
+    double splitRateFilterStep = 0.0;
+    double splitRateResCurrent = 1.0;
+    double splitRateResStep = 0.0;
 };
 
 struct ModulationResult
@@ -120,3 +149,10 @@ ModulationResult EvaluateModulation(
     const ModulationConfig& cfg,
     double deltaTimeSec,
     const ModulationInput& input = {});
+
+ModulationResult EvaluateModulationSplitRate(
+    ModulationRuntimeState& state,
+    const ModulationConfig& cfg,
+    double deltaTimeSec,
+    const ModulationInput& input = {},
+    int controlIntervalSamples = 4);
