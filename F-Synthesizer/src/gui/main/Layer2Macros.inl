@@ -100,6 +100,10 @@ void DrawLayer2Macros(GUIState& state)
     }
 
     state.presetDirty = true;
-    state.autoTonePreviewPending = true;
+    if (state.autoTonePreviewEnabled)
+    {
+        state.autoTonePreviewPending = true;
+        state.autoTonePreviewLastEditSec = ImGui::GetTime();
+    }
 }
 } // namespace
