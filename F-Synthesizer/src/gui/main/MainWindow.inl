@@ -839,6 +839,8 @@ if (state.UIModeTab == 0)
         }
 
         ImGui::TableSetColumnIndex(1);
+        DrawLayer2Macros(state);
+        ImGui::Separator();
         const bool channelEditorChanged = DrawChannelEditor(
             state,
             false,

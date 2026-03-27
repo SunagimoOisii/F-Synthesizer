@@ -16,6 +16,7 @@
 #include "gui/GUIActions.h"
 #include "gui/GUIChannelEditor.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIMacroMapping.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/GUIPlatform.h"
 #include "gui/GUIState.h"
@@ -54,6 +55,7 @@ using gui::GUIStatePath;
 using gui::DrawPianoRollPanel;
 
 #include "main/TopBar.inl"
+#include "main/Layer2Macros.inl"
 #include "main/MainWindow.inl"
 } // namespace
 

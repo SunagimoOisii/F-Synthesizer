@@ -266,6 +266,9 @@
     <ClInclude Include="src\\gui\\main\\MainWindow.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\\gui\\main\\Layer2Macros.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="src\\gui\\main\\RunLoop.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

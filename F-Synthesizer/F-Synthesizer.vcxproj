@@ -232,6 +232,7 @@
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="src\\gui\\main\\MainWindow.inl" />
+    <ClInclude Include="src\\gui\\main\\Layer2Macros.inl" />
     <ClInclude Include="src\\gui\\main\\RunLoop.inl" />
     <ClInclude Include="src\\gui\\main\\TopBar.inl" />
     <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl" />
