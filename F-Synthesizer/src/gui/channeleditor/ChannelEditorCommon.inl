@@ -122,7 +122,13 @@
             if (updateHoverHelp) updateHoverHelp("Filter Cutoff を調整します。", "通過帯域の中心が変わります。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
             localChanged |= sliderWaveParam("Filter Resonance (Q)", src.filterResonance, 0.1f, 18.0f, "%.2f");
-            if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            if (updateHoverHelp)
+            {
+                updateHoverHelp(
+                    "Filter Resonance を調整します。",
+                    "カットオフ付近の強調量が変わります。Layer2「荒さ」スライダーの書き込み範囲は 0.5〜6.0 です。",
+                    nullptr);
+            }
             ImGui::SetNextItemWidth(220.0f);
             localChanged |= sliderWaveParam("Filter Keytrack", src.filterKeytrack, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Keytrack を調整します。", "ノート音程に連動してカットオフが動く量が変わります。基準は C4(60)。", nullptr);
