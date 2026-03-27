@@ -15,7 +15,6 @@ int RunMain(
 {
     const bool previewMode = (options.mode == RunMode::Preview);
 
-    LogLine(observer, "Build Marker: 2026-02-21-save-debug-v1");
     if (options.writeWAV)
     {
         std::string dirErr;
@@ -63,7 +62,10 @@ int RunMain(
 
     if (events.empty())
     {
-        LogLine(observer, "No note events found.");
+        if (midiErr.empty())
+        {
+            LogLine(observer, "No note events found.");
+        }
         return 1;
     }
 

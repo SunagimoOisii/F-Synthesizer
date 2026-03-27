@@ -13,6 +13,21 @@
 
 namespace
 {
+#ifdef _WIN32
+struct LocalFreeGuard
+{
+    LPWSTR* ptr = nullptr;
+
+    ~LocalFreeGuard()
+    {
+        if (ptr != nullptr)
+        {
+            LocalFree(ptr);
+        }
+    }
+};
+#endif
+
 bool ParseNarrowArgs(const std::vector<std::string>& args, CLIOptions& outOptions)
 {
     outOptions = CLIOptions{};
@@ -62,11 +77,12 @@ bool ParseNarrowArgs(const std::vector<std::string>& args, CLIOptions& outOption
 bool ParseWideArgs(CLIOptions& outOptions)
 {
     int argc = 0;
-    wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (argv == nullptr || argc <= 0)
     {
         return false;
     }
+    LocalFreeGuard argvGuard{ argv };
 
     outOptions = CLIOptions{};
     // 日本語パスを壊さないため、Windowsではワイド文字引数を優先して解釈する。
@@ -77,7 +93,6 @@ bool ParseWideArgs(CLIOptions& outOptions)
         {
             if (i + 1 >= argc)
             {
-                LocalFree(argv);
                 return false;
             }
             outOptions.configPath = std::filesystem::path(argv[++i]);
@@ -87,7 +102,6 @@ bool ParseWideArgs(CLIOptions& outOptions)
         {
             if (i + 1 >= argc)
             {
-                LocalFree(argv);
                 return false;
             }
             outOptions.presetName = WideToUtf8(argv[++i]);
@@ -107,12 +121,10 @@ bool ParseWideArgs(CLIOptions& outOptions)
             std::cout << "Usage: F-Synthesizer.exe [--gui] [--cli] [--config path/to/config.json] [--preset name]" << std::endl;
             std::cout << "Default: start GUI when no CLI options are given." << std::endl;
             outOptions.showHelp = true;
-            LocalFree(argv);
             return true;
         }
     }
 
-    LocalFree(argv);
     return true;
 }
 #endif

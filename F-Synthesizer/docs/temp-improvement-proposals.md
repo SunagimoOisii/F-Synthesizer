@@ -1,313 +1,238 @@
-# 改善案（優先度 1〜4）（一時メモ）
+# 改善案（残カテゴリ: IO / APP / CORE）（一時メモ）
 
 > **破棄前提** — 採否判断後は削除する。
+> CONFIG(A) / GUI(B) / SynthEngine(C) / MIDI(D) は実施済みのため省略。
 
 ---
 
-## 優先度 1: CONFIG — JSON パーサ置換 + LoadSource 分割
+## 改善案 E: IO — Writer 出力精度強化 + バリデーション
 
 ### 現状の問題
 
-| ファイル | 行数 | 問題 |
-|----------|------|------|
-| `LoadSource.cpp` | ~1,100 | パース / バリデーション / スキーマ検証が混在 |
-| `ConfigJSONUtils.cpp` | ~805 | `std::regex` ベースの自前 JSON 読み書き |
+| 問題 | 深刻度 | 詳細 |
+|------|--------|------|
+| **bits 設定が無視される** | バグ | `sound.bits` に 24 が入っていても `Writer.cpp` は常に PCM16 で書き出す |
+| バリデーションが書き込み直前のみ | 保守性 | bits / channels / fs の異常値がファイルを開いてから初めてエラーになる |
+| モノラルフォールバックの意図が不明 | 保守性 | `dataL/dataR` が空のとき `data[i]` で代替する分岐があるが、正常状態か異常状態か不明 |
 
-- `std::regex` による JSON 抽出は「フィールド名が重複するとどちらが拾われるか不定」「文字列値内のエスケープを完全には処理できない」など構造上の限界がある
-- 新ソース追加のたびに `LoadSource.cpp` の分岐・`ConfigJSONUtils.cpp` の `WriteSourceConfig` の両方を修正しなければならない
+### 改善ステップ
 
-### 改善案 A: nlohmann/json 導入 + ファイル分割
+#### ステップ 1: 24bit PCM 書き出し対応（`Writer.cpp`）
 
-#### ステップ 1: nlohmann/json をサブモジュールまたは single-header で追加
+```cpp
+// 現状: bits に関係なく int16_t に変換
+// 改善後: sound.bits で分岐
 
+if (sound.bits == 24)
+{
+    // 3バイト little-endian
+    int32_t s = static_cast<int32_t>(
+        std::clamp(sample * 8388607.0, -8388608.0, 8388607.0));
+    buf[0] = s & 0xFF;
+    buf[1] = (s >> 8) & 0xFF;
+    buf[2] = (s >> 16) & 0xFF;
+}
+else // 16bit
+{
+    int16_t s = static_cast<int16_t>(
+        std::clamp(sample * 32767.0, -32768.0, 32767.0));
+    // ...
+}
 ```
-F-Synthesizer/external/nlohmann/json.hpp   ← 追加
-```
 
-影響範囲は `ConfigFileInternal.h` のみ。`ReadJSONString / ReadJSONInt / ...` 系を json オブジェクト経由に置き換える。
+WAV ヘッダの `wBitsPerSample` / `nBlockAlign` / `nAvgBytesPerSec` も `sound.bits` に連動させる。
 
-#### ステップ 2: ConfigJSONUtils.cpp の責務を整理
+#### ステップ 2: 早期バリデーション（`Writer.cpp` 冒頭、ファイルを開く前）
 
-現状の責務を 3 本に分ける（ファイル名は変更せず、内部 namespace で分離してもよい）:
-
-| 責務 | 具体的な内容 |
+| 条件 | エラーコード |
 |------|------------|
-| **列挙型 ↔ 文字列変換** | `TryParse*` / `*ToString` 関数群 — 現状のまま残す |
-| **JSON 読み書き共通** | `ReadTextFile`, `ExtractObjectAt` 等 — nlohmann 導入後は削減可能 |
-| **JSON 書き出し** | `WriteSourceConfig`, `WriteModulationConfig` 等 — 次ステップで分割 |
+| `sound.bits != 16 && sound.bits != 24` | `"wav_invalid_bits"` |
+| `sound.fs <= 0` | `"wav_invalid_samplerate"` |
+| `sound.channels < 1 \|\| sound.channels > 2` | `"wav_invalid_channels"` |
+| `sound.length <= 0` | `"wav_empty"` |
 
-#### ステップ 3: LoadSource.cpp を 4 ファイルに分割
+#### ステップ 3: モノラルフォールバック分岐の明示化
 
-```
-src/config/load/
-  LoadSource.cpp          ← エントリ: SourceConfig に dispatch するだけ (~80行)
-  LoadSourceWaveform.cpp  ← WaveformConfig / AnalogConfig パース (~200行)
-  LoadSourceFm.cpp        ← FmConfig パース (~150行)
-  LoadSourceDrum.cpp      ← DrumConfig / DrumKitConfig パース (~200行)
-  LoadSourceNoise.cpp     ← NoiseConfig / PsgConfig パース (~100行)
-  LoadSourceCommon.cpp    ← ValidateLifecycleContract / ValidateSchemaRange 等の共通処理
-```
+`Writer.cpp` の「`dataL/dataR` が空なら `data[i]` にフォールバック」分岐を、
+`channels == 1` の正規パスとして `GetSampleL/R()` ヘルパー経由に統一する（後述 改善案 G と連携）。
 
-`Internal.h` に共通型・前方宣言だけ残し、各ファイルが必要な分だけインクルードする。
+### 効果
+- `bits=24` 設定が実際に 24bit WAV として出力される（設定と出力の不一致が解消）
+- 無効な設定が早期エラーになり診断が明確になる
 
-#### 効果
-- `LoadSource.cpp` を 1,100 行 → 80 行に削減
-- 正規 JSON パーサにより、ネスト構造・配列・エスケープの処理が保証される
-- 新ソース追加時のファイル = 1 本の `LoadSourceXxx.cpp` 追加のみ
-
-#### リスクと対策
-- nlohmann/json はヘッダオンリーで追加依存がなく、ライセンスは MIT — 受け入れやすい
-- 既存の `std::regex` ベースのテスト（smoke）が通っていれば移行後も同一の JSON を入力として検証可能
-- `ConfigJSONUtils.cpp` の `Write*` 関数群は nlohmann の `dump()` に移行すると出力フォーマットが変わる可能性があるため、**読み書きのラウンドトリップテスト**を事前に整備してから着手する
+### リスクと対策
+- 24bit 出力は互換性が高いが、受け取り側ソフトで稀に問題が出る可能性がある
+- 変更前後でファイルバイト列が変わるため smoke テスト（再生確認）が必須
 
 ---
 
-## 優先度 2: GUI — GUIState 分割 + GUIChannelEditor モジュール化
+## 改善案 F: APP — バグ修正 + 保守性改善
 
 ### 現状の問題
 
-| ファイル | 行数 | 問題 |
-|----------|------|------|
-| `GUIState.h` | 99 | 50+ フィールドが 1 構造体に集約（God Object） |
-| `GUIChannelEditor.cpp` | 988 | ソース種別ごとの UI ロジックが縦に連なる |
-| `GUIActions.cpp` | 856 | Run 実行・プリセット・プレビューが混在 |
+| 問題 | 深刻度 | 詳細 |
+|------|--------|------|
+| **LocalFree リーク** | バグ | `CLI.cpp` の `ParseWideArgs` で引数不足時に途中 `return`、`LocalFree(wargv)` が呼ばれない |
+| **重複ログ** | バグ | `RunExecution.cpp` で `BuildMIDIPipeline` 失敗時に「No note events found」が 2 回出力される |
+| **Build Marker ハードコード** | コード品質 | `"2026-02-21-save-debug-v1"` が `RunExecution.cpp` に埋め込まれたまま |
+| プロジェクトルート探索の脆弱性 | 保守性 | `FindProjectRootInternal` が `F-Synthesizer.vcxproj` ファイル名に依存（リネームで壊れる） |
+| MAX_PATH 制限 | 保守性 | `GetModuleFileNameW` が 260 文字制限（日本語パス + 深いネストで超過リスク） |
 
-`GUIState` は以下の 4 つの独立した責務を同居させている:
-1. **実行パラメータ** (midiPath, wavPath, sampleRate, bits ...)
-2. **非同期 Run 状態** (runFuture, logMutex, observer, stopRequested ...)
-3. **プレビュー状態** (previewRenderedSound, playback, autoTonePreview ...)
-4. **UI 表示状態** (UIModeTab, UIScaleIndex, selectedSoundSlot ...)
+### 改善ステップ
 
-### 改善案 B: GUIState を責務別に分割
+#### ステップ 1: LocalFree リーク修正（`CLI.cpp`）
 
-#### ステップ 1: 責務ごとに sub-struct を切り出す
+RAII ガードで `wargv` を管理する:
 
 ```cpp
-// 既存の GUIState.h をそのまま維持しつつ、内部を sub-struct に整理
-struct GUIRunState              // 非同期 Run の状態
+struct LocalFreeGuard
 {
-    std::future<int> runFuture{};
-    std::mutex logMutex{};
-    std::vector<std::string> soundLogs{};
-    std::vector<std::string> musicLogs{};
-    std::atomic<bool> stopRequested{ false };
-    bool running = false;
-    bool hasRun = false;
-    int lastRunExitCode = 0;
-    GUIRunObserver observer{};
+    LPWSTR* ptr = nullptr;
+    ~LocalFreeGuard() { if (ptr) LocalFree(ptr); }
 };
 
-struct GUIPreviewState          // プレビュー再生の状態
-{
-    bool soloPreviewActive = false;
-    bool restorePreviewOnRunComplete = false;
-    int soloPreviewChannel = 0;
-    std::array<ChannelMixState, 16> soloPreviewBackup{};
-    bool previewLoop = false;
-    bool autoTonePreviewEnabled = false;
-    bool autoTonePreviewPending = false;
-    double autoTonePreviewLastEditSec = 0.0;
-    bool previewAudioReady = false;
-    bool runIsPreview = false;
-    bool autoPlayPreviewOnRunComplete = false;
-    int previewRequestedStartTick = 0;
-    double previewRequestedDurationSec = 0.0;
-    std::shared_ptr<SoundData> previewRenderedSound{};
-    std::shared_ptr<SoundData> runOutputBuffer{};
-    PreviewPlaybackState playback{};
-};
-
-struct GUIRenderParams          // 実行パラメータ
-{
-    char midiPath[1024]{};
-    char wavPath[1024]{};
-    int targetChannel = -1;
-    int sampleRate = 44100;
-    int initialSeconds = 6;
-    int bits = 16;
-    float extraReleaseSec = 0.3f;
-    MasterEffectConfig masterEffects{};
-};
-
-struct GUIState                 // 統合コンテナ（フィールド数を大幅削減）
-{
-    GUIRenderParams renderParams{};
-    GUIRunState run{};
-    GUIPreviewState preview{};
-    // UI 表示状態は残す
-    int UIScaleIndex = 1;
-    int UIModeTab = 0;
-    ...
-};
+// 使用例
+int wargc = 0;
+LPWSTR* wargv = CommandLineToArgvW(GetCommandLineW(), &wargc);
+LocalFreeGuard guard{ wargv };
+// 以降どこで return しても LocalFree が保証される
 ```
 
-この変更は `GUIState` の**フィールドアクセスのパス**が変わる（例: `state.running` → `state.run.running`）ため、`GUIActions.cpp` / `GUIStateStorage.cpp` 等の修正が必要。1 回の機械的置換で完了する範囲。
+#### ステップ 2: 重複ログ削除（`RunExecution.cpp`）
 
-#### ステップ 2: GUIChannelEditor.cpp を .inl 分割
+`BuildMIDIPipeline` が `err` を設定して `false` を返すとき既にログ出力している場合、
+呼び出し側の `events.empty()` チェックによるログを削除するか、`err` が空でなければスキップする。
 
-現在 `src/gui/pianoroll/` 配下に `PianoRollRender.inl` 等が存在する — 同パターンで:
+#### ステップ 3: Build Marker 除去（`RunExecution.cpp`）
 
-```
-src/gui/channeleditor/
-  ChannelEditorWaveform.inl   ← Waveform / Analog UI
-  ChannelEditorFm.inl         ← FM UI
-  ChannelEditorDrum.inl       ← Drum / DrumKit UI
-  ChannelEditorNoise.inl      ← Noise / PSG UI
-  ChannelEditorModulation.inl ← モジュレーション共通 UI
+```cpp
+// 以下の行を削除する
+observer->OnLogLine("[Build] 2026-02-21-save-debug-v1");
 ```
 
-`GUIChannelEditor.cpp` はインクルードとディスパッチのみ (~100行) になる。
+開発用マーカーとして残す場合は `#ifdef _DEBUG` で囲む。
 
-**注意**: `.inl` 方式は実態としてコンパイル単位を分割しないため、ビルド時間への影響は皆無。あくまで**読む単位を分ける**目的。
+#### ステップ 4: プロジェクトルート探索の改善（`RunDefaults.cpp`）
 
-#### ステップ 3: GUIActions.cpp の責務分離
+現在 `F-Synthesizer.vcxproj` の存在をマーカーに使っているが、
+配布・リネーム時に壊れる。代替案:
 
-| 現状 | 分割後 |
-|------|-------|
-| Run 実行・キャンセル | `GUIRunActions.cpp`（既存 GUIActions 内の Run 関連） |
-| プリセット保存・読み込み | `GUIPresetIO.cpp`（既存ファイルを拡充） |
-| プレビュー起動・停止 | `GUIPreviewActions.cpp` |
+```cpp
+// 環境変数で上書き可能にし、vcxproj 依存を取り除く
+if (const char* envRoot = std::getenv("FSYNTH_ROOT"))
+{
+    return std::filesystem::path(envRoot);
+}
+// フォールバック: 実行ファイルの親ディレクトリを固定使用
+```
 
-#### 効果
-- `GUIState` の認知負荷が大幅に低下（各 sub-struct は 10〜15 フィールド）
-- 新機能追加時に「どの sub-struct に追加すべきか」が明確になる
-- `GUIChannelEditor.cpp` が 988 行 → ~100 行に削減（中身は .inl に移動）
+または設定ファイル (`default.json`) の存在をマーカーとして使うことで、
+ビルドシステム固有ファイルへの依存を排除する。
 
-#### リスクと対策
-- `GUIState` フィールドのアクセスパス変更は広範囲 → sed / 一括置換で対応可能
-- sub-struct 化で `sizeof(GUIState)` は変わらないためメモリ影響なし
+#### ステップ 5: MAX_PATH 対応（`RunDefaults.cpp`）（低優先度）
+
+```cpp
+// 固定バッファ(MAX_PATH) → 動的確保に変更
+DWORD needed = GetModuleFileNameW(nullptr, nullptr, 0);
+std::wstring buf(needed, L'\0');
+GetModuleFileNameW(nullptr, buf.data(), needed);
+```
+
+### 効果
+- ステップ 1〜3 は変更量が小さく即修正可能
+- ステップ 4 はポータビリティ向上（将来のディレクトリ構成変更への耐性）
+
+### 着手順の推奨
+ステップ 1 → 2 → 3 は1コミットでまとめて実施（バグ修正 PR）。
+ステップ 4 → 5 は別 PR（設計変更を含むため）。
 
 ---
 
-## 優先度 3: SynthEngine — Renderer.cpp 分割
+## 改善案 G: CORE — SoundData モノ/ステレオ設計の明確化
 
 ### 現状の問題
 
-`Renderer.cpp`（736行）はソース種別ごとのレンダリングが縦方向に並んでいる:
+`SoundData` が `data`（モノ互換）と `dataL/dataR`（ステレオ）を同時に持ち、
+`channels` の値で使い分けが必要な構造になっている。
 
-```
-RenderVoiceSource<WaveformConfig, ...>  ~150行
-RenderVoiceSource<AnalogConfig, ...>    ~100行
-RenderVoiceSource<FmConfig, ...>        ~150行
-RenderVoiceSource<DrumConfig, ...>      ~80行
-RenderVoiceSource<DrumKitConfig, ...>   ~80行
-...
-+ フィルタ適用 / モジュレーション適用 / ミックス
-```
-
-関数間は `namespace {}` 内に定義された小ヘルパー（`SampleOp`, `EnsureDrumFilters`, `ArpSemitoneRatio` 等）が入り組んでいる。
-
-### 改善案 C: Renderer を .inl 分割
-
-pianoroll と同じパターンを踏襲する:
-
-```
-src/SynthEngine/renderer/
-  RenderCommon.inl      ← VoiceRenderInput, TimeScaleFromOffset 等の共通ヘルパー
-  RenderWaveform.inl    ← WaveformConfig / AnalogConfig レンダリング
-  RenderFm.inl          ← FmConfig レンダリング（SampleOp 含む）
-  RenderDrum.inl        ← DrumConfig / DrumKitConfig レンダリング
-  RenderNoise.inl       ← NoiseConfig / PsgConfig レンダリング
-  RenderMix.inl         ← ミックス / エフェクト適用
+```cpp
+struct SoundData
+{
+    std::vector<double> data;   // モノラル互換 (L+R)*0.5
+    std::vector<double> dataL;
+    std::vector<double> dataR;
+    int channels;               // 1 or 2
+};
 ```
 
-`Renderer.cpp` 本体はインクルードとエントリ関数のみ (~60行)。
-
-#### ヘルパーの帰属整理
-
-現在 `Renderer.cpp` のローカル namespace にある共通ヘルパーを適切な .inl に移動する:
-
-| ヘルパー | 移動先 |
-|----------|--------|
-| `ArpSemitoneRatio` | `RenderWaveform.inl`（Waveform/Analog 専用） |
-| `SampleOp` | `RenderFm.inl` |
-| `EnsureDrumFilters` | `RenderDrum.inl` |
-| `SourceFilterResonance` | `RenderCommon.inl` |
-| `WrapPhase` | `RenderCommon.inl` |
-
-#### Modulation 適用の分離
-
-現在 `Renderer.cpp` 内でモジュレーション適用（`EvaluateModulation` 呼び出し後の `pitchMul` 合成等）がレンダリングループに埋め込まれている。これを `RenderMix.inl` に切り出し、`SourceRenderFrame` を受け取って後段で適用するフロー（STATUS.md に記載の `source render -> common shaper -> modulation apply -> mix`）に合わせる。
-
-#### 効果
-- `Renderer.cpp` が 736 行 → ~60 行に削減
-- ソース追加時の修正ファイル = `RenderXxx.inl` 1 本のみ
-- FM / Drum など互いに干渉しない部分のコードレビューが容易になる
-
-#### リスクと対策
-- `.inl` はコンパイル単位を分割しないため、**ビルド時間・リンク・最適化に影響なし**
-- `Internal.h` の `Voice` / `PerSourceVoiceState` を .inl が参照できれば移行は機械的
-- 移行前後で `-RunRuntimeSmoke` による音声出力比較が必須
-
----
-
-## 優先度 4: MIDI — MIDIParser.cpp 責務分離
-
-### 現状の問題
-
-`MIDIParser.cpp`（455行）が 2 つの独立した責務を持っている:
-
-| 責務 | 内容 |
+| 問題 | 詳細 |
 |------|------|
-| **SMF バイナリ解析** | `ReadBE32/16`, `ReadVarLen`, ヘッダ/トラック読み込み |
-| **イベント構築** | ノート重複追跡, サステインペダル, `MIDIBuildOutput` 組み立て |
+| どの `data*` が有効か不明 | `channels` を読まないと判断できない |
+| `data` と `dataL/dataR` の同期責任が不明確 | どちらが source-of-truth か定義されていない |
+| Writer のフォールバック分岐 | `dataL/dataR` が空なら `data[i]` で代替 — 異常状態を正常扱いしている |
 
-これらは完全に直列な処理だが、「バイナリ構造の知識」と「ゲームロジック的なイベント変換」の 2 つの異なるドメイン知識を要求するため、読む目的によって必要な前提知識が異なる。
+### 改善ステップ
 
-### 改善案 D: 2 ファイルに分割
-
-```
-src/midi/
-  MIDIReader.cpp      ← SMF バイナリ解析のみ（ReadBE32/16, ReadVarLen, ParseSMF）
-  MIDIParser.cpp      ← イベント構築のみ（ノート追跡, サステイン, MIDIBuildOutput 組み立て）
-```
-
-#### MIDIReader.cpp の公開 API
+#### ステップ 1（最小変更）: サンプルアクセスを関数化（`AudioBuffer.h`）
 
 ```cpp
-// 新設: SMF を読み込んで生の tick イベント列と tempo map を返す
-struct MIDIRawOutput
+// SoundData にインラインヘルパーを追加
+double SampleL(size_t i) const
 {
-    std::vector<MIDIEventTick> rawEvents;  // ソートされた全 tick イベント
-    std::vector<TempoEvent> tempoEvents;
-    MIDIParseStatus status;
-};
-
-MIDIRawOutput ParseSMFFile(const std::string& path);
+    return (channels >= 2) ? dataL[i] : data[i];
+}
+double SampleR(size_t i) const
+{
+    return (channels >= 2) ? dataR[i] : data[i];
+}
 ```
 
-#### MIDIParser.cpp の変更
+`Writer.cpp` の `dataL/dataR` 直接アクセスをこれで統一し、フォールバック分岐を削除する。
+`TrimPreviewSoundByDuration` など他の `data*` 直接アクセス箇所も同様に統一する。
 
-現在の `BuildMIDIData(path, ...)` を `BuildMIDIData(MIDIRawOutput&&, ...)` に変更し、バイナリ I/O から切り離す。
+#### ステップ 2（将来設計）: 書き込み先の一本化
 
-#### 効果
-- SMF 解析部は単体テスト可能になる（バイナリファイルを用意して `MIDIRawOutput` の内容を検証）
-- イベント構築部は `MIDIRawOutput` をモックして独立テスト可能
-- 「MIDI ファイルが壊れているのか / ノート変換が壊れているのか」の切り分けが容易になる
+`RenderWithEngine` から `SoundData` へ書き込む際、
+`channels == 1` なら `data` のみ、`channels == 2` なら `dataL/dataR` のみに書き込むルールを明示し、
+「一方が常に空である」状態を正常として設計する。
 
-#### リスクと対策
-- 変更量は小さい（455行 → ~220行 + ~230行）
-- `MIDIPipeline.cpp` が呼び出す `BuildMIDIData` のシグネチャ変更が必要
-- バイナリパーサはステートフル（`std::ifstream` を引き回す）なので、インタフェースを `ParseSMFFile` という関数呼び出し型にまとめることで外部への露出を最小化できる
+これにより `Writer.cpp` のフォールバック分岐が不要になる（ステップ 1 と合わせて完全に除去できる）。
+
+### 効果
+- ステップ 1: 変更量は `AudioBuffer.h` に 2 メソッド追加 + `Writer.cpp` 数行の置き換えのみ
+- モノラル/ステレオの判断が一箇所に集約され、読み手の認知負荷が下がる
+- 改善案 E（Writer 改善）と同時実施すると相乗効果がある
+
+---
+
+## synth ヘルパー: 変更不要
+
+分析資料の通り「全カテゴリ中、最も品質が安定している」ため積極的な変更は不要。
+
+潜在的な将来拡張:
+- `Envelope.cpp` の `ModEnvelopeConfig.curve` 対応（現在は SynthEngine 側で閉じており `StepADSR` には未反映）
+  — ただし SynthEngine 側との連携変更が必要なため、単独では着手しない。
 
 ---
 
 ## 全体俯瞰
 
-| 優先度 | 対象 | 変更の種類 | 修正箇所の広がり | 推定リスク |
-|--------|------|----------|-----------------|-----------|
-| 1 | CONFIG / JSON パーサ置換 | 外部依存追加 + 全 config ファイル | config 全体 | 中（ラウンドトリップ検証が必要） |
-| 1 | CONFIG / LoadSource 分割 | ファイル分割のみ | config/load/ のみ | 低 |
-| 2 | GUI / GUIState sub-struct 化 | フィールドアクセスパス変更 | GUI 全体 | 中（機械的置換で対応可） |
-| 2 | GUI / GUIChannelEditor .inl 分割 | ファイル分割のみ | gui/channeleditor/ のみ | 低 |
-| 3 | SynthEngine / Renderer .inl 分割 | ファイル分割のみ | SynthEngine/ のみ | 低（smoke テスト必須） |
-| 4 | MIDI / MIDIParser 分割 | シグネチャ変更 + ファイル分割 | midi/ + pipeline 呼び出し箇所 | 低 |
+| 案 | 対象 | 変更の種類 | 修正箇所の広がり | 推定リスク |
+|----|------|----------|-----------------|-----------|
+| E-1 | IO / 24bit 出力 | バグ修正 + 機能追加 | Writer.cpp のみ | 低（smoke テスト必須） |
+| E-2 | IO / 早期バリデーション | 保守性 | Writer.cpp のみ | 低 |
+| F-1 | APP / LocalFree リーク | バグ修正 | CLI.cpp のみ | 低 |
+| F-2 | APP / 重複ログ | バグ修正 | RunExecution.cpp のみ | 低 |
+| F-3 | APP / Build Marker 除去 | コード品質 | RunExecution.cpp 1行 | 低 |
+| F-4 | APP / プロジェクトルート | 保守性 | RunDefaults.cpp | 低〜中 |
+| F-5 | APP / MAX_PATH | 保守性 | RunDefaults.cpp | 低 |
+| G-1 | CORE / SoundData ヘルパー | 設計整理 | AudioBuffer.h + Writer.cpp | 低 |
+| G-2 | CORE / 書き込み先一本化 | 設計整理 | RenderWithEngine + Writer | 中 |
 
 ### 着手順の推奨
 
-1. **LoadSource 分割**（優先度 1 のうち、外部依存なしで即着手可能）
-2. **Renderer .inl 分割**（smoke テストで前後比較が容易）
-3. **GUIChannelEditor .inl 分割**（ビルド影響なし、視覚的効果大）
-4. **MIDIParser 分割**（変更量が少なく完結しやすい）
-5. **GUIState sub-struct 化**（置換範囲が広いので単独 PR で行う）
-6. **nlohmann/json 導入**（ラウンドトリップ検証の準備ができてから）
+1. **F-1 + F-2 + F-3**（バグ修正セット、1 PR でまとめて実施）
+2. **E-1 + E-2**（IO 出力改善、smoke テストとセット）
+3. **G-1**（SoundData ヘルパー、E-2 と同時実施で相乗効果）
+4. **F-4 + F-5**（保守性改善、別 PR）
+5. **G-2**（設計変更のため十分な検証後）
