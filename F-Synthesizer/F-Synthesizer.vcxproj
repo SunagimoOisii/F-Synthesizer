@@ -179,6 +179,7 @@
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
     <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
+    <ClCompile Include="src\\gui\\GUIMacroMapping.cpp" />
     <ClCompile Include="src\\gui\\GUIStateModel.cpp" />
     <ClCompile Include="src\\gui\\GUIStatePersistence.cpp" />
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
@@ -220,9 +221,11 @@
     <ClInclude Include="include\\gui\\GUIActions.h" />
     <ClInclude Include="include\\gui\\GUIActionsInternal.h" />
     <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
+    <ClInclude Include="include\\gui\\GUIMacroMapping.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />
     <ClInclude Include="include\\gui\\GUIRunHelpers.h" />
+    <ClInclude Include="include\\gui\\GUIMacroSliders.h" />
     <ClInclude Include="include\\gui\\GUIState.h" />
     <ClInclude Include="include\\gui\\GUIStateModel.h" />
     <ClInclude Include="include\\gui\\GUIStatePersistence.h" />
