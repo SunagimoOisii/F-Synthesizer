@@ -333,6 +333,10 @@ void ApplyRetroEffects(RenderState& state, double inL, double inR, double& outL,
 {
     outL = inL;
     outR = inR;
+    if (state.effects.sampleRateReducer.ratio >= 1.0 && state.effects.bitCrusher.bits >= 16)
+    {
+        return;
+    }
 
     const double ratio = std::clamp(state.effects.sampleRateReducer.ratio, 0.0, 1.0);
     if (ratio < 1.0)
@@ -367,6 +371,16 @@ void ApplyRetroEffects(RenderState& state, double inL, double inR, double& outL,
 
 StereoFrame ApplyMasterEffects(RenderState& state, int sampleRate, StereoFrame in)
 {
+    if (state.effects.sampleRateReducer.ratio >= 1.0 &&
+        state.effects.bitCrusher.bits >= 16 &&
+        (!state.effects.chorus.enabled || state.effects.chorus.mix <= 0.0) &&
+        (!state.effects.flanger.enabled || state.effects.flanger.mix <= 0.0) &&
+        (!state.effects.delay.enabled || state.effects.delay.mix <= 0.0) &&
+        (!state.effects.reverb.enabled || state.effects.reverb.mix <= 0.0))
+    {
+        return in;
+    }
+
     double l0 = 0.0;
     double r0 = 0.0;
     ApplyRetroEffects(state, in.left, in.right, l0, r0);

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <climits>
 #include <cstdint>
 #include <cerrno>
@@ -79,8 +80,7 @@ bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePa
         const double r = (i < static_cast<int>(sound.dataR.size())) ? sound.dataR[i] : sound.data[i];
         auto toPcm16 = [](double x) -> short
         {
-            double amp = (x > 1.0) ? 1.0 : x;
-            amp = (amp < -1.0) ? -1.0 : amp;
+            const double amp = std::clamp(x, -1.0, 1.0);
             return static_cast<short>(amp * SHRT_MAX);
         };
         if (channels == 1)
