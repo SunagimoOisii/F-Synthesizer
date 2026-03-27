@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <cstddef>
 #include <vector>
 
 // レンダリング結果を保持するモノラルPCMバッファ。
@@ -21,4 +22,23 @@ public:
     std::vector<double> data;
     std::vector<double> dataL;
     std::vector<double> dataR;
+
+    // channels に応じた参照先を一箇所に寄せ、呼び出し側の分岐重複を減らす。
+    double SampleL(size_t i) const
+    {
+        if (channels >= 2)
+        {
+            return (i < dataL.size()) ? dataL[i] : 0.0;
+        }
+        return (i < data.size()) ? data[i] : 0.0;
+    }
+
+    double SampleR(size_t i) const
+    {
+        if (channels >= 2)
+        {
+            return (i < dataR.size()) ? dataR[i] : 0.0;
+        }
+        return (i < data.size()) ? data[i] : 0.0;
+    }
 };

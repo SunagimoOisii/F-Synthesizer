@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <climits>
 #include <cstdint>
 #include <cerrno>
 #include <iostream>
@@ -49,6 +48,56 @@ bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePa
     std::cout << "[SaveWAVFilePath] begin: " << PathToUtf8(filePath) << std::endl;
     SetLastError(0);
     errno = 0;
+
+    if (sound.bits != 16 && sound.bits != 24)
+    {
+        FillError(
+            outError,
+            "wav_invalid_bits",
+            filePath,
+            0,
+            0,
+            "bits must be 16 or 24",
+            "set sound.bits to 16 or 24 before writing");
+        return false;
+    }
+    if (sound.fs <= 0)
+    {
+        FillError(
+            outError,
+            "wav_invalid_samplerate",
+            filePath,
+            0,
+            0,
+            "sample rate must be greater than zero",
+            "set sound.fs to a valid Hz value such as 44100");
+        return false;
+    }
+    if (sound.channels < 1 || sound.channels > 2)
+    {
+        FillError(
+            outError,
+            "wav_invalid_channels",
+            filePath,
+            0,
+            0,
+            "channels must be 1 or 2",
+            "set sound.channels to mono(1) or stereo(2)");
+        return false;
+    }
+    if (sound.length <= 0)
+    {
+        FillError(
+            outError,
+            "wav_empty",
+            filePath,
+            0,
+            0,
+            "sound buffer has no samples",
+            "render at least one frame before writing");
+        return false;
+    }
+
     std::ofstream fout(filePath, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!fout.is_open())
     {
@@ -72,30 +121,41 @@ bool SaveWAVFilePath(const SoundData& sound, const std::filesystem::path& filePa
         return false;
     }
 
-    const int channels = (sound.channels >= 2) ? 2 : 1;
-    std::vector<short> wdata(static_cast<size_t>(sound.length) * channels);
-    for (int i = 0; i < sound.length; i++)
+    const int channels = sound.channels;
+    const int bytesPerSample = sound.bits / 8;
+    std::vector<std::uint8_t> wdata(static_cast<size_t>(sound.length) * static_cast<size_t>(channels) * static_cast<size_t>(bytesPerSample));
+    size_t writeOffset = 0;
+    auto writeSample = [&](double x)
     {
-        const double l = (i < static_cast<int>(sound.dataL.size())) ? sound.dataL[i] : sound.data[i];
-        const double r = (i < static_cast<int>(sound.dataR.size())) ? sound.dataR[i] : sound.data[i];
-        auto toPcm16 = [](double x) -> short
+        const double sample = std::clamp(x, -1.0, 1.0);
+        if (sound.bits == 24)
         {
-            const double amp = std::clamp(x, -1.0, 1.0);
-            return static_cast<short>(amp * SHRT_MAX);
-        };
-        if (channels == 1)
-        {
-            wdata[i] = toPcm16(sound.data[i]);
+            const int32_t pcm24 = static_cast<int32_t>(std::clamp(sample * 8388607.0, -8388608.0, 8388607.0));
+            wdata[writeOffset + 0] = static_cast<std::uint8_t>(pcm24 & 0xFF);
+            wdata[writeOffset + 1] = static_cast<std::uint8_t>((pcm24 >> 8) & 0xFF);
+            wdata[writeOffset + 2] = static_cast<std::uint8_t>((pcm24 >> 16) & 0xFF);
+            writeOffset += 3;
         }
         else
         {
-            const size_t base = static_cast<size_t>(i) * 2;
-            wdata[base + 0] = toPcm16(l);
-            wdata[base + 1] = toPcm16(r);
+            const int32_t pcm16 = static_cast<int32_t>(std::clamp(sample * 32767.0, -32768.0, 32767.0));
+            const int16_t s = static_cast<int16_t>(pcm16);
+            wdata[writeOffset + 0] = static_cast<std::uint8_t>(s & 0xFF);
+            wdata[writeOffset + 1] = static_cast<std::uint8_t>((s >> 8) & 0xFF);
+            writeOffset += 2;
+        }
+    };
+    for (int i = 0; i < sound.length; i++)
+    {
+        const size_t index = static_cast<size_t>(i);
+        writeSample(sound.SampleL(index));
+        if (channels >= 2)
+        {
+            writeSample(sound.SampleR(index));
         }
     }
 
-    int32_t wsize = static_cast<int32_t>(sizeof(short) * wdata.size());
+    const int32_t wsize = static_cast<int32_t>(wdata.size());
     Chunk riffChunk = { 'R', 'I', 'F', 'F' };
     int32_t riffSize = 12 + (int32_t)sizeof(PCMWAVEFORMAT) + 8 + wsize;
     Chunk waveChunk = { 'W', 'A', 'V', 'E' };
