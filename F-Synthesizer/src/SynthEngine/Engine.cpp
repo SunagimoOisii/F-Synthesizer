@@ -469,6 +469,21 @@ void RenderMIDIEvents(
             (state.channelMixGainL[i] > 0.0 || state.channelMixGainR[i] > 0.0);
     }
 
+    if (sound.channels >= 2)
+    {
+        sound.channels = 2;
+        sound.data.clear();
+        sound.dataL.resize(static_cast<size_t>(sound.length));
+        sound.dataR.resize(static_cast<size_t>(sound.length));
+    }
+    else
+    {
+        sound.channels = 1;
+        sound.data.resize(static_cast<size_t>(sound.length));
+        sound.dataL.clear();
+        sound.dataR.clear();
+    }
+
     // 目的: 毎サンプルで削除圧縮を走らせず、一定間隔でまとめて掃除して負荷を抑える。
     // 前提: pendingRemove は短時間遅延しても音として破綻しない。
     // トレードオフ: 削除タイミングが最大 cleanupInterval サンプルぶん遅れる。
@@ -494,9 +509,15 @@ void RenderMIDIEvents(
         }
         StereoFrame frame = RenderVoices(state, sound);
         frame = ApplyMasterEffects(state, sound.fs, frame);
-        sound.dataL[i] = frame.left;
-        sound.dataR[i] = frame.right;
-        sound.data[i] = (frame.left + frame.right) * 0.5;
+        if (sound.channels >= 2)
+        {
+            sound.dataL[i] = frame.left;
+            sound.dataR[i] = frame.right;
+        }
+        else
+        {
+            sound.data[i] = (frame.left + frame.right) * 0.5;
+        }
 
         if ((i % cleanupInterval) == 0)
         {

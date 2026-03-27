@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <vector>
 
-// レンダリング結果を保持するモノラルPCMバッファ。
-// app/core/io の境界で共通利用し、data.size() は length と一致する前提で扱う。
+// レンダリング結果を保持するPCMバッファ。
+// app/core/io の境界で共通利用し、channels で有効バッファを切り替える。
 class SoundData
 {
 public:
@@ -18,7 +18,9 @@ public:
     int bits;
     int fs; //サンプリングレート(Hz)
     int channels;
-    // 互換維持用のモノラル合成バッファ（(L+R)*0.5）。
+    // source-of-truth:
+    // channels==1 -> data を使用、dataL/dataR は空
+    // channels==2 -> dataL/dataR を使用、data は空
     std::vector<double> data;
     std::vector<double> dataL;
     std::vector<double> dataR;

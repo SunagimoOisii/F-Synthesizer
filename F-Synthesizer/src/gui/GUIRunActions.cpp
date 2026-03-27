@@ -99,11 +99,14 @@ void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
     const uint64_t keepSamples = static_cast<uint64_t>(durationSec * static_cast<double>(sound.fs));
     if (keepSamples == 0)
     {
-        sound.data.clear();
         if (sound.channels >= 2)
         {
             sound.dataL.clear();
             sound.dataR.clear();
+        }
+        else
+        {
+            sound.data.clear();
         }
         sound.length = 0;
         return;
@@ -111,11 +114,14 @@ void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
     if (keepSamples < static_cast<uint64_t>(sound.length))
     {
         const size_t keep = static_cast<size_t>(keepSamples);
-        sound.data.resize(keep);
         if (sound.channels >= 2)
         {
             sound.dataL.resize(keep);
             sound.dataR.resize(keep);
+        }
+        else
+        {
+            sound.data.resize(keep);
         }
         sound.length = static_cast<int>(keep);
     }
@@ -363,13 +369,13 @@ bool TryFinalizeCompletedRun(GUIState& state)
     {
         if (state.lastRunExitCode == 0 &&
             state.runOutputBuffer != nullptr &&
-            !state.runOutputBuffer->data.empty())
+            state.runOutputBuffer->length > 0)
         {
             if (state.pianoRoll.previewRangeEnabled)
             {
                 TrimPreviewSoundByDuration(*state.runOutputBuffer, state.previewRequestedDurationSec);
             }
-            if (state.runOutputBuffer->data.empty())
+            if (state.runOutputBuffer->length <= 0)
             {
                 state.previewAudioReady = false;
                 state.previewRenderedSound.reset();
