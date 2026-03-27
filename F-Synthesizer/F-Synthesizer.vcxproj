@@ -184,6 +184,7 @@
     <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
+    <ClCompile Include="src\\midi\\MIDIReader.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
     <ClCompile Include="src\\midi\\MIDIPipeline.cpp" />
     <ClCompile Include="src\\synth\\Oscillator.cpp" />
@@ -242,6 +243,7 @@
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollTempo.inl" />
     <ClInclude Include="include\\io\\PlatformPaths.h" />
     <ClInclude Include="include\\midi\\MIDIParser.h" />
+    <ClInclude Include="include\\midi\\MIDIReader.h" />
     <ClInclude Include="include\\synth\\Oscillator.h" />
     <ClInclude Include="include\\midi\\Sequencer.h" />
     <ClInclude Include="include\\midi\\MIDIPipeline.h" />

@@ -138,6 +138,9 @@
     <ClCompile Include="src\\midi\\MIDIPipeline.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\midi\\MIDIReader.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\midi\\MIDIParser.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -294,6 +297,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\midi\\MIDIParser.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\midi\\MIDIReader.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\synth\\Oscillator.h">
