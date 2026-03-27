@@ -1,5 +1,6 @@
 #include <cctype>
 
+#include "config/SourceRegistry.h"
 #include "gui/GUIMacroSliders.h"
 
 namespace
@@ -45,6 +46,15 @@ void DrawLayer1Discovery(
         return;
     }
     state.layer1Expanded = true;
+
+    if (state.channelConfigs)
+    {
+        const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+        const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
+        ImGui::TextDisabled("Source: %s  (%d presets)",
+            config::SourceKindToDisplayName(kind),
+            static_cast<int>(state.presetItems.size()));
+    }
 
     ImGui::TextDisabled("タグ:");
     const ImGuiStyle& style = ImGui::GetStyle();

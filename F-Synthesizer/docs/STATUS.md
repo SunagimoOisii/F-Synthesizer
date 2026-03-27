@@ -43,6 +43,7 @@ Branch: `main`
 - Tier D-2 実装（next-features）: Waveform/Analog に hard sync（`hardSyncEnabled/hardSyncRatio`）を追加し、voice state の `syncPhase` ラップ時にスレーブ位相 `voices.phase` をリセットして倍音を生成（Renderer/Voices/Load/Save/Schema/GUI/比較関数 反映）
 - Fix B-1 実装: Layer2 マクロ操作時の `autoTonePreviewPending` 直書きを廃止し、`autoTonePreviewEnabled` 時のみ `autoTonePreviewLastEditSec` を更新してデバウンスが正しく機能するよう修正
 - Fix A-1 実装: Sound左カラムの重複 `Preset` コンボと `Apply Preset Paths` ボタンを削除し、プリセット選択導線を右カラム Layer1 Discovery に一本化
+- Fix A-2 実装: 左カラム `Source Type` ラベル/ヘルプ文言を Layer1 連動前提へ更新し、Layer1ヘッダに現在の source 種別とプリセット件数を表示
 - `gui-help` 手動受け入れの記録を `docs/gui-help-hover-acceptance-checklist.md` に追加し、`GUI_REQUIREMENTS.md` と同期
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 

@@ -566,7 +566,7 @@ if (state.UIModeTab == 0)
             ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
         }
         ImGui::BeginDisabled(state.running);
-        if (ImGui::BeginCombo("Source Type (Preset Scope)", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
+        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
         {
             for (size_t i = 0; i < guiKindCount; i++)
             {
@@ -593,7 +593,7 @@ if (state.UIModeTab == 0)
         updateHoverHelp(
             "Source Type を選択します。",
             "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
-            "切替時は選択中スロットを該当sourceTypeの初期値で再初期化します。");
+            "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
 
         ImGui::SameLine();
         if (ImGui::Button("Reset Defaults"))
