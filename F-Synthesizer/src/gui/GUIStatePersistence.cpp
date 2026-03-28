@@ -72,6 +72,20 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.prDrumNameMode = state.pianoRoll.drumNameMode;
     data.prFollowPreviewPlayback = state.pianoRoll.followPreviewPlayback;
     data.prPreviewStartTick = state.pianoRoll.previewStartTick;
+    data.stepSeqViewActive = state.stepSeq.viewActive;
+    for (int r = 0; r < GUIStepSeqState::kRows; ++r)
+    {
+        uint16_t bits = 0;
+        for (int s = 0; s < GUIStepSeqState::kSteps; ++s)
+        {
+            if (state.stepSeq.steps[r][s])
+            {
+                bits |= static_cast<uint16_t>(1u << s);
+            }
+        }
+        data.stepSeqStepBits[r] = bits;
+        data.stepSeqVelocity[r] = state.stepSeq.velocity[r];
+    }
     data.channelAssignments = state.channelAssignments;
     data.drumChannelSpecialHandling = state.drumChannelSpecialHandling;
     data.prSelectedIndices.clear();
@@ -148,6 +162,16 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.pianoRoll.drumNameMode = data.prDrumNameMode;
     state.pianoRoll.followPreviewPlayback = data.prFollowPreviewPlayback;
     state.pianoRoll.previewStartTick = data.prPreviewStartTick;
+    state.stepSeq.viewActive = data.stepSeqViewActive;
+    for (int r = 0; r < GUIStepSeqState::kRows; ++r)
+    {
+        const uint16_t bits = data.stepSeqStepBits[r];
+        for (int s = 0; s < GUIStepSeqState::kSteps; ++s)
+        {
+            state.stepSeq.steps[r][s] = ((bits >> s) & 1u) != 0;
+        }
+        state.stepSeq.velocity[r] = std::clamp(data.stepSeqVelocity[r], 1, 127);
+    }
     state.pianoRoll.pendingSelectedIndices = data.prSelectedIndices;
     state.channelAssignments = data.channelAssignments;
     state.drumChannelSpecialHandling = data.drumChannelSpecialHandling;

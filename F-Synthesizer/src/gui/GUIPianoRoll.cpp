@@ -489,4 +489,30 @@ void DrawPianoRollPanel(
         drawList->AddRect(ImVec2(rx0, ry0), ImVec2(rx1, ry1), IM_COL32(120, 180, 255, 200));
     }
 }
+
+void ApplyStepSeqNotes(PianoRollState& state, const std::vector<PianoRollNote>& ch9Notes)
+{
+    state.notes.erase(
+        std::remove_if(state.notes.begin(), state.notes.end(),
+            [](const PianoRollNote& n) { return n.channel == 9; }),
+        state.notes.end());
+
+    state.notes.insert(state.notes.end(), ch9Notes.begin(), ch9Notes.end());
+    std::sort(state.notes.begin(), state.notes.end(),
+        [](const PianoRollNote& a, const PianoRollNote& b) {
+            if (a.startTick != b.startTick)
+            {
+                return a.startTick < b.startTick;
+            }
+            if (a.channel != b.channel)
+            {
+                return a.channel < b.channel;
+            }
+            return a.note < b.note;
+        });
+
+    RecomputeMaxTick(state);
+    SyncProjectDataFromCurrentNotes(state);
+    TouchNotesVersion(state);
+}
 } // namespace gui

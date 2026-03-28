@@ -15,6 +15,24 @@
 #include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
 
+// ステップシーケンサー状態 (ch10 / drumChannel 専用)
+struct GUIStepSeqState
+{
+    static constexpr int kRows = 7;
+    static constexpr int kSteps = 16;
+    bool steps[kRows][kSteps]{};
+    int velocity[kRows]{};
+    bool viewActive = false;
+
+    GUIStepSeqState()
+    {
+        for (int r = 0; r < kRows; ++r)
+        {
+            velocity[r] = 100;
+        }
+    }
+};
+
 // GUI画面の編集値・実行状態・ログ状態を集約した永続/実行モデル。
 // 1フレーム内で参照するUI状態と、非同期Run連携状態を同居させる。
 struct GUIState
@@ -120,4 +138,5 @@ struct GUIState
     std::deque<SoundUndoEntry> soundUndoStack;
     std::deque<SoundUndoEntry> soundRedoStack;
     gui::PianoRollState pianoRoll{};
+    GUIStepSeqState stepSeq{};
 };

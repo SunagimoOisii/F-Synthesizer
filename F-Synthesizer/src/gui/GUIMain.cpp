@@ -63,6 +63,7 @@ using ::RedoSound;
 #include "main/Layer2Macros.inl"
 #include "main/VirtualKeyboard.inl"
 #include "main/VUMeter.inl"
+#include "main/StepSequencer.inl"
 #include "main/ExportView.inl"
 #include "main/MainWindow.inl"
 } // namespace

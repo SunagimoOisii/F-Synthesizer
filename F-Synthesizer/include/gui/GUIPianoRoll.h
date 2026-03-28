@@ -107,4 +107,8 @@ void DrawPianoRollPanel(
     const std::function<void(const std::string&)>& appendLog,
     const std::function<void()>& requestPreviewPlay,
     const std::function<void()>& requestPreviewStop);
+
+// ステップシーケンサーから生成した ch9 ノートを pianoRoll.notes に適用し、
+// プロジェクトデータを同期する。既存の ch9 ノートは全て置き換えられる。
+void ApplyStepSeqNotes(PianoRollState& state, const std::vector<PianoRollNote>& ch9Notes);
 } // namespace gui

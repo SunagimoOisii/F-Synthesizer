@@ -1368,19 +1368,76 @@ else if (state.UIModeTab == 1)
     }
     ImGui::EndDisabled();
     ImGui::Separator();
-    DrawPianoRollPanel(
-        state.pianoRoll,
-        state.midiPath,
-        &state.playback,
-        [&](const std::string& line) { AppendGUILog(state, line); },
-        [&]()
+    const bool isShowingDrumCh =
+        (state.pianoRoll.displayChannel == drumMidiChannel) && state.drumChannelSpecialHandling;
+    if (isShowingDrumCh)
+    {
+        const bool prSelected = !state.stepSeq.viewActive;
+        if (prSelected)
         {
-            StartGUIRun(state, true);
-        },
-        [&]()
+            ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 90, 170, 255));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 110, 200, 255));
+        }
+        if (ImGui::Button("Piano Roll"))
         {
-            StopGUIRunAndPreview(state);
-        });
+            if (state.stepSeq.viewActive)
+            {
+                state.stepSeq.viewActive = false;
+            }
+        }
+        if (prSelected)
+        {
+            ImGui::PopStyleColor(2);
+        }
+        updateHoverHelp(
+            "Piano Roll ビューへ切り替えます。",
+            "通常のピアノロールが表示されます。");
+
+        ImGui::SameLine();
+
+        const bool ssSelected = state.stepSeq.viewActive;
+        if (ssSelected)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 90, 170, 255));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 110, 200, 255));
+        }
+        if (ImGui::Button("Step Seq"))
+        {
+            if (!state.stepSeq.viewActive)
+            {
+                LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll);
+                state.stepSeq.viewActive = true;
+            }
+        }
+        if (ssSelected)
+        {
+            ImGui::PopStyleColor(2);
+        }
+        updateHoverHelp(
+            "Step Seq ビューへ切り替えます。",
+            "16ステップのドラムグリッドが表示されます。");
+    }
+
+    if (isShowingDrumCh && state.stepSeq.viewActive)
+    {
+        DrawStepSeqPanel(state);
+    }
+    else
+    {
+        DrawPianoRollPanel(
+            state.pianoRoll,
+            state.midiPath,
+            &state.playback,
+            [&](const std::string& line) { AppendGUILog(state, line); },
+            [&]()
+            {
+                StartGUIRun(state, true);
+            },
+            [&]()
+            {
+                StopGUIRunAndPreview(state);
+            });
+    }
 }
 else
 {

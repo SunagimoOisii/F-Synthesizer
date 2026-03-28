@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -67,6 +68,11 @@ struct GUIStateStorageData
     std::array<ChannelMixState, 16> channelMixStates{};
     std::array<int, 16> channelAssignments{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     bool drumChannelSpecialHandling = true;
+    bool stepSeqViewActive = false;
+    // row ごとに 16 ビットのステップビットマスク (bit0 = step0)
+    std::array<uint16_t, 7> stepSeqStepBits{};
+    // row ごとのベロシティ (1-127)
+    std::array<int, 7> stepSeqVelocity{ 100, 100, 100, 100, 100, 100, 100 };
 };
 
 struct PianoRollProjectStorageNote

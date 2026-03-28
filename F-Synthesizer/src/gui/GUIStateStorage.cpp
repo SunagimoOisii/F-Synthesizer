@@ -290,6 +290,20 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     if (auto v = ReadJSONBool(text, "prFollowPreviewPlayback")) data.prFollowPreviewPlayback = *v;
     if (auto v = ReadJSONInt(text, "prPreviewStartTick")) data.prPreviewStartTick = *v;
     if (auto v = ReadJSONBool(text, "drumChannelSpecialHandling")) data.drumChannelSpecialHandling = *v;
+    if (auto v = ReadJSONBool(text, "stepSeqViewActive")) data.stepSeqViewActive = *v;
+    for (int r = 0; r < 7; ++r)
+    {
+        const std::string bitsKey = "stepSeqBits" + std::to_string(r);
+        const std::string velKey = "stepSeqVel" + std::to_string(r);
+        if (auto v = ReadJSONInt(text, bitsKey))
+        {
+            data.stepSeqStepBits[r] = static_cast<uint16_t>(std::clamp(*v, 0, 65535));
+        }
+        if (auto v = ReadJSONInt(text, velKey))
+        {
+            data.stepSeqVelocity[r] = std::clamp(*v, 1, 127);
+        }
+    }
     if (auto v = ReadJSONInt(text, "prSelectedCount"))
     {
         data.prSelectedIndices.clear();
@@ -399,6 +413,12 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"prFollowPreviewPlayback\": " << (data.prFollowPreviewPlayback ? "true" : "false") << ",\n";
     fout << "  \"prPreviewStartTick\": " << data.prPreviewStartTick << ",\n";
     fout << "  \"drumChannelSpecialHandling\": " << (data.drumChannelSpecialHandling ? "true" : "false") << ",\n";
+    fout << "  \"stepSeqViewActive\": " << (data.stepSeqViewActive ? "true" : "false") << ",\n";
+    for (int r = 0; r < 7; ++r)
+    {
+        fout << "  \"stepSeqBits" << r << "\": " << data.stepSeqStepBits[r] << ",\n";
+        fout << "  \"stepSeqVel" << r << "\": " << data.stepSeqVelocity[r] << ",\n";
+    }
     fout << "  \"prSelectedCount\": " << data.prSelectedIndices.size() << ",\n";
     for (size_t i = 0; i < data.prSelectedIndices.size(); i++)
     {

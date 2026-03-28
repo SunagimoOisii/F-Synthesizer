@@ -119,6 +119,7 @@ void InitializeGUIState(
     state.previewRenderedSound.reset();
     state.runOutputBuffer.reset();
     state.pianoRoll = gui::PianoRollState{};
+    state.stepSeq = GUIStepSeqState{};
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.soundLogs;
     state.observer.cancelRequested = &state.stopRequested;
