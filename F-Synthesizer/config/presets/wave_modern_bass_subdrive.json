@@ -1,4 +1,8 @@
 {
+  "tags": [
+    "dark"
+  ],
+  "description": "Preset wave_modern_bass_subdrive",
   "channels": {
     "0": {
       "amp": 0.22,
@@ -26,9 +30,19 @@
           "filterCutoffTimeMs": 10.0
         },
         "modulation": {
-          "env2": { "attackSec": 0.0, "decaySec": 0.09, "sustainLevel": 0.0, "releaseSec": 0.04 },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.09,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.04
+          },
           "routes": {
-            "0": { "source": "env2", "destination": "filterCutoffHz", "amount": 0.28, "enabled": true }
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.28,
+              "enabled": true
+            }
           }
         }
       }

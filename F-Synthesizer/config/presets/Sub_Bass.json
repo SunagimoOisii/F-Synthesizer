@@ -1,29 +1,27 @@
 {
   "tags": [
-    "dark",
-    "game",
-    "simple"
+    "dark"
   ],
-  "description": "Preset wave_snes_bass_sub",
+  "description": "Preset Sub_Bass",
   "channels": {
     "0": {
-      "amp": 0.21,
-      "attackSec": 0.002,
-      "decaySec": 0.13,
-      "sustainLevel": 0.6,
-      "releaseSec": 0.1,
+      "amp": 0.22,
+      "attackSec": 0.001,
+      "decaySec": 0.11,
+      "sustainLevel": 0.58,
+      "releaseSec": 0.09,
       "source": {
         "type": "waveform",
-        "wave": "square",
+        "wave": "saw",
         "unisonVoices": 1,
         "unisonDetuneCents": 0.0,
         "unisonSpread": 0.0,
-        "subOscLevel": 0.3,
+        "subOscLevel": 0.34,
         "filterMode": "lowpass",
-        "filterCutoffHz": 2500,
-        "filterResonance": 1.2,
-        "filterKeytrack": 0.22,
-        "drive": 0.42,
+        "filterCutoffHz": 1700,
+        "filterResonance": 1.05,
+        "filterKeytrack": 0.16,
+        "drive": 0.72,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": false,
@@ -34,15 +32,15 @@
         "modulation": {
           "env2": {
             "attackSec": 0.0,
-            "decaySec": 0.08,
+            "decaySec": 0.09,
             "sustainLevel": 0.0,
-            "releaseSec": 0.05
+            "releaseSec": 0.04
           },
           "routes": {
             "0": {
               "source": "env2",
               "destination": "filterCutoffHz",
-              "amount": 0.24,
+              "amount": 0.28,
               "enabled": true
             }
           }

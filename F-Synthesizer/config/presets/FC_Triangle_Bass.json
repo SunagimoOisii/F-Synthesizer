@@ -4,7 +4,7 @@
     "game",
     "simple"
   ],
-  "description": "Preset psg_nesgb_bass_triangle",
+  "description": "Preset FC_Triangle_Bass",
   "channels": {
     "0": {
       "amp": 0.24,

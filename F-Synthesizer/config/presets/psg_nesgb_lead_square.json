@@ -1,10 +1,16 @@
 {
+  "tags": [
+    "bright",
+    "game",
+    "simple"
+  ],
+  "description": "Preset psg_nesgb_lead_square",
   "channels": {
     "0": {
       "amp": 0.22,
       "attackSec": 0.001,
       "decaySec": 0.05,
-      "sustainLevel": 0.80,
+      "sustainLevel": 0.8,
       "releaseSec": 0.05,
       "source": {
         "type": "psg",

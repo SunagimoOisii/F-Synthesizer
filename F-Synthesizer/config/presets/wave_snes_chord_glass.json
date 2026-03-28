@@ -1,17 +1,22 @@
 {
+  "tags": [
+    "game",
+    "simple"
+  ],
+  "description": "Preset wave_snes_chord_glass",
   "channels": {
     "0": {
       "amp": 0.19,
-      "attackSec": 0.010,
+      "attackSec": 0.01,
       "decaySec": 0.22,
       "sustainLevel": 0.78,
-      "releaseSec": 0.20,
+      "releaseSec": 0.2,
       "source": {
         "type": "waveform",
         "wave": "triangle",
         "unisonVoices": 2,
         "unisonDetuneCents": 7.0,
-        "unisonSpread": 0.40,
+        "unisonSpread": 0.4,
         "subOscLevel": 0.06,
         "filterMode": "lowpass",
         "filterCutoffHz": 5400,
@@ -25,9 +30,19 @@
           "filterCutoffTimeMs": 10.0
         },
         "modulation": {
-          "lfo1": { "wave": "sine", "rateHz": 0.9, "depth": 0.25, "bipolar": true },
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.9,
+            "depth": 0.25,
+            "bipolar": true
+          },
           "routes": {
-            "0": { "source": "lfo1", "destination": "filterCutoffHz", "amount": 0.10, "enabled": true }
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.1,
+              "enabled": true
+            }
           }
         }
       }

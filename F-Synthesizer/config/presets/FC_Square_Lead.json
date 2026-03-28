@@ -1,20 +1,20 @@
 {
   "tags": [
-    "noise",
+    "bright",
     "game",
     "simple"
   ],
-  "description": "Preset psg_noise_nesgb_sfx",
+  "description": "Preset FC_Square_Lead",
   "channels": {
     "0": {
-      "amp": 0.19,
+      "amp": 0.22,
       "attackSec": 0.001,
-      "decaySec": 0.03,
-      "sustainLevel": 0.0,
-      "releaseSec": 0.03,
+      "decaySec": 0.05,
+      "sustainLevel": 0.8,
+      "releaseSec": 0.05,
       "source": {
         "type": "psg",
-        "wave": "noise",
+        "wave": "square",
         "volumeSteps": 15,
         "maxVoices": 1
       }

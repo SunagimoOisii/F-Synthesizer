@@ -2,10 +2,9 @@
   "tags": [
     "drum",
     "attack",
-    "simple",
-    "game"
+    "simple"
   ],
-  "description": "Preset drumkit_mdpc88_arcade",
+  "description": "Preset Snare_Hit",
   "channels": {
     "9": {
       "amp": 0.24,

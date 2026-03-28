@@ -2,62 +2,62 @@
   "tags": [
     "fm",
     "complex",
-    "game",
-    "simple"
+    "dark",
+    "attack"
   ],
-  "description": "Preset fm_mdpc88_chord_stack",
+  "description": "Preset FM_Slap_Bass",
   "channels": {
     "0": {
-      "amp": 0.21,
-      "attackSec": 0.008,
-      "decaySec": 0.16,
-      "sustainLevel": 0.76,
-      "releaseSec": 0.18,
+      "amp": 0.24,
+      "attackSec": 0.002,
+      "decaySec": 0.12,
+      "sustainLevel": 0.44,
+      "releaseSec": 0.09,
       "source": {
         "type": "fm",
-        "algorithm": 1,
-        "feedback": 0.14,
+        "algorithm": 3,
+        "feedback": 0.3,
         "ops": [
           {
             "wave": "sine",
             "ratio": 1.0,
             "level": 1.0,
-            "index": 2.2
+            "index": 3.1
           },
           {
             "wave": "sine",
             "ratio": 1.0,
-            "level": 0.82,
-            "index": 0.0
+            "level": 1.0,
+            "index": 1.6
           },
           {
             "wave": "sine",
-            "ratio": 0.5,
+            "ratio": 1.0,
             "level": 0.9,
-            "index": 1.7
+            "index": 0.8
           },
           {
             "wave": "sine",
-            "ratio": 0.5,
-            "level": 0.8,
+            "ratio": 1.0,
+            "level": 1.0,
             "index": 0.0
           }
         ],
         "filterMode": "lowpass",
-        "filterCutoffHz": 5200,
-        "filterResonance": 0.7,
+        "filterCutoffHz": 3100,
+        "filterResonance": 0.9,
         "modulation": {
           "env2": {
             "attackSec": 0.0,
-            "decaySec": 0.2,
+            "decaySec": 0.06,
             "sustainLevel": 0.0,
-            "releaseSec": 0.1
+            "releaseSec": 0.04
           },
           "routes": {
             "0": {
               "source": "env2",
               "destination": "fm.index",
-              "amount": 0.62,
+              "amount": 0.95,
               "enabled": true
             }
           }

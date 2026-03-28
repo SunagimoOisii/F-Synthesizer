@@ -1,7 +1,13 @@
 {
+  "tags": [
+    "bright",
+    "game",
+    "simple"
+  ],
+  "description": "Preset wave_snes_lead_vibrato",
   "channels": {
     "0": {
-      "amp": 0.20,
+      "amp": 0.2,
       "attackSec": 0.004,
       "decaySec": 0.12,
       "sustainLevel": 0.74,
@@ -12,11 +18,11 @@
         "unisonVoices": 1,
         "unisonDetuneCents": 0.0,
         "unisonSpread": 0.0,
-        "subOscLevel": 0.10,
+        "subOscLevel": 0.1,
         "filterMode": "lowpass",
         "filterCutoffHz": 6200,
         "filterResonance": 1.1,
-        "filterKeytrack": 0.40,
+        "filterKeytrack": 0.4,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": false,
@@ -25,9 +31,19 @@
           "filterCutoffTimeMs": 10.0
         },
         "modulation": {
-          "lfo1": { "wave": "sine", "rateHz": 5.5, "depth": 0.60, "bipolar": true },
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 5.5,
+            "depth": 0.6,
+            "bipolar": true
+          },
           "routes": {
-            "0": { "source": "lfo1", "destination": "pitchMul", "amount": 0.04, "enabled": true }
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.04,
+              "enabled": true
+            }
           }
         }
       }

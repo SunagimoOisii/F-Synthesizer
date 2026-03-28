@@ -65,6 +65,8 @@ struct GUIState
     char presetName[128]{ "custom" };
     bool presetDirty = false;
     std::vector<std::string> presetItems{};
+    std::vector<std::vector<std::string>> presetItemTags{};
+    std::vector<std::string> presetItemDescriptions{};
     std::string lastOutputPath{};
     std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};

@@ -1,13 +1,9 @@
 {
   "tags": [
-    "fm",
-    "complex",
-    "bright",
     "game",
-    "simple",
-    "attack"
+    "simple"
   ],
-  "description": "Preset fm_mdpc88_pluck_arcade",
+  "description": "Preset 8bit_Blip",
   "channels": {
     "0": {
       "amp": 0.23,

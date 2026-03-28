@@ -1,11 +1,8 @@
 {
   "tags": [
-    "fm",
-    "complex",
-    "game",
-    "simple"
+    "complex"
   ],
-  "description": "Preset fm_mdpc88_chord_stack",
+  "description": "Preset Electric_Piano",
   "channels": {
     "0": {
       "amp": 0.21,

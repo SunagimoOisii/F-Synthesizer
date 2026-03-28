@@ -2,10 +2,9 @@
   "tags": [
     "drum",
     "attack",
-    "simple",
-    "game"
+    "simple"
   ],
-  "description": "Preset drumkit_nesgb_core",
+  "description": "Preset 808_Kick",
   "channels": {
     "9": {
       "amp": 0.23,

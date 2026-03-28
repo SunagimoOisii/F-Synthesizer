@@ -31,6 +31,37 @@ bool PresetMatchesTag(const std::string& name, int tagIdx)
     return lower.find(keywords[tagIdx]) != std::string::npos;
 }
 
+bool PresetMatchesTagWithMetadata(
+    const std::string& name,
+    const std::vector<std::string>& tags,
+    int tagIdx)
+{
+    static constexpr const char* keywords[kMacroTagCount] = {
+        "game", "dark", "bright", "metal", "soft",
+        "noise", "simple", "complex", "attack", "pad",
+        "fm", "analog", "drum", "noise"
+    };
+
+    if (tagIdx < 0 || tagIdx >= kMacroTagCount)
+    {
+        return false;
+    }
+
+    const std::string key = keywords[tagIdx];
+    for (const auto& tag : tags)
+    {
+        std::string lowerTag = tag;
+        std::transform(lowerTag.begin(), lowerTag.end(), lowerTag.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+        if (lowerTag == key || lowerTag.find(key) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return PresetMatchesTag(name, tagIdx);
+}
+
 template <typename ApplyPresetFn>
 void DrawLayer1Discovery(
     GUIState& state,
@@ -104,12 +135,15 @@ void DrawLayer1Discovery(
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); ++i)
     {
         const std::string& name = state.presetItems[i];
+        static const std::vector<std::string> kEmptyTags{};
+        const std::vector<std::string>& tags =
+            (i < static_cast<int>(state.presetItemTags.size())) ? state.presetItemTags[i] : kEmptyTags;
         if (anyTag)
         {
             bool match = false;
             for (int t = 0; t < kMacroTagCount; ++t)
             {
-                if (state.macroTagFilters[t] && PresetMatchesTag(name, t))
+                if (state.macroTagFilters[t] && PresetMatchesTagWithMetadata(name, tags, t))
                 {
                     match = true;
                     break;
@@ -138,5 +172,15 @@ void DrawLayer1Discovery(
         }
     }
     ImGui::EndChild();
+
+    if (state.presetIndex >= 0
+        && state.presetIndex < static_cast<int>(state.presetItemDescriptions.size()))
+    {
+        const std::string& desc = state.presetItemDescriptions[state.presetIndex];
+        if (!desc.empty())
+        {
+            ImGui::TextWrapped("%s", desc.c_str());
+        }
+    }
 }
 } // namespace

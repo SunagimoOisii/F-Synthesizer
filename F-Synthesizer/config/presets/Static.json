@@ -1,10 +1,8 @@
 {
   "tags": [
-    "noise",
-    "game",
-    "simple"
+    "noise"
   ],
-  "description": "Preset psg_noise_nesgb_sfx",
+  "description": "Preset Static",
   "channels": {
     "0": {
       "amp": 0.19,

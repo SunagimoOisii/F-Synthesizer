@@ -1,8 +1,10 @@
 #include "gui/GUIPresetIO.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <fstream>
+#include <unordered_map>
 
 #include "config/SourceJSON.h"
 #include "config/SourceRegistry.h"
@@ -10,9 +12,116 @@
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIStateModel.h"
 #include "io/PlatformPaths.h"
+#include "third_party/nlohmann/json.hpp"
 
 namespace
 {
+using Json = nlohmann::json;
+
+struct PresetMeta
+{
+    std::vector<std::string> tags{};
+    std::string description{};
+    config::SourceKind sourceKind = config::SourceKind::Count;
+};
+
+std::string ToLower(std::string src)
+{
+    std::transform(src.begin(), src.end(), src.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+    return src;
+}
+
+config::SourceKind SourceKindFromTypeString(const std::string& type)
+{
+    const std::string lower = ToLower(type);
+    if (lower == "waveform")
+    {
+        return config::SourceKind::Waveform;
+    }
+    if (lower == "analog")
+    {
+        return config::SourceKind::Analog;
+    }
+    if (lower == "fm")
+    {
+        return config::SourceKind::Fm;
+    }
+    if (lower == "psg")
+    {
+        return config::SourceKind::Psg;
+    }
+    if (lower == "drumkit")
+    {
+        return config::SourceKind::DrumKit;
+    }
+    if (lower == "noise")
+    {
+        return config::SourceKind::Noise;
+    }
+    return config::SourceKind::Count;
+}
+
+PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
+{
+    PresetMeta meta{};
+    std::ifstream in(presetPath, std::ios::binary);
+    if (!in)
+    {
+        return meta;
+    }
+
+    Json root = Json::parse(in, nullptr, false);
+    if (root.is_discarded() || !root.is_object())
+    {
+        return meta;
+    }
+
+    if (root.contains("description") && root["description"].is_string())
+    {
+        meta.description = root["description"].get<std::string>();
+    }
+    if (root.contains("tags") && root["tags"].is_array())
+    {
+        for (const auto& tag : root["tags"])
+        {
+            if (tag.is_string())
+            {
+                meta.tags.push_back(ToLower(tag.get<std::string>()));
+            }
+        }
+    }
+
+    if (root.contains("channels") && root["channels"].is_object())
+    {
+        for (auto it = root["channels"].begin(); it != root["channels"].end(); ++it)
+        {
+            if (!it.value().is_object())
+            {
+                continue;
+            }
+            const auto srcIt = it.value().find("source");
+            if (srcIt == it.value().end() || !srcIt->is_object())
+            {
+                continue;
+            }
+            const auto typeIt = srcIt->find("type");
+            if (typeIt == srcIt->end() || !typeIt->is_string())
+            {
+                continue;
+            }
+            meta.sourceKind = SourceKindFromTypeString(typeIt->get<std::string>());
+            if (meta.sourceKind != config::SourceKind::Count)
+            {
+                break;
+            }
+        }
+    }
+
+    return meta;
+}
+
 int FindPresetIndex(const GUIState& state, const std::string& name)
 {
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
@@ -25,8 +134,17 @@ int FindPresetIndex(const GUIState& state, const std::string& name)
     return -1;
 }
 
-bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind kind)
+bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind kind, const PresetMeta& meta)
 {
+    if (meta.sourceKind != config::SourceKind::Count)
+    {
+        if (kind == config::SourceKind::Noise && presetName.rfind("psg_noise_", 0) == 0)
+        {
+            return true;
+        }
+        return meta.sourceKind == kind;
+    }
+
     switch (kind)
     {
     case config::SourceKind::Waveform:
@@ -152,26 +270,63 @@ bool LoadPresetConfig(
 
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
+    const std::filesystem::path projectRoot = FindProjectRootPath();
     std::vector<std::string> all = CollectPresetItems(FindProjectRootPath());
+    std::unordered_map<std::string, PresetMeta> metaByName;
+    metaByName.reserve(all.size());
+    for (const auto& name : all)
+    {
+        const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (name + ".json");
+        metaByName.emplace(name, ReadPresetMeta(presetPath));
+    }
+
     EnsureChannelConfigs(state);
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
     const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
     state.presetItems.clear();
+    state.presetItemTags.clear();
+    state.presetItemDescriptions.clear();
     state.presetItems.reserve(all.size());
+    state.presetItemTags.reserve(all.size());
+    state.presetItemDescriptions.reserve(all.size());
     for (const auto& name : all)
     {
-        if (PresetMatchesSourceKind(name, kind))
+        const auto it = metaByName.find(name);
+        const PresetMeta* meta = (it != metaByName.end()) ? &it->second : nullptr;
+        if (meta != nullptr && PresetMatchesSourceKind(name, kind, *meta))
         {
             state.presetItems.push_back(name);
+            state.presetItemTags.push_back(meta->tags);
+            state.presetItemDescriptions.push_back(meta->description);
         }
     }
     if (state.presetItems.empty())
     {
         state.presetItems = std::move(all);
+        state.presetItemTags.clear();
+        state.presetItemDescriptions.clear();
+        state.presetItemTags.reserve(state.presetItems.size());
+        state.presetItemDescriptions.reserve(state.presetItems.size());
+        for (const auto& name : state.presetItems)
+        {
+            const auto it = metaByName.find(name);
+            if (it != metaByName.end())
+            {
+                state.presetItemTags.push_back(it->second.tags);
+                state.presetItemDescriptions.push_back(it->second.description);
+            }
+            else
+            {
+                state.presetItemTags.emplace_back();
+                state.presetItemDescriptions.emplace_back();
+            }
+        }
     }
     if (state.presetItems.empty())
     {
         state.presetItems.push_back("wave_snes_lead_vibrato");
+        state.presetItemTags.emplace_back();
+        state.presetItemDescriptions.emplace_back();
     }
 
     int idx = FindPresetIndex(state, preferName);

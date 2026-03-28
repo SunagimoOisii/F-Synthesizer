@@ -1,10 +1,12 @@
 {
   "tags": [
+    "drum",
+    "attack",
+    "simple",
     "noise",
-    "game",
-    "simple"
+    "game"
   ],
-  "description": "Preset psg_noise_nesgb_sfx",
+  "description": "Preset GB_Noise_Drum",
   "channels": {
     "0": {
       "amp": 0.19,

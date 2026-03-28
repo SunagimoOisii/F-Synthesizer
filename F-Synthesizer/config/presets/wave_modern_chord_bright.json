@@ -1,9 +1,13 @@
 {
+  "tags": [
+    "bright"
+  ],
+  "description": "Preset wave_modern_chord_bright",
   "channels": {
     "0": {
       "amp": 0.17,
       "attackSec": 0.006,
-      "decaySec": 0.20,
+      "decaySec": 0.2,
       "sustainLevel": 0.78,
       "releaseSec": 0.18,
       "source": {
@@ -25,9 +29,19 @@
           "filterCutoffTimeMs": 10.0
         },
         "modulation": {
-          "lfo1": { "wave": "triangle", "rateHz": 0.6, "depth": 0.22, "bipolar": true },
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 0.6,
+            "depth": 0.22,
+            "bipolar": true
+          },
           "routes": {
-            "0": { "source": "lfo1", "destination": "filterCutoffHz", "amount": 0.08, "enabled": true }
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.08,
+              "enabled": true
+            }
           }
         }
       }

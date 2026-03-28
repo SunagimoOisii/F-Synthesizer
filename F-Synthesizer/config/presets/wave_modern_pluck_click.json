@@ -1,7 +1,12 @@
 {
+  "tags": [
+    "bright",
+    "attack"
+  ],
+  "description": "Preset wave_modern_pluck_click",
   "channels": {
     "0": {
-      "amp": 0.20,
+      "amp": 0.2,
       "attackSec": 0.001,
       "decaySec": 0.09,
       "sustainLevel": 0.18,
@@ -26,9 +31,19 @@
           "filterCutoffTimeMs": 8.0
         },
         "modulation": {
-          "env2": { "attackSec": 0.0, "decaySec": 0.06, "sustainLevel": 0.0, "releaseSec": 0.03 },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.06,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.03
+          },
           "routes": {
-            "0": { "source": "env2", "destination": "filterCutoffHz", "amount": 0.34, "enabled": true }
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.34,
+              "enabled": true
+            }
           }
         }
       }

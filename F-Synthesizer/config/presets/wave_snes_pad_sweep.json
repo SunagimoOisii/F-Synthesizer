@@ -1,9 +1,16 @@
 {
+  "tags": [
+    "pad",
+    "soft",
+    "game",
+    "simple"
+  ],
+  "description": "Preset wave_snes_pad_sweep",
   "channels": {
     "0": {
       "amp": 0.18,
       "attackSec": 0.08,
-      "decaySec": 0.40,
+      "decaySec": 0.4,
       "sustainLevel": 0.74,
       "releaseSec": 0.35,
       "source": {
@@ -25,11 +32,31 @@
           "filterCutoffTimeMs": 14.0
         },
         "modulation": {
-          "lfo1": { "wave": "triangle", "rateHz": 0.35, "depth": 0.40, "bipolar": true },
-          "env2": { "attackSec": 0.0, "decaySec": 0.50, "sustainLevel": 0.0, "releaseSec": 0.20 },
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 0.35,
+            "depth": 0.4,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.5,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.2
+          },
           "routes": {
-            "0": { "source": "lfo1", "destination": "pitchMul", "amount": 0.012, "enabled": true },
-            "1": { "source": "env2", "destination": "filterCutoffHz", "amount": 0.36, "enabled": true }
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.012,
+              "enabled": true
+            },
+            "1": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.36,
+              "enabled": true
+            }
           }
         }
       }
