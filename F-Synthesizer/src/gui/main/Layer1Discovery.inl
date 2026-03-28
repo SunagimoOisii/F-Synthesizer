@@ -62,13 +62,15 @@ bool PresetMatchesTagWithMetadata(
     return PresetMatchesTag(name, tagIdx);
 }
 
-template <typename ApplyPresetFn>
+template <typename ApplyPresetFn, typename TopFn, typename BottomFn>
 void DrawLayer1Discovery(
     GUIState& state,
     int& pendingPresetIndex,
     int& pendingPresetOriginalIndex,
     bool& openUnsavedPopupNextFrame,
-    ApplyPresetFn&& applyPresetByIndex)
+    ApplyPresetFn&& applyPresetByIndex,
+    TopFn&& topContent,
+    BottomFn&& bottomContent)
 {
     ImGui::SetNextItemOpen(state.layer1Expanded, ImGuiCond_Once);
     if (!ImGui::CollapsingHeader("発見  ( プリセット + タグ )"))
@@ -77,6 +79,8 @@ void DrawLayer1Discovery(
         return;
     }
     state.layer1Expanded = true;
+
+    topContent();
 
     if (state.channelConfigs)
     {
@@ -182,5 +186,7 @@ void DrawLayer1Discovery(
             ImGui::TextWrapped("%s", desc.c_str());
         }
     }
+
+    bottomContent();
 }
 } // namespace

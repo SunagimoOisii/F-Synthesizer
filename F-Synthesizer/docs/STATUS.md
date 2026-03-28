@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-28 (Phase 2-G 実装: エフェクトチェーン視覚化)
+Last Updated: 2026-03-28 (GUI レイアウト修正: FX チェーン座標バグ修正 + Sound タブ 3 層縦スタック化)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -55,6 +55,8 @@ Branch: `main`
 - Phase 2-E 実装: `UIModeTab=2` の Export タブを追加し、書き出し専用ビュー（`ExportView.inl`）を実装。Output Path / Output Target / Export/Preview/Stop / VU メーター / 最近の書き出し表示を集約し、ログを `exportLogs` へ分離。`TryFinalizeCompletedRun` で成功時の `recentWavPaths`（最大5件）を更新
 - Phase 2-F 実装: Music タブの ch10 表示時に `Piano Roll / Step Seq` 切替を追加し、7行x16ステップのドラムシーケンサーを実装。`ApplyStepSeqNotes` で ch9 ノートのみ差し替えて PianoRoll プロジェクトへ同期し、Play Preview / Export WAV 反映を維持。step grid/velocity/view state のワークスペース永続化（`stepSeqViewActive/stepSeqBits*/stepSeqVel*`）を追加
 - Phase 2-G 実装: Music タブ Master Effects に `SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb` の6ブロックチェーン図を追加。DrawList 描画で ON/OFF 状態を可視化し、各ブロッククリックで有効/無効を直接トグル（SampleRateReducer は ratio、BitCrusher は bits でバイパス制御）
+- GUI バグ修正: FX チェーン可視化で `GetCursorPosX/Y()`（ローカル座標）を `GetCursorScreenPos()`（スクリーン座標）に修正。ブロックが画面外に描画されていた問題とピアノロールレイアウト崩壊を解消
+- Sound タブ 3 層縦スタック化: `BeginTable("layout_split", 2列)` を廃止し全幅 1 列化。Source Type / Preset 管理を Layer1 CollapsingHeader 内に統合、Waveform / Spectrum / VU Meter / Preview Note を Layer2 直下に移動し「発見→調整→詳細編集」の縦スタック構造を実現
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

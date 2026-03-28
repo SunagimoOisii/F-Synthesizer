@@ -562,211 +562,222 @@ if (state.UIModeTab == 0)
         }
     }
 
-    if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+    // --- 状態初期化（UI なし）---
+    gui::EnsureChannelConfigs(state);
+    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+    ChannelConfig& selectedSlotCfg = (*state.channelConfigs)[state.selectedSoundSlot];
+    auto buildGuiSourceKinds = [](std::array<config::SourceKind, config::kSourceKindCount>& kinds, size_t& count)
     {
-        ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.56f);
-        ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthStretch, 0.44f);
-        ImGui::TableNextRow();
-
-        ImGui::TableSetColumnIndex(0);
-        gui::EnsureChannelConfigs(state);
-        state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
-        ChannelConfig& selectedSlotCfg = (*state.channelConfigs)[state.selectedSoundSlot];
-        auto buildGuiSourceKinds = [](std::array<config::SourceKind, config::kSourceKindCount>& kinds, size_t& count)
+        kinds = {};
+        count = 0;
+        for (int i = 0; i < config::kSourceKindCount; i++)
         {
-            kinds = {};
-            count = 0;
-            for (int i = 0; i < config::kSourceKindCount; i++)
+            const config::SourceKind kind = config::SourceKindFromIndex(i);
+            if (kind == config::SourceKind::Count)
             {
-                const config::SourceKind kind = config::SourceKindFromIndex(i);
-                if (kind == config::SourceKind::Count)
+                continue;
+            }
+            const config::SourceCapability capability = config::SourceCapabilityOf(kind);
+            if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
+            {
+                kinds[count++] = kind;
+            }
+        }
+        if (count == 0)
+        {
+            kinds[count++] = config::SourceKind::Waveform;
+        }
+    };
+    std::array<config::SourceKind, config::kSourceKindCount> guiKinds{};
+    size_t guiKindCount = 0;
+    buildGuiSourceKinds(guiKinds, guiKindCount);
+    const config::SourceKind currentKind = config::SourceConfigKind(selectedSlotCfg.source);
+    int sourceKindUiIndex = 0;
+    for (size_t i = 0; i < guiKindCount; i++)
+    {
+        if (guiKinds[i] == currentKind)
+        {
+            sourceKindUiIndex = static_cast<int>(i);
+            break;
+        }
+    }
+
+    static int lastPresetFilterKey = -1;
+    const int filterKey = std::clamp(state.selectedSoundSlot, 0, 15) * 100 +
+        config::SourceKindToIndex(currentKind);
+    if (filterKey != lastPresetFilterKey)
+    {
+        RefreshPresetItems(state, state.presetName);
+        lastPresetFilterKey = filterKey;
+    }
+
+    // プリセット保存状態: 常時表示（Layer1 の外）
+    if (state.presetDirty)
+    {
+        ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
+    }
+
+    // ---- Layer 1 — 発見 ----
+    DrawLayer1Discovery(
+        state,
+        pendingPresetIndex,
+        pendingPresetOriginalIndex,
+        openUnsavedPopupNextFrame,
+        applyPresetByIndex,
+        [&]()  // ヘッダ直下: Source Type + Reset Defaults
+        {
+            ImGui::BeginDisabled(state.running);
+            if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
+            {
+                for (size_t i = 0; i < guiKindCount; i++)
                 {
-                    continue;
+                    const config::SourceKind candidate = guiKinds[i];
+                    const bool selected = (sourceKindUiIndex == static_cast<int>(i));
+                    if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                    {
+                        sourceKindUiIndex = static_cast<int>(i);
+                        selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                        state.presetDirty = true;
+                        requestAutoTonePreview();
+                        RefreshPresetItems(state, state.presetName);
+                        AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
+                            config::SourceKindToTypeName(candidate) +
+                            " @ slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
+                    }
+                    if (selected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
                 }
-                const config::SourceCapability capability = config::SourceCapabilityOf(kind);
-                if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
+                ImGui::EndCombo();
+            }
+            updateHoverHelp(
+                "Source Type を選択します。",
+                "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
+                "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Defaults"))
+            {
+                ClearGUIError(state);
+                InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
+                state.presetDirty = false;
+                clearAutoTonePreviewRequest();
+            }
+            updateHoverHelp(
+                "設定を既定値へ戻します。",
+                "GUI状態とSound設定を初期化します。",
+                "未保存変更は失われます。");
+            ImGui::EndDisabled();
+        },
+        [&]()  // リスト下: Preset Name + Save / Dup / Reset Sound Slot
+        {
+            ImGui::BeginDisabled(state.running);
+            ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+            updateHoverHelp(
+                "保存時のPreset名を入力します。",
+                "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
+            ImGui::SameLine();
+            if (ImGui::Button("Save Preset As"))
+            {
+                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                std::string err;
+                if (SavePresetDiffFromState(state, p, err))
                 {
-                    kinds[count++] = kind;
+                    state.lastPresetPath = PathToUtf8(p);
+                    state.presetDirty = false;
+                    RefreshPresetItems(state, state.presetName);
+                    AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                }
+                else
+                {
+                    AppendGUILog(state, "[GUI] Preset save failed: " + err);
+                    RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
                 }
             }
-            if (count == 0)
+            updateHoverHelp(
+                "現在設定をPresetとして保存します。",
+                "Preset Name で指定したJSONファイルへ保存します。",
+                "同名が存在する場合は上書きされます。");
+            ImGui::SameLine();
+            if (ImGui::Button("Duplicate Preset"))
             {
-                kinds[count++] = config::SourceKind::Waveform;
-            }
-        };
-        std::array<config::SourceKind, config::kSourceKindCount> guiKinds{};
-        size_t guiKindCount = 0;
-        buildGuiSourceKinds(guiKinds, guiKindCount);
-        const config::SourceKind currentKind = config::SourceConfigKind(selectedSlotCfg.source);
-        int sourceKindUiIndex = 0;
-        for (size_t i = 0; i < guiKindCount; i++)
-        {
-            if (guiKinds[i] == currentKind)
-            {
-                sourceKindUiIndex = static_cast<int>(i);
-                break;
-            }
-        }
-
-        static int lastPresetFilterKey = -1;
-        const int filterKey = std::clamp(state.selectedSoundSlot, 0, 15) * 100 +
-            config::SourceKindToIndex(currentKind);
-        if (filterKey != lastPresetFilterKey)
-        {
-            RefreshPresetItems(state, state.presetName);
-            lastPresetFilterKey = filterKey;
-        }
-
-        if (state.presetDirty)
-        {
-            ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
-        }
-        ImGui::BeginDisabled(state.running);
-        if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
-        {
-            for (size_t i = 0; i < guiKindCount; i++)
-            {
-                const config::SourceKind candidate = guiKinds[i];
-                const bool selected = (sourceKindUiIndex == static_cast<int>(i));
-                if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                std::string copyName = std::string(state.presetName) + "_copy";
+                strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
+                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                std::string err;
+                if (SavePresetDiffFromState(state, p, err))
                 {
-                    sourceKindUiIndex = static_cast<int>(i);
-                    selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                    state.lastPresetPath = PathToUtf8(p);
+                    state.presetDirty = false;
+                    RefreshPresetItems(state, state.presetName);
+                    AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+                }
+                else
+                {
+                    AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
+                    RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
+                }
+            }
+            updateHoverHelp(
+                "Presetを複製保存します。",
+                "Preset Name に `_copy` を付けた保存名で複製します。");
+            ImGui::SameLine();
+            if (ImGui::Button("Reset Sound Slot"))
+            {
+                gui::EnsureChannelConfigs(state);
+                AppConfig def = DefaultConfig();
+                if (def.channelConfigs)
+                {
+                    (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
                     state.presetDirty = true;
                     requestAutoTonePreview();
-                    RefreshPresetItems(state, state.presetName);
-                    AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
-                        config::SourceKindToTypeName(candidate) +
-                        " @ slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
-                }
-                if (selected)
-                {
-                    ImGui::SetItemDefaultFocus();
+                    AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
                 }
             }
-            ImGui::EndCombo();
-        }
-        updateHoverHelp(
-            "Source Type を選択します。",
-            "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
-            "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
+            updateHoverHelp(
+                "選択中Sound Slotを初期化します。",
+                "対象スロットの音色設定を既定値へ戻します。");
+            if (!state.lastPresetPath.empty())
+            {
+                ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
+            }
+            ImGui::TextDisabled("Song export settings are in Music tab.");
+            ImGui::EndDisabled();
+        });
 
-        ImGui::SameLine();
-        if (ImGui::Button("Reset Defaults"))
-        {
-            ClearGUIError(state);
-            InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
-            state.presetDirty = false;
-            clearAutoTonePreviewRequest();
-        }
-        updateHoverHelp(
-            "設定を既定値へ戻します。",
-            "GUI状態とSound設定を初期化します。",
-            "未保存変更は失われます。");
+    ImGui::Separator();
 
-        ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
-        updateHoverHelp(
-            "保存時のPreset名を入力します。",
-            "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
-        ImGui::SameLine();
-        if (ImGui::Button("Save Preset As"))
-        {
-            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-            std::string err;
-            if (SavePresetDiffFromState(state, p, err))
-            {
-                state.lastPresetPath = PathToUtf8(p);
-                state.presetDirty = false;
-                RefreshPresetItems(state, state.presetName);
-                AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
-            }
-            else
-            {
-                AppendGUILog(state, "[GUI] Preset save failed: " + err);
-                RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
-            }
-        }
-        updateHoverHelp(
-            "現在設定をPresetとして保存します。",
-            "Preset Name で指定したJSONファイルへ保存します。",
-            "同名が存在する場合は上書きされます。");
-        ImGui::SameLine();
-        if (ImGui::Button("Duplicate Preset"))
-        {
-            std::string copyName = std::string(state.presetName) + "_copy";
-            strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
-            const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-            std::string err;
-            if (SavePresetDiffFromState(state, p, err))
-            {
-                state.lastPresetPath = PathToUtf8(p);
-                state.presetDirty = false;
-                RefreshPresetItems(state, state.presetName);
-                AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
-            }
-            else
-            {
-                AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
-                RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
-            }
-        }
-        updateHoverHelp(
-            "Presetを複製保存します。",
-            "Preset Name に `_copy` を付けた保存名で複製します。");
-        ImGui::SameLine();
-        if (ImGui::Button("Reset Sound Slot"))
-        {
-            gui::EnsureChannelConfigs(state);
-            AppConfig def = DefaultConfig();
-            if (def.channelConfigs)
-            {
-                (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
-                state.presetDirty = true;
-                requestAutoTonePreview();
-                AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
-            }
-        }
-        updateHoverHelp(
-            "選択中Sound Slotを初期化します。",
-            "対象スロットの音色設定を既定値へ戻します。");
-        if (!state.lastPresetPath.empty())
-        {
-            ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
-        }
-
-        ImGui::TextDisabled("Song export settings are in Music tab.");
-        ImGui::EndDisabled();
-
+    // ---- Layer 2 — 調整 ----
+    DrawLayer2Macros(state);
+    if (state.layer2Expanded)
+    {
         // DrumKit 以外の音源では Tone Preview ノートを手動選択する。
+        bool isDrumSlot = false;
+        if (state.channelConfigs)
         {
-            bool isDrumSlot = false;
-            if (state.channelConfigs)
+            const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+            isDrumSlot = std::holds_alternative<DrumKitConfig>((*state.channelConfigs)[slot].source);
+        }
+        if (!isDrumSlot)
+        {
+            ImGui::SetNextItemWidth(160.0f);
+            if (ImGui::SliderInt("Preview Note", &state.tonePreviewNoteNumber, 24, 96))
             {
-                const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-                isDrumSlot = std::holds_alternative<DrumKitConfig>((*state.channelConfigs)[slot].source);
+                state.tonePreviewNoteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
+                requestAutoTonePreview();
             }
-
-            if (!isDrumSlot)
-            {
-                ImGui::SetNextItemWidth(160.0f);
-                if (ImGui::SliderInt("Preview Note", &state.tonePreviewNoteNumber, 24, 96))
-                {
-                    state.tonePreviewNoteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
-                    requestAutoTonePreview();
-                }
-                updateHoverHelp(
-                    "Tone Preview の再生音程を変更します。",
-                    "C2(24)〜C6(84) 付近の範囲で MIDI ノート番号を指定できます。");
-                ImGui::SameLine();
-                constexpr const char* kNoteNames[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-                const int noteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
-                const int oct = noteNumber / 12 - 1;
-                ImGui::TextDisabled("(%s%d)", kNoteNames[noteNumber % 12], oct);
-            }
+            updateHoverHelp(
+                "Tone Preview の再生音程を変更します。",
+                "C2(24)〜C6(84) 付近の範囲で MIDI ノート番号を指定できます。");
+            ImGui::SameLine();
+            constexpr const char* kNoteNames[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+            const int noteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
+            const int oct = noteNumber / 12 - 1;
+            ImGui::TextDisabled("(%s%d)", kNoteNames[noteNumber % 12], oct);
         }
 
         // Tone Preview 波形ビューア: 再生中は frameCursor を窓の中心に追従し、
@@ -853,48 +864,40 @@ if (state.UIModeTab == 0)
             }
         }
         DrawVUMeter(state);
-
-        ImGui::TableSetColumnIndex(1);
-        DrawLayer1Discovery(
-            state,
-            pendingPresetIndex,
-            pendingPresetOriginalIndex,
-            openUnsavedPopupNextFrame,
-            applyPresetByIndex);
-        ImGui::Separator();
-        DrawLayer2Macros(state);
-        ImGui::Separator();
-        const bool channelEditorChanged = DrawChannelEditor(
-            state,
-            false,
-            [&](const char* what, const char* impact, const char* caution)
-            {
-                updateHoverHelp(what, impact, caution);
-            });
-        state.presetDirty |= channelEditorChanged;
-        if (channelEditorChanged)
-        {
-            requestAutoTonePreview();
-        }
-        if (!state.lastOutputPath.empty())
-        {
-            ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
-        }
-        AnalyzeRenderPeakFromLogs(state);
-        if (state.hasPeak)
-        {
-            const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
-            ImGui::Text("Peak: %.4f", state.lastPeak);
-            ImGui::ProgressBar(meter, ImVec2(-1, 0));
-            if (state.lastPeak > 1.0)
-            {
-                ImGui::SameLine();
-                ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
-            }
-        }
-        ImGui::EndTable();
     }
-    // テーブル終了後、全幅で仮想キーボードを描画
+
+    ImGui::Separator();
+
+    // ---- Layer 3 — 詳細編集 ----
+    const bool channelEditorChanged = DrawChannelEditor(
+        state,
+        false,
+        [&](const char* what, const char* impact, const char* caution)
+        {
+            updateHoverHelp(what, impact, caution);
+        });
+    state.presetDirty |= channelEditorChanged;
+    if (channelEditorChanged)
+    {
+        requestAutoTonePreview();
+    }
+    if (!state.lastOutputPath.empty())
+    {
+        ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
+    }
+    AnalyzeRenderPeakFromLogs(state);
+    if (state.hasPeak)
+    {
+        const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
+        ImGui::Text("Peak: %.4f", state.lastPeak);
+        ImGui::ProgressBar(meter, ImVec2(-1, 0));
+        if (state.lastPeak > 1.0)
+        {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.3f, 1.0f), "CLIP");
+        }
+    }
+    // 全幅で仮想キーボードを描画
     DrawVirtualKeyboard(state);
 }
 else if (state.UIModeTab == 1)
@@ -1104,8 +1107,9 @@ else if (state.UIModeTab == 1)
         constexpr float kGap = 10.0f;
         const float totalWidth = (kBlockW * 6.0f) + (kGap * 5.0f);
         const float availWidth = ImGui::GetContentRegionAvail().x;
-        const float startX = ImGui::GetCursorPosX() + (std::max)(0.0f, (availWidth - totalWidth) * 0.5f);
-        const ImVec2 startPos = ImVec2(startX, ImGui::GetCursorPosY());
+        const ImVec2 cursorScreen = ImGui::GetCursorScreenPos();
+        const float startX = cursorScreen.x + (std::max)(0.0f, (availWidth - totalWidth) * 0.5f);
+        const ImVec2 startPos = ImVec2(startX, cursorScreen.y);
         ImDrawList* dl = ImGui::GetWindowDrawList();
 
         // ラベル幅は静的文字列なので一度だけ計算する
