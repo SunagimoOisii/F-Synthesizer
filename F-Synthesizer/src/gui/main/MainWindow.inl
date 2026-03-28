@@ -833,6 +833,8 @@ if (state.UIModeTab == 0)
         }
         ImGui::EndTable();
     }
+    // テーブル終了後、全幅で仮想キーボードを描画
+    DrawVirtualKeyboard(state);
 }
 else
 {

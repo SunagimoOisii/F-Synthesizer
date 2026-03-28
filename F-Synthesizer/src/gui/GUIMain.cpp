@@ -57,6 +57,7 @@ using gui::DrawPianoRollPanel;
 #include "main/TopBar.inl"
 #include "main/Layer1Discovery.inl"
 #include "main/Layer2Macros.inl"
+#include "main/VirtualKeyboard.inl"
 #include "main/MainWindow.inl"
 } // namespace
 
