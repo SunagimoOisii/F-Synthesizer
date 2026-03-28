@@ -101,6 +101,8 @@ struct GUIState
     std::mutex logMutex{};
     std::vector<std::string> soundLogs{};
     std::vector<std::string> musicLogs{};
+    std::vector<std::string> exportLogs{};
+    std::vector<std::string> recentWavPaths{}; // Export 成功時に最大 5 件記録
     int runLogTab = 0;
     GUIRunObserver observer{};
     // Layer2 マクロスライダーの状態（チャンネル数分）

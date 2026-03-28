@@ -33,6 +33,10 @@ std::string hoverHelp = (state.UIModeTab == 0)
     ? composeHoverHelp(
         "Soundモードを表示します。",
         "Sound Slot中心に音色編集と試聴を行えます。")
+    : (state.UIModeTab == 2)
+    ? composeHoverHelp(
+        "Exportモードを表示します。",
+        "WAV書き出しに特化した操作を行えます。")
     : composeHoverHelp(
         "Musicモードを表示します。",
         "ピアノロール確認、プレビュー、WAV書き出しを行えます。");
@@ -138,6 +142,8 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             (needSync && state.UIModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         ImGuiTabItemFlags musicFlags =
             (needSync && state.UIModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+        ImGuiTabItemFlags exportFlags =
+            (needSync && state.UIModeTab == 2) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
         {
             state.UIModeTab = 0;
@@ -153,7 +159,15 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
         }
         updateHoverHelp(
             "Musicモードへ切り替えます。",
-            "Music編集と書き出しの操作を表示します。");
+            "MIDIとミックス設定の操作を表示します。");
+        if (ImGui::BeginTabItem("Export", nullptr, exportFlags))
+        {
+            state.UIModeTab = 2;
+            ImGui::EndTabItem();
+        }
+        updateHoverHelp(
+            "Exportモードへ切り替えます。",
+            "WAV書き出しに特化した操作を表示します。");
         ImGui::EndTabBar();
         syncedTab = state.UIModeTab;
     }
@@ -364,7 +378,7 @@ if (state.UIModeTab == 0)
         "Loop Previewを切り替えます。",
         "Preview終了後に先頭からループ再生します。");
 }
-else
+else if (state.UIModeTab == 1)
 {
     if (ImGui::Button("Export WAV"))
     {
@@ -382,6 +396,31 @@ else
     updateHoverHelp(
         "Play Preview (Display Channel) を実行します。",
         "表示chを現在の割当/ミックスで再生します。",
+        "WAVファイルは出力しません。");
+    ImGui::SameLine();
+    ImGui::Checkbox("Loop Preview", &state.previewLoop);
+    updateHoverHelp(
+        "Loop Previewを切り替えます。",
+        "Preview終了後に先頭からループ再生します。");
+}
+else
+{
+    if (ImGui::Button("Export WAV"))
+    {
+        StartGUIRun(state, false);
+    }
+    updateHoverHelp(
+        "Export WAVを実行します。",
+        "現在設定でWAVを書き出します。",
+        "再生中の場合は停止してから書き出しを開始します。Preview専用操作ではありません。");
+    ImGui::SameLine();
+    if (ImGui::Button("Play Preview"))
+    {
+        StartGUIRun(state, true);
+    }
+    updateHoverHelp(
+        "Play Preview を実行します。",
+        "現在設定でプレビュー再生します。",
         "WAVファイルは出力しません。");
     ImGui::SameLine();
     ImGui::Checkbox("Loop Preview", &state.previewLoop);
@@ -858,7 +897,7 @@ if (state.UIModeTab == 0)
     // テーブル終了後、全幅で仮想キーボードを描画
     DrawVirtualKeyboard(state);
 }
-else
+else if (state.UIModeTab == 1)
 {
     ImGui::TextUnformatted("Music");
     ImGui::TextDisabled("Music は現在の Sound 設定（割当/ミックス）をそのまま使って Preview/Export します。");
@@ -1343,6 +1382,10 @@ else
             StopGUIRunAndPreview(state);
         });
 }
+else
+{
+    DrawExportView(state, updateHoverHelp);
+}
 ImGui::EndChild();
 
 ImGui::Separator();
@@ -1368,7 +1411,11 @@ if (logPanelExpanded)
     ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);
     {
         std::lock_guard<std::mutex> lock(state.logMutex);
-        const std::vector<std::string>& visibleLogs = (state.UIModeTab == 1) ? state.musicLogs : state.soundLogs;
+        const std::vector<std::string>& visibleLogs = (state.UIModeTab == 1)
+            ? state.musicLogs
+            : (state.UIModeTab == 2)
+            ? state.exportLogs
+            : state.soundLogs;
         for (const std::string& line : visibleLogs)
         {
             ImGui::TextUnformatted(line.c_str());

@@ -365,6 +365,7 @@ bool TryFinalizeCompletedRun(GUIState& state)
     state.hasRun = true;
     state.running = false;
     detail::AppendGUILogToTab(state, state.runLogTab, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
+    const bool finishedPreview = state.runIsPreview;
     if (state.runIsPreview)
     {
         if (state.lastRunExitCode == 0 &&
@@ -419,6 +420,17 @@ bool TryFinalizeCompletedRun(GUIState& state)
         state.runOutputBuffer.reset();
         state.runIsPreview = false;
         state.autoPlayPreviewOnRunComplete = false;
+    }
+    if (!finishedPreview &&
+        state.lastRunExitCode == 0 &&
+        !state.lastOutputPath.empty() &&
+        state.lastOutputPath != "[memory preview]")
+    {
+        state.recentWavPaths.insert(state.recentWavPaths.begin(), state.lastOutputPath);
+        if (state.recentWavPaths.size() > 5)
+        {
+            state.recentWavPaths.resize(5);
+        }
     }
     if (state.restorePreviewOnRunComplete)
     {

@@ -10,12 +10,16 @@ namespace gui::detail
 {
 std::vector<std::string>& LogsByTab(GUIState& state, int tab)
 {
-    return (tab == 1) ? state.musicLogs : state.soundLogs;
+    if (tab == 1) { return state.musicLogs; }
+    if (tab == 2) { return state.exportLogs; }
+    return state.soundLogs;
 }
 
 const std::vector<std::string>& LogsByTab(const GUIState& state, int tab)
 {
-    return (tab == 1) ? state.musicLogs : state.soundLogs;
+    if (tab == 1) { return state.musicLogs; }
+    if (tab == 2) { return state.exportLogs; }
+    return state.soundLogs;
 }
 
 void AppendGUILogToTab(GUIState& state, int tab, const std::string& line)

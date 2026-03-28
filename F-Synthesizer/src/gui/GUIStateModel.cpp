@@ -101,6 +101,8 @@ void InitializeGUIState(
     state.lastPresetPath.clear();
     state.soundLogs.clear();
     state.musicLogs.clear();
+    state.exportLogs.clear();
+    state.recentWavPaths.clear();
     state.runLogTab = state.UIModeTab;
     state.lastPeak = 0.0;
     state.hasPeak = false;
@@ -314,7 +316,7 @@ void RepairGUIStatePaths(
         state.UIScaleIndex = 1;
         repaired = true;
     }
-    if (state.UIModeTab < 0 || state.UIModeTab > 1)
+    if (state.UIModeTab < 0 || state.UIModeTab > 2)
     {
         state.UIModeTab = 0;
         repaired = true;
