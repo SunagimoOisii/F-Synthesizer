@@ -792,6 +792,7 @@ if (state.UIModeTab == 0)
                 }
             }
         }
+        DrawVUMeter(state);
 
         ImGui::TableSetColumnIndex(1);
         DrawLayer1Discovery(

@@ -46,6 +46,7 @@ Branch: `main`
 - Fix A-2 実装: 左カラム `Source Type` ラベル/ヘルプ文言を Layer1 連動前提へ更新し、Layer1ヘッダに現在の source 種別とプリセット件数を表示
 - Fix B-2 実装: Layer3 の `Filter Resonance (Q)` ホバーヘルプに Layer2「荒さ」の書き込み範囲（0.5〜6.0）注記を追加し、UI上の範囲差を明示
 - `gui-help` 手動受け入れの記録を `docs/gui-help-hover-acceptance-checklist.md` に追加し、`GUI_REQUIREMENTS.md` と同期
+- Phase 1-C 実装: Tone Preview / Play Preview 再生中の VU メーターを Sound タブ左カラム（Spectrum 下）に追加（ファストアタック/スローデケイ、1.5 秒ピークホールド、CLIP 表示。GUIState 追加なし、VUMeter.inl + MainWindow.inl のみ変更）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
