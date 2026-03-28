@@ -1047,6 +1047,128 @@ else if (state.UIModeTab == 1)
     ImGui::Separator();
     ImGui::TextUnformatted("Master Effects");
     ImGui::TextDisabled("Order: SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb");
+    {
+        struct FxBlockDef
+        {
+            const char* label;
+        };
+        static constexpr FxBlockDef kFxBlocks[6] = {
+            { "SampleRateReducer" },
+            { "BitCrusher" },
+            { "Chorus" },
+            { "Flanger" },
+            { "Delay" },
+            { "Reverb" },
+        };
+        // ratio == 1.0 がバイパス仕様（SynthEngine.h "1.0でバイパス"）
+        // UI では浮動小数点誤差を吸収するため 0.999 を閾値として使用する
+        constexpr double kSrBypass = 0.999;
+        auto fxEnabled = [&](int idx) -> bool
+        {
+            switch (idx)
+            {
+            case 0: return state.masterEffects.sampleRateReducer.ratio < kSrBypass;
+            case 1: return state.masterEffects.bitCrusher.bits < 16;
+            case 2: return state.masterEffects.chorus.enabled;
+            case 3: return state.masterEffects.flanger.enabled;
+            case 4: return state.masterEffects.delay.enabled;
+            case 5: return state.masterEffects.reverb.enabled;
+            default: return false;
+            }
+        };
+        auto toggleFx = [&](int idx)
+        {
+            switch (idx)
+            {
+            case 0:
+                // ON 時は 0.5 (UI 初期値として中間値を選択)、OFF 時は 1.0 (バイパス)
+                state.masterEffects.sampleRateReducer.ratio =
+                    (state.masterEffects.sampleRateReducer.ratio < kSrBypass) ? 1.0 : 0.5;
+                break;
+            case 1:
+                // ON 時は 8bit (視聴しやすい中間値)、OFF 時は 16bit (バイパス)
+                state.masterEffects.bitCrusher.bits =
+                    (state.masterEffects.bitCrusher.bits < 16) ? 16 : 8;
+                break;
+            case 2: state.masterEffects.chorus.enabled = !state.masterEffects.chorus.enabled; break;
+            case 3: state.masterEffects.flanger.enabled = !state.masterEffects.flanger.enabled; break;
+            case 4: state.masterEffects.delay.enabled = !state.masterEffects.delay.enabled; break;
+            case 5: state.masterEffects.reverb.enabled = !state.masterEffects.reverb.enabled; break;
+            default: break;
+            }
+            state.presetDirty = true;
+        };
+
+        constexpr float kBlockW = 132.0f;
+        constexpr float kBlockH = 38.0f;
+        constexpr float kGap = 10.0f;
+        const float totalWidth = (kBlockW * 6.0f) + (kGap * 5.0f);
+        const float availWidth = ImGui::GetContentRegionAvail().x;
+        const float startX = ImGui::GetCursorPosX() + (std::max)(0.0f, (availWidth - totalWidth) * 0.5f);
+        const ImVec2 startPos = ImVec2(startX, ImGui::GetCursorPosY());
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+
+        // ラベル幅は静的文字列なので一度だけ計算する
+        ImVec2 labelSizes[6];
+        for (int i = 0; i < 6; ++i) { labelSizes[i] = ImGui::CalcTextSize(kFxBlocks[i].label); }
+        const ImVec2 onSize  = ImGui::CalcTextSize("ON");
+        const ImVec2 offSize = ImGui::CalcTextSize("OFF");
+
+        for (int i = 0; i < 6; ++i)
+        {
+            const ImVec2 p0 = ImVec2(startPos.x + i * (kBlockW + kGap), startPos.y);
+            const ImVec2 p1 = ImVec2(p0.x + kBlockW, p0.y + kBlockH);
+            const bool on = fxEnabled(i);
+            const ImU32 fill = on ? IM_COL32(46, 126, 74, 235) : IM_COL32(70, 70, 70, 220);
+            const ImU32 border = on ? IM_COL32(92, 195, 126, 255) : IM_COL32(118, 118, 118, 255);
+            const ImU32 text = on ? IM_COL32(242, 255, 246, 255) : IM_COL32(212, 212, 212, 255);
+
+            ImGui::SetCursorScreenPos(p0);
+            ImGui::PushID(i + 7000);
+            ImGui::InvisibleButton("fx_chain_block", ImVec2(kBlockW, kBlockH));
+            if (ImGui::IsItemClicked())
+            {
+                toggleFx(i);
+            }
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("%s: %s", kFxBlocks[i].label, on ? "ON" : "OFF");
+                updateHoverHelp(
+                    "エフェクトブロックを切り替えます。",
+                    "クリックしたエフェクトのON/OFFを切り替えます。",
+                    "処理順は左から右へ固定です。");
+            }
+            ImGui::PopID();
+
+            dl->AddRectFilled(p0, p1, fill, 6.0f);
+            dl->AddRect(p0, p1, border, 6.0f, 0, 2.0f);
+            const char* status = on ? "ON" : "OFF";
+            const ImVec2& labelSize = labelSizes[i];
+            const ImVec2& statusSize = on ? onSize : offSize;
+            dl->AddText(
+                ImVec2(p0.x + (kBlockW - labelSize.x) * 0.5f, p0.y + 6.0f),
+                text,
+                kFxBlocks[i].label);
+            dl->AddText(
+                ImVec2(p0.x + (kBlockW - statusSize.x) * 0.5f, p0.y + 20.0f),
+                text,
+                status);
+
+            if (i < 5)
+            {
+                const ImVec2 a = ImVec2(p1.x + 2.0f, p0.y + kBlockH * 0.5f);
+                const ImVec2 b = ImVec2(p1.x + kGap - 3.0f, p0.y + kBlockH * 0.5f);
+                dl->AddLine(a, b, IM_COL32(150, 150, 150, 210), 2.0f);
+                dl->AddTriangleFilled(
+                    ImVec2(b.x, b.y),
+                    ImVec2(b.x - 5.0f, b.y - 4.0f),
+                    ImVec2(b.x - 5.0f, b.y + 4.0f),
+                    IM_COL32(150, 150, 150, 210));
+            }
+        }
+        ImGui::SetCursorScreenPos(startPos);
+        ImGui::Dummy(ImVec2(totalWidth, kBlockH + 8.0f));
+    }
     const auto sliderFxDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
     {
         float v = static_cast<float>(value);

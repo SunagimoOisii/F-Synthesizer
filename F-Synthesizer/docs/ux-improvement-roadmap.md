@@ -287,8 +287,8 @@ HH    [■][■][■][■] [■][■][■][■]
 - `ImGui::DrawList` で描画（外部ライブラリ追加なし）
 
 **受け入れ条件:**
-- [ ] 全 6 エフェクト（SampleRateReducer → BitCrusher → Chorus → Flanger → Delay → Reverb）のブロックが表示される
-- [ ] ブロッククリックで有効/無効が切り替わり、音に即座に反映される
+- [x] 全 6 エフェクト（SampleRateReducer → BitCrusher → Chorus → Flanger → Delay → Reverb）のブロックが表示される
+- [x] ブロッククリックで有効/無効が切り替わり、音に即座に反映される
 
 ---
 
