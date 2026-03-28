@@ -62,6 +62,8 @@ struct GUIState
     int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
     int tonePreviewNoteNumber = 60;
+    bool chordModeEnabled = false;
+    int chordType = 0; // 0=Major 1=Minor 2=7th 3=Minor7th 4=Sus4
     char presetName[128]{ "custom" };
     bool presetDirty = false;
     std::vector<std::string> presetItems{};

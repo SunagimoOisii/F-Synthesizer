@@ -50,6 +50,8 @@ struct GUIStateStorageData
     int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
     int tonePreviewNoteNumber = 60;
+    bool chordModeEnabled = false;
+    int chordType = 0;
     std::string presetName = "custom";
     std::string lastPresetPath;
     int prDisplayChannel = 0;

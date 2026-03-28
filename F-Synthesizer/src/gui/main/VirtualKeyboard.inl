@@ -57,7 +57,44 @@ static void DrawVirtualKeyboard(GUIState& state)
         }
     }
 
+    // ---- Chord UI ----
     ImGui::Separator();
+    const char* chordTypes[] = { "Major", "Minor", "7th", "Minor 7th", "Sus4" };
+    ImGui::Checkbox("Chord", &state.chordModeEnabled);
+    if (state.chordModeEnabled)
+    {
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100.0f);
+        ImGui::Combo("##chordType", &state.chordType, chordTypes, IM_ARRAYSIZE(chordTypes));
+    }
+
+    // ---- コード構成音 ハイライト判定 ----
+    constexpr int kChordOffsets[5][4] = {
+        { 0,  4,  7, -1 }, // Major
+        { 0,  3,  7, -1 }, // Minor
+        { 0,  4,  7, 10 }, // 7th
+        { 0,  3,  7, 10 }, // Minor7th
+        { 0,  5,  7, -1 }, // Sus4
+    };
+    constexpr int kChordSizes[5] = { 3, 3, 4, 4, 3 };
+    auto isChordMember = [&](int n) -> bool
+    {
+        if (!state.chordModeEnabled || n == state.tonePreviewNoteNumber)
+        {
+            return false;
+        }
+        const int ct = std::clamp(state.chordType, 0, 4);
+        for (int i = 0; i < kChordSizes[ct]; ++i)
+        {
+            if (kChordOffsets[ct][i] >= 0 &&
+                n == state.tonePreviewNoteNumber + kChordOffsets[ct][i])
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+
     const ImVec2 origin = ImGui::GetCursorScreenPos();
     const float totalW = static_cast<float>(totalWhite) * kWhiteW;
 
@@ -69,7 +106,8 @@ static void DrawVirtualKeyboard(GUIState& state)
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const ImU32 cWhite = IM_COL32(235, 235, 235, 255);
     const ImU32 cBlack = IM_COL32(30, 30, 30, 255);
-    const ImU32 cSel = IM_COL32(100, 170, 255, 255);
+    const ImU32 cSel = IM_COL32(100, 170, 255, 255);   // ルート（青）
+    const ImU32 cChord = IM_COL32(100, 200, 140, 255); // 構成音（緑）
     const ImU32 cBorder = IM_COL32(80, 80, 80, 255);
 
     // 白鍵を先に描画
@@ -82,10 +120,13 @@ static void DrawVirtualKeyboard(GUIState& state)
         const float x0 = origin.x + static_cast<float>(whitesBefore(n)) * kWhiteW;
         const float x1 = x0 + kWhiteW - 1.0f; // 1px 隙間でセパレータ代わり
         const float y1 = origin.y + kWhiteH;
+        const ImU32 fill = (state.tonePreviewNoteNumber == n) ? cSel
+            : isChordMember(n) ? cChord
+            : cWhite;
         dl->AddRectFilled(
             { x0, origin.y },
             { x1, y1 },
-            (state.tonePreviewNoteNumber == n) ? cSel : cWhite);
+            fill);
         dl->AddRect({ x0, origin.y }, { x1, y1 }, cBorder);
     }
 
@@ -100,10 +141,13 @@ static void DrawVirtualKeyboard(GUIState& state)
         const float x0 = cx - kBlackW * 0.5f;
         const float x1 = x0 + kBlackW;
         const float y1 = origin.y + kBlackH;
+        const ImU32 fill = (state.tonePreviewNoteNumber == n) ? cSel
+            : isChordMember(n) ? cChord
+            : cBlack;
         dl->AddRectFilled(
             { x0, origin.y },
             { x1, y1 },
-            (state.tonePreviewNoteNumber == n) ? cSel : cBlack);
+            fill);
         dl->AddRect({ x0, origin.y }, { x1, y1 }, cBorder);
     }
 

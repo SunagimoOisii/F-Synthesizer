@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-28 (Phase 2-B 実装: FM アルゴリズム接続図)
+Last Updated: 2026-03-28 (Phase 2-C 実装: 仮想キーボード Chord モード)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -51,6 +51,7 @@ Branch: `main`
 - Phase 1-F 実装: Tier C/D 追加パラメータの hover 文言欠落を解消（Pulse Width 改善、Hard Sync/Ring Mod/Arpeggio/LFO1 Wave/Env2 系 計 16 箇所を ChannelEditorCommon.inl + ChannelEditorModulation.inl に追加）
 - Phase 2-A 実装: Layer3 Channel Editor に ADSR/LFO グラフィカル表示を追加（`Envelope / Gain` に ADSR プレビュー、`Modulation` に LFO1 波形プレビュー + Env2 カーブプレビュー。`LfoWave` 全列挙値対応）
 - Phase 2-B 実装: FM Source Details に Algorithm 0〜7 のオペレーター接続図を追加（DrawList描画、Op0 feedback ループ表示、algo 変更時に即時切替）
+- Phase 2-C 実装: Virtual Keyboard に Chord モード（Major/Minor/7th/Minor7th/Sus4）を追加し、Tone Preview で同時和音を発音。構成音ハイライト表示と GUI state 永続化（`chordModeEnabled/chordType`）を追加
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

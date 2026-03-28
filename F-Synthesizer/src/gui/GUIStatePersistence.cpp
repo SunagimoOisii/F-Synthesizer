@@ -59,6 +59,8 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.selectedSoundSlot = state.selectedSoundSlot;
     data.selectedDrumNote = state.selectedDrumNote;
     data.tonePreviewNoteNumber = state.tonePreviewNoteNumber;
+    data.chordModeEnabled = state.chordModeEnabled;
+    data.chordType = state.chordType;
     data.presetName = state.presetName;
     data.lastPresetPath = state.lastPresetPath;
     data.prDisplayChannel = state.pianoRoll.displayChannel;
@@ -133,6 +135,8 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.selectedSoundSlot = data.selectedSoundSlot;
     state.selectedDrumNote = data.selectedDrumNote;
     state.tonePreviewNoteNumber = std::clamp(data.tonePreviewNoteNumber, 0, 127);
+    state.chordModeEnabled = data.chordModeEnabled;
+    state.chordType = std::clamp(data.chordType, 0, 4);
     strncpy_s(state.presetName, sizeof(state.presetName), data.presetName.c_str(), _TRUNCATE);
     state.lastPresetPath = data.lastPresetPath;
     state.pianoRoll.displayChannel = data.prDisplayChannel;

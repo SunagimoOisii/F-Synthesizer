@@ -85,6 +85,51 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSound
     return ticks;
 }
 
+std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForChord(
+    int channel,
+    const std::array<int, 4>& notes,
+    int noteCount,
+    int velocity,
+    int ticksPerQuarter)
+{
+    auto ticks = std::make_shared<std::vector<MIDIEventTick>>();
+    ticks->reserve(static_cast<size_t>(noteCount) * 2);
+
+    for (int i = 0; i < noteCount; ++i)
+    {
+        MIDIEventTick on{};
+        on.type = MIDIEventType::Note;
+        on.tick = 0;
+        on.noteNumber = std::clamp(notes[i], 0, 127);
+        on.velocity = std::clamp(velocity, 1, 127);
+        on.channel = std::clamp(channel, 0, 15);
+        on.controller = 0;
+        on.value = 0;
+        on.noteInstanceID = i + 1;
+        on.order = i;
+        on.isNoteOn = true;
+        ticks->push_back(on);
+    }
+
+    for (int i = 0; i < noteCount; ++i)
+    {
+        MIDIEventTick off{};
+        off.type = MIDIEventType::Note;
+        off.tick = (std::max)(1, ticksPerQuarter);
+        off.noteNumber = std::clamp(notes[i], 0, 127);
+        off.velocity = 0;
+        off.channel = std::clamp(channel, 0, 15);
+        off.controller = 0;
+        off.value = 0;
+        off.noteInstanceID = i + 1;
+        off.order = noteCount + i;
+        off.isNoteOn = false;
+        ticks->push_back(off);
+    }
+
+    return ticks;
+}
+
 int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
 {
     if (!state.channelConfigs)
@@ -221,7 +266,31 @@ void StartGUISoundTonePreview(GUIState& state)
     const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
     cfg.midiPath.clear();
     cfg.overrideTicksPerQuarter = 480;
-    cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(previewChannel, previewNote, 110, cfg.overrideTicksPerQuarter);
+    if (state.chordModeEnabled)
+    {
+        constexpr int kChordOffsets[5][4] = {
+            { 0,  4,  7, -1 }, // Major
+            { 0,  3,  7, -1 }, // Minor
+            { 0,  4,  7, 10 }, // 7th
+            { 0,  3,  7, 10 }, // Minor7th
+            { 0,  5,  7, -1 }, // Sus4
+        };
+        constexpr int kChordSizes[5] = { 3, 3, 4, 4, 3 };
+        const int ct = std::clamp(state.chordType, 0, 4);
+        const int sz = kChordSizes[ct];
+        std::array<int, 4> notes{};
+        for (int i = 0; i < sz; ++i)
+        {
+            notes[i] = previewNote + kChordOffsets[ct][i];
+        }
+        cfg.overrideNoteTicks = BuildOverrideNoteTicksForChord(
+            previewChannel, notes, sz, 110, cfg.overrideTicksPerQuarter);
+    }
+    else
+    {
+        cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(
+            previewChannel, previewNote, 110, cfg.overrideTicksPerQuarter);
+    }
 
     RenderOptions options = DefaultPreviewRenderOptions();
     options.writeWAV = false;
