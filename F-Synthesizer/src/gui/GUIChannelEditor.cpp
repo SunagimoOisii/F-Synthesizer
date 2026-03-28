@@ -223,6 +223,8 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
     }
     return changed;
 }
+
+#include "channeleditor/EnvelopeView.inl"
 } // namespace
 
 namespace gui
@@ -303,6 +305,12 @@ bool DrawChannelEditor(
         if (updateHoverHelp) updateHoverHelp("Sustain を調整します。", "押下維持中の音量が変わります。", nullptr);
         changed |= ImGui::InputDouble("Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Release を調整します。", "ノートオフ後の余韻時間が変わります。", nullptr);
+        ImGui::TextDisabled("Envelope");
+        DrawADSRPreview("##adsr_main",
+            static_cast<float>(chCfg.attackSec),
+            static_cast<float>(chCfg.decaySec),
+            static_cast<float>(chCfg.sustainLevel),
+            static_cast<float>(chCfg.releaseSec));
     }
 
     bool layer3Changed = false;

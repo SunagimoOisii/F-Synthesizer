@@ -55,6 +55,10 @@
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("LFO1 Fade (ms)", modulation.lfo1.fadeMs, 0.0f, 2000.0f, "%.1f");
         if (updateHoverHelp) updateHoverHelp("LFO1 Fade を調整します。", "LFOが最大深さに達するまでの立ち上がり時間が変わります。", nullptr);
+        ImGui::TextDisabled("LFO1 Wave");
+        DrawLfo1WavePreview(
+            (std::string("##lfo1_preview_") + idPrefix).c_str(),
+            modulation.lfo1.wave);
 
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Attack", modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
@@ -71,6 +75,14 @@
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Curve", modulation.env2.curve, 0.0f, 1.0f, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Env2 Curve を調整します。", "変化の加速感が変わります。低いと急激に、高いとなだらかに変化します。", nullptr);
+        ImGui::TextDisabled("Env2 Envelope");
+        DrawADSRPreview(
+            (std::string("##env2_preview_") + idPrefix).c_str(),
+            static_cast<float>(modulation.env2.attackSec),
+            static_cast<float>(modulation.env2.decaySec),
+            static_cast<float>(modulation.env2.sustainLevel),
+            static_cast<float>(modulation.env2.releaseSec),
+            static_cast<float>(modulation.env2.curve));
 
         const char* modSources[] = { "none", "lfo1", "env2", "velocity", "channelPressure", "polyPressure", "ModWheel" };
         struct DestinationChoice
