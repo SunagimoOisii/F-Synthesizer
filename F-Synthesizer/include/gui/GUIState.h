@@ -101,6 +101,11 @@ struct GUIState
     std::array<MacroSliderState, 16> macroSliders{};
     // Layer1 タグフィルターの選択状態（タグ数分）
     std::array<bool, kMacroTagCount> macroTagFilters{};
+    // Randomize: 直前の MacroSliderState スナップショット（元に戻す用）
+    std::array<MacroSliderState, 16> macroRandomizeSnapshot{};
+    std::array<bool, 16> macroRandomizeHasSnapshot{};
+    // Randomize 強度: 0=Subtle, 1=Medium, 2=Wild
+    int macroRandomizeStrength = 1;
     bool layer1Expanded = true;
     bool layer2Expanded = true;
     gui::PianoRollState pianoRoll{};

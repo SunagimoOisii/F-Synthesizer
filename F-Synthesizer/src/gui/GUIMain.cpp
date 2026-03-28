@@ -4,6 +4,7 @@
 #include <cfloat>
 #include <cmath>
 #include <cstring>
+#include <random>
 #include <variant>
 
 #include <GLFW/glfw3.h>
