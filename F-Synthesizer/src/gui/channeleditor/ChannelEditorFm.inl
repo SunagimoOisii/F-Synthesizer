@@ -50,6 +50,15 @@
                     "現在の微調整値は上書きされます。");
             }
 
+            DrawFmAlgorithmDiagram("##fmAlgoDiagram", fm->algorithm);
+            if (updateHoverHelp)
+            {
+                updateHoverHelp(
+                    "FM オペレーター接続図を表示します。",
+                    "青=モジュレーター (M)、金=キャリア (C)。矢印は変調の流れを示します。",
+                    nullptr);
+            }
+
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Feedback", fm->feedback, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Op1 の自己フィードバック量です。", "大きくするとサチュレーション気味になります。", nullptr);

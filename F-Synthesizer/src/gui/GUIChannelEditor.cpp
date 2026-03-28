@@ -225,6 +225,7 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
 }
 
 #include "channeleditor/EnvelopeView.inl"
+#include "channeleditor/FmAlgorithmDiagram.inl"
 } // namespace
 
 namespace gui

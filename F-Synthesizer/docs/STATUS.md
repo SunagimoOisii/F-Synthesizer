@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-28 (Phase 2-A 実装: ADSR/LFO グラフィカル表示)
+Last Updated: 2026-03-28 (Phase 2-B 実装: FM アルゴリズム接続図)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -50,6 +50,7 @@ Branch: `main`
 - Phase 1-D 実装: Sound タブ Layer2/Layer3 の Undo/Redo（Ctrl+Z/Y）を追加。Layer2 は per-slider IsItemActivated フック、Layer3 は IsAnyItemActive() ブラケット方式で 1 操作 = 1 エントリ（GUISoundHistory.h/cpp 新規、GUIState/Layer2Macros/GUIChannelEditor/MainWindow 変更、スタック上限 50）
 - Phase 1-F 実装: Tier C/D 追加パラメータの hover 文言欠落を解消（Pulse Width 改善、Hard Sync/Ring Mod/Arpeggio/LFO1 Wave/Env2 系 計 16 箇所を ChannelEditorCommon.inl + ChannelEditorModulation.inl に追加）
 - Phase 2-A 実装: Layer3 Channel Editor に ADSR/LFO グラフィカル表示を追加（`Envelope / Gain` に ADSR プレビュー、`Modulation` に LFO1 波形プレビュー + Env2 カーブプレビュー。`LfoWave` 全列挙値対応）
+- Phase 2-B 実装: FM Source Details に Algorithm 0〜7 のオペレーター接続図を追加（DrawList描画、Op0 feedback ループ表示、algo 変更時に即時切替）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3
