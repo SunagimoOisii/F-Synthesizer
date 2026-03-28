@@ -78,34 +78,90 @@ void DrawLayer2Macros(GUIState& state)
     MacroSliderState& sliders = state.macroSliders[ch];
     const MacroLabels labels = GetMacroLabels(cfg.source);
 
+    // --- Undo 用 before スナップショット（スライダーのドラッグ開始時にキャプチャ） ---
+    static MacroSliderState undoBeforeSliders{};
+    static ChannelConfig undoBeforeConfig{};
+    static int undoBeforeSlot = -1;
+
     // --- マクロスライダー ---
     bool changed = false;
     if (labels.brightness != nullptr)
     {
+        const float bv = sliders.brightness; // ドラッグ開始前の値
         changed |= ImGui::SliderFloat(labels.brightness, &sliders.brightness, 0.0f, 1.0f);
+        if (ImGui::IsItemActivated())
+        {
+            undoBeforeSliders = sliders;
+            undoBeforeSliders.brightness = bv; // SliderFloat が更新する前の値に補正
+            undoBeforeConfig = cfg;
+            undoBeforeSlot = ch;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
+        {
+            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
+        }
     }
     if (labels.roughness != nullptr)
     {
+        const float bv = sliders.roughness;
         if (ImGui::SliderFloat(labels.roughness, &sliders.roughness, 0.0f, 1.0f))
         {
             sliders.lastLayer2Roughness = sliders.roughness;
             changed = true;
         }
+        if (ImGui::IsItemActivated())
+        {
+            undoBeforeSliders = sliders;
+            undoBeforeSliders.roughness = bv;
+            undoBeforeSliders.lastLayer2Roughness = bv;
+            undoBeforeConfig = cfg;
+            undoBeforeSlot = ch;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
+        {
+            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
+        }
     }
     if (labels.movement != nullptr)
     {
+        const float bv = sliders.movement;
         if (ImGui::SliderFloat(labels.movement, &sliders.movement, 0.0f, 1.0f))
         {
             sliders.lastLayer2Movement = sliders.movement;
             changed = true;
         }
+        if (ImGui::IsItemActivated())
+        {
+            undoBeforeSliders = sliders;
+            undoBeforeSliders.movement = bv;
+            undoBeforeSliders.lastLayer2Movement = bv;
+            undoBeforeConfig = cfg;
+            undoBeforeSlot = ch;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
+        {
+            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
+        }
     }
     if (labels.envelope != nullptr)
     {
+        const float bv = sliders.envelope;
         if (ImGui::SliderFloat(labels.envelope, &sliders.envelope, 0.0f, 1.0f))
         {
             sliders.lastLayer2Envelope = sliders.envelope;
             changed = true;
+        }
+        if (ImGui::IsItemActivated())
+        {
+            undoBeforeSliders = sliders;
+            undoBeforeSliders.envelope = bv;
+            undoBeforeSliders.lastLayer2Envelope = bv;
+            undoBeforeConfig = cfg;
+            undoBeforeSlot = ch;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
+        {
+            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
         }
     }
     if (changed)
@@ -133,7 +189,9 @@ void DrawLayer2Macros(GUIState& state)
     ImGui::SameLine();
     if (ImGui::Button("Randomize"))
     {
-        // 実行前にスナップショット保存
+        // Undo スタックに積む（Ctrl+Z 対応）
+        PushSoundHistoryEntry(state, ch, cfg, sliders);
+        // 元に戻すボタン用スナップショットも更新（既存の [元に戻す] ボタンを存続）
         state.macroRandomizeSnapshot[ch] = sliders;
         state.macroRandomizeHasSnapshot[ch] = true;
 

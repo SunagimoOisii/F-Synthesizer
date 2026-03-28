@@ -2,6 +2,7 @@
 
 #include <array>
 #include <atomic>
+#include <deque>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -10,6 +11,7 @@
 
 #include "AppCore.h"
 #include "gui/GUIMacroSliders.h"
+#include "gui/GUISoundHistory.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
 
@@ -108,5 +110,8 @@ struct GUIState
     int macroRandomizeStrength = 1;
     bool layer1Expanded = true;
     bool layer2Expanded = true;
+    // Sound タブ Undo/Redo スタック（セッション中のみ保持）
+    std::deque<SoundUndoEntry> soundUndoStack;
+    std::deque<SoundUndoEntry> soundRedoStack;
     gui::PianoRollState pianoRoll{};
 };

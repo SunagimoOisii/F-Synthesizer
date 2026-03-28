@@ -47,6 +47,7 @@ Branch: `main`
 - Fix B-2 実装: Layer3 の `Filter Resonance (Q)` ホバーヘルプに Layer2「荒さ」の書き込み範囲（0.5〜6.0）注記を追加し、UI上の範囲差を明示
 - `gui-help` 手動受け入れの記録を `docs/gui-help-hover-acceptance-checklist.md` に追加し、`GUI_REQUIREMENTS.md` と同期
 - Phase 1-C 実装: Tone Preview / Play Preview 再生中の VU メーターを Sound タブ左カラム（Spectrum 下）に追加（ファストアタック/スローデケイ、1.5 秒ピークホールド、CLIP 表示。GUIState 追加なし、VUMeter.inl + MainWindow.inl のみ変更）
+- Phase 1-D 実装: Sound タブ Layer2/Layer3 の Undo/Redo（Ctrl+Z/Y）を追加。Layer2 は per-slider IsItemActivated フック、Layer3 は IsAnyItemActive() ブラケット方式で 1 操作 = 1 エントリ（GUISoundHistory.h/cpp 新規、GUIState/Layer2Macros/GUIChannelEditor/MainWindow 変更、スタック上限 50）
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

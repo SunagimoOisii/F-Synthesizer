@@ -232,9 +232,20 @@ bool DrawChannelEditor(
     bool showSourceTypeSelector,
     const std::function<void(const char* what, const char* impact, const char* caution)>& updateHoverHelp)
 {
+    static ChannelConfig l3BeforeConfig{};
+    static MacroSliderState l3BeforeSliders{};
+    static int l3BeforeSlot = -1;
+    static bool l3SessionChanged = false;
+
     bool changed = false;
     EnsureChannelConfigs(state);
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+    // Layer3 Undo bracketing: IsAnyItemActive() の遷移を利用して before スナップショットを記録する。
+    // 精度注記: IsAnyItemActive() はウィンドウ全体のフラグのため Layer2 の操作で誤アーム
+    // することがあるが、Layer2 は独自の per-slider undo を持つため実用上の問題はない。
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const ChannelConfig frameConfig = (*state.channelConfigs)[slot];
+    const MacroSliderState frameSliders = state.macroSliders[slot];
 
     ImGui::TextUnformatted("Sound Slot");
     changed |= ImGui::InputInt("Selected Sound Slot (0-15)", &state.selectedSoundSlot);
@@ -353,6 +364,40 @@ bool DrawChannelEditor(
         // Layer2 マクロスライダーを Layer3 編集に追従させる。
         const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
         state.macroSliders[ch] = ReadMacroSliders((*state.channelConfigs)[ch], state.macroSliders[ch]);
+    }
+
+    const bool anyItemActive = ImGui::IsAnyItemActive();
+
+    // スロット切替でアーム状態をリセット
+    if (l3BeforeSlot >= 0 && l3BeforeSlot != slot)
+    {
+        l3BeforeSlot = -1;
+        l3SessionChanged = false;
+    }
+
+    // アクティブ開始: before スナップショットをキャプチャ
+    if (anyItemActive && l3BeforeSlot < 0)
+    {
+        l3BeforeConfig = frameConfig; // このフレームのレンダリング前の値
+        l3BeforeSliders = frameSliders;
+        l3BeforeSlot = slot;
+        l3SessionChanged = false;
+    }
+
+    if (changed)
+    {
+        l3SessionChanged = true;
+    }
+
+    // アクティブ終了: 変更があればスタックに積む
+    if (!anyItemActive && l3BeforeSlot >= 0)
+    {
+        if (l3SessionChanged)
+        {
+            PushSoundHistoryEntry(state, l3BeforeSlot, l3BeforeConfig, l3BeforeSliders);
+        }
+        l3BeforeSlot = -1;
+        l3SessionChanged = false;
     }
     return changed;
 }

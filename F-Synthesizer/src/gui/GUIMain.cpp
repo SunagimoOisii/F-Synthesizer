@@ -54,6 +54,9 @@ using gui::LoadGUIStateFile;
 using gui::SaveGUIStateFile;
 using gui::GUIStatePath;
 using gui::DrawPianoRollPanel;
+using ::PushSoundHistoryEntry;
+using ::UndoSound;
+using ::RedoSound;
 
 #include "main/TopBar.inl"
 #include "main/Layer1Discovery.inl"

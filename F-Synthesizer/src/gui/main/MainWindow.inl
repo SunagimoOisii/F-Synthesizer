@@ -502,6 +502,27 @@ const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
 ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true);
 if (state.UIModeTab == 0)
 {
+    // Ctrl+Z / Ctrl+Y: Sound タブ専用 Undo/Redo
+    // ピアノロールにフォーカスがない場合のみ Sound Undo を消費する
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        !state.running)
+    {
+        if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_Z))
+        {
+            if (UndoSound(state))
+            {
+                requestAutoTonePreview();
+            }
+        }
+        if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_Y))
+        {
+            if (RedoSound(state))
+            {
+                requestAutoTonePreview();
+            }
+        }
+    }
+
     if (ImGui::BeginTable("layout_split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
     {
         ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.56f);
