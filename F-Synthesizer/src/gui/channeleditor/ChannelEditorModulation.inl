@@ -32,6 +32,7 @@
             }
             localChanged = true;
         }
+        if (updateHoverHelp) updateHoverHelp("LFO1 の波形を選択します。", "変調の形が変わります。Sine=なめらか、Square=段階的、Saw=のこぎり、S&H=ランダムホールド。", nullptr);
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("LFO1 Rate (Hz)", modulation.lfo1.rateHz, 0.0f, 100.0f, "%.2f");
         if (updateHoverHelp) updateHoverHelp("LFO1 Rate を調整します。", "周期変調の速さが変わります。", nullptr);
@@ -57,14 +58,19 @@
 
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Attack", modulation.env2.attackSec, 0.0f, 10.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("Env2 Attack を調整します。", "変調が最大値に達するまでの立ち上がり時間が変わります。", nullptr);
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Decay", modulation.env2.decaySec, 0.0f, 10.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("Env2 Decay を調整します。", "ピーク後にサステインレベルへ落ちるまでの減衰時間が変わります。", nullptr);
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Sustain", modulation.env2.sustainLevel, 0.0f, 1.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("Env2 Sustain を調整します。", "ノート押下中に維持する変調量が変わります (0〜1)。", nullptr);
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Release", modulation.env2.releaseSec, 0.0f, 10.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("Env2 Release を調整します。", "ノートオフ後に変調量がゼロに戻るまでのリリース時間が変わります。", nullptr);
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Curve", modulation.env2.curve, 0.0f, 1.0f, "%.3f");
+        if (updateHoverHelp) updateHoverHelp("Env2 Curve を調整します。", "変化の加速感が変わります。低いと急激に、高いとなだらかに変化します。", nullptr);
 
         const char* modSources[] = { "none", "lfo1", "env2", "velocity", "channelPressure", "polyPressure", "ModWheel" };
         struct DestinationChoice

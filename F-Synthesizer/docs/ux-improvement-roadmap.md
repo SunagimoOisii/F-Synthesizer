@@ -163,8 +163,8 @@ Layer2 マクロスライダーを軸にした探索体験を完成させる段�
 | `arpeggio.rateHz` | `音が繰り返す速さ。高いほど細かく刻む` |
 
 **受け入れ条件:**
-- [ ] 主要導線（Filter / Envelope / LFO / Modulation / Arpeggio）でホバー文言欠落なし
-- [ ] `gui-help-hover-acceptance-checklist.md` に反映済み
+- [x] 主要導線（Filter / Envelope / LFO / Modulation / Arpeggio）でホバー文言欠落なし
+- [x] `gui-help-hover-acceptance-checklist.md` に反映済み
 
 ---
 

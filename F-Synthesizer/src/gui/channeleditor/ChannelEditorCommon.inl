@@ -10,7 +10,7 @@
             {
                 ImGui::SetNextItemWidth(220.0f);
                 localChanged |= sliderWaveParam("Pulse Width", src.pulseWidth, 0.05f, 0.95f, "%.2f");
-                if (updateHoverHelp) updateHoverHelp("Pulse Width を調整します。", "Square波のデューティ幅が変わります。", nullptr);
+                if (updateHoverHelp) updateHoverHelp("Pulse Width を調整します。", "音の細さ・鋭さが変わります。LFO でゆっくり揺らすとクラリネット的な揺らぎになります。", nullptr);
             }
 
             src.unisonVoices = std::clamp(src.unisonVoices, 1, 8);
@@ -51,19 +51,24 @@
 
             std::string hardSyncLabel = std::string("Hard Sync##") + hardSyncTag;
             localChanged |= ImGui::Checkbox(hardSyncLabel.c_str(), &src.hardSyncEnabled);
+            if (updateHoverHelp) updateHoverHelp("Hard Sync を切り替えます。", "倍音の金属感が変わります。クラシックなジッパーサウンドを作れます。", nullptr);
             if (src.hardSyncEnabled)
             {
                 std::string syncRatioLabel = std::string("Sync Ratio##") + hardSyncTag;
                 ImGui::SetNextItemWidth(220.0f);
                 localChanged |= sliderWaveParam(syncRatioLabel.c_str(), src.hardSyncRatio, 0.5f, 8.0f, "%.3f");
+                if (updateHoverHelp) updateHoverHelp("Sync Ratio を調整します。", "スレーブ周波数の倍率が変わります。高いほど高次倍音が強調されます。", nullptr);
             }
             localChanged |= ImGui::Checkbox("Ring Mod", &src.ringModEnabled);
+            if (updateHoverHelp) updateHoverHelp("Ring Mod を切り替えます。", "2つの音が干渉して金属的・ベル的な響きになります。", nullptr);
             if (src.ringModEnabled)
             {
                 ImGui::SetNextItemWidth(220.0f);
                 localChanged |= sliderWaveParam("Ring Ratio", src.ringModRatio, 0.125f, 16.0f, "%.3f");
+                if (updateHoverHelp) updateHoverHelp("Ring Ratio を調整します。", "変調オシレーターの周波数比率が変わります。整数比でベル的、非整数比で金属的になります。", nullptr);
                 ImGui::SetNextItemWidth(220.0f);
                 localChanged |= sliderWaveParam("Ring Mix", src.ringModMix, 0.0f, 1.0f, "%.3f");
+                if (updateHoverHelp) updateHoverHelp("Ring Mix を調整します。", "原音とリングモジュレーション音のブレンド量が変わります。", nullptr);
             }
 
             ImGui::Separator();
@@ -72,8 +77,10 @@
             std::string arpRateLabel = std::string("Rate Hz##") + arpeggioTag;
             std::string arpStepsLabel = std::string("Steps##") + arpeggioTag;
             localChanged |= ImGui::Checkbox(arpEnabledLabel.c_str(), &src.arpeggio.enabled);
+            if (updateHoverHelp) updateHoverHelp("Arpeggio を切り替えます。", "オンにするとステップ順でノートを繰り返し発音します。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
             localChanged |= sliderWaveParam(arpRateLabel.c_str(), src.arpeggio.rateHz, 0.5f, 40.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Arpeggio Rate を調整します。", "音が繰り返す速さが変わります。高いほど細かく刻みます。", nullptr);
             int arpSteps = src.arpeggio.steps;
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::SliderInt(arpStepsLabel.c_str(), &arpSteps, 1, 8))
@@ -81,12 +88,14 @@
                 src.arpeggio.steps = arpSteps;
                 localChanged = true;
             }
+            if (updateHoverHelp) updateHoverHelp("Arpeggio Steps を調整します。", "繰り返すノート数 (1〜8) が変わります。Note 1〜N を順番に再生します。", nullptr);
             for (int k = 0; k < src.arpeggio.steps; k++)
             {
                 char label[64];
                 snprintf(label, sizeof(label), "Note %d##%s", k + 1, arpeggioTag);
                 ImGui::SetNextItemWidth(220.0f);
                 localChanged |= ImGui::SliderInt(label, &src.arpeggio.semitones[static_cast<size_t>(k)], -24, 24);
+                if (updateHoverHelp) updateHoverHelp("Arpeggio Note を調整します。", "基音からの半音オフセットが変わります。0=ユニゾン、12=1オクターブ上。", nullptr);
             }
 
             const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
