@@ -48,7 +48,7 @@
             "0": {
               "source": "env2",
               "destination": "fm.index",
-              "amount": 1.05,
+              "amount": 0.95,
               "enabled": true
             }
           }

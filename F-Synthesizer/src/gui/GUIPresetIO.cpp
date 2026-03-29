@@ -300,7 +300,8 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
             state.presetItemDescriptions.push_back(meta->description);
         }
     }
-    if (state.presetItems.empty())
+    const bool allowUnfilteredFallback = (kind == config::SourceKind::Count);
+    if (state.presetItems.empty() && allowUnfilteredFallback)
     {
         state.presetItems = std::move(all);
         state.presetItemTags.clear();
@@ -322,19 +323,19 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
             }
         }
     }
-    if (state.presetItems.empty())
-    {
-        state.presetItems.push_back("wave_snes_lead_vibrato");
-        state.presetItemTags.emplace_back();
-        state.presetItemDescriptions.emplace_back();
-    }
-
     int idx = FindPresetIndex(state, preferName);
     if (idx < 0)
     {
         idx = FindPresetIndex(state, "wave_snes_lead_vibrato");
     }
-    state.presetIndex = (idx >= 0) ? idx : 0;
+    if (state.presetItems.empty())
+    {
+        state.presetIndex = -1;
+    }
+    else
+    {
+        state.presetIndex = (idx >= 0) ? idx : 0;
+    }
 }
 
 bool ApplySelectedPresetPaths(GUIState& state, std::string& err)

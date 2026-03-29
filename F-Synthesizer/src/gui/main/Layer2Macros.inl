@@ -83,37 +83,45 @@ void DrawLayer2Macros(GUIState& state)
     static ChannelConfig undoBeforeConfig{};
     static int undoBeforeSlot = -1;
 
-    // --- マクロスライダー ---
+    // --- マクロスライダー（2x2）---
     bool changed = false;
-    if (labels.brightness != nullptr)
-    {
-        const float bv = sliders.brightness; // ドラッグ開始前の値
-        changed |= ImGui::SliderFloat(labels.brightness, &sliders.brightness, 0.0f, 1.0f);
-        if (ImGui::IsItemActivated())
+    auto drawMacroSlider = [&](const char* id, const char* label, float& value, float* lastValue) {
+        if (label == nullptr)
         {
-            undoBeforeSliders = sliders;
-            undoBeforeSliders.brightness = bv; // SliderFloat が更新する前の値に補正
-            undoBeforeConfig = cfg;
-            undoBeforeSlot = ch;
+            return;
         }
-        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
+        ImGui::PushID(id);
+        const float before = value;
+        if (ImGui::SliderFloat(label, &value, 0.0f, 1.0f))
         {
-            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
-        }
-    }
-    if (labels.roughness != nullptr)
-    {
-        const float bv = sliders.roughness;
-        if (ImGui::SliderFloat(labels.roughness, &sliders.roughness, 0.0f, 1.0f))
-        {
-            sliders.lastLayer2Roughness = sliders.roughness;
+            if (lastValue != nullptr)
+            {
+                *lastValue = value;
+            }
             changed = true;
         }
         if (ImGui::IsItemActivated())
         {
             undoBeforeSliders = sliders;
-            undoBeforeSliders.roughness = bv;
-            undoBeforeSliders.lastLayer2Roughness = bv;
+            if (&value == &sliders.brightness)
+            {
+                undoBeforeSliders.brightness = before;
+            }
+            else if (&value == &sliders.roughness)
+            {
+                undoBeforeSliders.roughness = before;
+                undoBeforeSliders.lastLayer2Roughness = before;
+            }
+            else if (&value == &sliders.movement)
+            {
+                undoBeforeSliders.movement = before;
+                undoBeforeSliders.lastLayer2Movement = before;
+            }
+            else if (&value == &sliders.envelope)
+            {
+                undoBeforeSliders.envelope = before;
+                undoBeforeSliders.lastLayer2Envelope = before;
+            }
             undoBeforeConfig = cfg;
             undoBeforeSlot = ch;
         }
@@ -121,48 +129,21 @@ void DrawLayer2Macros(GUIState& state)
         {
             PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
         }
-    }
-    if (labels.movement != nullptr)
+        ImGui::PopID();
+    };
+    if (ImGui::BeginTable("layer2_macro_grid", 2, ImGuiTableFlags_SizingStretchProp))
     {
-        const float bv = sliders.movement;
-        if (ImGui::SliderFloat(labels.movement, &sliders.movement, 0.0f, 1.0f))
-        {
-            sliders.lastLayer2Movement = sliders.movement;
-            changed = true;
-        }
-        if (ImGui::IsItemActivated())
-        {
-            undoBeforeSliders = sliders;
-            undoBeforeSliders.movement = bv;
-            undoBeforeSliders.lastLayer2Movement = bv;
-            undoBeforeConfig = cfg;
-            undoBeforeSlot = ch;
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
-        {
-            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
-        }
-    }
-    if (labels.envelope != nullptr)
-    {
-        const float bv = sliders.envelope;
-        if (ImGui::SliderFloat(labels.envelope, &sliders.envelope, 0.0f, 1.0f))
-        {
-            sliders.lastLayer2Envelope = sliders.envelope;
-            changed = true;
-        }
-        if (ImGui::IsItemActivated())
-        {
-            undoBeforeSliders = sliders;
-            undoBeforeSliders.envelope = bv;
-            undoBeforeSliders.lastLayer2Envelope = bv;
-            undoBeforeConfig = cfg;
-            undoBeforeSlot = ch;
-        }
-        if (ImGui::IsItemDeactivatedAfterEdit() && undoBeforeSlot >= 0)
-        {
-            PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
-        }
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        drawMacroSlider("brightness", labels.brightness, sliders.brightness, nullptr);
+        ImGui::TableSetColumnIndex(1);
+        drawMacroSlider("roughness", labels.roughness, sliders.roughness, &sliders.lastLayer2Roughness);
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        drawMacroSlider("movement", labels.movement, sliders.movement, &sliders.lastLayer2Movement);
+        ImGui::TableSetColumnIndex(1);
+        drawMacroSlider("envelope", labels.envelope, sliders.envelope, &sliders.lastLayer2Envelope);
+        ImGui::EndTable();
     }
     if (changed)
     {

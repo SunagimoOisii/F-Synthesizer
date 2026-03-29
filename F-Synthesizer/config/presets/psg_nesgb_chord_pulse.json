@@ -1,22 +1,22 @@
 {
   "tags": [
-    "dark",
     "game",
-    "simple"
+    "simple",
+    "bright"
   ],
-  "description": "Preset FC_Triangle_Bass",
+  "description": "PSG 3-voice chord layer: stack up to 3 square waves for retro NES chord pads.",
   "channels": {
     "0": {
-      "amp": 0.24,
+      "amp": 0.18,
       "attackSec": 0.002,
       "decaySec": 0.08,
-      "sustainLevel": 0.72,
+      "sustainLevel": 0.75,
       "releaseSec": 0.08,
       "source": {
         "type": "psg",
-        "wave": "triangle",
+        "wave": "square",
         "volumeSteps": 15,
-        "maxVoices": 1
+        "maxVoices": 3
       }
     }
   }

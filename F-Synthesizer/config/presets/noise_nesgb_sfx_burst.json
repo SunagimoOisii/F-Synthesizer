@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "noise",
+    "game",
+    "attack",
+    "simple"
+  ],
+  "description": "Short NES/GB burst noise for chip impacts and menu blips.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.045,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.04,
+      "source": {
+        "type": "noise",
+        "noise": "white",
+        "filterMode": "bandpass",
+        "filterCutoffHz": 3600.0,
+        "filterResonance": 2.4
+      }
+    }
+  }
+}

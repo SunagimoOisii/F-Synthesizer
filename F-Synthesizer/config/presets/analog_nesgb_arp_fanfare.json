@@ -1,0 +1,48 @@
+{
+  "tags": [
+    "game",
+    "bright",
+    "analog",
+    "attack",
+    "complex"
+  ],
+  "description": "NES/GB fanfare arpeggio: major triad + octave at 12 Hz, chip-clean with 25% duty pulse.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.06,
+      "sustainLevel": 0.8,
+      "releaseSec": 0.06,
+      "source": {
+        "type": "analog",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.0,
+        "pulseWidth": 0.25,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 9000.0,
+        "filterResonance": 0.7,
+        "filterKeytrack": 0.2,
+        "drive": 0.08,
+        "driftDepthCents": 0.0,
+        "driftRateHz": 0.0,
+        "arpeggio": {
+          "enabled": true,
+          "rateHz": 12.0,
+          "steps": 4,
+          "semitones": [0, 4, 7, 12, 0, 0, 0, 0]
+        },
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 1.5,
+          "pitchTimeMs": 1.0,
+          "filterCutoffTimeMs": 3.0
+        }
+      }
+    }
+  }
+}

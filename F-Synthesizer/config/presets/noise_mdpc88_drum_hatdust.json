@@ -1,0 +1,26 @@
+{
+  "tags": [
+    "noise",
+    "drum",
+    "game",
+    "attack",
+    "simple"
+  ],
+  "description": "Arcade hi-hat dust layer tuned for MD/PC-88 style rhythm accents.",
+  "channels": {
+    "9": {
+      "amp": 0.19,
+      "attackSec": 0.001,
+      "decaySec": 0.02,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.018,
+      "source": {
+        "type": "noise",
+        "noise": "blue",
+        "filterMode": "highpass",
+        "filterCutoffHz": 6800.0,
+        "filterResonance": 0.9
+      }
+    }
+  }
+}

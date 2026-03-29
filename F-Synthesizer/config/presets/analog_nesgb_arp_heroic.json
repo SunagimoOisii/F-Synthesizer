@@ -1,0 +1,64 @@
+{
+  "tags": [
+    "game",
+    "bright",
+    "analog",
+    "attack"
+  ],
+  "description": "NES/GB heroic arpeggio lead: root-fifth-octave at 10 Hz with key-synced triangle vibrato.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.08,
+      "source": {
+        "type": "analog",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.0,
+        "pulseWidth": 0.125,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 7200.0,
+        "filterResonance": 0.8,
+        "filterKeytrack": 0.3,
+        "drive": 0.1,
+        "driftDepthCents": 0.5,
+        "driftRateHz": 0.8,
+        "arpeggio": {
+          "enabled": true,
+          "rateHz": 10.0,
+          "steps": 3,
+          "semitones": [0, 7, 12, 0, 0, 0, 0, 0]
+        },
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 2.0,
+          "pitchTimeMs": 1.0,
+          "filterCutoffTimeMs": 4.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 6.0,
+            "depth": 0.3,
+            "bipolar": true,
+            "keySync": true
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.012,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "tags": [
+    "noise",
+    "game",
+    "dark"
+  ],
+  "description": "MD/PC-88 noise sweep SFX: pink noise through a narrow bandpass resonance for percussive texture.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.22,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "noise",
+        "noise": "pink",
+        "filterMode": "bandpass",
+        "filterCutoffHz": 800.0,
+        "filterResonance": 2.8
+      }
+    }
+  }
+}

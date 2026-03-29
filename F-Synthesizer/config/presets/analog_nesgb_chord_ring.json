@@ -1,0 +1,44 @@
+{
+  "tags": [
+    "analog",
+    "game",
+    "metal",
+    "complex"
+  ],
+  "description": "NES/GB ring-mod chord: square wave with ring modulator at 1.5x ratio for alien bell harmonics.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.002,
+      "decaySec": 0.15,
+      "sustainLevel": 0.55,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "analog",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.0,
+        "pulseWidth": 0.25,
+        "ringModEnabled": true,
+        "ringModRatio": 1.5,
+        "ringModMix": 0.38,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 5800.0,
+        "filterResonance": 1.3,
+        "filterKeytrack": 0.5,
+        "drive": 0.1,
+        "driftDepthCents": 0.8,
+        "driftRateHz": 0.6,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 2.5,
+          "pitchTimeMs": 3.0,
+          "filterCutoffTimeMs": 6.0
+        }
+      }
+    }
+  }
+}

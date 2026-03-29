@@ -1,0 +1,72 @@
+{
+  "tags": [
+    "analog",
+    "game",
+    "bright",
+    "attack",
+    "simple"
+  ],
+  "description": "SNES-style resonant pluck with analog bite and short expressive sweep.",
+  "channels": {
+    "0": {
+      "amp": 0.21,
+      "attackSec": 0.001,
+      "decaySec": 0.11,
+      "sustainLevel": 0.22,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "analog",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.2,
+        "pulseWidth": 0.32,
+        "hardSyncEnabled": true,
+        "hardSyncRatio": 4.0,
+        "filterMode": "bandpass",
+        "filterCutoffHz": 2900.0,
+        "filterResonance": 2.2,
+        "filterKeytrack": 0.45,
+        "drive": 0.18,
+        "driftDepthCents": 1.4,
+        "driftRateHz": 0.9,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 2.5,
+          "pitchTimeMs": 3.5,
+          "filterCutoffTimeMs": 8.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 6.2,
+            "depth": 0.4,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.08,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.06
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.62,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.01,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

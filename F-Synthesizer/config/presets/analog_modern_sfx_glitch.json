@@ -1,0 +1,57 @@
+{
+  "tags": [
+    "analog",
+    "modern",
+    "noisy",
+    "complex"
+  ],
+  "description": "Modern glitch SFX: 8-step random arpeggio + Sample-and-Hold LFO jumps the bandpass filter.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.05,
+      "source": {
+        "type": "analog",
+        "wave": "square",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0.0,
+        "unisonSpread": 0.0,
+        "subOscLevel": 0.0,
+        "pulseWidth": 0.12,
+        "filterMode": "bandpass",
+        "filterCutoffHz": 3200.0,
+        "filterResonance": 2.5,
+        "filterKeytrack": 0.2,
+        "drive": 0.22,
+        "driftDepthCents": 0.0,
+        "driftRateHz": 0.0,
+        "arpeggio": {
+          "enabled": true,
+          "rateHz": 22.0,
+          "steps": 8,
+          "semitones": [0, 7, -5, 12, 3, -2, 14, 5]
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sampleAndHold",
+            "rateHz": 11.0,
+            "depth": 0.8,
+            "bipolar": false,
+            "keySync": true
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.72,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

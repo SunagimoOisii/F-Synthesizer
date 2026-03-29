@@ -1,0 +1,55 @@
+{
+  "tags": [
+    "fm",
+    "game",
+    "dark",
+    "complex"
+  ],
+  "description": "MD/PC-88 deep FM bass: 4-op chain (algo 3) with high feedback and exponential env2 punch.",
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.001,
+      "decaySec": 0.14,
+      "sustainLevel": 0.48,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "fm",
+        "algorithm": 3,
+        "feedback": 0.26,
+        "ops": [
+          { "wave": "sine", "ratio": 0.5, "level": 1.0, "index": 3.2 },
+          { "wave": "sine", "ratio": 1.0, "level": 0.9, "index": 1.8 },
+          { "wave": "sine", "ratio": 2.0, "level": 0.7, "index": 0.8 },
+          { "wave": "sine", "ratio": 1.0, "level": 0.8, "index": 0.0 }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 2200,
+        "filterResonance": 1.2,
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.12,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.06,
+            "curve": 2.5
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.85,
+              "enabled": true
+            },
+            "1": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.38,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

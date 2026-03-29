@@ -1,0 +1,51 @@
+{
+  "tags": [
+    "fm",
+    "game",
+    "soft",
+    "pad",
+    "complex"
+  ],
+  "description": "MD/PC-88 FM organ pad: four harmonic operators (algo 4) with delayed tremolo that fades in after sustain.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.012,
+      "decaySec": 0.2,
+      "sustainLevel": 0.8,
+      "releaseSec": 0.28,
+      "source": {
+        "type": "fm",
+        "algorithm": 4,
+        "feedback": 0.1,
+        "ops": [
+          { "wave": "sine", "ratio": 1.0, "level": 1.0, "index": 1.4 },
+          { "wave": "sine", "ratio": 2.0, "level": 0.72, "index": 0.0 },
+          { "wave": "sine", "ratio": 3.0, "level": 0.54, "index": 0.6 },
+          { "wave": "sine", "ratio": 4.0, "level": 0.36, "index": 0.0 }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4800,
+        "filterResonance": 0.75,
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 5.2,
+            "depth": 0.5,
+            "bipolar": true,
+            "delayMs": 500.0,
+            "fadeMs": 400.0
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.14,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

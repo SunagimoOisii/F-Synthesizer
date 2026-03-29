@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "noise",
+    "game",
+    "attack",
+    "simple"
+  ],
+  "description": "SNES rimshot texture: white noise through tight highpass for crisp percussive hits.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.001,
+      "decaySec": 0.055,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.04,
+      "source": {
+        "type": "noise",
+        "noise": "white",
+        "filterMode": "highpass",
+        "filterCutoffHz": 4200.0,
+        "filterResonance": 1.6
+      }
+    }
+  }
+}

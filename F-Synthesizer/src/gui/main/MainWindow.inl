@@ -131,8 +131,8 @@ ImGui::Separator();
 static int syncedTab = -1;
 if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
 {
-    ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.72f);
-    ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthFixed, 360.0f);
+    ImGui::TableSetupColumn("left", ImGuiTableColumnFlags_WidthStretch, 0.65f);
+    ImGui::TableSetupColumn("right", ImGuiTableColumnFlags_WidthStretch, 0.35f);
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     if (ImGui::BeginTabBar("mode_tabs"))
@@ -173,21 +173,40 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     }
 
     ImGui::TableSetColumnIndex(1);
-    DrawStatusBadge(state);
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16.0f);
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextUnformatted("UI Scale");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(120.0f);
-    const char* uiScales[] = { "100%", "125%", "150%" };
-    if (ImGui::Combo("##ui_scale", &state.UIScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
+    const int selectedSlotChip = std::clamp(state.selectedSoundSlot, 0, 15);
+    const char* sourceChip = "-";
+    if (state.channelConfigs)
     {
-        AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UIScaleLabelFromIndex(state.UIScaleIndex));
+        const config::SourceKind sourceKindChip =
+            config::SourceConfigKind((*state.channelConfigs)[selectedSlotChip].source);
+        sourceChip = config::SourceKindToDisplayName(sourceKindChip);
     }
-    updateHoverHelp(
-        "UI全体の表示倍率を変更します。",
-        "表示倍率だけが変わります。");
+    if (ImGui::BeginTable("top_header_chips", 4, ImGuiTableFlags_SizingStretchProp))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        DrawStatusBadge(state);
+        ImGui::TableSetColumnIndex(1);
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Scale");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(96.0f);
+        const char* uiScales[] = { "100%", "125%", "150%" };
+        if (ImGui::Combo("##ui_scale", &state.UIScaleIndex, uiScales, IM_ARRAYSIZE(uiScales)))
+        {
+            AppendGUILog(state, std::string("[GUI] UI scale changed: ") + UIScaleLabelFromIndex(state.UIScaleIndex));
+        }
+        updateHoverHelp(
+            "UI全体の表示倍率を変更します。",
+            "表示倍率だけが変わります。");
+        ImGui::TableSetColumnIndex(2);
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Slot s%d", selectedSlotChip);
+        ImGui::TableSetColumnIndex(3);
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Source %s", sourceChip);
+        ImGui::EndTable();
+    }
     ImGui::EndTable();
 }
 ImGui::Separator();
@@ -203,30 +222,9 @@ if (state.UIModeTab != lastFrameTab)
     lastFrameTab = state.UIModeTab;
 }
 ImGui::Separator();
-ImGui::TextDisabled("Save Targets: SoundAsset(Preset) / MusicProject(GUI+PianoRoll) / Workspace(UI state)");
+ImGui::TextDisabled("Save Scope: SoundAsset / MusicProject / Workspace");
 ImGui::SameLine();
-ImGui::BeginDisabled(state.running);
-if (ImGui::Button("Save Project"))
-{
-    // MusicProject + Workspace を保存。SoundAsset は含めない。
-    if (saveWorkspaceOnly())
-    {
-        AppendGUILog(state, "[GUI] Save Project: MusicProject + Workspace");
-    }
-}
-updateHoverHelp(
-    "Save Projectを実行します。",
-    "MusicProjectとWorkspaceを保存します。",
-    "SoundAsset(Preset)は保存対象に含みません。");
-ImGui::SameLine();
-if (ImGui::Button("Save All"))
-{
-    saveAll();
-}
-updateHoverHelp(
-    "Save Allを実行します。",
-    "SoundAsset/MusicProject/Workspaceを保存します。");
-ImGui::EndDisabled();
+ImGui::TextDisabled("(details on hover)");
 if (state.hasUIError)
 {
     auto suggestedFix = [&]() -> const char*
@@ -348,119 +346,148 @@ if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     ImGui::EndPopup();
 }
 ImGui::Separator();
-ImGui::BeginDisabled(state.running);
-if (state.UIModeTab == 0)
+if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
 {
-    if (ImGui::Button("Play Preview (PR Channel using Selected Slot)"))
+    ImGui::TableSetupColumn("save", ImGuiTableColumnFlags_WidthStretch, 0.48f);
+    ImGui::TableSetupColumn("primary", ImGuiTableColumnFlags_WidthStretch, 0.32f);
+    ImGui::TableSetupColumn("aux", ImGuiTableColumnFlags_WidthStretch, 0.20f);
+    ImGui::TableNextRow();
+
+    ImGui::TableSetColumnIndex(0);
+    ImGui::BeginDisabled(state.running);
+    if (ImGui::Button("Save Project"))
     {
-        clearAutoTonePreviewRequest();
-        StartGUIRun(state, true);
-    }
-    updateHoverHelp(
-        "Play Previewを実行します。",
-        "表示chを選択中Slotで再生成して再生します。",
-        "WAVファイルは出力しません。");
-    ImGui::SameLine();
-    if (ImGui::Checkbox("Auto Tone Preview", &state.autoTonePreviewEnabled))
-    {
-        if (!state.autoTonePreviewEnabled)
+        if (saveWorkspaceOnly())
         {
-            clearAutoTonePreviewRequest();
+            AppendGUILog(state, "[GUI] Save Project: MusicProject + Workspace");
         }
     }
     updateHoverHelp(
-        "Auto Tone Preview を切り替えます。",
-        "Sound編集後、400ms無操作で単音試聴を自動実行します。",
-        "重い環境ではOFFにして手動Previewを使ってください。");
+        "Save Projectを実行します。",
+        "MusicProjectとWorkspaceを保存します。",
+        "SoundAsset(Preset)は保存対象に含みません。");
     ImGui::SameLine();
-    ImGui::Checkbox("Loop Preview", &state.previewLoop);
-    updateHoverHelp(
-        "Loop Previewを切り替えます。",
-        "Preview終了後に先頭からループ再生します。");
-}
-else if (state.UIModeTab == 1)
-{
-    if (ImGui::Button("Export WAV"))
+    if (ImGui::Button("Save All"))
     {
-        StartGUIRun(state, false);
+        saveAll();
     }
     updateHoverHelp(
-        "Export WAVを実行します。",
-        "現在設定でWAVを書き出します。",
-        "再生中の場合は停止してから書き出しを開始します。Preview専用操作ではありません。");
-    ImGui::SameLine();
-    if (ImGui::Button("Play Preview (Display Channel)"))
+        "Save Allを実行します。",
+        "SoundAsset/MusicProject/Workspaceを保存します。");
+    ImGui::EndDisabled();
+
+    ImGui::TableSetColumnIndex(1);
+    ImGui::BeginDisabled(state.running);
+    if (state.UIModeTab == 0)
     {
-        StartGUIRun(state, true);
+        if (ImGui::Button("Preview"))
+        {
+            clearAutoTonePreviewRequest();
+            StartGUIRun(state, true);
+        }
+        updateHoverHelp(
+            "Previewを実行します。",
+            "表示chを選択中Slotで再生成して再生します。",
+            "WAVファイルは出力しません。");
     }
-    updateHoverHelp(
-        "Play Preview (Display Channel) を実行します。",
-        "表示chを現在の割当/ミックスで再生します。",
-        "WAVファイルは出力しません。");
-    ImGui::SameLine();
-    ImGui::Checkbox("Loop Preview", &state.previewLoop);
-    updateHoverHelp(
-        "Loop Previewを切り替えます。",
-        "Preview終了後に先頭からループ再生します。");
-}
-else
-{
-    if (ImGui::Button("Export WAV"))
+    else if (state.UIModeTab == 1)
     {
-        StartGUIRun(state, false);
-    }
-    updateHoverHelp(
-        "Export WAVを実行します。",
-        "現在設定でWAVを書き出します。",
-        "再生中の場合は停止してから書き出しを開始します。Preview専用操作ではありません。");
-    ImGui::SameLine();
-    if (ImGui::Button("Play Preview"))
-    {
-        StartGUIRun(state, true);
-    }
-    updateHoverHelp(
-        "Play Preview を実行します。",
-        "現在設定でプレビュー再生します。",
-        "WAVファイルは出力しません。");
-    ImGui::SameLine();
-    ImGui::Checkbox("Loop Preview", &state.previewLoop);
-    updateHoverHelp(
-        "Loop Previewを切り替えます。",
-        "Preview終了後に先頭からループ再生します。");
-}
-ImGui::EndDisabled();
-ImGui::SameLine();
-// Stopは「レンダ中」または「プレビュー再生中」のどちらでも有効。
-const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
-ImGui::BeginDisabled(!canStop);
-if (ImGui::Button("Stop"))
-{
-    StopGUIRunAndPreview(state);
-}
-updateHoverHelp(
-    "Stopを実行します。",
-    "レンダまたはPreviewを停止します。",
-    "未実行時は無効です。");
-ImGui::EndDisabled();
-ImGui::SameLine();
-ImGui::BeginDisabled(state.running);
-if (ImGui::Button("Close"))
-{
-    if (state.presetDirty)
-    {
-        pendingCloseRequest = true;
-        ImGui::OpenPopup("Unsaved Changes");
+        if (ImGui::Button("Export"))
+        {
+            StartGUIRun(state, false);
+        }
+        updateHoverHelp(
+            "Exportを実行します。",
+            "現在設定でWAVを書き出します。",
+            "再生中の場合は停止してから書き出しを開始します。");
+        ImGui::SameLine();
+        if (ImGui::Button("Preview"))
+        {
+            StartGUIRun(state, true);
+        }
+        updateHoverHelp(
+            "Previewを実行します。",
+            "表示chを現在の割当/ミックスで再生します。",
+            "WAVファイルは出力しません。");
     }
     else
     {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        if (ImGui::Button("Export"))
+        {
+            StartGUIRun(state, false);
+        }
+        updateHoverHelp(
+            "Exportを実行します。",
+            "現在設定でWAVを書き出します。",
+            "再生中の場合は停止してから書き出しを開始します。");
+        ImGui::SameLine();
+        if (ImGui::Button("Preview"))
+        {
+            StartGUIRun(state, true);
+        }
+        updateHoverHelp(
+            "Previewを実行します。",
+            "現在設定でプレビュー再生します。",
+            "WAVファイルは出力しません。");
     }
+    ImGui::EndDisabled();
+
+    ImGui::TableSetColumnIndex(2);
+    ImGui::BeginDisabled(state.running);
+    if (state.UIModeTab == 0)
+    {
+        if (ImGui::Checkbox("Auto", &state.autoTonePreviewEnabled))
+        {
+            if (!state.autoTonePreviewEnabled)
+            {
+                clearAutoTonePreviewRequest();
+            }
+        }
+        updateHoverHelp(
+            "Auto Tone Preview を切り替えます。",
+            "Sound編集後、400ms無操作で単音試聴を自動実行します。",
+            "重い環境ではOFFにして手動Previewを使ってください。");
+        ImGui::SameLine();
+    }
+    ImGui::Checkbox("Loop", &state.previewLoop);
+    updateHoverHelp(
+        "Loop Previewを切り替えます。",
+        "Preview終了後に先頭からループ再生します。");
+    ImGui::EndDisabled();
+
+    ImGui::SameLine();
+    const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
+    ImGui::BeginDisabled(!canStop);
+    if (ImGui::Button("Stop"))
+    {
+        StopGUIRunAndPreview(state);
+    }
+    updateHoverHelp(
+        "Stopを実行します。",
+        "レンダまたはPreviewを停止します。",
+        "未実行時は無効です。");
+    ImGui::EndDisabled();
+
+    ImGui::SameLine();
+    ImGui::BeginDisabled(state.running);
+    if (ImGui::Button("Close"))
+    {
+        if (state.presetDirty)
+        {
+            pendingCloseRequest = true;
+            ImGui::OpenPopup("Unsaved Changes");
+        }
+        else
+        {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+    }
+    updateHoverHelp(
+        "GUIを終了します。",
+        "未保存時は確認ダイアログを表示します。");
+    ImGui::EndDisabled();
+    ImGui::EndTable();
 }
-updateHoverHelp(
-    "GUIを終了します。",
-    "未保存時は確認ダイアログを表示します。");
-ImGui::EndDisabled();
-ImGui::SameLine();
 ImGui::Separator();
 if (openUnsavedPopupNextFrame)
 {
@@ -621,140 +648,143 @@ if (state.UIModeTab == 0)
         ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
     }
 
-    // ---- Layer 1 — 発見 ----
-    DrawLayer1Discovery(
-        state,
-        pendingPresetIndex,
-        pendingPresetOriginalIndex,
-        openUnsavedPopupNextFrame,
-        applyPresetByIndex,
-        [&]()  // ヘッダ直下: Source Type + Reset Defaults
-        {
-            ImGui::BeginDisabled(state.running);
-            if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
+    auto drawLayer1Panel = [&]()
+    {
+        DrawLayer1Discovery(
+            state,
+            pendingPresetIndex,
+            pendingPresetOriginalIndex,
+            openUnsavedPopupNextFrame,
+            applyPresetByIndex,
+            [&]()  // ヘッダ直下: Source Type + Reset Defaults
             {
-                for (size_t i = 0; i < guiKindCount; i++)
+                ImGui::BeginDisabled(state.running);
+                if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
                 {
-                    const config::SourceKind candidate = guiKinds[i];
-                    const bool selected = (sourceKindUiIndex == static_cast<int>(i));
-                    if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                    for (size_t i = 0; i < guiKindCount; i++)
                     {
-                        sourceKindUiIndex = static_cast<int>(i);
-                        selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                        const config::SourceKind candidate = guiKinds[i];
+                        const bool selected = (sourceKindUiIndex == static_cast<int>(i));
+                        if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
+                        {
+                            sourceKindUiIndex = static_cast<int>(i);
+                            selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                            state.presetDirty = true;
+                            requestAutoTonePreview();
+                            RefreshPresetItems(state, state.presetName);
+                            AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
+                                config::SourceKindToTypeName(candidate) +
+                                " @ slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
+                        }
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                updateHoverHelp(
+                    "Source Type を選択します。",
+                    "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
+                    "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Defaults"))
+                {
+                    ClearGUIError(state);
+                    InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
+                    state.presetDirty = false;
+                    clearAutoTonePreviewRequest();
+                }
+                updateHoverHelp(
+                    "設定を既定値へ戻します。",
+                    "GUI状態とSound設定を初期化します。",
+                    "未保存変更は失われます。");
+                ImGui::EndDisabled();
+            },
+            [&]()  // リスト下: Preset Name + Save / Dup / Reset Sound Slot
+            {
+                ImGui::BeginDisabled(state.running);
+                ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+                updateHoverHelp(
+                    "保存時のPreset名を入力します。",
+                    "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
+                ImGui::SameLine();
+                if (ImGui::Button("Save Preset As"))
+                {
+                    const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                    std::string err;
+                    if (SavePresetDiffFromState(state, p, err))
+                    {
+                        state.lastPresetPath = PathToUtf8(p);
+                        state.presetDirty = false;
+                        RefreshPresetItems(state, state.presetName);
+                        AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Preset save failed: " + err);
+                        RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
+                    }
+                }
+                updateHoverHelp(
+                    "現在設定をPresetとして保存します。",
+                    "Preset Name で指定したJSONファイルへ保存します。",
+                    "同名が存在する場合は上書きされます。");
+                ImGui::SameLine();
+                if (ImGui::Button("Duplicate Preset"))
+                {
+                    std::string copyName = std::string(state.presetName) + "_copy";
+                    strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
+                    const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
+                    std::string err;
+                    if (SavePresetDiffFromState(state, p, err))
+                    {
+                        state.lastPresetPath = PathToUtf8(p);
+                        state.presetDirty = false;
+                        RefreshPresetItems(state, state.presetName);
+                        AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
+                    }
+                    else
+                    {
+                        AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
+                        RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
+                    }
+                }
+                updateHoverHelp(
+                    "Presetを複製保存します。",
+                    "Preset Name に `_copy` を付けた保存名で複製します。");
+                ImGui::SameLine();
+                if (ImGui::Button("Reset Sound Slot"))
+                {
+                    gui::EnsureChannelConfigs(state);
+                    AppConfig def = DefaultConfig();
+                    if (def.channelConfigs)
+                    {
+                        (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
                         state.presetDirty = true;
                         requestAutoTonePreview();
-                        RefreshPresetItems(state, state.presetName);
-                        AppendGUILog(state, std::string("[GUI] Source type changed (preset scope): ") +
-                            config::SourceKindToTypeName(candidate) +
-                            " @ slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
-                    }
-                    if (selected)
-                    {
-                        ImGui::SetItemDefaultFocus();
+                        AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
                     }
                 }
-                ImGui::EndCombo();
-            }
-            updateHoverHelp(
-                "Source Type を選択します。",
-                "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
-                "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
-            ImGui::SameLine();
-            if (ImGui::Button("Reset Defaults"))
-            {
-                ClearGUIError(state);
-                InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
-                state.presetDirty = false;
-                clearAutoTonePreviewRequest();
-            }
-            updateHoverHelp(
-                "設定を既定値へ戻します。",
-                "GUI状態とSound設定を初期化します。",
-                "未保存変更は失われます。");
-            ImGui::EndDisabled();
-        },
-        [&]()  // リスト下: Preset Name + Save / Dup / Reset Sound Slot
-        {
-            ImGui::BeginDisabled(state.running);
-            ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
-            updateHoverHelp(
-                "保存時のPreset名を入力します。",
-                "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
-            ImGui::SameLine();
-            if (ImGui::Button("Save Preset As"))
-            {
-                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-                std::string err;
-                if (SavePresetDiffFromState(state, p, err))
+                updateHoverHelp(
+                    "選択中Sound Slotを初期化します。",
+                    "対象スロットの音色設定を既定値へ戻します。");
+                if (!state.lastPresetPath.empty())
                 {
-                    state.lastPresetPath = PathToUtf8(p);
-                    state.presetDirty = false;
-                    RefreshPresetItems(state, state.presetName);
-                    AppendGUILog(state, "[GUI] Preset saved: " + state.lastPresetPath);
+                    ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
                 }
-                else
-                {
-                    AppendGUILog(state, "[GUI] Preset save failed: " + err);
-                    RaiseGUIError(state, "Preset 保存に失敗しました。(" + err + ")", 3, true);
-                }
-            }
-            updateHoverHelp(
-                "現在設定をPresetとして保存します。",
-                "Preset Name で指定したJSONファイルへ保存します。",
-                "同名が存在する場合は上書きされます。");
-            ImGui::SameLine();
-            if (ImGui::Button("Duplicate Preset"))
-            {
-                std::string copyName = std::string(state.presetName) + "_copy";
-                strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
-                const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
-                std::string err;
-                if (SavePresetDiffFromState(state, p, err))
-                {
-                    state.lastPresetPath = PathToUtf8(p);
-                    state.presetDirty = false;
-                    RefreshPresetItems(state, state.presetName);
-                    AppendGUILog(state, "[GUI] Preset duplicated: " + state.lastPresetPath);
-                }
-                else
-                {
-                    AppendGUILog(state, "[GUI] Preset duplicate failed: " + err);
-                    RaiseGUIError(state, "Preset 複製に失敗しました。(" + err + ")", 3, true);
-                }
-            }
-            updateHoverHelp(
-                "Presetを複製保存します。",
-                "Preset Name に `_copy` を付けた保存名で複製します。");
-            ImGui::SameLine();
-            if (ImGui::Button("Reset Sound Slot"))
-            {
-                gui::EnsureChannelConfigs(state);
-                AppConfig def = DefaultConfig();
-                if (def.channelConfigs)
-                {
-                    (*state.channelConfigs)[state.selectedSoundSlot] = (*def.channelConfigs)[state.selectedSoundSlot];
-                    state.presetDirty = true;
-                    requestAutoTonePreview();
-                    AppendGUILog(state, "[GUI] Sound slot reset: s" + std::to_string(state.selectedSoundSlot));
-                }
-            }
-            updateHoverHelp(
-                "選択中Sound Slotを初期化します。",
-                "対象スロットの音色設定を既定値へ戻します。");
-            if (!state.lastPresetPath.empty())
-            {
-                ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
-            }
-            ImGui::TextDisabled("Song export settings are in Music tab.");
-            ImGui::EndDisabled();
-        });
+                ImGui::TextDisabled("Song export settings are in Music tab.");
+                ImGui::EndDisabled();
+            });
+    };
 
-    ImGui::Separator();
-
-    // ---- Layer 2 — 調整 ----
-    DrawLayer2Macros(state);
-    if (state.layer2Expanded)
+    auto drawLayer2Panel = [&]()
     {
+        DrawLayer2Macros(state);
+        if (!state.layer2Expanded)
+        {
+            return;
+        }
         // DrumKit 以外の音源では Tone Preview ノートを手動選択する。
         bool isDrumSlot = false;
         if (state.channelConfigs)
@@ -864,6 +894,28 @@ if (state.UIModeTab == 0)
             }
         }
         DrawVUMeter(state);
+    };
+
+    const bool splitTopSoundLayers = ImGui::GetContentRegionAvail().x >= 1360.0f;
+    if (splitTopSoundLayers)
+    {
+        if (ImGui::BeginTable("sound_layer12_split", 2, ImGuiTableFlags_SizingStretchProp))
+        {
+            ImGui::TableSetupColumn("discovery", ImGuiTableColumnFlags_WidthStretch, 0.58f);
+            ImGui::TableSetupColumn("macro", ImGuiTableColumnFlags_WidthStretch, 0.42f);
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            drawLayer1Panel();
+            ImGui::TableSetColumnIndex(1);
+            drawLayer2Panel();
+            ImGui::EndTable();
+        }
+    }
+    else
+    {
+        drawLayer1Panel();
+        ImGui::Separator();
+        drawLayer2Panel();
     }
 
     ImGui::Separator();

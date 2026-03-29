@@ -1,0 +1,62 @@
+{
+  "tags": [
+    "analog",
+    "modern",
+    "noisy",
+    "complex"
+  ],
+  "description": "Modern resonance wobble lead: LFO sweeps cutoff and resonance simultaneously for liquid wah character.",
+  "channels": {
+    "0": {
+      "amp": 0.21,
+      "attackSec": 0.004,
+      "decaySec": 0.14,
+      "sustainLevel": 0.66,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 10.0,
+        "unisonSpread": 0.42,
+        "subOscLevel": 0.1,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 3200.0,
+        "filterResonance": 1.6,
+        "filterKeytrack": 0.3,
+        "drive": 0.2,
+        "driftDepthCents": 5.0,
+        "driftRateHz": 0.28,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 1.6,
+            "depth": 0.65,
+            "bipolar": true
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.6,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "filterResonance",
+              "amount": 0.45,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

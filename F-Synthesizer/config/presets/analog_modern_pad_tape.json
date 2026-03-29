@@ -1,0 +1,72 @@
+{
+  "tags": [
+    "analog",
+    "modern",
+    "pad",
+    "soft",
+    "complex"
+  ],
+  "description": "Slow modern analog pad with tape-like drift, ring texture, and airy motion.",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.08,
+      "decaySec": 0.6,
+      "sustainLevel": 0.76,
+      "releaseSec": 0.95,
+      "source": {
+        "type": "analog",
+        "wave": "triangle",
+        "unisonVoices": 4,
+        "unisonDetuneCents": 13.0,
+        "unisonSpread": 0.68,
+        "subOscLevel": 0.35,
+        "ringModEnabled": true,
+        "ringModRatio": 1.5,
+        "ringModMix": 0.2,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4200.0,
+        "filterResonance": 0.9,
+        "filterKeytrack": 0.2,
+        "drive": 0.12,
+        "driftDepthCents": 10.0,
+        "driftRateHz": 0.07,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 18.0,
+          "pitchTimeMs": 16.0,
+          "filterCutoffTimeMs": 60.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.33,
+            "depth": 0.7,
+            "bipolar": true
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.55,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.01,
+              "enabled": true
+            },
+            "2": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.12,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

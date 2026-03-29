@@ -1,6 +1,6 @@
 # STATUS
 
-Last Updated: 2026-03-28 (GUI レイアウト修正: FX チェーン座標バグ修正 + Sound タブ 3 層縦スタック化)
+Last Updated: 2026-03-29 (GUI レイアウト修正: Sound 上部を横幅活用レイアウトへ再編)
 Branch: `main`
 
 進捗管理の正本は本ファイルのみ。
@@ -57,6 +57,7 @@ Branch: `main`
 - Phase 2-G 実装: Music タブ Master Effects に `SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb` の6ブロックチェーン図を追加。DrawList 描画で ON/OFF 状態を可視化し、各ブロッククリックで有効/無効を直接トグル（SampleRateReducer は ratio、BitCrusher は bits でバイパス制御）
 - GUI バグ修正: FX チェーン可視化で `GetCursorPosX/Y()`（ローカル座標）を `GetCursorScreenPos()`（スクリーン座標）に修正。ブロックが画面外に描画されていた問題とピアノロールレイアウト崩壊を解消
 - Sound タブ 3 層縦スタック化: `BeginTable("layout_split", 2列)` を廃止し全幅 1 列化。Source Type / Preset 管理を Layer1 CollapsingHeader 内に統合、Waveform / Spectrum / VU Meter / Preview Note を Layer2 直下に移動し「発見→調整→詳細編集」の縦スタック構造を実現
+- GUI レイアウト改修（案B）: ヘッダ右側を `Status + Scale + Slot + Source` のチップ行へ再編、アクション行を `Save / Primary / Aux` の3カラム化（`Preview`/`Export` ラベル短縮 + `Auto/Loop/Stop/Close` 集約）、Sound 上部 Layer1/Layer2 を広幅時2ペイン表示へ変更し、Layer2 マクロを 2x2 グリッド化
 - 完了済みの詳細履歴は `docs/DECISIONS.md` と Git 履歴を参照
 
 ## Next 3

@@ -1,0 +1,80 @@
+{
+  "tags": [
+    "analog",
+    "modern",
+    "bright",
+    "complex",
+    "wide"
+  ],
+  "description": "Modern analog lead with drift, sync shimmer, and animated filter movement.",
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.003,
+      "decaySec": 0.12,
+      "sustainLevel": 0.68,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 3,
+        "unisonDetuneCents": 11.0,
+        "unisonSpread": 0.55,
+        "subOscLevel": 0.12,
+        "hardSyncEnabled": true,
+        "hardSyncRatio": 2.2,
+        "ringModEnabled": false,
+        "ringModRatio": 2.0,
+        "ringModMix": 1.0,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 6400.0,
+        "filterResonance": 1.1,
+        "filterKeytrack": 0.52,
+        "drive": 0.26,
+        "driftDepthCents": 8.0,
+        "driftRateHz": 0.32,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 11.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 5.8,
+            "depth": 0.46,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.12,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.08
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.032,
+              "enabled": true
+            },
+            "1": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.42,
+              "enabled": true
+            },
+            "2": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.09,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

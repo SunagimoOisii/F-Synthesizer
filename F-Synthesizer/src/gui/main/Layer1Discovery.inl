@@ -136,6 +136,7 @@ void DrawLayer1Discovery(
 
     ImGui::Spacing();
     ImGui::BeginChild("##layer1_presets", ImVec2(0.0f, 112.0f), true);
+    bool visibleAnyPreset = false;
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); ++i)
     {
         const std::string& name = state.presetItems[i];
@@ -158,6 +159,7 @@ void DrawLayer1Discovery(
                 continue;
             }
         }
+        visibleAnyPreset = true;
 
         const bool selected = (state.presetIndex == i);
         if (ImGui::Selectable(name.c_str(), selected))
@@ -174,6 +176,10 @@ void DrawLayer1Discovery(
                 applyPresetByIndex(i);
             }
         }
+    }
+    if (!visibleAnyPreset)
+    {
+        ImGui::TextDisabled("この SourceType に対応するプリセットはありません");
     }
     ImGui::EndChild();
 

@@ -1,0 +1,57 @@
+{
+  "tags": [
+    "analog",
+    "game",
+    "dark",
+    "attack"
+  ],
+  "description": "MD/PC-88 warm analog stab: driven unison saw with exponential env2 filter sweep.",
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.002,
+      "decaySec": 0.12,
+      "sustainLevel": 0.4,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 8.0,
+        "unisonSpread": 0.3,
+        "subOscLevel": 0.14,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 1800.0,
+        "filterResonance": 2.2,
+        "filterKeytrack": 0.38,
+        "drive": 0.32,
+        "driftDepthCents": 3.0,
+        "driftRateHz": 0.45,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 3.0,
+          "pitchTimeMs": 5.0,
+          "filterCutoffTimeMs": 8.0
+        },
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.1,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.05,
+            "curve": 2.5
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.72,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

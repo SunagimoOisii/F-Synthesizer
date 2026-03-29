@@ -1,0 +1,69 @@
+{
+  "tags": [
+    "analog",
+    "modern",
+    "dark",
+    "simple",
+    "bass"
+  ],
+  "description": "Modern mono analog bass with heavy sub body and controlled drift.",
+  "channels": {
+    "0": {
+      "amp": 0.24,
+      "attackSec": 0.002,
+      "decaySec": 0.1,
+      "sustainLevel": 0.6,
+      "releaseSec": 0.08,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 4.5,
+        "unisonSpread": 0.15,
+        "subOscLevel": 0.9,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 2100.0,
+        "filterResonance": 1.2,
+        "filterKeytrack": 0.28,
+        "drive": 0.42,
+        "driftDepthCents": 3.0,
+        "driftRateHz": 0.18,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 3.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 9.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "triangle",
+            "rateHz": 3.2,
+            "depth": 0.32,
+            "bipolar": true
+          },
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.09,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.07
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "filterCutoffHz",
+              "amount": 0.38,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.05,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
