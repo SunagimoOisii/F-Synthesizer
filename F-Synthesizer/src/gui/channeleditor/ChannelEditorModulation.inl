@@ -218,6 +218,138 @@
             ImGui::Separator();
             ImGui::PopID();
         }
+
+        ImGui::Separator();
+        ImGui::TextDisabled("Modulation Routing View");
+        const ImVec2 canvasSize = ImVec2(0.0f, 190.0f);
+        ImGui::BeginChild((std::string("##mod_route_view_") + idPrefix).c_str(), canvasSize, true);
+        {
+            struct SourceNode
+            {
+                ModSource source;
+                const char* label;
+            };
+            constexpr std::array<SourceNode, 6> sourceNodes{ {
+                { ModSource::Lfo1, "LFO1" },
+                { ModSource::Env2, "Env2" },
+                { ModSource::Velocity, "Velocity" },
+                { ModSource::ChannelPressure, "ChPressure" },
+                { ModSource::PolyPressure, "PolyPressure" },
+                { ModSource::ModWheel, "ModWheel" },
+            } };
+
+            std::array<ModDestination, 7> destinationNodes{};
+            int destinationNodeCount = 0;
+            for (int i = 0; i < destinationCount; i++)
+            {
+                const ModDestination destination = destinationChoices[i].value;
+                if (destination == ModDestination::None)
+                {
+                    continue;
+                }
+                destinationNodes[static_cast<size_t>(destinationNodeCount++)] = destination;
+            }
+            if (destinationNodeCount <= 0)
+            {
+                destinationNodes[0] = ModDestination::Amp;
+                destinationNodeCount = 1;
+            }
+
+            auto sourceIndexOf = [&](ModSource source) -> int
+            {
+                for (int i = 0; i < static_cast<int>(sourceNodes.size()); i++)
+                {
+                    if (sourceNodes[static_cast<size_t>(i)].source == source)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            };
+            auto destinationIndexOf = [&](ModDestination destination) -> int
+            {
+                for (int i = 0; i < destinationNodeCount; i++)
+                {
+                    if (destinationNodes[static_cast<size_t>(i)] == destination)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            };
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            const ImVec2 topLeft = ImGui::GetCursorScreenPos();
+            const float width = (std::max)(220.0f, ImGui::GetContentRegionAvail().x - 8.0f);
+            const float leftX = topLeft.x + 8.0f;
+            const float rightX = topLeft.x + width - 144.0f;
+            const float nodeW = 132.0f;
+            const float nodeH = 22.0f;
+            const float yTop = topLeft.y + 8.0f;
+            const float leftSpan = (sourceNodes.size() > 1) ? 148.0f / static_cast<float>(sourceNodes.size() - 1) : 0.0f;
+            const float rightSpan = (destinationNodeCount > 1) ? 148.0f / static_cast<float>(destinationNodeCount - 1) : 0.0f;
+
+            std::array<ImVec2, sourceNodes.size()> srcAnchors{};
+            for (int i = 0; i < static_cast<int>(sourceNodes.size()); i++)
+            {
+                const float y = yTop + leftSpan * static_cast<float>(i);
+                const ImVec2 p0 = ImVec2(leftX, y);
+                const ImVec2 p1 = ImVec2(leftX + nodeW, y + nodeH);
+                drawList->AddRectFilled(p0, p1, IM_COL32(56, 72, 96, 190), 4.0f);
+                drawList->AddRect(p0, p1, IM_COL32(110, 130, 170, 220), 4.0f);
+                drawList->AddText(ImVec2(p0.x + 8.0f, p0.y + 4.0f), IM_COL32(230, 236, 245, 255), sourceNodes[static_cast<size_t>(i)].label);
+                srcAnchors[static_cast<size_t>(i)] = ImVec2(p1.x, p0.y + nodeH * 0.5f);
+            }
+
+            std::array<ImVec2, 7> dstAnchors{};
+            for (int i = 0; i < destinationNodeCount; i++)
+            {
+                const float y = yTop + rightSpan * static_cast<float>(i);
+                const ImVec2 p0 = ImVec2(rightX, y);
+                const ImVec2 p1 = ImVec2(rightX + nodeW, y + nodeH);
+                drawList->AddRectFilled(p0, p1, IM_COL32(72, 88, 62, 190), 4.0f);
+                drawList->AddRect(p0, p1, IM_COL32(120, 170, 120, 220), 4.0f);
+                drawList->AddText(ImVec2(p0.x + 8.0f, p0.y + 4.0f), IM_COL32(236, 245, 230, 255), destinationLabel(destinationNodes[static_cast<size_t>(i)]));
+                dstAnchors[static_cast<size_t>(i)] = ImVec2(p0.x, p0.y + nodeH * 0.5f);
+            }
+
+            bool hasAnyRoute = false;
+            for (const ModRoute& route : modulation.matrix.routes)
+            {
+                if (route.source == ModSource::None || route.destination == ModDestination::None)
+                {
+                    continue;
+                }
+                const int srcIdx = sourceIndexOf(route.source);
+                const int dstIdx = destinationIndexOf(route.destination);
+                if (srcIdx < 0 || dstIdx < 0)
+                {
+                    continue;
+                }
+                const ImVec2 p0 = srcAnchors[static_cast<size_t>(srcIdx)];
+                const ImVec2 p3 = dstAnchors[static_cast<size_t>(dstIdx)];
+                const float cdx = (p3.x - p0.x) * 0.4f;
+                const ImVec2 p1 = ImVec2(p0.x + cdx, p0.y);
+                const ImVec2 p2 = ImVec2(p3.x - cdx, p3.y);
+                const ImU32 lineColor = route.enabled
+                    ? (route.amount >= 0.0 ? IM_COL32(110, 220, 140, 235) : IM_COL32(220, 140, 110, 235))
+                    : IM_COL32(120, 120, 120, 150);
+                const float thickness = route.enabled ? 2.4f : 1.2f;
+                drawList->AddBezierCubic(p0, p1, p2, p3, lineColor, thickness);
+                hasAnyRoute = true;
+            }
+
+            if (!hasAnyRoute)
+            {
+                drawList->AddText(
+                    ImVec2(topLeft.x + 12.0f, topLeft.y + 166.0f),
+                    IM_COL32(180, 180, 180, 220),
+                    "No active routes");
+            }
+
+            ImGui::Dummy(ImVec2(width, 170.0f));
+        }
+        ImGui::EndChild();
         ImGui::PopID();
         return localChanged;
     };

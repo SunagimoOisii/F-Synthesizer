@@ -31,14 +31,14 @@ auto composeHoverHelp = [](const char* what, const char* impact, const char* cau
 };
 std::string hoverHelp = (state.UIModeTab == 0)
     ? composeHoverHelp(
-        "Soundモードを表示します。",
+        "作るモードを表示します。",
         "Sound Slot中心に音色編集と試聴を行えます。")
     : (state.UIModeTab == 2)
     ? composeHoverHelp(
-        "Exportモードを表示します。",
+        "書き出すモードを表示します。",
         "WAV書き出しに特化した操作を行えます。")
     : composeHoverHelp(
-        "Musicモードを表示します。",
+        "遊ぶモードを表示します。",
         "ピアノロール確認、プレビュー、WAV書き出しを行えます。");
 // 新規UI項目の追加時は「項目描画 -> updateHoverHelp(what, impact, caution)」の順で統一する。
 // whatは補助情報として受け取るが、Help表示は原則「影響/注意」を優先する。
@@ -138,35 +138,35 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     if (ImGui::BeginTabBar("mode_tabs"))
     {
         const bool needSync = (syncedTab != state.UIModeTab);
-        ImGuiTabItemFlags soundFlags =
+        ImGuiTabItemFlags createFlags =
             (needSync && state.UIModeTab == 0) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-        ImGuiTabItemFlags musicFlags =
+        ImGuiTabItemFlags playFlags =
             (needSync && state.UIModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         ImGuiTabItemFlags exportFlags =
             (needSync && state.UIModeTab == 2) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-        if (ImGui::BeginTabItem("Sound", nullptr, soundFlags))
-        {
-            state.UIModeTab = 0;
-            ImGui::EndTabItem();
-        }
-        updateHoverHelp(
-            "Soundモードへ切り替えます。",
-            "Sound編集と試聴の操作を表示します。");
-        if (ImGui::BeginTabItem("Music", nullptr, musicFlags))
+        if (ImGui::BeginTabItem("遊ぶ", nullptr, playFlags))
         {
             state.UIModeTab = 1;
             ImGui::EndTabItem();
         }
         updateHoverHelp(
-            "Musicモードへ切り替えます。",
-            "MIDIとミックス設定の操作を表示します。");
-        if (ImGui::BeginTabItem("Export", nullptr, exportFlags))
+            "遊ぶモードへ切り替えます。",
+            "ピアノロール確認、プレビュー、WAV書き出し操作を表示します。");
+        if (ImGui::BeginTabItem("作る", nullptr, createFlags))
+        {
+            state.UIModeTab = 0;
+            ImGui::EndTabItem();
+        }
+        updateHoverHelp(
+            "作るモードへ切り替えます。",
+            "Sound編集と試聴の操作を表示します。");
+        if (ImGui::BeginTabItem("書き出す", nullptr, exportFlags))
         {
             state.UIModeTab = 2;
             ImGui::EndTabItem();
         }
         updateHoverHelp(
-            "Exportモードへ切り替えます。",
+            "書き出すモードへ切り替えます。",
             "WAV書き出しに特化した操作を表示します。");
         ImGui::EndTabBar();
         syncedTab = state.UIModeTab;
@@ -233,8 +233,8 @@ if (state.hasUIError)
         {
         case 1: return "Suggested Fix: MIDI path を選び直す";
         case 2: return "Suggested Fix: Output path を選び直す";
-        case 3: return "Suggested Fix: Sound タブで設定を確認する";
-        case 4: return "Suggested Fix: Music タブで設定を確認する";
+        case 3: return "Suggested Fix: 作る タブで設定を確認する";
+        case 4: return "Suggested Fix: 遊ぶ タブで設定を確認する";
         default: return "Suggested Fix: 設定を見直して再実行する";
         }
     };
@@ -280,14 +280,14 @@ if (state.hasUIError)
     else if (state.UIErrorAction == 3)
     {
         ImGui::SameLine();
-        if (ImGui::Button("Recover: Go Sound Tab"))
+        if (ImGui::Button("Recover: Go 作る Tab"))
         {
             state.UIModeTab = 0;
             ClearGUIError(state);
         }
         updateHoverHelp(
-            "Recover: Go Sound Tab を実行します。",
-            "Soundタブへ移動します。");
+            "Recover: Go 作る Tab を実行します。",
+            "作るタブへ移動します。");
     }
     else if (state.UIErrorAction == 4)
     {
@@ -323,8 +323,8 @@ if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
     case 1: ImGui::TextDisabled("Suggested Fix: MIDI path を選び直してください。"); break;
     case 2: ImGui::TextDisabled("Suggested Fix: Output path を選び直してください。"); break;
-    case 3: ImGui::TextDisabled("Suggested Fix: Sound タブの設定を確認してください。"); break;
-    case 4: ImGui::TextDisabled("Suggested Fix: Music タブの設定を確認してください。"); break;
+    case 3: ImGui::TextDisabled("Suggested Fix: 作る タブの設定を確認してください。"); break;
+    case 4: ImGui::TextDisabled("Suggested Fix: 遊ぶ タブの設定を確認してください。"); break;
     default: ImGui::TextDisabled("Suggested Fix: 設定を見直して再実行してください。"); break;
     }
     if (ImGui::Button("OK"))
