@@ -51,6 +51,10 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.fxReverbDamping = static_cast<float>(state.masterEffects.reverb.damping);
     data.UIScaleIndex = state.UIScaleIndex;
     data.UIModeTab = state.UIModeTab;
+    data.UIThemeIndex = state.UIThemeIndex;
+    data.themeFxScanline = state.themeFxScanline;
+    data.themeFxDotMask = state.themeFxDotMask;
+    data.themeFxVignette = state.themeFxVignette;
     data.logPanelHeight = state.logPanelHeight;
     data.presetIndex = state.presetIndex;
     data.serialSave = state.serialSave;
@@ -141,6 +145,10 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.masterEffects.reverb.damping = data.fxReverbDamping;
     state.UIScaleIndex = data.UIScaleIndex;
     state.UIModeTab = data.UIModeTab;
+    state.UIThemeIndex = data.UIThemeIndex;
+    state.themeFxScanline = data.themeFxScanline;
+    state.themeFxDotMask = data.themeFxDotMask;
+    state.themeFxVignette = data.themeFxVignette;
     state.logPanelHeight = data.logPanelHeight;
     state.presetIndex = data.presetIndex;
     state.serialSave = data.serialSave;

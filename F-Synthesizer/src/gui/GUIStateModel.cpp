@@ -84,6 +84,10 @@ void InitializeGUIState(
     state.masterEffects = cfg.masterEffects;
     state.UIScaleIndex = 1;
     state.UIModeTab = 0;
+    state.UIThemeIndex = 0;
+    state.themeFxScanline = true;
+    state.themeFxDotMask = false;
+    state.themeFxVignette = true;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
     state.selectedSoundSlot = 0;
@@ -320,6 +324,11 @@ void RepairGUIStatePaths(
     if (state.UIModeTab < 0 || state.UIModeTab > 2)
     {
         state.UIModeTab = 0;
+        repaired = true;
+    }
+    if (state.UIThemeIndex < 0 || state.UIThemeIndex > 1)
+    {
+        state.UIThemeIndex = 0;
         repaired = true;
     }
     if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)

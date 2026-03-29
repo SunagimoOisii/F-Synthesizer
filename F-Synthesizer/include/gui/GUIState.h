@@ -69,7 +69,11 @@ struct GUIState
     float extraReleaseSec = 0.3f;
     MasterEffectConfig masterEffects{};
     int UIScaleIndex = 1; // 0=100%, 1=125%, 2=150%
-    int UIModeTab = 0; // 0=Sound, 1=Music
+    int UIModeTab = 0; // 0=作る, 1=遊ぶ, 2=書き出す
+    int UIThemeIndex = 0; // 0=Default Dark, 1=CRT Night
+    bool themeFxScanline = true;
+    bool themeFxDotMask = false;
+    bool themeFxVignette = true;
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
     int lastRunExitCode = 0;

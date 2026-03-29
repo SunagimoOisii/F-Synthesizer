@@ -181,8 +181,9 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             config::SourceConfigKind((*state.channelConfigs)[selectedSlotChip].source);
         sourceChip = config::SourceKindToDisplayName(sourceKindChip);
     }
-    if (ImGui::BeginTable("top_header_chips", 4, ImGuiTableFlags_SizingStretchProp))
+    if (ImGui::BeginTable("top_header_chips", 5, ImGuiTableFlags_SizingStretchProp))
     {
+        static const char* uiThemes[] = { "Default Dark", "CRT Night" };
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         DrawStatusBadge(state);
@@ -201,10 +202,66 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             "表示倍率だけが変わります。");
         ImGui::TableSetColumnIndex(2);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Slot s%d", selectedSlotChip);
+        ImGui::Text("Theme");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(132.0f);
+        if (ImGui::Combo("##ui_theme", &state.UIThemeIndex, uiThemes, IM_ARRAYSIZE(uiThemes)))
+        {
+            const char* themeLabel = (state.UIThemeIndex == 1) ? "CRT Night" : "Default Dark";
+            AppendGUILog(state, std::string("[GUI] UI theme changed: ") + themeLabel);
+        }
+        updateHoverHelp(
+            "UIテーマを切り替えます。",
+            "配色と見た目の演出が切り替わります。");
         ImGui::TableSetColumnIndex(3);
         ImGui::AlignTextToFramePadding();
+        ImGui::Text("Slot s%d", selectedSlotChip);
+        ImGui::TableSetColumnIndex(4);
+        ImGui::AlignTextToFramePadding();
         ImGui::Text("Source %s", sourceChip);
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextDisabled("CRT FX");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextDisabled("-");
+        ImGui::TableSetColumnIndex(2);
+        const bool crtThemeActive = (state.UIThemeIndex == 1);
+        bool fxChanged = false;
+        ImGui::BeginDisabled(!crtThemeActive);
+        if (ImGui::Checkbox("Scanline##crt_fx_scanline", &state.themeFxScanline))
+        {
+            fxChanged = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Dot##crt_fx_dot", &state.themeFxDotMask))
+        {
+            fxChanged = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Vignette##crt_fx_vignette", &state.themeFxVignette))
+        {
+            fxChanged = true;
+        }
+        ImGui::EndDisabled();
+        if (fxChanged)
+        {
+            AppendGUILog(
+                state,
+                std::string("[GUI] CRT FX changed: ")
+                + (state.themeFxScanline ? "Scanline=on " : "Scanline=off ")
+                + (state.themeFxDotMask ? "Dot=on " : "Dot=off ")
+                + (state.themeFxVignette ? "Vignette=on" : "Vignette=off"));
+        }
+        updateHoverHelp(
+            "CRT演出を切り替えます。",
+            "走査線/ドット/ビネットを個別に調整できます。",
+            "Theme が CRT Night のときのみ有効です。");
+
+        ImGui::TableSetColumnIndex(3);
+        ImGui::TextDisabled("-");
+        ImGui::TableSetColumnIndex(4);
+        ImGui::TextDisabled(crtThemeActive ? "CRT Night active" : "Switch Theme to CRT Night");
         ImGui::EndTable();
     }
     ImGui::EndTable();
@@ -1663,6 +1720,43 @@ if (logPanelExpanded)
     ImGui::EndChild();
 }
 const std::string helpLine = hoverHelp;
+if (state.UIThemeIndex == 1)
+{
+    ImDrawList* overlay = ImGui::GetForegroundDrawList(viewport);
+    const ImVec2 p0 = viewport->Pos;
+    const ImVec2 p1 = ImVec2(viewport->Pos.x + viewport->Size.x, viewport->Pos.y + viewport->Size.y);
+    const float width = viewport->Size.x;
+    const float height = viewport->Size.y;
+
+    if (state.themeFxScanline)
+    {
+        constexpr float scanlineStep = 4.0f;
+        for (float y = p0.y; y < p1.y; y += scanlineStep)
+        {
+            overlay->AddLine(ImVec2(p0.x, y), ImVec2(p1.x, y), IM_COL32(20, 48, 22, 24), 1.0f);
+        }
+    }
+    if (state.themeFxDotMask)
+    {
+        constexpr float maskStep = 6.0f;
+        for (float x = p0.x; x < p1.x; x += maskStep)
+        {
+            overlay->AddLine(ImVec2(x, p0.y), ImVec2(x, p1.y), IM_COL32(255, 48, 48, 14), 1.0f);
+            overlay->AddLine(ImVec2(x + 2.0f, p0.y), ImVec2(x + 2.0f, p1.y), IM_COL32(48, 255, 80, 14), 1.0f);
+            overlay->AddLine(ImVec2(x + 4.0f, p0.y), ImVec2(x + 4.0f, p1.y), IM_COL32(96, 144, 255, 14), 1.0f);
+        }
+    }
+    if (state.themeFxVignette)
+    {
+        const float edge = std::max(48.0f, std::min(width, height) * 0.16f);
+        const ImU32 outer = IM_COL32(0, 0, 0, 72);
+        const ImU32 inner = IM_COL32(0, 0, 0, 0);
+        overlay->AddRectFilledMultiColor(ImVec2(p0.x, p0.y), ImVec2(p1.x, p0.y + edge), outer, outer, inner, inner);
+        overlay->AddRectFilledMultiColor(ImVec2(p0.x, p1.y - edge), ImVec2(p1.x, p1.y), inner, inner, outer, outer);
+        overlay->AddRectFilledMultiColor(ImVec2(p0.x, p0.y), ImVec2(p0.x + edge, p1.y), outer, inner, inner, outer);
+        overlay->AddRectFilledMultiColor(ImVec2(p1.x - edge, p0.y), ImVec2(p1.x, p1.y), inner, outer, outer, inner);
+    }
+}
 const ImVec2 helpTextSize = ImGui::CalcTextSize(helpLine.c_str());
 const float helpPadding = 8.0f;
 const ImVec2 helpPos = ImVec2(
