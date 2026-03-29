@@ -307,11 +307,36 @@ bool DrawChannelEditor(
         changed |= ImGui::InputDouble("Release", &chCfg.releaseSec, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Release を調整します。", "ノートオフ後の余韻時間が変わります。", nullptr);
         ImGui::TextDisabled("Envelope");
-        DrawADSRPreview("##adsr_main",
-            static_cast<float>(chCfg.attackSec),
-            static_cast<float>(chCfg.decaySec),
-            static_cast<float>(chCfg.sustainLevel),
-            static_cast<float>(chCfg.releaseSec));
+        float attackDrag = static_cast<float>(chCfg.attackSec);
+        float decayDrag = static_cast<float>(chCfg.decaySec);
+        float sustainDrag = static_cast<float>(chCfg.sustainLevel);
+        float releaseDrag = static_cast<float>(chCfg.releaseSec);
+        const bool adsrDragged = DrawADSRPreview(
+            "##adsr_main",
+            attackDrag,
+            decayDrag,
+            sustainDrag,
+            releaseDrag,
+            0.0f,
+            &attackDrag,
+            &decayDrag,
+            &sustainDrag,
+            &releaseDrag);
+        if (adsrDragged)
+        {
+            chCfg.attackSec = std::max(0.0, static_cast<double>(attackDrag));
+            chCfg.decaySec = std::max(0.0, static_cast<double>(decayDrag));
+            chCfg.sustainLevel = std::clamp(static_cast<double>(sustainDrag), 0.0, 1.0);
+            chCfg.releaseSec = std::max(0.0, static_cast<double>(releaseDrag));
+            changed = true;
+        }
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "ADSR グラフの点をドラッグして直接編集します。",
+                "Attack/Decay/Sustain/Release を形で調整できます。",
+                "ピーク点・減衰終点・リリース開始点をドラッグできます。");
+        }
     }
 
     bool layer3Changed = false;

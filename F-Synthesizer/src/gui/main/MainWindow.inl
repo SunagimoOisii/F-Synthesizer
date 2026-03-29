@@ -144,14 +144,6 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             (needSync && state.UIModeTab == 1) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         ImGuiTabItemFlags exportFlags =
             (needSync && state.UIModeTab == 2) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-        if (ImGui::BeginTabItem("遊ぶ", nullptr, playFlags))
-        {
-            state.UIModeTab = 1;
-            ImGui::EndTabItem();
-        }
-        updateHoverHelp(
-            "遊ぶモードへ切り替えます。",
-            "ピアノロール確認、プレビュー、WAV書き出し操作を表示します。");
         if (ImGui::BeginTabItem("作る", nullptr, createFlags))
         {
             state.UIModeTab = 0;
@@ -160,6 +152,14 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
         updateHoverHelp(
             "作るモードへ切り替えます。",
             "Sound編集と試聴の操作を表示します。");
+        if (ImGui::BeginTabItem("遊ぶ", nullptr, playFlags))
+        {
+            state.UIModeTab = 1;
+            ImGui::EndTabItem();
+        }
+        updateHoverHelp(
+            "遊ぶモードへ切り替えます。",
+            "ピアノロール確認、プレビュー、WAV書き出し操作を表示します。");
         if (ImGui::BeginTabItem("書き出す", nullptr, exportFlags))
         {
             state.UIModeTab = 2;

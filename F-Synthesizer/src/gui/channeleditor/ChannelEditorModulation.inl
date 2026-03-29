@@ -76,13 +76,36 @@
         localChanged |= sliderWaveParam("Env2 Curve", modulation.env2.curve, 0.0f, 1.0f, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Env2 Curve を調整します。", "変化の加速感が変わります。低いと急激に、高いとなだらかに変化します。", nullptr);
         ImGui::TextDisabled("Env2 Envelope");
-        DrawADSRPreview(
+        float env2AttackDrag = static_cast<float>(modulation.env2.attackSec);
+        float env2DecayDrag = static_cast<float>(modulation.env2.decaySec);
+        float env2SustainDrag = static_cast<float>(modulation.env2.sustainLevel);
+        float env2ReleaseDrag = static_cast<float>(modulation.env2.releaseSec);
+        const bool env2Dragged = DrawADSRPreview(
             (std::string("##env2_preview_") + idPrefix).c_str(),
-            static_cast<float>(modulation.env2.attackSec),
-            static_cast<float>(modulation.env2.decaySec),
-            static_cast<float>(modulation.env2.sustainLevel),
-            static_cast<float>(modulation.env2.releaseSec),
-            static_cast<float>(modulation.env2.curve));
+            env2AttackDrag,
+            env2DecayDrag,
+            env2SustainDrag,
+            env2ReleaseDrag,
+            static_cast<float>(modulation.env2.curve),
+            &env2AttackDrag,
+            &env2DecayDrag,
+            &env2SustainDrag,
+            &env2ReleaseDrag);
+        if (env2Dragged)
+        {
+            modulation.env2.attackSec = std::clamp(static_cast<double>(env2AttackDrag), 0.0, 10.0);
+            modulation.env2.decaySec = std::clamp(static_cast<double>(env2DecayDrag), 0.0, 10.0);
+            modulation.env2.sustainLevel = std::clamp(static_cast<double>(env2SustainDrag), 0.0, 1.0);
+            modulation.env2.releaseSec = std::clamp(static_cast<double>(env2ReleaseDrag), 0.0, 10.0);
+            localChanged = true;
+        }
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "Env2 の点をドラッグして直接編集します。",
+                "Env2 の ADSR 形状をグラフ上で調整できます。",
+                "ピーク点・減衰終点・リリース開始点をドラッグできます。");
+        }
 
         const char* modSources[] = { "none", "lfo1", "env2", "velocity", "channelPressure", "polyPressure", "ModWheel" };
         struct DestinationChoice
