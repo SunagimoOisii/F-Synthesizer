@@ -270,9 +270,6 @@ bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageD
     else if (auto v = ReadJSONInt(text, "uiModeTab")) data.UIModeTab = *v;
     if (auto v = ReadJSONInt(text, "UIThemeIndex")) data.UIThemeIndex = *v;
     else if (auto v = ReadJSONInt(text, "uiThemeIndex")) data.UIThemeIndex = *v;
-    if (auto v = ReadJSONBool(text, "themeFxScanline")) data.themeFxScanline = *v;
-    if (auto v = ReadJSONBool(text, "themeFxDotMask")) data.themeFxDotMask = *v;
-    if (auto v = ReadJSONBool(text, "themeFxVignette")) data.themeFxVignette = *v;
     if (auto v = ReadJSONFloat(text, "logPanelHeight")) data.logPanelHeight = *v;
     if (auto v = ReadJSONInt(text, "presetIndex")) data.presetIndex = *v;
     if (auto v = ReadJSONBool(text, "serialSave")) data.serialSave = *v;
@@ -397,9 +394,6 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
     fout << "  \"uiScaleIndex\": " << data.UIScaleIndex << ",\n";
     fout << "  \"uiModeTab\": " << data.UIModeTab << ",\n";
     fout << "  \"uiThemeIndex\": " << data.UIThemeIndex << ",\n";
-    fout << "  \"themeFxScanline\": " << (data.themeFxScanline ? "true" : "false") << ",\n";
-    fout << "  \"themeFxDotMask\": " << (data.themeFxDotMask ? "true" : "false") << ",\n";
-    fout << "  \"themeFxVignette\": " << (data.themeFxVignette ? "true" : "false") << ",\n";
     fout << "  \"logPanelHeight\": " << data.logPanelHeight << ",\n";
     fout << "  \"presetIndex\": " << data.presetIndex << ",\n";
     fout << "  \"serialSave\": " << (data.serialSave ? "true" : "false") << ",\n";

@@ -85,9 +85,6 @@ void InitializeGUIState(
     state.UIScaleIndex = 1;
     state.UIModeTab = 0;
     state.UIThemeIndex = 0;
-    state.themeFxScanline = true;
-    state.themeFxDotMask = false;
-    state.themeFxVignette = true;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
     state.selectedSoundSlot = 0;

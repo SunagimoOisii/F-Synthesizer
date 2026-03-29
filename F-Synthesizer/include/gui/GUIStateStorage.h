@@ -44,9 +44,6 @@ struct GUIStateStorageData
     int UIScaleIndex = 1;
     int UIModeTab = 0;
     int UIThemeIndex = 0;
-    bool themeFxScanline = true;
-    bool themeFxDotMask = false;
-    bool themeFxVignette = true;
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
     bool serialSave = false;
