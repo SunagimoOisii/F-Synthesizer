@@ -189,7 +189,7 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
         DrawStatusBadge(state);
         ImGui::TableSetColumnIndex(1);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Scale");
+        ImGui::Text("表示倍率");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(96.0f);
         const char* uiScales[] = { "100%", "125%", "150%" };
@@ -202,7 +202,7 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             "表示倍率だけが変わります。");
         ImGui::TableSetColumnIndex(2);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Theme");
+        ImGui::Text("テーマ");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(154.0f);
         if (ImGui::Combo("##ui_theme", &state.UIThemeIndex, uiThemes, IM_ARRAYSIZE(uiThemes)))
@@ -214,10 +214,10 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             "Light/Dark の表示モードが切り替わります。");
         ImGui::TableSetColumnIndex(3);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Slot s%d", selectedSlotChip);
+        ImGui::Text("スロット s%d", selectedSlotChip);
         ImGui::TableSetColumnIndex(4);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Source %s", sourceChip);
+        ImGui::Text("音源 %s", sourceChip);
         ImGui::EndTable();
     }
     ImGui::EndTable();
@@ -235,29 +235,26 @@ if (state.UIModeTab != lastFrameTab)
     lastFrameTab = state.UIModeTab;
 }
 ImGui::Separator();
-ImGui::TextDisabled("Save Scope: SoundAsset / MusicProject / Workspace");
-ImGui::SameLine();
-ImGui::TextDisabled("(details on hover)");
 if (state.hasUIError)
 {
     auto suggestedFix = [&]() -> const char*
     {
         switch (state.UIErrorAction)
         {
-        case 1: return "Suggested Fix: MIDI path を選び直す";
-        case 2: return "Suggested Fix: Output path を選び直す";
-        case 3: return "Suggested Fix: 作る タブで設定を確認する";
-        case 4: return "Suggested Fix: 遊ぶ タブで設定を確認する";
-        default: return "Suggested Fix: 設定を見直して再実行する";
+        case 1: return "対処案: MIDIパスを選び直す";
+        case 2: return "対処案: 出力パスを選び直す";
+        case 3: return "対処案: 作るタブで設定を確認する";
+        case 4: return "対処案: 遊ぶタブで設定を確認する";
+        default: return "対処案: 設定を見直して再実行する";
         }
     };
     ImGui::Separator();
-    ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "Problem: %s", state.UIErrorMessage.c_str());
+    ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "問題: %s", state.UIErrorMessage.c_str());
     ImGui::TextDisabled("%s", suggestedFix());
     if (state.UIErrorAction == 1)
     {
         ImGui::SameLine();
-        if (ImGui::Button("Recover: Browse MIDI"))
+        if (ImGui::Button("復旧: MIDIを選び直す"))
         {
             std::string selected;
             const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
@@ -269,13 +266,13 @@ if (state.hasUIError)
             }
         }
         updateHoverHelp(
-            "Recover: Browse MIDI を実行します。",
+            "復旧: MIDIを選び直す を実行します。",
             "MIDI Pathを再選択して復旧します。");
     }
     else if (state.UIErrorAction == 2)
     {
         ImGui::SameLine();
-        if (ImGui::Button("Recover: Browse Output"))
+        if (ImGui::Button("復旧: 出力先を選び直す"))
         {
             std::string selected;
             const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
@@ -287,58 +284,58 @@ if (state.hasUIError)
             }
         }
         updateHoverHelp(
-            "Recover: Browse Output を実行します。",
+            "復旧: 出力先を選び直す を実行します。",
             "Output Pathを再選択して復旧します。");
     }
     else if (state.UIErrorAction == 3)
     {
         ImGui::SameLine();
-        if (ImGui::Button("Recover: Go 作る Tab"))
+        if (ImGui::Button("復旧: 作るタブへ移動"))
         {
             state.UIModeTab = 0;
             ClearGUIError(state);
         }
         updateHoverHelp(
-            "Recover: Go 作る Tab を実行します。",
+            "復旧: 作るタブへ移動 を実行します。",
             "作るタブへ移動します。");
     }
     else if (state.UIErrorAction == 4)
     {
         ImGui::SameLine();
-        if (ImGui::Button("Recover: Go Music Tab"))
+        if (ImGui::Button("復旧: Musicタブへ移動"))
         {
             state.UIModeTab = 1;
             ClearGUIError(state);
         }
         updateHoverHelp(
-            "Recover: Go Music Tab を実行します。",
+            "復旧: Musicタブへ移動 を実行します。",
             "Musicタブへ移動します。");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Clear Error"))
+    if (ImGui::Button("エラーをクリア"))
     {
         ClearGUIError(state);
     }
     updateHoverHelp(
-        "Clear Error を実行します。",
+        "エラーをクリア を実行します。",
         "エラー表示をクリアします。",
         "原因が未解決の場合は再実行時に再発します。");
 }
 if (state.showErrorDialog)
 {
-    ImGui::OpenPopup("Error");
+    ImGui::OpenPopup("エラー");
     state.showErrorDialog = false;
 }
-if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+if (ImGui::BeginPopupModal("エラー", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 {
-    ImGui::TextWrapped("Problem: %s", state.UIErrorMessage.c_str());
+    ImGui::TextWrapped("問題: %s", state.UIErrorMessage.c_str());
     switch (state.UIErrorAction)
     {
-    case 1: ImGui::TextDisabled("Suggested Fix: MIDI path を選び直してください。"); break;
-    case 2: ImGui::TextDisabled("Suggested Fix: Output path を選び直してください。"); break;
-    case 3: ImGui::TextDisabled("Suggested Fix: 作る タブの設定を確認してください。"); break;
-    case 4: ImGui::TextDisabled("Suggested Fix: 遊ぶ タブの設定を確認してください。"); break;
-    default: ImGui::TextDisabled("Suggested Fix: 設定を見直して再実行してください。"); break;
+    case 1: ImGui::TextDisabled("対処案: MIDIパスを選び直してください。"); break;
+    case 2: ImGui::TextDisabled("対処案: 出力パスを選び直してください。"); break;
+    case 3: ImGui::TextDisabled("対処案: 作るタブの設定を確認してください。"); break;
+    case 4: ImGui::TextDisabled("対処案: 遊ぶタブの設定を確認してください。"); break;
+    default: ImGui::TextDisabled("対処案: 設定を見直して再実行してください。"); break;
     }
     if (ImGui::Button("OK"))
     {
@@ -348,13 +345,13 @@ if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         "Errorダイアログを閉じます。",
         "表示のみ閉じ、エラー状態は維持します。");
     ImGui::SameLine();
-    if (ImGui::Button("Dismiss"))
+    if (ImGui::Button("状態をクリア"))
     {
         ClearGUIError(state);
         ImGui::CloseCurrentPopup();
     }
     updateHoverHelp(
-        "Dismiss を実行します。",
+        "状態をクリア を実行します。",
         "エラー状態をクリアして閉じます。");
     ImGui::EndPopup();
 }
@@ -368,7 +365,7 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
 
     ImGui::TableSetColumnIndex(0);
     ImGui::BeginDisabled(state.running);
-    if (ImGui::Button("Save Project"))
+    if (ImGui::Button("プロジェクト保存"))
     {
         if (saveWorkspaceOnly())
         {
@@ -376,16 +373,16 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
         }
     }
     updateHoverHelp(
-        "Save Projectを実行します。",
+        "プロジェクト保存を実行します。",
         "MusicProjectとWorkspaceを保存します。",
         "SoundAsset(Preset)は保存対象に含みません。");
     ImGui::SameLine();
-    if (ImGui::Button("Save All"))
+    if (ImGui::Button("すべて保存"))
     {
         saveAll();
     }
     updateHoverHelp(
-        "Save Allを実行します。",
+        "すべて保存を実行します。",
         "SoundAsset/MusicProject/Workspaceを保存します。");
     ImGui::EndDisabled();
 
@@ -393,53 +390,53 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     ImGui::BeginDisabled(state.running);
     if (state.UIModeTab == 0)
     {
-        if (ImGui::Button("Preview"))
+        if (ImGui::Button("試聴"))
         {
             clearAutoTonePreviewRequest();
             StartGUIRun(state, true);
         }
         updateHoverHelp(
-            "Previewを実行します。",
+            "試聴を実行します。",
             "表示chを選択中Slotで再生成して再生します。",
             "WAVファイルは出力しません。");
     }
     else if (state.UIModeTab == 1)
     {
-        if (ImGui::Button("Export"))
+        if (ImGui::Button("書き出し"))
         {
             StartGUIRun(state, false);
         }
         updateHoverHelp(
-            "Exportを実行します。",
+            "書き出しを実行します。",
             "現在設定でWAVを書き出します。",
             "再生中の場合は停止してから書き出しを開始します。");
         ImGui::SameLine();
-        if (ImGui::Button("Preview"))
+        if (ImGui::Button("試聴"))
         {
             StartGUIRun(state, true);
         }
         updateHoverHelp(
-            "Previewを実行します。",
+            "試聴を実行します。",
             "表示chを現在の割当/ミックスで再生します。",
             "WAVファイルは出力しません。");
     }
     else
     {
-        if (ImGui::Button("Export"))
+        if (ImGui::Button("書き出し"))
         {
             StartGUIRun(state, false);
         }
         updateHoverHelp(
-            "Exportを実行します。",
+            "書き出しを実行します。",
             "現在設定でWAVを書き出します。",
             "再生中の場合は停止してから書き出しを開始します。");
         ImGui::SameLine();
-        if (ImGui::Button("Preview"))
+        if (ImGui::Button("試聴"))
         {
             StartGUIRun(state, true);
         }
         updateHoverHelp(
-            "Previewを実行します。",
+            "試聴を実行します。",
             "現在設定でプレビュー再生します。",
             "WAVファイルは出力しません。");
     }
@@ -449,7 +446,7 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     ImGui::BeginDisabled(state.running);
     if (state.UIModeTab == 0)
     {
-        if (ImGui::Checkbox("Auto", &state.autoTonePreviewEnabled))
+        if (ImGui::Checkbox("自動", &state.autoTonePreviewEnabled))
         {
             if (!state.autoTonePreviewEnabled)
             {
@@ -462,7 +459,7 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
             "重い環境ではOFFにして手動Previewを使ってください。");
         ImGui::SameLine();
     }
-    ImGui::Checkbox("Loop", &state.previewLoop);
+    ImGui::Checkbox("ループ", &state.previewLoop);
     updateHoverHelp(
         "Loop Previewを切り替えます。",
         "Preview終了後に先頭からループ再生します。");
@@ -471,7 +468,7 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     ImGui::SameLine();
     const bool canStop = state.running || state.playback.playing.load(std::memory_order_relaxed);
     ImGui::BeginDisabled(!canStop);
-    if (ImGui::Button("Stop"))
+    if (ImGui::Button("停止"))
     {
         StopGUIRunAndPreview(state);
     }
@@ -483,12 +480,12 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
 
     ImGui::SameLine();
     ImGui::BeginDisabled(state.running);
-    if (ImGui::Button("Close"))
+    if (ImGui::Button("閉じる"))
     {
         if (state.presetDirty)
         {
             pendingCloseRequest = true;
-            ImGui::OpenPopup("Unsaved Changes");
+            ImGui::OpenPopup("未保存の変更");
         }
         else
         {
@@ -504,10 +501,10 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
 ImGui::Separator();
 if (openUnsavedPopupNextFrame)
 {
-    ImGui::OpenPopup("Unsaved Changes");
+    ImGui::OpenPopup("未保存の変更");
     openUnsavedPopupNextFrame = false;
 }
-if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+if (ImGui::BeginPopupModal("未保存の変更", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 {
     ImGui::TextUnformatted("変更が未保存です。どうしますか？");
     if (ImGui::Button("保存して続行"))
@@ -654,11 +651,11 @@ if (state.UIModeTab == 0)
     // プリセット保存状態: 常時表示（Layer1 の外）
     if (state.presetDirty)
     {
-        ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "Preset: modified (unsaved)");
+        ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.2f, 1.0f), "プリセット: 変更あり（未保存）");
     }
     else
     {
-        ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "Preset: saved");
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 0.5f, 1.0f), "プリセット: 保存済み");
     }
 
     auto drawLayer1Panel = [&]()
@@ -672,7 +669,7 @@ if (state.UIModeTab == 0)
             [&]()  // ヘッダ直下: Source Type + Reset Defaults
             {
                 ImGui::BeginDisabled(state.running);
-                if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
+                if (ImGui::BeginCombo("音源タイプ", config::SourceKindToDisplayName(guiKinds[static_cast<size_t>(sourceKindUiIndex)])))
                 {
                     for (size_t i = 0; i < guiKindCount; i++)
                     {
@@ -697,11 +694,11 @@ if (state.UIModeTab == 0)
                     ImGui::EndCombo();
                 }
                 updateHoverHelp(
-                    "Source Type を選択します。",
+                    "音源タイプ を選択します。",
                     "Sound右ペインの編集対象とPreset一覧の表示対象を切り替えます。",
                     "切替時は選択中スロットを該当sourceTypeの初期値で再初期化し、Layer1のプリセット一覧も更新されます。");
                 ImGui::SameLine();
-                if (ImGui::Button("Reset Defaults"))
+                if (ImGui::Button("初期設定に戻す"))
                 {
                     ClearGUIError(state);
                     InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
@@ -717,12 +714,12 @@ if (state.UIModeTab == 0)
             [&]()  // リスト下: Preset Name + Save / Dup / Reset Sound Slot
             {
                 ImGui::BeginDisabled(state.running);
-                ImGui::InputText("Preset Name", state.presetName, IM_ARRAYSIZE(state.presetName));
+                ImGui::InputText("プリセット名", state.presetName, IM_ARRAYSIZE(state.presetName));
                 updateHoverHelp(
                     "保存時のPreset名を入力します。",
                     "Save Preset As / Duplicate Preset の保存先ファイル名に使います。");
                 ImGui::SameLine();
-                if (ImGui::Button("Save Preset As"))
+                if (ImGui::Button("プリセット保存"))
                 {
                     const std::filesystem::path p = FindProjectRootPath() / "config" / "presets" / (std::string(state.presetName) + ".json");
                     std::string err;
@@ -744,7 +741,7 @@ if (state.UIModeTab == 0)
                     "Preset Name で指定したJSONファイルへ保存します。",
                     "同名が存在する場合は上書きされます。");
                 ImGui::SameLine();
-                if (ImGui::Button("Duplicate Preset"))
+                if (ImGui::Button("プリセット複製"))
                 {
                     std::string copyName = std::string(state.presetName) + "_copy";
                     strncpy_s(state.presetName, sizeof(state.presetName), copyName.c_str(), _TRUNCATE);
@@ -767,7 +764,7 @@ if (state.UIModeTab == 0)
                     "Presetを複製保存します。",
                     "Preset Name に `_copy` を付けた保存名で複製します。");
                 ImGui::SameLine();
-                if (ImGui::Button("Reset Sound Slot"))
+                if (ImGui::Button("選択スロットを初期化"))
                 {
                     gui::EnsureChannelConfigs(state);
                     AppConfig def = DefaultConfig();
@@ -784,9 +781,9 @@ if (state.UIModeTab == 0)
                     "対象スロットの音色設定を既定値へ戻します。");
                 if (!state.lastPresetPath.empty())
                 {
-                    ImGui::Text("Last Preset: %s", state.lastPresetPath.c_str());
+                    ImGui::Text("最終プリセット: %s", state.lastPresetPath.c_str());
                 }
-                ImGui::TextDisabled("Song export settings are in Music tab.");
+                ImGui::TextDisabled("曲の書き出し設定は Music タブにあります。");
                 ImGui::EndDisabled();
             });
     };
@@ -808,7 +805,7 @@ if (state.UIModeTab == 0)
         if (!isDrumSlot)
         {
             ImGui::SetNextItemWidth(160.0f);
-            if (ImGui::SliderInt("Preview Note", &state.tonePreviewNoteNumber, 24, 96))
+            if (ImGui::SliderInt("試聴ノート", &state.tonePreviewNoteNumber, 24, 96))
             {
                 state.tonePreviewNoteNumber = std::clamp(state.tonePreviewNoteNumber, 0, 127);
                 requestAutoTonePreview();
@@ -854,7 +851,7 @@ if (state.UIModeTab == 0)
                     wfBuf[i] = static_cast<float>(src[idx]);
                 }
                 ImGui::Separator();
-                ImGui::TextDisabled("Waveform (Tone Preview)");
+                ImGui::TextDisabled("波形");
                 ImGui::PlotLines("##wf", wfBuf, kBufSize, 0, nullptr, -1.0f, 1.0f, ImVec2(-1.0f, 64.0f));
                 // --- Spectrum ---
                 {
@@ -901,7 +898,7 @@ if (state.UIModeTab == 0)
                         }
                     }
 
-                    ImGui::TextDisabled("Spectrum (Tone Preview)");
+                    ImGui::TextDisabled("スペクトラム");
                     ImGui::PlotHistogram("##spec", specBuf, kSpecBins, 0, nullptr, 0.0f, 1.0f, ImVec2(-1.0f, 48.0f));
                 }
             }
@@ -948,13 +945,13 @@ if (state.UIModeTab == 0)
     }
     if (!state.lastOutputPath.empty())
     {
-        ImGui::Text("Last Output: %s", state.lastOutputPath.c_str());
+        ImGui::Text("最終出力: %s", state.lastOutputPath.c_str());
     }
     AnalyzeRenderPeakFromLogs(state);
     if (state.hasPeak)
     {
         const float meter = static_cast<float>(std::clamp(state.lastPeak, 0.0, 1.0));
-        ImGui::Text("Peak: %.4f", state.lastPeak);
+        ImGui::Text("ピーク: %.4f", state.lastPeak);
         ImGui::ProgressBar(meter, ImVec2(-1, 0));
         if (state.lastPeak > 1.0)
         {
@@ -967,20 +964,20 @@ if (state.UIModeTab == 0)
 }
 else if (state.UIModeTab == 1)
 {
-    ImGui::TextUnformatted("Music");
-    ImGui::TextDisabled("Music は現在の Sound 設定（割当/ミックス）をそのまま使って Preview/Export します。");
+    ImGui::TextUnformatted("音楽");
+    ImGui::TextDisabled("音楽タブは現在の音色設定（割当/ミックス）を使用します。");
     ImGui::Separator();
     gui::EnsureChannelConfigs(state);
     gui::EnsureChannelMixStates(state);
 
     ImGui::BeginDisabled(state.running);
-    state.presetDirty |= ImGui::InputText("MIDI Path", state.midiPath, IM_ARRAYSIZE(state.midiPath));
+    state.presetDirty |= ImGui::InputText("MIDIパス", state.midiPath, IM_ARRAYSIZE(state.midiPath));
     updateHoverHelp(
         "読み込むMIDIファイルを指定します。",
         "Preview/Exportの入力に使います。",
         "無効パスでは再生/書き出しに失敗します。");
     ImGui::SameLine();
-    if (ImGui::Button("Browse MIDI..."))
+    if (ImGui::Button("MIDI参照..."))
     {
         std::string selected;
         const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
@@ -992,15 +989,15 @@ else if (state.UIModeTab == 1)
     }
     updateHoverHelp(
         "MIDIファイル選択ダイアログを開きます。",
-        "MIDI Pathを更新します。",
+        "MIDIパスを更新します。",
         "想定外のファイルを選ぶと解析エラーになる場合があります。");
     ImGui::SameLine();
-    if (ImGui::Button("Copy MIDI"))
+    if (ImGui::Button("MIDIをコピー"))
     {
         ImGui::SetClipboardText(state.midiPath);
     }
     updateHoverHelp(
-        "MIDI Path をコピーします。",
+        "MIDIパスをコピーします。",
         "パスをクリップボードへコピーします。");
     {
         const std::string compact = CompactPathForUI(state.midiPath);
@@ -1010,13 +1007,13 @@ else if (state.UIModeTab == 1)
             ImGui::SetTooltip("%s", state.midiPath);
         }
     }
-    state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+    state.presetDirty |= ImGui::InputText("出力パス", state.wavPath, IM_ARRAYSIZE(state.wavPath));
     updateHoverHelp(
         "WAVの書き出し先パスを指定します。",
         "WAVの出力先が変わります。",
         "Serial Save が無効だと既存ファイルを上書きする場合があります。");
     ImGui::SameLine();
-    if (ImGui::Button("Browse Output..."))
+    if (ImGui::Button("出力先参照..."))
     {
         std::string selected;
         const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
@@ -1028,15 +1025,15 @@ else if (state.UIModeTab == 1)
     }
     updateHoverHelp(
         "出力先WAVパス選択ダイアログを開きます。",
-        "Output Pathを更新します。",
+        "出力パスを更新します。",
         "保存権限のない場所は失敗します。");
     ImGui::SameLine();
-    if (ImGui::Button("Copy Output"))
+    if (ImGui::Button("出力先をコピー"))
     {
         ImGui::SetClipboardText(state.wavPath);
     }
     updateHoverHelp(
-        "Output Path をコピーします。",
+        "出力パスをコピーします。",
         "パスをクリップボードへコピーします。");
     {
         const std::string compact = CompactPathForUI(state.wavPath);
@@ -1048,73 +1045,73 @@ else if (state.UIModeTab == 1)
     }
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Output Target");
+    ImGui::TextUnformatted("出力対象");
     int outputMode = (state.targetChannel < 0) ? 0 : 1;
-    if (ImGui::RadioButton("All Channels", outputMode == 0))
+    if (ImGui::RadioButton("全チャンネル", outputMode == 0))
     {
         state.targetChannel = -1;
         state.presetDirty = true;
     }
     updateHoverHelp(
-        "出力対象を All Channels にします。",
+        "出力対象を 全チャンネル にします。",
         "全MIDIチャンネルを出力します。",
-        "PR Channel の表示先とは独立です。");
+        "表示チャンネルとは独立です。");
     ImGui::SameLine();
-    if (ImGui::RadioButton("Single Channel", outputMode == 1))
+    if (ImGui::RadioButton("単一チャンネル", outputMode == 1))
     {
         state.targetChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
         state.presetDirty = true;
     }
     updateHoverHelp(
-        "出力対象を Single Channel にします。",
+        "出力対象を 単一チャンネル にします。",
         "指定chのみを出力します。",
-        "PR Channel とは自動連動しません。");
+        "表示チャンネルとは自動連動しません。");
     if (state.targetChannel >= 0)
     {
         ImGui::SetNextItemWidth(220.0f);
         int singleTarget = std::clamp(state.targetChannel, 0, 15);
-        if (ImGui::SliderInt("Target Ch", &singleTarget, 0, 15))
+        if (ImGui::SliderInt("対象ch", &singleTarget, 0, 15))
         {
             state.targetChannel = singleTarget;
             state.presetDirty = true;
         }
         updateHoverHelp(
-            "Single Channel の対象chを変更します。",
-            "Export対象chが変わります。",
+            "単一チャンネル の対象chを変更します。",
+            "書き出し対象chが変わります。",
             "プレビュー表示chの切替とは別設定です。");
     }
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Render Settings");
-    state.presetDirty |= ImGui::InputInt("Sample Rate", &state.sampleRate);
+    ImGui::TextUnformatted("レンダー設定");
+    state.presetDirty |= ImGui::InputInt("サンプルレート", &state.sampleRate);
     updateHoverHelp(
         "出力サンプルレートを設定します。",
         "音質・負荷・サイズが変わります。",
         "高すぎる値は処理時間を増やします。");
-    state.presetDirty |= ImGui::InputInt("Initial Seconds", &state.initialSeconds);
+    state.presetDirty |= ImGui::InputInt("最小秒数", &state.initialSeconds);
     updateHoverHelp(
         "最低レンダ秒数を設定します。",
         "出力の最小長さを確保します。",
         "短くしすぎると余韻が切れやすくなります。");
-    state.presetDirty |= ImGui::InputInt("Bits", &state.bits);
+    state.presetDirty |= ImGui::InputInt("ビット深度", &state.bits);
     updateHoverHelp(
         "出力ビット深度を設定します。",
         "ダイナミックレンジと互換性が変わります。",
         "現行実装は16bitのみ有効です。");
-    state.presetDirty |= ImGui::InputFloat("Extra Release (sec)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+    state.presetDirty |= ImGui::InputFloat("追加リリース (秒)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
     updateHoverHelp(
         "ノート終端後の追加リリース時間を設定します。",
         "尻切れを抑え、余韻を確保します。",
         "長くしすぎると書き出し時間とサイズが増えます。");
-    state.presetDirty |= ImGui::Checkbox("Serial Save (timestamp suffix)", &state.serialSave);
+    state.presetDirty |= ImGui::Checkbox("連番保存（タイムスタンプ）", &state.serialSave);
     updateHoverHelp(
         "連番保存（タイムスタンプ付与）を切り替えます。",
         "同名出力の上書きを避けます。",
         "無効時は同名ファイルを上書きします。");
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Master Effects");
-    ImGui::TextDisabled("Order: SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb");
+    ImGui::TextUnformatted("マスターエフェクト");
+    ImGui::TextDisabled("処理順: SampleRateReducer -> BitCrusher -> Chorus -> Flanger -> Delay -> Reverb");
     {
         struct FxBlockDef
         {
@@ -1248,11 +1245,11 @@ else if (state.UIModeTab == 1)
         }
         return edited;
     };
-    if (ImGui::CollapsingHeader("Retro FX", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("レトロFX", ImGuiTreeNodeFlags_DefaultOpen))
     {
         int bits = std::clamp(state.masterEffects.bitCrusher.bits, 1, 16);
         ImGui::SetNextItemWidth(260.0f);
-        if (ImGui::SliderInt("BitCrusher Bits", &bits, 1, 16))
+        if (ImGui::SliderInt("BitCrusher ビット数", &bits, 1, 16))
         {
             state.masterEffects.bitCrusher.bits = bits;
             state.presetDirty = true;
@@ -1275,7 +1272,7 @@ else if (state.UIModeTab == 1)
 
     if (ImGui::CollapsingHeader("Chorus"))
     {
-        state.presetDirty |= ImGui::Checkbox("Chorus Enabled", &state.masterEffects.chorus.enabled);
+        state.presetDirty |= ImGui::Checkbox("コーラス有効", &state.masterEffects.chorus.enabled);
         updateHoverHelp(
             "コーラスの有効/無効を切り替えます。",
             "厚みと揺らぎを加えます。",
@@ -1294,7 +1291,7 @@ else if (state.UIModeTab == 1)
 
     if (ImGui::CollapsingHeader("Flanger"))
     {
-        state.presetDirty |= ImGui::Checkbox("Flanger Enabled", &state.masterEffects.flanger.enabled);
+        state.presetDirty |= ImGui::Checkbox("フランジャー有効", &state.masterEffects.flanger.enabled);
         updateHoverHelp(
             "フランジャーの有効/無効を切り替えます。",
             "短ディレイの周期変調でジェット感を加えます。",
@@ -1313,7 +1310,7 @@ else if (state.UIModeTab == 1)
 
     if (ImGui::CollapsingHeader("Delay"))
     {
-        state.presetDirty |= ImGui::Checkbox("Delay Enabled", &state.masterEffects.delay.enabled);
+        state.presetDirty |= ImGui::Checkbox("ディレイ有効", &state.masterEffects.delay.enabled);
         updateHoverHelp(
             "ディレイの有効/無効を切り替えます。",
             "反復エコーを加えます。",
@@ -1322,7 +1319,7 @@ else if (state.UIModeTab == 1)
         if (sliderFxDouble("Delay Mix", state.masterEffects.delay.mix, 0.0f, 1.0f, "%.3f")) state.presetDirty = true;
         ImGui::SetNextItemWidth(260.0f);
         if (sliderFxDouble("Delay Feedback", state.masterEffects.delay.feedback, 0.0f, 0.95f, "%.3f")) state.presetDirty = true;
-        state.presetDirty |= ImGui::Checkbox("Delay Tempo Sync", &state.masterEffects.delay.tempoSync);
+        state.presetDirty |= ImGui::Checkbox("ディレイ テンポ同期", &state.masterEffects.delay.tempoSync);
         if (state.masterEffects.delay.tempoSync)
         {
             ImGui::SetNextItemWidth(260.0f);
@@ -1337,7 +1334,7 @@ else if (state.UIModeTab == 1)
 
     if (ImGui::CollapsingHeader("Reverb"))
     {
-        state.presetDirty |= ImGui::Checkbox("Reverb Enabled", &state.masterEffects.reverb.enabled);
+        state.presetDirty |= ImGui::Checkbox("リバーブ有効", &state.masterEffects.reverb.enabled);
         updateHoverHelp(
             "リバーブの有効/無効を切り替えます。",
             "残響感と奥行きを加えます。",
@@ -1351,25 +1348,25 @@ else if (state.UIModeTab == 1)
     }
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Music Mixer / Assignment");
+    ImGui::TextUnformatted("ミキサー / 割当");
     constexpr int drumMidiChannel = 9; // MIDI ch10 (0-based index)
     const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     const int assignedFromPr = std::clamp(state.channelAssignments[prChannel], 0, 15);
     const bool singleOutput = (state.targetChannel >= 0);
-    ImGui::Text("PR Channel: ch%d  ->  Assigned Sound Slot: s%d", prChannel, assignedFromPr);
+    ImGui::Text("表示ch: ch%d  ->  割当スロット: s%d", prChannel, assignedFromPr);
     updateHoverHelp(
-        "現在のPR表示chと割当先Sound Slotを確認します。",
+        "現在の表示chと割当先スロットを確認します。",
         "再生に使う音色割当を確認できます。",
         "表示chと書き出し対象chは別です。");
     if (singleOutput)
     {
-        ImGui::Text("Current Export: Single Channel ch%d", std::clamp(state.targetChannel, 0, 15));
+        ImGui::Text("現在の出力: 単一チャンネル ch%d", std::clamp(state.targetChannel, 0, 15));
     }
     else
     {
-        ImGui::TextUnformatted("Current Export: All Channels");
+        ImGui::TextUnformatted("現在の出力: 全チャンネル");
     }
-    if (ImGui::Button("Set PR Assign = Same slot index"))
+    if (ImGui::Button("表示chの割当=同番号スロット"))
     {
         state.channelAssignments[prChannel] = prChannel;
         state.presetDirty = true;
@@ -1378,17 +1375,17 @@ else if (state.UIModeTab == 1)
         "PR表示chの割当を同一番号スロットへ合わせます。",
         "表示chの割当を同一番号へそろえます。");
     ImGui::SameLine();
-    if (ImGui::Button("Set Output Target = PR ch"))
+    if (ImGui::Button("出力対象=表示ch"))
     {
         state.targetChannel = prChannel;
         state.presetDirty = true;
     }
     updateHoverHelp(
-        "Output Target を現在のPR chへ合わせます。",
-        "Single Channelの対象を更新します。",
-        "All Channels の場合は Single Channel 選択後に有効になります。");
+        "出力対象 を現在の表示chへ合わせます。",
+        "単一チャンネルの対象を更新します。",
+        "全チャンネル の場合は 単一チャンネル 選択後に有効になります。");
     ImGui::SameLine();
-    if (ImGui::Button("Reset All Assign = Same slot index"))
+    if (ImGui::Button("全割当を同番号スロットに戻す"))
     {
         for (int ch = 0; ch < 16; ch++)
         {
@@ -1413,14 +1410,14 @@ else if (state.UIModeTab == 1)
     };
 
     ImGui::Separator();
-    ImGui::TextUnformatted("Drum (MIDI ch10) Quick Setup");
-    ImGui::TextDisabled("Use this when ch10 should behave as percussion.");
-    ImGui::Checkbox("Enable ch10 Drum Guard", &state.drumChannelSpecialHandling);
+    ImGui::TextUnformatted("ドラム簡単設定（MIDI ch10）");
+    ImGui::TextDisabled("ch10 をドラム運用する場合に使います。");
+    ImGui::Checkbox("ch10 ドラムガードを有効化", &state.drumChannelSpecialHandling);
     updateHoverHelp(
         "ch10 Drum Guard を切り替えます。",
         "ch10をドラム運用として監視します。");
     ImGui::SameLine();
-    if (ImGui::Button("Auto Setup ch10 Drum"))
+    if (ImGui::Button("ch10をドラム自動設定"))
     {
         applyDrumCh10Setup();
     }
@@ -1428,7 +1425,7 @@ else if (state.UIModeTab == 1)
         "ch10 のドラム向け自動セットアップを実行します。",
         "ch10の割当と音源種別をドラム向けに調整します。");
     ImGui::SameLine();
-    if (ImGui::Button("Focus PR ch10"))
+    if (ImGui::Button("表示chをch10へ"))
     {
         state.pianoRoll.displayChannel = drumMidiChannel;
     }
@@ -1541,11 +1538,11 @@ else if (state.UIModeTab == 1)
                 const bool mappedToDrum = config::SourceCapabilityOf(srcCfg).isPercussion;
                 if (mappedToDrum)
                 {
-                    ImGui::TextUnformatted("Drum Ready");
+                    ImGui::TextUnformatted("ドラム準備OK");
                 }
                 else
                 {
-                    ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "Needs Drum Source");
+                    ImGui::TextColored(ImVec4(0.95f, 0.45f, 0.35f, 1.0f), "ドラム音源の割当が必要");
                 }
             }
             else
@@ -1569,7 +1566,7 @@ else if (state.UIModeTab == 1)
             ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 90, 170, 255));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 110, 200, 255));
         }
-        if (ImGui::Button("Piano Roll"))
+        if (ImGui::Button("ピアノロール"))
         {
             if (state.stepSeq.viewActive)
             {
@@ -1581,7 +1578,7 @@ else if (state.UIModeTab == 1)
             ImGui::PopStyleColor(2);
         }
         updateHoverHelp(
-            "Piano Roll ビューへ切り替えます。",
+        "ピアノロール ビューへ切り替えます。",
             "通常のピアノロールが表示されます。");
 
         ImGui::SameLine();
@@ -1592,7 +1589,7 @@ else if (state.UIModeTab == 1)
             ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(50, 90, 170, 255));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(70, 110, 200, 255));
         }
-        if (ImGui::Button("Step Seq"))
+        if (ImGui::Button("ステップシーケンサー"))
         {
             if (!state.stepSeq.viewActive)
             {
@@ -1605,7 +1602,7 @@ else if (state.UIModeTab == 1)
             ImGui::PopStyleColor(2);
         }
         updateHoverHelp(
-            "Step Seq ビューへ切り替えます。",
+        "ステップシーケンサー ビューへ切り替えます。",
             "16ステップのドラムグリッドが表示されます。");
     }
 
@@ -1653,7 +1650,7 @@ if (logPanelExpanded)
     }
 }
 ImGui::SetNextItemOpen(logPanelExpanded, ImGuiCond_Once);
-logPanelExpanded = ImGui::CollapsingHeader("Logs");
+logPanelExpanded = ImGui::CollapsingHeader("ログ");
 if (logPanelExpanded)
 {
     ImGui::BeginChild("log_panel", ImVec2(0, state.logPanelHeight), true);

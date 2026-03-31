@@ -6,7 +6,7 @@
     {
         bool localChanged = false;
         ImGui::Separator();
-        ImGui::TextUnformatted("Modulation");
+        ImGui::TextUnformatted("モジュレーション");
 
         const char* lfoWaves[] = { "Sine", "Triangle", "Square", "Saw", "S&H" };
         int lfoWaveIdx = 0;
@@ -19,7 +19,7 @@
         case LfoWave::SampleAndHold: lfoWaveIdx = 4; break;
         }
         ImGui::SetNextItemWidth(220.0f);
-        if (ImGui::Combo("LFO1 Wave", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
+        if (ImGui::Combo("LFO1 波形", &lfoWaveIdx, lfoWaves, IM_ARRAYSIZE(lfoWaves)))
         {
             switch (lfoWaveIdx)
             {
@@ -39,9 +39,9 @@
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("LFO1 Depth", modulation.lfo1.depth, 0.0f, 1.0f, "%.3f");
         if (updateHoverHelp) updateHoverHelp("LFO1 Depth を調整します。", "LFOの変調量が変わります。", nullptr);
-        localChanged |= ImGui::Checkbox("LFO1 Bipolar", &modulation.lfo1.bipolar);
+        localChanged |= ImGui::Checkbox("LFOを±方向で効かせる", &modulation.lfo1.bipolar);
         if (updateHoverHelp) updateHoverHelp("LFO1 Bipolar を切り替えます。", "LFO出力の極性レンジが変わります。", nullptr);
-        localChanged |= ImGui::Checkbox("Key Sync", &modulation.lfo1.keySync);
+        localChanged |= ImGui::Checkbox("鍵盤ごとに揺れをリセット", &modulation.lfo1.keySync);
         if (updateHoverHelp)
         {
             updateHoverHelp(
@@ -55,7 +55,7 @@
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("LFO1 Fade (ms)", modulation.lfo1.fadeMs, 0.0f, 2000.0f, "%.1f");
         if (updateHoverHelp) updateHoverHelp("LFO1 Fade を調整します。", "LFOが最大深さに達するまでの立ち上がり時間が変わります。", nullptr);
-        ImGui::TextDisabled("LFO1 Wave");
+        ImGui::TextDisabled("LFO1 波形");
         DrawLfo1WavePreview(
             (std::string("##lfo1_preview_") + idPrefix).c_str(),
             modulation.lfo1.wave);
@@ -75,7 +75,7 @@
         ImGui::SetNextItemWidth(220.0f);
         localChanged |= sliderWaveParam("Env2 Curve", modulation.env2.curve, 0.0f, 1.0f, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Env2 Curve を調整します。", "変化の加速感が変わります。低いと急激に、高いとなだらかに変化します。", nullptr);
-        ImGui::TextDisabled("Env2 Envelope");
+        ImGui::TextDisabled("Env2 エンベロープ");
         float env2AttackDrag = static_cast<float>(modulation.env2.attackSec);
         float env2DecayDrag = static_cast<float>(modulation.env2.decaySec);
         float env2SustainDrag = static_cast<float>(modulation.env2.sustainLevel);
@@ -190,7 +190,7 @@
                 continue;
             }
 
-            localChanged |= ImGui::Checkbox("Enabled", &route.enabled);
+            localChanged |= ImGui::Checkbox("有効", &route.enabled);
             if (updateHoverHelp) updateHoverHelp("Route Enabled を切り替えます。", "このモジュレーション経路の有効/無効が変わります。", nullptr);
 
             int srcIdx = 0;
@@ -205,7 +205,7 @@
             case ModSource::ModWheel: srcIdx = 6; break;
             }
             ImGui::SetNextItemWidth(220.0f);
-            if (ImGui::Combo("Source", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
+            if (ImGui::Combo("変調元", &srcIdx, modSources, IM_ARRAYSIZE(modSources)))
             {
                 switch (srcIdx)
                 {
@@ -229,7 +229,7 @@
                 destinationLabels[i] = destinationChoices[i].label;
             }
             ImGui::SetNextItemWidth(220.0f);
-            if (ImGui::Combo("Destination", &dstIdx, destinationLabels, destinationCount))
+            if (ImGui::Combo("変調先", &dstIdx, destinationLabels, destinationCount))
             {
                 route.destination = destinationChoices[dstIdx].value;
                 localChanged = true;
@@ -243,7 +243,7 @@
         }
 
         ImGui::Separator();
-        ImGui::TextDisabled("Modulation Routing View");
+        ImGui::TextDisabled("モジュレーション配線図");
         const ImVec2 canvasSize = ImVec2(0.0f, 190.0f);
         ImGui::BeginChild((std::string("##mod_route_view_") + idPrefix).c_str(), canvasSize, true);
         {

@@ -50,35 +50,35 @@ const char* UIScaleLabelFromIndex(int idx)
 void DrawStatusBadge(const GUIState& state)
 {
     ImVec4 color = ImVec4(0.55f, 0.55f, 0.55f, 1.0f);
-    const char* label = "Idle";
+    const char* label = "待機中";
 
     if (state.running)
     {
         color = ImVec4(0.95f, 0.78f, 0.2f, 1.0f);
-        label = "Running";
+        label = "実行中";
     }
     else if (state.playback.playing.load(std::memory_order_relaxed))
     {
         color = ImVec4(0.28f, 0.82f, 0.95f, 1.0f);
-        label = state.previewLoop ? "Preview (Loop)" : "Preview";
+        label = state.previewLoop ? "試聴中（ループ）" : "試聴中";
     }
     else if (state.hasRun && state.lastRunExitCode == 2)
     {
         color = ImVec4(0.95f, 0.70f, 0.25f, 1.0f);
-        label = "Canceled";
+        label = "キャンセル";
     }
     else if (state.hasRun && state.lastRunExitCode == 0)
     {
         color = ImVec4(0.30f, 0.82f, 0.40f, 1.0f);
-        label = "Success";
+        label = "成功";
     }
     else if (state.hasRun)
     {
         color = ImVec4(0.95f, 0.35f, 0.35f, 1.0f);
-        label = "Failed";
+        label = "失敗";
     }
 
-    ImGui::TextUnformatted("Status:");
+    ImGui::TextUnformatted("状態:");
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, color);
     ImGui::TextUnformatted(label);

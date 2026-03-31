@@ -250,8 +250,8 @@ bool DrawChannelEditor(
     const ChannelConfig frameConfig = (*state.channelConfigs)[slot];
     const MacroSliderState frameSliders = state.macroSliders[slot];
 
-    ImGui::TextUnformatted("Sound Slot");
-    changed |= ImGui::InputInt("Selected Sound Slot (0-15)", &state.selectedSoundSlot);
+    ImGui::TextUnformatted("音色スロット");
+    changed |= ImGui::InputInt("選択スロット (0-15)", &state.selectedSoundSlot);
     if (updateHoverHelp)
     {
         updateHoverHelp(
@@ -262,9 +262,9 @@ bool DrawChannelEditor(
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
     const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     const int assignedSlot = std::clamp(state.channelAssignments[prChannel], 0, 15);
-    ImGui::TextDisabled("PR Channel ch%d -> Assigned Slot s%d", prChannel, assignedSlot);
+    ImGui::TextDisabled("表示ch%d -> 割当スロット s%d", prChannel, assignedSlot);
     ImGui::SameLine();
-    if (ImGui::Button("Edit Assigned Slot of PR ch"))
+    if (ImGui::Button("この割当スロットを編集"))
     {
         state.selectedSoundSlot = assignedSlot;
     }
@@ -287,14 +287,14 @@ bool DrawChannelEditor(
         return edited;
     };
 #include "channeleditor/ChannelEditorModulation.inl"
-    ImGui::TextDisabled("Sound tab edits sound definitions only. Channel mix/assign is in Music tab.");
+    ImGui::TextDisabled("Soundタブは音色定義のみ編集します（ミックス/割当はMusicタブ）。");
 
     ImGui::Separator();
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];
-    ImGui::Text("Selected Sound Slot: s%d", state.selectedSoundSlot);
-    ImGui::TextDisabled("Tone preview uses selected sound slot.");
+    ImGui::Text("選択スロット: s%d", state.selectedSoundSlot);
+    ImGui::TextDisabled("Tone Preview は選択中スロットを使用します。");
 
-    if (ImGui::CollapsingHeader("Envelope / Gain", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("エンベロープ / 音量", ImGuiTreeNodeFlags_DefaultOpen))
     {
         changed |= ImGui::InputDouble("Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
         if (updateHoverHelp) updateHoverHelp("Amp を調整します。", "音量スケールが変わります。", "上げすぎるとクリップしやすくなります。");
@@ -340,7 +340,7 @@ bool DrawChannelEditor(
     }
 
     bool layer3Changed = false;
-    if (ImGui::CollapsingHeader("Source Details", ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {
         const bool changedBeforeSourceDetails = changed;
         if (showSourceTypeSelector)
@@ -357,7 +357,7 @@ bool DrawChannelEditor(
                     break;
                 }
             }
-            if (ImGui::BeginCombo("Source Type", config::SourceKindToDisplayName(guiSourceKinds[static_cast<size_t>(srcType)])))
+            if (ImGui::BeginCombo("音源タイプ", config::SourceKindToDisplayName(guiSourceKinds[static_cast<size_t>(srcType)])))
             {
                 for (size_t i = 0; i < guiSourceKindCount; i++)
                 {

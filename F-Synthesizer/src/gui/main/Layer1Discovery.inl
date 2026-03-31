@@ -86,7 +86,7 @@ void DrawLayer1Discovery(
     {
         const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
         const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
-        ImGui::TextDisabled("Source: %s  (%d presets)",
+        ImGui::TextDisabled("音源: %s  （%d件）",
             config::SourceKindToDisplayName(kind),
             static_cast<int>(state.presetItems.size()));
     }
@@ -179,7 +179,7 @@ void DrawLayer1Discovery(
     }
     if (!visibleAnyPreset)
     {
-        ImGui::TextDisabled("この SourceType に対応するプリセットはありません");
+        ImGui::TextDisabled("この音源タイプに対応するプリセットはありません");
     }
     ImGui::EndChild();
 

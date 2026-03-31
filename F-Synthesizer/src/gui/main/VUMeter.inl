@@ -112,7 +112,7 @@ static void DrawVUMeter(GUIState& state)
 
     // ---- 3. 描画 ----
     ImGui::Separator();
-    ImGui::TextDisabled("Level (Preview)");
+    ImGui::TextDisabled("レベル");
 
     // バーの色: 0..0.7 = 緑、0.7..0.9 = 黄、0.9.. = 赤
     const ImVec4 barColor = (vuLevel > 0.9f) ? ImVec4(0.9f, 0.25f, 0.25f, 1.0f)

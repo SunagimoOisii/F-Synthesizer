@@ -33,11 +33,11 @@ void DrawPianoRollPanel(
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
 
-    ImGui::TextUnformatted("Piano Roll");
+    ImGui::TextUnformatted("ピアノロール");
     ImGui::SetNextItemWidth(140.0f);
-    ImGui::SliderInt("PR Channel", &state.displayChannel, 0, 15);
+    ImGui::SliderInt("表示チャンネル", &state.displayChannel, 0, 15);
     ImGui::SameLine();
-    ImGui::Text("Snap: %s", SnapLabel(state.snapIndex));
+    ImGui::Text("スナップ: %s", SnapLabel(state.snapIndex));
     ImGui::SameLine();
     if (ImGui::SmallButton("OFF"))
     {
@@ -64,40 +64,40 @@ void DrawPianoRollPanel(
         SetSnapIndex(state, 4, appendLog);
     }
     ImGui::SameLine();
-    ImGui::Checkbox("PR Follow", &state.followPreviewPlayback);
+    ImGui::Checkbox("再生位置に追従", &state.followPreviewPlayback);
     ImGui::SameLine();
     if (state.previewRangeEnabled)
     {
-        ImGui::Text("PR Range=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
+        ImGui::Text("再生範囲=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
     }
     else
     {
-        ImGui::Text("PR StartTick=%d", state.previewStartTick);
+        ImGui::Text("再生開始Tick=%d", state.previewStartTick);
     }
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / Space=再生停止 / Q,1-4=Snap");
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / Space=再生停止 / Q,1-4=スナップ");
 
     if (state.hasLoadError)
     {
-        ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "PianoRoll load failed: %s", state.lastError.c_str());
+        ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "ピアノロールの読み込みに失敗: %s", state.lastError.c_str());
     }
     else
     {
         const bool hasSelection = AnySelected(state);
-        ImGui::Text("PianoRoll notes=%zu, selected=%s, tpq=%d, maxTick=%d",
+        ImGui::Text("ノート数=%zu, 選択=%s, 四分音符あたりTick=%d, 最大Tick=%d",
             state.notes.size(),
-            hasSelection ? "yes" : "no",
+            hasSelection ? "あり" : "なし",
             state.ticksPerQuarter,
             state.maxTick);
         ImGui::SameLine();
         ImGui::BeginDisabled(state.undoStack.empty());
-        if (ImGui::SmallButton("Undo"))
+        if (ImGui::SmallButton("元に戻す"))
         {
             ExecuteUndo(state);
         }
         ImGui::EndDisabled();
         ImGui::SameLine();
         ImGui::BeginDisabled(state.redoStack.empty());
-        if (ImGui::SmallButton("Redo"))
+        if (ImGui::SmallButton("やり直し"))
         {
             ExecuteRedo(state);
         }

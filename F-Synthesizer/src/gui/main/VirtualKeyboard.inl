@@ -59,8 +59,8 @@ static void DrawVirtualKeyboard(GUIState& state)
 
     // ---- Chord UI ----
     ImGui::Separator();
-    const char* chordTypes[] = { "Major", "Minor", "7th", "Minor 7th", "Sus4" };
-    ImGui::Checkbox("Chord", &state.chordModeEnabled);
+    const char* chordTypes[] = { "メジャー", "マイナー", "セブンス", "マイナー7th", "サス4" };
+    ImGui::Checkbox("コード", &state.chordModeEnabled);
     if (state.chordModeEnabled)
     {
         ImGui::SameLine();

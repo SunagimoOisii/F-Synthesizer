@@ -65,7 +65,7 @@ void ApplyAndTriggerPreview(GUIState& state, int ch)
 void DrawLayer2Macros(GUIState& state)
 {
     ImGui::SetNextItemOpen(state.layer2Expanded, ImGuiCond_Once);
-    if (!ImGui::CollapsingHeader("調整  ( マクロスライダー )"))
+    if (!ImGui::CollapsingHeader("調整"))
     {
         state.layer2Expanded = false;
         return;
@@ -154,7 +154,7 @@ void DrawLayer2Macros(GUIState& state)
     ImGui::Separator();
 
     // 強度選択ラジオボタン
-    static const char* kStrengthLabels[] = { "Subtle", "Medium", "Wild" };
+    static const char* kStrengthLabels[] = { "控えめ", "標準", "大胆" };
     for (int i = 0; i < 3; ++i)
     {
         if (i > 0)
@@ -168,7 +168,7 @@ void DrawLayer2Macros(GUIState& state)
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Randomize"))
+    if (ImGui::Button("ランダム化"))
     {
         // Undo スタックに積む（Ctrl+Z 対応）
         PushSoundHistoryEntry(state, ch, cfg, sliders);

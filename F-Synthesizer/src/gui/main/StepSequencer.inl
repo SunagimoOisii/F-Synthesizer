@@ -9,13 +9,13 @@ struct StepSeqRowDef
 };
 
 static constexpr StepSeqRowDef kStepSeqRows[GUIStepSeqState::kRows] = {
-    { 36, "Kick" },
-    { 38, "Snare" },
-    { 42, "C.HH" },
-    { 46, "O.HH" },
-    { 45, "LTom" },
-    { 48, "MTom" },
-    { 49, "Crash" },
+    { 36, "キック" },
+    { 38, "スネア" },
+    { 42, "クローズHH" },
+    { 46, "オープンHH" },
+    { 45, "ロータム" },
+    { 48, "ミッドタム" },
+    { 49, "クラッシュ" },
 };
 
 static void LoadStepSeqFromPianoRoll(GUIStepSeqState& ss, const gui::PianoRollState& pr)
@@ -167,14 +167,14 @@ static void DrawStepSeqPanel(GUIState& state)
         }
         if (ImGui::IsItemHovered())
         {
-            ImGui::SetTooltip("Row velocity: %d", ss.velocity[r]);
+            ImGui::SetTooltip("行ベロシティ: %d", ss.velocity[r]);
         }
 
         ImGui::PopID();
     }
 
     ImGui::Spacing();
-    if (ImGui::Button("Clear All"))
+    if (ImGui::Button("すべてクリア"))
     {
         for (int r = 0; r < GUIStepSeqState::kRows; ++r)
         {

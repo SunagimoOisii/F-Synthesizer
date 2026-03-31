@@ -3,7 +3,7 @@
             bool localChanged = false;
             int idx = WaveToIndex(src.wave);
             const char* waves[] = { "sine", "square", "saw", "triangle" };
-            localChanged |= ImGui::Combo("Wave", &idx, waves, IM_ARRAYSIZE(waves));
+            localChanged |= ImGui::Combo("波形", &idx, waves, IM_ARRAYSIZE(waves));
             if (updateHoverHelp) updateHoverHelp("Wave を選択します。", "基本波形キャラクターが変わります。", nullptr);
             src.wave = WaveFromIndex(idx);
             if (src.wave == WaveType::Square)
@@ -33,23 +33,23 @@
 
             int unisonVoices = src.unisonVoices;
             ImGui::SetNextItemWidth(220.0f);
-            if (ImGui::SliderInt("Unison Voices", &unisonVoices, 1, 8))
+            if (ImGui::SliderInt("ユニゾン発音数", &unisonVoices, 1, 8))
             {
                 src.unisonVoices = unisonVoices;
                 localChanged = true;
             }
             if (updateHoverHelp) updateHoverHelp("Unison Voices を調整します。", "重ねる発音数が変わり厚みが変わります。", "増やすほどCPU負荷が上がります。");
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Unison Detune (cent)", src.unisonDetuneCents, 0.0f, 120.0f, "%.1f");
+            localChanged |= sliderWaveParam("重ね音のずれ量", src.unisonDetuneCents, 0.0f, 120.0f, "%.1f");
             if (updateHoverHelp) updateHoverHelp("Unison Detune を調整します。", "重ね音のピッチ差が変わります。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Unison Spread", src.unisonSpread, 0.0f, 1.0f, "%.2f");
+            localChanged |= sliderWaveParam("ユニゾン広がり", src.unisonSpread, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Unison Spread を調整します。", "ステレオの広がりが変わります。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Sub Osc Level", src.subOscLevel, 0.0f, 2.0f, "%.2f");
+            localChanged |= sliderWaveParam("サブオシレータ音量", src.subOscLevel, 0.0f, 2.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Sub Osc Level を調整します。", "低域補助成分の音量が変わります。", nullptr);
 
-            std::string hardSyncLabel = std::string("Hard Sync##") + hardSyncTag;
+            std::string hardSyncLabel = std::string("強制同期（硬い音）##") + hardSyncTag;
             localChanged |= ImGui::Checkbox(hardSyncLabel.c_str(), &src.hardSyncEnabled);
             if (updateHoverHelp) updateHoverHelp("Hard Sync を切り替えます。", "倍音の金属感が変わります。クラシックなジッパーサウンドを作れます。", nullptr);
             if (src.hardSyncEnabled)
@@ -59,7 +59,7 @@
                 localChanged |= sliderWaveParam(syncRatioLabel.c_str(), src.hardSyncRatio, 0.5f, 8.0f, "%.3f");
                 if (updateHoverHelp) updateHoverHelp("Sync Ratio を調整します。", "スレーブ周波数の倍率が変わります。高いほど高次倍音が強調されます。", nullptr);
             }
-            localChanged |= ImGui::Checkbox("Ring Mod", &src.ringModEnabled);
+            localChanged |= ImGui::Checkbox("金属音ミックス", &src.ringModEnabled);
             if (updateHoverHelp) updateHoverHelp("Ring Mod を切り替えます。", "2つの音が干渉して金属的・ベル的な響きになります。", nullptr);
             if (src.ringModEnabled)
             {
@@ -72,7 +72,7 @@
             }
 
             ImGui::Separator();
-            ImGui::TextUnformatted("Arpeggio");
+            ImGui::TextUnformatted("アルペジオ");
             std::string arpEnabledLabel = std::string("Enabled##") + arpeggioTag;
             std::string arpRateLabel = std::string("Rate Hz##") + arpeggioTag;
             std::string arpStepsLabel = std::string("Steps##") + arpeggioTag;
@@ -108,7 +108,7 @@
             case FilterMode::BandPass: filterModeIdx = 3; break;
             }
             ImGui::SetNextItemWidth(220.0f);
-            if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
+            if (ImGui::Combo("フィルタモード", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
             {
                 switch (filterModeIdx)
                 {
@@ -127,10 +127,10 @@
                 ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "(active)");
             }
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Filter Cutoff (Hz)", src.filterCutoffHz, 10.0f, 20000.0f, "%.1f");
+            localChanged |= sliderWaveParam("フィルタカットオフ (Hz)", src.filterCutoffHz, 10.0f, 20000.0f, "%.1f");
             if (updateHoverHelp) updateHoverHelp("Filter Cutoff を調整します。", "通過帯域の中心が変わります。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Filter Resonance (Q)", src.filterResonance, 0.1f, 18.0f, "%.2f");
+            localChanged |= sliderWaveParam("フィルタ強調", src.filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp)
             {
                 updateHoverHelp(
@@ -139,7 +139,7 @@
                     nullptr);
             }
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Filter Keytrack", src.filterKeytrack, 0.0f, 1.0f, "%.2f");
+            localChanged |= sliderWaveParam("フィルタキー追従", src.filterKeytrack, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Keytrack を調整します。", "ノート音程に連動してカットオフが動く量が変わります。基準は C4(60)。", nullptr);
             return localChanged;
         };
@@ -165,17 +165,17 @@
             }
 
             ImGui::Separator();
-            ImGui::TextUnformatted("Smoothing");
-            localChanged |= ImGui::Checkbox("Smoothing Enabled", &src.smoothing.enabled);
+            ImGui::TextUnformatted("スムージング");
+            localChanged |= ImGui::Checkbox("スムージング有効", &src.smoothing.enabled);
             if (updateHoverHelp) updateHoverHelp("Smoothing Enabled を切り替えます。", "パラメータ変化の段差を抑えます。", nullptr);
-            localChanged |= ImGui::Checkbox("Pitch Smoothing Enabled", &src.smoothing.pitchEnabled);
+            localChanged |= ImGui::Checkbox("ピッチスムージング有効", &src.smoothing.pitchEnabled);
             if (updateHoverHelp) updateHoverHelp("Pitch Smoothing Enabled を切り替えます。", "ピッチ変化の滑らかさが変わります。", nullptr);
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Amp Smoothing (ms)", src.smoothing.ampTimeMs, 0.0f, 1000.0f, "%.1f");
+            localChanged |= sliderWaveParam("音量スムージング (ms)", src.smoothing.ampTimeMs, 0.0f, 1000.0f, "%.1f");
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Pitch Smoothing (ms)", src.smoothing.pitchTimeMs, 0.0f, 1000.0f, "%.1f");
+            localChanged |= sliderWaveParam("ピッチスムージング (ms)", src.smoothing.pitchTimeMs, 0.0f, 1000.0f, "%.1f");
             ImGui::SetNextItemWidth(220.0f);
-            localChanged |= sliderWaveParam("Filter Smoothing (ms)", src.smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
+            localChanged |= sliderWaveParam("フィルタスムージング (ms)", src.smoothing.filterCutoffTimeMs, 0.0f, 1000.0f, "%.1f");
             localChanged |= drawModulationEditor(modulationId, src.modulation, true, false, true);
             return localChanged;
         };

@@ -15,13 +15,13 @@ static void DrawExportView(
     ImGui::BeginDisabled(state.running);
 
     // ---- 出力先パス ----
-    state.presetDirty |= ImGui::InputText("Output Path", state.wavPath, IM_ARRAYSIZE(state.wavPath));
+    state.presetDirty |= ImGui::InputText("出力パス", state.wavPath, IM_ARRAYSIZE(state.wavPath));
     updateHoverHelp(
         "WAVの書き出し先パスを指定します。",
         "WAVの出力先が変わります。",
         "Serial Save が無効だと既存ファイルを上書きする場合があります。");
     ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
+    if (ImGui::Button("参照..."))
     {
         std::string selected;
         const wchar_t* wavFilter = L"WAV Files (*.wav)\0*.wav\0All Files (*.*)\0*.*\0";
@@ -33,14 +33,14 @@ static void DrawExportView(
     }
     updateHoverHelp(
         "出力先WAVパスを選択するダイアログを開きます。",
-        "Output Pathを更新します。",
+        "出力パスを更新します。",
         "保存権限のない場所は失敗します。");
     ImGui::SameLine();
-    if (ImGui::Button("Copy##wavPath"))
+    if (ImGui::Button("コピー##wavPath"))
     {
         ImGui::SetClipboardText(state.wavPath);
     }
-    updateHoverHelp("Output Path をコピーします。", "パスをクリップボードへコピーします。", nullptr);
+    updateHoverHelp("出力パス をコピーします。", "パスをクリップボードへコピーします。", nullptr);
     {
         const std::string compact = CompactPathForUI(state.wavPath);
         ImGui::TextDisabled("%s", compact.c_str());
@@ -52,28 +52,28 @@ static void DrawExportView(
 
     // ---- フォーマットサマリー（読み取り専用） ----
     ImGui::Separator();
-    ImGui::TextDisabled("Format: %d Hz / %dbit   Serial Save: %s",
+    ImGui::TextDisabled("形式: %d Hz / %dbit   連番保存: %s",
         state.sampleRate, state.bits, state.serialSave ? "ON" : "OFF");
     updateHoverHelp(
         "現在のフォーマット設定のサマリーです。",
-        "詳細設定は Music タブの Render Settings で変更できます。",
+        "詳細設定は 音楽 タブの レンダー設定 で変更できます。",
         nullptr);
 
     // ---- 出力対象 ----
     ImGui::Separator();
-    ImGui::TextUnformatted("Output Target");
+    ImGui::TextUnformatted("出力対象");
     const int outputMode = (state.targetChannel < 0) ? 0 : 1;
-    if (ImGui::RadioButton("All Channels", outputMode == 0))
+    if (ImGui::RadioButton("全チャンネル", outputMode == 0))
     {
         state.targetChannel = -1;
         state.presetDirty = true;
     }
     updateHoverHelp(
-        "出力対象を All Channels にします。",
+        "出力対象を 全チャンネル にします。",
         "全MIDIチャンネルを出力します。",
         nullptr);
     ImGui::SameLine();
-    if (ImGui::RadioButton("Single Channel", outputMode == 1))
+    if (ImGui::RadioButton("単一チャンネル", outputMode == 1))
     {
         state.targetChannel = std::clamp(state.targetChannel, 0, 15);
         if (state.targetChannel < 0)
@@ -83,21 +83,21 @@ static void DrawExportView(
         state.presetDirty = true;
     }
     updateHoverHelp(
-        "出力対象を Single Channel にします。",
+        "出力対象を 単一チャンネル にします。",
         "指定chのみを出力します。",
         nullptr);
     if (state.targetChannel >= 0)
     {
         ImGui::SetNextItemWidth(220.0f);
         int singleTarget = std::clamp(state.targetChannel, 0, 15);
-        if (ImGui::SliderInt("Target Ch##export", &singleTarget, 0, 15))
+        if (ImGui::SliderInt("対象ch##export", &singleTarget, 0, 15))
         {
             state.targetChannel = singleTarget;
             state.presetDirty = true;
         }
         updateHoverHelp(
             "書き出し対象のチャンネルを変更します。",
-            "Export対象chが変わります。",
+            "書き出し対象chが変わります。",
             nullptr);
     }
 
@@ -106,21 +106,21 @@ static void DrawExportView(
     // ---- ボタン ----
     ImGui::Separator();
     ImGui::BeginDisabled(state.running);
-    if (ImGui::Button("Export WAV"))
+    if (ImGui::Button("WAV書き出し"))
     {
         StartGUIRun(state, false);
     }
     updateHoverHelp(
-        "Export WAVを実行します。",
+        "WAV書き出しを実行します。",
         "現在設定でWAVを書き出します。",
         "再生中の場合は停止してから書き出しを開始します。");
     ImGui::SameLine();
-    if (ImGui::Button("Play Preview"))
+    if (ImGui::Button("プレビュー再生"))
     {
         StartGUIRun(state, true);
     }
     updateHoverHelp(
-        "Play Previewを実行します。",
+        "プレビュー再生を実行します。",
         "現在のMIDI設定でメモリ再生します。",
         "WAVファイルは出力しません。");
     ImGui::EndDisabled();
