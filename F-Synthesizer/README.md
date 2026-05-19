@@ -32,7 +32,7 @@ git status --short --branch
 # ビルド / 標準チェック
 .\scripts\check.ps1
 
-# レンダリング・音声まわりを触った後の任意 smoke
+# レンダリング・音声・CLI・config 読み込みを触った後だけ使う任意 smoke
 .\scripts\check.ps1 -RunRuntimeSmoke
 
 # GUI 実行

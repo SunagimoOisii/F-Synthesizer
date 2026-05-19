@@ -25,7 +25,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 # 標準検証
 .\scripts\check.ps1
 
-# CLI / render / config 変更時の任意 runtime smoke
+# CLI / render / audio / config 変更時だけ使う任意 runtime smoke
 .\scripts\check.ps1 -RunRuntimeSmoke
 
 # GUI
@@ -42,7 +42,8 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 ## 検証方針
 
 - 通常導線は `.\scripts\check.ps1`。
-- `-RunRuntimeSmoke` は、render、audio、config、CLI、実行ファイル起動に影響する変更時だけ使う。
+- `-RunRuntimeSmoke` は毎回不要。render、audio、config、CLI、実行ファイル起動に影響する変更時だけ使う。
+- runtime smoke は最小 MIDI を一時生成し、短い WAV と missing config の失敗だけを確認する。
 - UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
 - 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 

@@ -1,7 +1,8 @@
 param(
     [string]$Configuration = "Debug",
     [string]$Platform = "x64",
-    [switch]$RunRuntimeSmoke
+    [switch]$RunRuntimeSmoke,
+    [int]$RuntimeSmokeTimeoutSec = 10
 )
 
 Set-StrictMode -Version Latest
@@ -109,20 +110,73 @@ function Parse-RenderStats {
 function Invoke-CLI {
     param(
         [string]$ExePath,
-        [string[]]$CliArgs
+        [string[]]$CliArgs,
+        [int]$TimeoutSec = 10
     )
 
-    $out = & $ExePath @CliArgs 2>&1 | Out-String
+    $tempBase = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+    $stdoutPath = "$tempBase.out"
+    $stderrPath = "$tempBase.err"
+    $p = Start-Process -FilePath $ExePath -ArgumentList $CliArgs -NoNewWindow -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    if (-not $p.WaitForExit($TimeoutSec * 1000)) {
+        Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+        return [PSCustomObject]@{
+            ExitCode = -999
+            Output = "CLI command timed out after ${TimeoutSec}s: $($CliArgs -join ' ')"
+        }
+    }
+
+    $out = ""
+    if (Test-Path $stdoutPath) {
+        $out += Get-Content -Path $stdoutPath -Raw -ErrorAction SilentlyContinue
+    }
+    if (Test-Path $stderrPath) {
+        $err = Get-Content -Path $stderrPath -Raw -ErrorAction SilentlyContinue
+        if ($err) {
+            $out += "`r`n$err"
+        }
+    }
+    Remove-Item -Path $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
+
     return [PSCustomObject]@{
-        ExitCode = $LASTEXITCODE
+        ExitCode = $p.ExitCode
         Output = $out
     }
+}
+
+function Write-BytesFile {
+    param(
+        [string]$Path,
+        [byte[]]$Bytes
+    )
+
+    [System.IO.File]::WriteAllBytes($Path, $Bytes)
+}
+
+function New-MIDIFileBytes {
+    param(
+        [byte[]]$TrackData
+    )
+
+    $header = [byte[]](
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60
+    )
+    $len = [uint32]$TrackData.Length
+    $trackHeader = [byte[]](
+        0x4D, 0x54, 0x72, 0x6B,
+        [byte](($len -shr 24) -band 0xFF),
+        [byte](($len -shr 16) -band 0xFF),
+        [byte](($len -shr 8) -band 0xFF),
+        [byte]($len -band 0xFF)
+    )
+    return ($header + $trackHeader + $TrackData)
 }
 
 function Run-RuntimeSmoke {
     param(
         [string]$RepoRoot,
-        [string]$ExePath
+        [string]$ExePath,
+        [int]$TimeoutSec
     )
 
     Ensure-RuntimeDependencies -ExePath $ExePath
@@ -132,7 +186,11 @@ function Run-RuntimeSmoke {
 
     $configPath = Join-Path $smokeDir "quick_smoke.json"
     $wavPath = Join-Path $smokeDir "quick_smoke.wav"
-    $midiPath = (Join-Path $RepoRoot "assets/midi/logo.mid") -replace "\\", "/"
+    $midiPathRaw = Join-Path $smokeDir "quick_smoke.mid"
+    $noteTrack = [byte[]](0x00,0x90,0x3C,0x64, 0x30,0x80,0x3C,0x00, 0x00,0xFF,0x2F,0x00)
+    Write-BytesFile -Path $midiPathRaw -Bytes (New-MIDIFileBytes -TrackData $noteTrack)
+
+    $midiPath = $midiPathRaw -replace "\\", "/"
     $wavPathNorm = ($wavPath -replace "\\", "/")
 
     $json = @"
@@ -141,15 +199,15 @@ function Run-RuntimeSmoke {
   "wavPath": "$wavPathNorm",
   "targetChannel": 0,
   "defaultWave": "saw",
-  "initialSeconds": 1,
+  "initialSeconds": 0.25,
   "bits": 16,
-  "sampleRate": 44100,
-  "extraReleaseSec": 0.05
+  "sampleRate": 22050,
+  "extraReleaseSec": 0.01
 }
 "@
     Set-Content -Path $configPath -Value $json -Encoding UTF8
 
-    $ok = Invoke-CLI -ExePath $ExePath -CliArgs @("--cli", "--config", $configPath)
+    $ok = Invoke-CLI -ExePath $ExePath -CliArgs @("--cli", "--config", $configPath) -TimeoutSec $TimeoutSec
     if ($ok.ExitCode -ne 0) {
         Write-Host $ok.Output
         throw "Runtime smoke render failed (exit=$($ok.ExitCode))."
@@ -163,7 +221,7 @@ function Run-RuntimeSmoke {
         throw "Runtime smoke WAV not found: $wavPath"
     }
 
-    $missing = Invoke-CLI -ExePath $ExePath -CliArgs @("--cli", "--config", (Join-Path $RepoRoot "config/__missing__.json"))
+    $missing = Invoke-CLI -ExePath $ExePath -CliArgs @("--cli", "--config", (Join-Path $RepoRoot "config/__missing__.json")) -TimeoutSec $TimeoutSec
     if ($missing.ExitCode -eq 0) {
         throw "Missing config should fail, but exited 0."
     }
@@ -194,7 +252,7 @@ try {
         if (-not (Test-Path $exePath)) {
             throw "Executable not found after build: $exePath"
         }
-        Run-RuntimeSmoke -RepoRoot $repoRoot -ExePath $exePath
+        Run-RuntimeSmoke -RepoRoot $repoRoot -ExePath $exePath -TimeoutSec $RuntimeSmokeTimeoutSec
     }
     else {
         Write-Host "Runtime smoke: skipped (use -RunRuntimeSmoke to enable)"
