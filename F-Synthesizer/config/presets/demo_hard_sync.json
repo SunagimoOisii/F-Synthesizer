@@ -1,0 +1,43 @@
+{
+  "tags": [
+    "機能デモ",
+    "アナログ",
+    "ハードシンク",
+    "リード"
+  ],
+  "description": "機能デモ: hard sync。sync ratioで鋭い倍音が出ることを確認する。",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.002,
+      "decaySec": 0.12,
+      "sustainLevel": 0.7,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0.05,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 6200,
+        "filterResonance": 1.1,
+        "filterKeytrack": 0.35,
+        "drive": 0.12,
+        "driftDepthCents": 2,
+        "driftRateHz": 0.2,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "hardSyncEnabled": true,
+        "hardSyncRatio": 3.0
+      }
+    }
+  }
+}

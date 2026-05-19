@@ -1,0 +1,60 @@
+{
+  "tags": [
+    "機能デモ",
+    "アナログ",
+    "LFO",
+    "サンプルホールド"
+  ],
+  "description": "機能デモ: Sample&Hold LFO。ランダム段階変調でfilterが跳ねる。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.004,
+      "decaySec": 0.18,
+      "sustainLevel": 0.7,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0.08,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4200,
+        "filterResonance": 1.2,
+        "filterKeytrack": 0.35,
+        "drive": 0.12,
+        "driftDepthCents": 2,
+        "driftRateHz": 0.2,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sampleAndHold",
+            "rateHz": 5.0,
+            "depth": 0.8,
+            "bipolar": true,
+            "keySync": true,
+            "delayMs": 0.0,
+            "fadeMs": 0.0
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.46,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

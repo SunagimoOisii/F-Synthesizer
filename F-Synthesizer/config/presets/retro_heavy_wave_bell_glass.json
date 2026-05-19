@@ -1,0 +1,41 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "波形",
+    "ベル",
+    "ガラス"
+  ],
+  "description": "透明感のある波形ベル。FMベルより柔らかいアクセント用。",
+  "channels": {
+    "0": {
+      "amp": 0.17,
+      "attackSec": 0.001,
+      "decaySec": 0.32,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.18,
+      "source": {
+        "type": "waveform",
+        "wave": "triangle",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0.0,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 7800,
+        "filterResonance": 0.8,
+        "filterKeytrack": 0.35,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 3.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 10.0
+        },
+        "ringModEnabled": true,
+        "ringModRatio": 2.0,
+        "ringModMix": 0.26
+      }
+    }
+  }
+}

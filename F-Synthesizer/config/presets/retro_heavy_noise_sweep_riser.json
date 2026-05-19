@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "ノイズ",
+    "効果音",
+    "スイープ"
+  ],
+  "description": "狭いbandpassのノイズスイープ。場面転換や効果音向け。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.001,
+      "decaySec": 0.24,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "noise",
+        "noise": "pink",
+        "filterMode": "bandpass",
+        "filterCutoffHz": 900,
+        "filterResonance": 3.2
+      }
+    }
+  }
+}

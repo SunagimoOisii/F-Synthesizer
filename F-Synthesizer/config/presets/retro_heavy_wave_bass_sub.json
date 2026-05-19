@@ -1,0 +1,38 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "波形",
+    "ベース",
+    "サブ"
+  ],
+  "description": "サブを強めた波形ベース。FMベースの下に敷ける低域。",
+  "channels": {
+    "0": {
+      "amp": 0.28,
+      "attackSec": 0.002,
+      "decaySec": 0.14,
+      "sustainLevel": 0.82,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "waveform",
+        "wave": "triangle",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0.55,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 2400,
+        "filterResonance": 0.75,
+        "filterKeytrack": 0.35,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": false,
+          "ampTimeMs": 3.0,
+          "pitchTimeMs": 2.0,
+          "filterCutoffTimeMs": 10.0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "FM",
+    "パッド",
+    "オルガン"
+  ],
+  "description": "90年代ゲーム風の太いFMオルガンパッド。ゆっくり揺れる持続音向け。",
+  "channels": {
+    "0": {
+      "amp": 0.15,
+      "attackSec": 0.018,
+      "decaySec": 0.32,
+      "sustainLevel": 0.88,
+      "releaseSec": 0.35,
+      "source": {
+        "type": "fm",
+        "algorithm": 4,
+        "feedback": 0.1,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.75,
+            "index": 0.8
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.58,
+            "index": 0.3
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.44,
+            "index": 0
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.34,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 7000,
+        "filterResonance": 0.7,
+        "drive": 0.01,
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.42,
+            "depth": 0.32,
+            "bipolar": true,
+            "keySync": false,
+            "delayMs": 300,
+            "fadeMs": 700
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.012,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "amp",
+              "amount": 0.12,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

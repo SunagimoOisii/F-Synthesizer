@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "PSG",
+    "コード",
+    "パルス"
+  ],
+  "description": "PSG pulseを重ねたコード。ピコピコ単音ではなく和音の厚みを狙う。",
+  "channels": {
+    "0": {
+      "amp": 0.17,
+      "attackSec": 0.002,
+      "decaySec": 0.08,
+      "sustainLevel": 0.76,
+      "releaseSec": 0.08,
+      "source": {
+        "type": "psg",
+        "wave": "pulse",
+        "duty": 3,
+        "volumeSteps": 14,
+        "maxVoices": 4
+      }
+    }
+  }
+}

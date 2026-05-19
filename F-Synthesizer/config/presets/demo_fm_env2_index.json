@@ -1,0 +1,70 @@
+{
+  "tags": [
+    "機能デモ",
+    "FM",
+    "Env2",
+    "インデックス"
+  ],
+  "description": "機能デモ: Env2でFM indexを短く押す。アタックの変化を確認する。",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.002,
+      "decaySec": 0.16,
+      "sustainLevel": 0.68,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "fm",
+        "algorithm": 3,
+        "feedback": 0.1,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 1,
+            "index": 1.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.8,
+            "index": 0.4
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.4,
+            "index": 0
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.2,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 7200,
+        "filterResonance": 0.8,
+        "drive": 0,
+        "modulation": {
+          "env2": {
+            "attackSec": 0,
+            "decaySec": 0.1,
+            "sustainLevel": 0,
+            "releaseSec": 0.04,
+            "curve": 0.85
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.85,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

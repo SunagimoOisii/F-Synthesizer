@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "PSG",
+    "ベース",
+    "三角波"
+  ],
+  "description": "三角波系の硬いベース。FMやdrumkitと混ぜる低域補強。",
+  "channels": {
+    "0": {
+      "amp": 0.22,
+      "attackSec": 0.001,
+      "decaySec": 0.1,
+      "sustainLevel": 0.82,
+      "releaseSec": 0.08,
+      "source": {
+        "type": "psg",
+        "wave": "triangle",
+        "duty": 3,
+        "volumeSteps": 15,
+        "maxVoices": 1
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "ノイズ",
+    "ドラム",
+    "金属"
+  ],
+  "description": "金属的なハット/ノイズ層。高域のザラつきでドラムを太くする。",
+  "channels": {
+    "9": {
+      "amp": 0.18,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.04,
+      "source": {
+        "type": "noise",
+        "noise": "blue",
+        "filterMode": "highpass",
+        "filterCutoffHz": 5200,
+        "filterResonance": 1.8
+      }
+    }
+  }
+}

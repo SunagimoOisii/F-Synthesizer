@@ -1,0 +1,53 @@
+{
+  "tags": [
+    "機能デモ",
+    "FM",
+    "アルゴリズム",
+    "積層"
+  ],
+  "description": "機能デモ: FM algorithm stack。縦に積んだ変調の濃い倍音を確認する。",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.002,
+      "decaySec": 0.14,
+      "sustainLevel": 0.7,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "fm",
+        "algorithm": 0,
+        "feedback": 0.12,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 1,
+            "index": 3
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.9,
+            "index": 0
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.3,
+            "index": 1.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.15,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 8500,
+        "filterResonance": 0.8,
+        "drive": 0.0
+      }
+    }
+  }
+}

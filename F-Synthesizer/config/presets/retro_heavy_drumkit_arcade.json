@@ -1,0 +1,135 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "ドラムキット",
+    "ドラム",
+    "アーケード"
+  ],
+  "description": "90年代アーケード寄りの基本ドラムキット。太いkickと硬いsnare。",
+  "channels": {
+    "9": {
+      "amp": 0.24,
+      "attackSec": 0.001,
+      "decaySec": 0.07,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.05,
+      "source": {
+        "type": "drumkit",
+        "map": {
+          "35": {
+            "drumType": "kick",
+            "gain": 1.0,
+            "baseFreq": 48,
+            "pitchDrop": 3.2,
+            "pitchDecaySec": 0.06,
+            "toneFreq": 110,
+            "toneLevel": 0.42,
+            "noiseLevel": 0.1,
+            "hpCut": 20,
+            "lpCut": 4300,
+            "toneWave": "sine",
+            "noiseType": "brown"
+          },
+          "36": {
+            "drumType": "kick",
+            "gain": 1.0,
+            "baseFreq": 48,
+            "pitchDrop": 3.2,
+            "pitchDecaySec": 0.06,
+            "toneFreq": 110,
+            "toneLevel": 0.42,
+            "noiseLevel": 0.1,
+            "hpCut": 20,
+            "lpCut": 4300,
+            "toneWave": "sine",
+            "noiseType": "brown"
+          },
+          "38": {
+            "drumType": "snare",
+            "gain": 0.86,
+            "baseFreq": 170,
+            "pitchDrop": 0.8,
+            "pitchDecaySec": 0.0,
+            "toneFreq": 240,
+            "toneLevel": 0.24,
+            "noiseLevel": 0.68,
+            "hpCut": 1500,
+            "lpCut": 6200,
+            "toneWave": "triangle",
+            "noiseType": "blue"
+          },
+          "40": {
+            "drumType": "snare",
+            "gain": 0.86,
+            "baseFreq": 170,
+            "pitchDrop": 0.8,
+            "pitchDecaySec": 0.0,
+            "toneFreq": 240,
+            "toneLevel": 0.24,
+            "noiseLevel": 0.68,
+            "hpCut": 1500,
+            "lpCut": 6200,
+            "toneWave": "triangle",
+            "noiseType": "blue"
+          },
+          "42": {
+            "drumType": "hat",
+            "gain": 0.72,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 7200,
+            "toneLevel": 0.12,
+            "noiseLevel": 0.9,
+            "hpCut": 4600,
+            "lpCut": 9800,
+            "toneWave": "square",
+            "noiseType": "blue"
+          },
+          "44": {
+            "drumType": "hat",
+            "gain": 0.64,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 6800,
+            "toneLevel": 0.1,
+            "noiseLevel": 0.84,
+            "hpCut": 3900,
+            "lpCut": 9000,
+            "toneWave": "square",
+            "noiseType": "blue"
+          },
+          "46": {
+            "drumType": "hat",
+            "gain": 0.76,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 7600,
+            "toneLevel": 0.14,
+            "noiseLevel": 0.92,
+            "hpCut": 5000,
+            "lpCut": 10800,
+            "toneWave": "square",
+            "noiseType": "blue"
+          },
+          "49": {
+            "drumType": "hat",
+            "gain": 0.82,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 8600,
+            "toneLevel": 0.2,
+            "noiseLevel": 0.96,
+            "hpCut": 5600,
+            "lpCut": 11800,
+            "toneWave": "square",
+            "noiseType": "blue"
+          }
+        }
+      }
+    }
+  }
+}

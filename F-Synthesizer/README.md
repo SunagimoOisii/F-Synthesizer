@@ -40,7 +40,7 @@ git status --short --branch
 
 # CLI 実行
 .\build\x64\Debug\F-Synthesizer.exe --cli
-.\build\x64\Debug\F-Synthesizer.exe --cli --preset wave_snes_lead_vibrato
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_lead_brasswall
 .\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
 ```
 

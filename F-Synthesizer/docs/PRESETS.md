@@ -1,128 +1,81 @@
 # PRESETS
 
-`config/presets/` 配下のプリセット一覧と用途メモ。
-詳細な履歴は Git history を参照する。
+`config/presets/` 配下のプリセット一覧と用途メモです。履歴は Git 履歴を参照します。
 
-## 設計方針（D-1）
+## 設計方針
 
-- 軸1: 役割網羅（`Lead / Bass / Chord / Pad / Pluck / Bell / Drumkit / SFX`）
-- 軸2: 世界観分離（`NES/GB`, `MD/PC-88`, `SNES-hybrid`, `Modern`）
-- 命名: `<source>_<world>_<role>_<character>`
+- 軸1: `retro_heavy_*`。90年代ゲーム音源風の重厚な実用音色。
+- 軸2: `demo_*`。1プリセット1テーマで既存機能を聴いて確認する音色。
+- 初期代表: `retro_heavy_fm_lead_brasswall`
+- 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
-## プリセット一覧（新セット）
+## 重厚レトロ
 
-### retro_nesgb
-
-| Preset | source | role | 対象ch | 用途メモ |
+| プリセット | 音源方式 | 役割 | 機能テーマ | 用途メモ |
 |---|---|---|---|---|
-| `psg_nesgb_lead_square` | `psg` | Lead | `0` | 8bitメロディ向けスクエア |
-| `psg_nesgb_bass_triangle` | `psg` | Bass | `0` | 低域土台の三角ベース |
-| `psg_noise_nesgb_sfx` | `psg` | SFX | `0` | ノイズ短音・効果音向け |
-| `psg_nesgb_chord_pulse` | `psg` | Chord | `0` | PSG 3-voice 和音レイヤー |
-| `drumkit_nesgb_core` | `drumkit` | Drumkit | `9` | NES系基本3点（kick/snare/hat） |
-| `wave_nesgb_pad_hollow` | `waveform` | Pad | `0` | NES三角波風ホローパッド |
-| `analog_nesgb_arp_heroic` | `analog` | Lead | `0` | root-fifth-octave アルペジオ 10Hz + keySync LFO |
-| `analog_nesgb_arp_fanfare` | `analog` | Lead | `0` | メジャートライアド アルペジオ 12Hz |
-| `analog_nesgb_lead_sync16` | `analog` | Lead | `0` | hardSync ratio2 + keySync saw LFO |
-| `analog_nesgb_chord_ring` | `analog` | Chord | `0` | ring mod 1.5x でエイリアンベル倍音 |
+| `retro_heavy_fm_lead_brasswall` | FM | リード | FM algorithm 6 / Env2 index | 厚いFMブラスリード。初回体験の代表音色 |
+| `retro_heavy_fm_lead_blade` | FM | リード | FM algorithm 7 / feedback | 硬く切り込む金属的リード |
+| `retro_heavy_fm_bass_pickgrit` | FM | ベース | FM algorithm 3 / Env2 index | ピック感とザラつきのあるFMベース |
+| `retro_heavy_fm_bass_depth` | FM | ベース | 低域FM / 暗めフィルター | 深く沈む低域用FMベース |
+| `retro_heavy_fm_chord_stack` | FM | コード | FM積み重ね / ゆっくりしたフィルター | 厚い和音と少し濁った倍音 |
+| `retro_heavy_fm_pad_organ` | FM | パッド | LFO delay/fade | 太いFMオルガンパッド |
+| `retro_heavy_fm_bell_steel` | FM | ベル | 非整数ratio | 抜けるスチールベル |
+| `retro_heavy_fm_pluck_arcade` | FM | プラック | 短いEnv2 index | アーケード風FMプラック |
+| `retro_heavy_fm_sfx_laser` | FM | 効果音 | pitch / Env2 sweep | レーザー系効果音 |
+| `retro_heavy_analog_lead_sync` | analog | リード | hard sync | sync倍音の太いリード |
+| `retro_heavy_analog_lead_pwm` | analog | リード | PWM / LFO | 揺れる矩形波リード |
+| `retro_heavy_analog_bass_drive` | analog | ベース | drive / sub oscillator | 荒い倍音の重いベース |
+| `retro_heavy_analog_chord_brass` | analog | コード | unison / filter LFO | FM群を支えるブラスコード |
+| `retro_heavy_analog_pad_tape` | analog | パッド | drift / slow LFO | テープ風に揺れる厚いパッド |
+| `retro_heavy_analog_arp_motor` | analog | アルペジオ | arpeggio | 推進力のある短いアルペジオ |
+| `retro_heavy_wave_bass_sub` | waveform | ベース | sub oscillator | FMベース下に敷く低域 |
+| `retro_heavy_wave_pad_sweep` | waveform | パッド | filter sweep | 滑らかな重厚パッド |
+| `retro_heavy_wave_bell_glass` | waveform | ベル | ring modulation | 柔らかいガラス系ベル |
+| `retro_heavy_psg_chord_pulse` | PSG | コード | pulse / 最大ボイス数 | PSGを厚く重ねたコード |
+| `retro_heavy_psg_bass_triangle` | PSG | ベース | triangle | 硬い低域補強 |
+| `retro_heavy_noise_hat_metal` | noise | ドラム | highpass noise | 金属的なハット層 |
+| `retro_heavy_noise_sweep_riser` | noise | 効果音 | bandpass noise | 場面転換向けノイズスイープ |
+| `retro_heavy_drumkit_arcade` | drumkit | ドラムキット | kick / snare / hat map | 90年代アーケード寄り基本キット |
+| `retro_heavy_drumkit_impact` | drumkit | ドラムキット | 重めのdrum map | 強いkickと金属hatのimpactキット |
 
-### retro_mdpc88
+## 機能デモ
 
-| Preset | source | role | 対象ch | 用途メモ |
+| プリセット | 音源方式 | 役割 | 機能テーマ | 用途メモ |
 |---|---|---|---|---|
-| `fm_mdpc88_lead_pierce` | `fm` | Lead | `0` | 抜けるFMリード |
-| `fm_mdpc88_bass_pick` | `fm` | Bass | `0` | ピック感のあるFMベース |
-| `fm_mdpc88_bass_algo3` | `fm` | Bass | `0` | algo 3 深いFMベース + exponential env2 |
-| `fm_mdpc88_chord_stack` | `fm` | Chord | `0` | 積層FMコード |
-| `fm_mdpc88_pluck_arcade` | `fm` | Pluck | `0` | アーケード寄り短音 |
-| `fm_mdpc88_bell_tine` | `fm` | Bell | `0` | FMベル/ティン系 |
-| `fm_mdpc88_pad_organ` | `fm` | Pad | `0` | algo 4 オルガンパッド + LFO delay/fade |
-| `fm_mdpc88_lead_algo6` | `fm` | Lead | `0` | algo 6 ブラスリード（Mega Drive風） |
-| `fm_mdpc88_lead_algo7` | `fm` | Lead | `0` | algo 7 四並列シマーリード |
-| `fm_mdpc88_sfx_laser` | `fm` | SFX | `0` | FM ピッチドロップ レーザーSFX |
-| `analog_mdpc88_chord_brass` | `analog` | Chord | `0` | MD/PC-88寄りのブラスコード |
-| `analog_mdpc88_lead_stabwarm` | `analog` | Lead | `0` | driven saw + exponential env2 フィルタースイープ |
-| `drumkit_mdpc88_arcade` | `drumkit` | Drumkit | `9` | MD系エレクトロ3点 |
-
-### hybrid_snes
-
-| Preset | source | role | 対象ch | 用途メモ |
-|---|---|---|---|---|
-| `wave_snes_lead_vibrato` | `waveform` | Lead | `0` | ビブラート付き主旋律 |
-| `wave_snes_bass_sub` | `waveform` | Bass | `0` | サブ強めの低域 |
-| `wave_snes_chord_glass` | `waveform` | Chord | `0` | 透明感のある和音 |
-| `wave_snes_pad_sweep` | `waveform` | Pad | `0` | 緩やかなフィルタスイープPad |
-| `wave_snes_pluck_soft` | `waveform` | Pluck | `0` | 柔らかい短音 |
-| `wave_snes_bell_water` | `waveform` | Bell | `0` | 三角波ベル + keySync LFO delay/fade |
-| `analog_snes_pluck_reso` | `analog` | Pluck | `0` | SNESハイブリッド寄りのレゾプラック |
-| `analog_snes_lead_pwm` | `analog` | Lead | `0` | PWM lead keySync unison （pulse width呼吸） |
-| `drumkit_snes_core` | `drumkit` | Drumkit | `9` | SNESソフトドラム（sine kick, pink hat） |
-| `noise_snes_pad_airwash` | `noise` | Pad | `0` | SNES風の空気感ノイズパッド |
-| `noise_snes_drum_rim` | `noise` | SFX | `0` | white noise highpass リムショット |
-
-### modern
-
-| Preset | source | role | 対象ch | 用途メモ |
-|---|---|---|---|---|
-| `wave_modern_lead_wide` | `waveform` | Lead | `0` | ユニゾン広がりリード |
-| `wave_modern_lead_pwm` | `waveform` | Lead | `0` | PWM + keySync LFO delay/fade（pulse width呼吸） |
-| `wave_modern_bass_subdrive` | `waveform` | Bass | `0` | ドライブ付きサブベース |
-| `wave_modern_chord_bright` | `waveform` | Chord | `0` | 明るい広がりコード |
-| `wave_modern_pad_air` | `waveform` | Pad | `0` | 空気感のある長音Pad |
-| `wave_modern_pluck_click` | `waveform` | Pluck | `0` | クリック感のある短音 |
-| `fm_modern_bell_digital` | `fm` | Bell | `0` | デジタル寄りベル |
-| `fm_modern_pad_vox` | `fm` | Pad | `0` | algo 5 vocal pad + modwheel→index |
-| `wave_modern_sfx_riser` | `waveform` | SFX | `0` | 上昇系ライザー |
-| `analog_modern_lead_drift` | `analog` | Lead | `0` | ドリフトと同期感のあるモダンリード |
-| `analog_modern_lead_resowobble` | `analog` | Lead | `0` | LFO→filterResonance wobble（wah的キャラクター） |
-| `analog_modern_bass_mono` | `analog` | Bass | `0` | 低域重視のモノベース |
-| `analog_modern_pad_tape` | `analog` | Pad | `0` | ゆらぎを活かしたテープ風パッド |
-| `analog_modern_sfx_glitch` | `analog` | SFX | `0` | 8step random arp + S&H LFO グリッチ |
-| `drumkit_modern_punchy` | `drumkit` | Drumkit | `9` | モダン電子ドラム（deep kick, tight hat） |
-| `noise_modern_sfx_risergrain` | `noise` | SFX | `0` | モダンな粒状ライザーノイズ |
-
-### analog（world coverage）
-
-| Preset | source | role | 対象ch | 用途メモ |
-|---|---|---|---|---|
-| `analog_nesgb_lead_chipfat` | `analog` | Lead | `0` | NES/GB感を残した太いパルス系リード |
-| `analog_mdpc88_chord_brass` | `analog` | Chord | `0` | MD/PC-88寄りのブラスコード |
-| `analog_snes_pluck_reso` | `analog` | Pluck | `0` | SNESハイブリッド寄りのレゾプラック |
-| `analog_modern_lead_drift` | `analog` | Lead | `0` | ドリフトと同期感のあるモダンリード |
-| `analog_modern_bass_mono` | `analog` | Bass | `0` | 低域重視のモノベース |
-| `analog_modern_pad_tape` | `analog` | Pad | `0` | ゆらぎを活かしたテープ風パッド |
-
-### noise（world coverage）
-
-| Preset | source | role | 対象ch | 用途メモ |
-|---|---|---|---|---|
-| `noise_nesgb_sfx_burst` | `noise` | SFX | `0` | NES/GB向け短いノイズバースト |
-| `noise_mdpc88_drum_hatdust` | `noise` | Drum | `9` | MD/PC-88向けハット層ノイズ |
-| `noise_mdpc88_sfx_sweep` | `noise` | SFX | `0` | pink noise bandpass 共鳴スイープ |
-| `noise_snes_pad_airwash` | `noise` | Pad | `0` | SNES風の空気感ノイズパッド |
-| `noise_snes_drum_rim` | `noise` | SFX | `0` | white noise highpass リムショット |
-| `noise_modern_sfx_risergrain` | `noise` | SFX | `0` | モダンな粒状ライザーノイズ |
+| `demo_fm_algo_stack` | FM | デモ | FM algorithm stack | 縦積み変調の濃い倍音 |
+| `demo_fm_algo_parallel` | FM | デモ | FM algorithm parallel | 複数carrierの並列感 |
+| `demo_fm_feedback_edge` | FM | デモ | FM feedback | feedbackで増えるエッジ |
+| `demo_fm_env2_index` | FM | デモ | Env2 -> fm.index | アタック時のFM index変化 |
+| `demo_pwm_lfo` | waveform | デモ | LFO -> pulseWidth | PWMによる矩形波の揺れ |
+| `demo_hard_sync` | analog | デモ | hard sync | sync ratioによる鋭い倍音 |
+| `demo_ring_mod` | waveform | デモ | ring modulation | 金属的な非整数倍音 |
+| `demo_arpeggio_steps` | analog | デモ | arpeggio | 8step半音列の音程変化 |
+| `demo_lfo_sample_hold` | analog | デモ | Sample&Hold LFO | ランダム段階filter変調 |
+| `demo_lfo_delay_fade` | analog | デモ | LFO delay/fade | 後から立ち上がるビブラート |
+| `demo_env2_curve` | FM | デモ | Env2 curve | 指数的なindex減衰 |
+| `demo_filter_resonance` | analog | デモ | filter resonance | 共振スイープの癖 |
+| `demo_modwheel_filter` | analog | デモ | modWheel -> filterCutoffHz | MIDI CCで明るさを操作 |
+| `demo_pressure_amp` | FM | デモ | pressure -> amp/filter | Aftertouch入力の確認 |
+| `demo_noise_filter` | noise | デモ | noise bandpass | ノイズに音程感を付ける |
+| `demo_master_fx_chain` | FM | デモ | master effects | bit crushからreverbまでのチェーン確認 |
 
 ## 使い方
 
 CLI:
 
 ```powershell
-# 例: SNES系リード
-F-Synthesizer.exe --cli --preset wave_snes_lead_vibrato
-
-# 例: MD系FMプラック
-F-Synthesizer.exe --cli --preset fm_mdpc88_pluck_arcade
+F-Synthesizer.exe --cli --preset retro_heavy_fm_lead_brasswall
+F-Synthesizer.exe --cli --preset demo_hard_sync
 ```
 
 GUI:
 
 - メイン画面の `Preset` コンボから選択して適用する。
+- `tags` と説明文は Layer1 Discovery の絞り込み・説明表示に使う。
 
 ## 補足
 
 - プリセットは `base.json` に差分適用される。
-- `source.smoothing` は `waveform` のみ有効。
-- FM の `modulation` ブロックは `source` 内に記述する。
+- ファイル名は CLI 指定しやすいように英数字と underscore で統一する。
+- 説明文とドキュメントは日本語で記述する。
 - 音源方式とレンダリング契約は `docs/Architecture.md` を正本とする。
-- 旧プリセットは削除済み（`config/presets/` には新セットのみ配置）。

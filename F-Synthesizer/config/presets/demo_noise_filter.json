@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "機能デモ",
+    "ノイズ",
+    "フィルター",
+    "バンドパス"
+  ],
+  "description": "機能デモ: noise filter。bandpassとresonanceでノイズに音程感を付ける。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.001,
+      "decaySec": 0.22,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "noise",
+        "noise": "pink",
+        "filterMode": "bandpass",
+        "filterCutoffHz": 1200,
+        "filterResonance": 5.0
+      }
+    }
+  }
+}

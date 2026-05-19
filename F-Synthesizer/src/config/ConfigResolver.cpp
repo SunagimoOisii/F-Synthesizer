@@ -15,7 +15,7 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
     // 1) --config 明示
     // 2) --preset 未指定時の default.json
     // 3) --preset 指定時の base + preset 合成
-    // 4) 何も無ければ base + wave_snes_lead_vibrato を自動適用
+    // 4) 何も無ければ base + retro_heavy_fm_lead_brasswall を自動適用
     if (!options.configPath.empty())
     {
         outResolved.selectedConfigPath = options.configPath;
@@ -76,7 +76,7 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
     }
 
     const std::filesystem::path basePath = projectRoot / "config" / "base.json";
-    const std::filesystem::path fallbackPresetPath = projectRoot / "config" / "presets" / "wave_snes_lead_vibrato.json";
+    const std::filesystem::path fallbackPresetPath = projectRoot / "config" / "presets" / "retro_heavy_fm_lead_brasswall.json";
     if (std::filesystem::exists(basePath) && std::filesystem::exists(fallbackPresetPath))
     {
         std::string loadErr;
@@ -90,7 +90,7 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
             err = "Failed to load preset config: " + PathToUtf8(fallbackPresetPath) + " (" + loadErr + ")";
             return false;
         }
-        outResolved.infoLines.push_back("Preset: wave_snes_lead_vibrato (auto)");
+        outResolved.infoLines.push_back("Preset: retro_heavy_fm_lead_brasswall (auto)");
         outResolved.infoLines.push_back("Base Config Path: " + PathToUtf8(basePath));
         outResolved.infoLines.push_back("Preset Config Path: " + PathToUtf8(fallbackPresetPath));
     }

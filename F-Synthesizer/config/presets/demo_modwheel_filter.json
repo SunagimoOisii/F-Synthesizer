@@ -1,0 +1,51 @@
+{
+  "tags": [
+    "機能デモ",
+    "アナログ",
+    "モジュレーションホイール",
+    "フィルター"
+  ],
+  "description": "機能デモ: modwheelをfilterへ送る。外部MIDI CCで明るさを動かす用途。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.004,
+      "decaySec": 0.14,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 2,
+        "unisonDetuneCents": 6,
+        "unisonSpread": 0.3,
+        "subOscLevel": 0.08,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 3600,
+        "filterResonance": 1.0,
+        "filterKeytrack": 0.35,
+        "drive": 0.12,
+        "driftDepthCents": 3,
+        "driftRateHz": 0.2,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "routes": {
+            "0": {
+              "source": "modWheel",
+              "destination": "filterCutoffHz",
+              "amount": 0.75,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

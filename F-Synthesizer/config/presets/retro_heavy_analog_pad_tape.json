@@ -1,0 +1,66 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "アナログ",
+    "パッド",
+    "テープ"
+  ],
+  "description": "テープ風に揺れる厚いパッド。driftと低いfilterで背景に置きやすい。",
+  "channels": {
+    "0": {
+      "amp": 0.14,
+      "attackSec": 0.04,
+      "decaySec": 0.38,
+      "sustainLevel": 0.86,
+      "releaseSec": 0.45,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 3,
+        "unisonDetuneCents": 10,
+        "unisonSpread": 0.55,
+        "subOscLevel": 0.1,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 3000,
+        "filterResonance": 0.8,
+        "filterKeytrack": 0.35,
+        "drive": 0.12,
+        "driftDepthCents": 8,
+        "driftRateHz": 0.12,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.22,
+            "depth": 0.35,
+            "bipolar": true,
+            "keySync": false,
+            "delayMs": 0,
+            "fadeMs": 900
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "pitchMul",
+              "amount": 0.008,
+              "enabled": true
+            },
+            "1": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.16,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

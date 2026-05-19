@@ -1,0 +1,72 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "FM",
+    "コード",
+    "積層"
+  ],
+  "description": "FMを積層したコード向け音色。厚い和音と少し濁った倍音が狙い。",
+  "channels": {
+    "0": {
+      "amp": 0.16,
+      "attackSec": 0.006,
+      "decaySec": 0.2,
+      "sustainLevel": 0.76,
+      "releaseSec": 0.22,
+      "source": {
+        "type": "fm",
+        "algorithm": 5,
+        "feedback": 0.16,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.82,
+            "index": 1.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.62,
+            "index": 0.6
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.5,
+            "index": 0.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.48,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 6200,
+        "filterResonance": 0.95,
+        "drive": 0.02,
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.55,
+            "depth": 0.22,
+            "bipolar": true,
+            "keySync": false,
+            "delayMs": 0.0,
+            "fadeMs": 0.0
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.22,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

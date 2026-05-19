@@ -1,0 +1,53 @@
+{
+  "tags": [
+    "機能デモ",
+    "FM",
+    "フィードバック",
+    "エッジ"
+  ],
+  "description": "機能デモ: FM feedback。feedbackでエッジが増える感触を確認する。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.002,
+      "decaySec": 0.14,
+      "sustainLevel": 0.7,
+      "releaseSec": 0.1,
+      "source": {
+        "type": "fm",
+        "algorithm": 6,
+        "feedback": 0.58,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 1,
+            "index": 2.0
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.76,
+            "index": 0.8
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.55,
+            "index": 0
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.3,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 7800,
+        "filterResonance": 1.1,
+        "drive": 0.0
+      }
+    }
+  }
+}

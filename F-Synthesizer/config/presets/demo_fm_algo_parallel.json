@@ -1,0 +1,53 @@
+{
+  "tags": [
+    "機能デモ",
+    "FM",
+    "アルゴリズム",
+    "並列"
+  ],
+  "description": "機能デモ: FM algorithm parallel。複数carrierの並列感を聴く。",
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.003,
+      "decaySec": 0.16,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "fm",
+        "algorithm": 7,
+        "feedback": 0.05,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.68,
+            "index": 1.0
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.55,
+            "index": 0.7
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.44,
+            "index": 0.3
+          },
+          {
+            "wave": "sine",
+            "ratio": 4,
+            "level": 0.34,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 9000,
+        "filterResonance": 0.75,
+        "drive": 0.0
+      }
+    }
+  }
+}

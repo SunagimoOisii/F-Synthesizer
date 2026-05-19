@@ -1,0 +1,60 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "アナログ",
+    "コード",
+    "ブラス"
+  ],
+  "description": "ブラスコード向けの厚いアナログ風音色。FM群に混ぜる支え役。",
+  "channels": {
+    "0": {
+      "amp": 0.17,
+      "attackSec": 0.01,
+      "decaySec": 0.22,
+      "sustainLevel": 0.78,
+      "releaseSec": 0.24,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 3,
+        "unisonDetuneCents": 8,
+        "unisonSpread": 0.46,
+        "subOscLevel": 0.08,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4200,
+        "filterResonance": 1.3,
+        "filterKeytrack": 0.35,
+        "drive": 0.2,
+        "driftDepthCents": 4,
+        "driftRateHz": 0.18,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 4.0,
+          "pitchTimeMs": 7.0,
+          "filterCutoffTimeMs": 14.0
+        },
+        "modulation": {
+          "lfo1": {
+            "wave": "sine",
+            "rateHz": 0.55,
+            "depth": 0.28,
+            "bipolar": true,
+            "keySync": false,
+            "delayMs": 0.0,
+            "fadeMs": 0.0
+          },
+          "routes": {
+            "0": {
+              "source": "lfo1",
+              "destination": "filterCutoffHz",
+              "amount": 0.18,
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

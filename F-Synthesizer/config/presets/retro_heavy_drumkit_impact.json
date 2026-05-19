@@ -1,0 +1,121 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "ドラムキット",
+    "ドラム",
+    "インパクト"
+  ],
+  "description": "より重いimpactドラムキット。強いkickと金属的なhatで迫力を出す。",
+  "channels": {
+    "9": {
+      "amp": 0.25,
+      "attackSec": 0.001,
+      "decaySec": 0.08,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.06,
+      "source": {
+        "type": "drumkit",
+        "map": {
+          "35": {
+            "drumType": "kick",
+            "gain": 1.15,
+            "baseFreq": 42,
+            "pitchDrop": 4.4,
+            "pitchDecaySec": 0.075,
+            "toneFreq": 90,
+            "toneLevel": 0.5,
+            "noiseLevel": 0.1,
+            "hpCut": 20,
+            "lpCut": 3600,
+            "toneWave": "sine",
+            "noiseType": "brown"
+          },
+          "36": {
+            "drumType": "kick",
+            "gain": 1.15,
+            "baseFreq": 42,
+            "pitchDrop": 4.4,
+            "pitchDecaySec": 0.075,
+            "toneFreq": 90,
+            "toneLevel": 0.5,
+            "noiseLevel": 0.1,
+            "hpCut": 20,
+            "lpCut": 3600,
+            "toneWave": "sine",
+            "noiseType": "brown"
+          },
+          "38": {
+            "drumType": "snare",
+            "gain": 0.96,
+            "baseFreq": 160,
+            "pitchDrop": 1.0,
+            "pitchDecaySec": 0.02,
+            "toneFreq": 230,
+            "toneLevel": 0.26,
+            "noiseLevel": 0.74,
+            "hpCut": 1100,
+            "lpCut": 7200,
+            "toneWave": "triangle",
+            "noiseType": "blue"
+          },
+          "40": {
+            "drumType": "snare",
+            "gain": 0.96,
+            "baseFreq": 160,
+            "pitchDrop": 1.0,
+            "pitchDecaySec": 0.02,
+            "toneFreq": 230,
+            "toneLevel": 0.26,
+            "noiseLevel": 0.74,
+            "hpCut": 1100,
+            "lpCut": 7200,
+            "toneWave": "triangle",
+            "noiseType": "blue"
+          },
+          "42": {
+            "drumType": "hat",
+            "gain": 0.72,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 7600,
+            "toneLevel": 0.1,
+            "noiseLevel": 0.92,
+            "hpCut": 4500,
+            "lpCut": 9800,
+            "toneWave": "square",
+            "noiseType": "blue"
+          },
+          "46": {
+            "drumType": "hat",
+            "gain": 0.82,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 8800,
+            "toneLevel": 0.14,
+            "noiseLevel": 0.96,
+            "hpCut": 5200,
+            "lpCut": 12000,
+            "toneWave": "square",
+            "noiseType": "blue"
+          },
+          "49": {
+            "drumType": "hat",
+            "gain": 0.9,
+            "baseFreq": 0,
+            "pitchDrop": 0,
+            "pitchDecaySec": 0,
+            "toneFreq": 9800,
+            "toneLevel": 0.22,
+            "noiseLevel": 0.95,
+            "hpCut": 5600,
+            "lpCut": 13000,
+            "toneWave": "square",
+            "noiseType": "blue"
+          }
+        }
+      }
+    }
+  }
+}
