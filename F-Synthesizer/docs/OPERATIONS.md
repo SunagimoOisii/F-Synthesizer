@@ -1,15 +1,16 @@
-# OPERATIONS
+# 運用
 
-ビルド、実行、チェック、GUIスモーク、運用ルールの詳細手順。
-日常の入口は `../README.md` を参照。
+F-Synthesizer のビルド、実行、検証メモです。
 
-## Visual Studio Build
+## Visual Studio
 
-1. `F-Synthesizer.vcxproj` を開く
-2. 構成を `Debug | x64` に設定
-3. ビルドして実行
+1. `..\F-Synthesizer.sln` を開く。
+2. `Debug | x64` を選ぶ。
+3. ビルドして実行する。
 
-## Dependency Setup (vcpkg)
+## 依存関係
+
+Visual Studio 2022 の MSBuild と、vcpkg で導入した GUI 実行時依存を前提にします。
 
 ```powershell
 git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
@@ -18,106 +19,45 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 & C:\vcpkg\vcpkg.exe integrate install
 ```
 
-## CLI / GUI Run Examples
+## コマンド
 
 ```powershell
-# build
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" ..\F-Synthesizer.sln /t:Build /p:Configuration=Debug /p:Platform=x64
+# 標準検証
+.\scripts\check.ps1
 
-# run (default: GUI)
+# CLI / render / config 変更時の任意 runtime smoke
+.\scripts\check.ps1 -RunRuntimeSmoke
+
+# GUI
 .\build\x64\Debug\F-Synthesizer.exe
-
-# run (CLI mode)
-.\build\x64\Debug\F-Synthesizer.exe --cli
-
-# run (GUI explicit)
 .\build\x64\Debug\F-Synthesizer.exe --gui
 
-# run (explicit config)
-.\build\x64\Debug\F-Synthesizer.exe --config .\config\default.json
-
-# run (preset)
-.\build\x64\Debug\F-Synthesizer.exe --preset wave_snes_lead_vibrato
-.\build\x64\Debug\F-Synthesizer.exe --preset fm_mdpc88_lead_pierce
-
-# help
+# CLI
+.\build\x64\Debug\F-Synthesizer.exe --cli
+.\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset wave_snes_lead_vibrato
 .\build\x64\Debug\F-Synthesizer.exe --help
 ```
 
-## Unified Check
+## 検証方針
 
-```powershell
-.\scripts\check.ps1
-.\scripts\check.ps1 -DocRules error
-.\scripts\check.ps1 -RunRuntimeSmoke
-```
+- 通常導線は `.\scripts\check.ps1`。
+- `-RunRuntimeSmoke` は、render、audio、config、CLI、実行ファイル起動に影響する変更時だけ使う。
+- UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
+- 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 
-## Personal Verification Flow (Lightweight)
+## 実行時出力
 
-個人運用前提として、重い自動ハーネス（大規模回帰自動化）は導入しない。
-日常運用は以下を標準とする。
+- ビルド出力: `build/`
+- 生成音声・検証出力: `output/`
+- ローカル GUI 状態: `config/gui_state.json`
+- ローカル piano-roll project 状態: `config/piano_roll_project.json`
 
-1. 通常系は `.\scripts\check.ps1` のみを実行する（Build + Doc rules）
-2. 代表MIDI（最低1つ）の手動確認は、品質確認が必要な変更時のみ追加で実施する
-3. 音色・レンダ品質に影響する場合のみ、`.\scripts\check.ps1 -RunRuntimeSmoke` を実行する
+生成された build / audio 出力は Git 管理対象外です。
 
-手動確認の観点:
-- 異常なノイズ/破綻音がない
-- クリップ増加がない（必要時は比較ログを残す）
-- 変更対象パラメータが意図どおり反映される
+## 保守
 
-## Git Hook (Lightweight)
-
-```powershell
-.\scripts\install_git_hooks.ps1
-```
-
-運用方針:
-- pre-commit では md 自動更新を行わない（時刻のみ差分のノイズを避けるため）
-- `docs/Architecture.md` の Auto-Generated 更新は必要時のみ手動実行（`check.ps1`）
-
-## GUI Smoke
-
-```powershell
-.\scripts\gui_smoke.ps1
-```
-
-`gui_smoke.ps1` はデバッグ用途の直接実行向け。通常運用では `check.ps1` 経由を正とする。
-
-## GUI Validation Contract
-
-`Run` 前に以下を検証する。
-- MIDI path 空欄/ファイル不在
-- Output path 空欄
-- `sampleRate <= 0`
-- `initialSeconds <= 0`
-- `bits != 16`
-
-## Config Notes
-
-主なキー:
-- `midiPath`, `wavPath`, `targetChannel`
-- `initialSeconds`, `bits`, `sampleRate`, `extraReleaseSec`
-
-プリセット運用:
-- `config/base.json` -> `config/presets/<name>.json`（後勝ち）
-- `--config` 指定時は `--preset` より `--config` を優先
-
-## Weekly Maintenance
-
-情報保持ポリシー:
-- 短期入力（次回週次まで）: `docs/STATUS.md` の `Current`
-- 長期判断（恒久）: `docs/DECISIONS.md`
-- 長期契約（恒久）: `docs/synth-methods/foundation-contract.md`
-- ADR詳細（恒久）: `docs/architecture/*.md` の `Special Notes`
-
-手順:
-1. `docs/STATUS.md` の残タスク・既知の問題を棚卸しし、更新要否を判定する
-2. 判定結果に応じて、必要なファイルだけ更新する
-   - `STATUS.md`: 進捗/優先順位が変わった時
-   - `DECISIONS.md`: 新しい設計判断が発生した時
-   - `docs/synth-methods/foundation-contract.md`: 契約（capability/lifecycle/schema）が変わった時
-   - `docs/architecture/*.md`: 設計判断の背景詳細を残す必要がある時のみ `Special Notes` に ADR を追記
-   - それ以外の文書: 差分がある時のみ更新（なければ更新しない）
-3. `docs/architecture/*.md` の `Special Notes` へ追記する場合は、`背景/判断/代替案/影響範囲/関連ファイル` を記入する
-4. 変更がなかった文書は記録しない（`No update` の記載は不要）
+- `README.md` を再開入口として正確に保つ。
+- モジュール境界、実行フロー、設定契約、GUI 契約、レンダリング契約が変わった場合は `docs/Architecture.md` を更新する。
+- コマンド、依存関係、検証方針が変わった場合はこのファイルを更新する。
+- 履歴ログはリポジトリに増やさない。古い文脈が必要な場合は Git 履歴を使う。

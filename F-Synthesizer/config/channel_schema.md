@@ -1,4 +1,4 @@
-# Channel Config Schema (v0.2 draft)
+# チャンネル設定スキーマ（v0.2 draft）
 
 ## 目的
 
@@ -22,7 +22,7 @@
 - `channels` 未指定のチャンネルは `DefaultConfig()` の既定値を使用する。
 - 指定されたチャンネルのみ上書き（後勝ち）。
 
-## Channel Object
+## チャンネルオブジェクト
 
 ```json
 {
@@ -114,7 +114,7 @@
 - `amp`: `0.0..16.0`
 - `attackSec/decaySec/releaseSec`: `0.0..30.0`
 - `sustainLevel`: `0.0..1.0`
-- ratio/index/outLevel: `>= 0.0`
+- ratio / index / outLevel: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`
 - `unisonDetuneCents`: `0.0..120.0`
@@ -138,3 +138,6 @@
 
 - 最小: `config/samples/channel_minimal.json`
 - 完全: `config/samples/channel_full.json`
+
+古いフェーズ別検証サンプルは保持しない。必要な検証ケースは
+`scripts/check.ps1 -RunRuntimeSmoke` へ直接追加する。

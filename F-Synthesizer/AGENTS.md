@@ -1,25 +1,40 @@
-# AGENTS.md — F-Synthesizer Entry Point
+# AGENTS.md - F-Synthesizer
 
-このプロジェクトでは本ファイルを正本とする。
+このファイルを、このプロジェクトにおける AI エージェント向けの唯一の入口にします。
 
-## コンテキスト読み込み順
+## 最初に見るもの
 
-1. `agents/core/AGENT.md`
+1. `git status --short --branch` を実行する。
+2. `README.md` を読む。
+3. 構造、設定、GUI 契約、レンダリング挙動に触れる変更では `docs/Architecture.md` を参照する。
+4. 機能や UX の優先順位を判断する場合は `docs/PRODUCT_POLICY.md` を参照する。
+5. ビルド、依存関係、実行、検証コマンドは `docs/OPERATIONS.md` を参照する。
 
-## 必要時のみ参照
+## 作業ルール
 
-- `agents/standards/COMMENT_GUIDELINE_FULL.md`（境界条件や運用手順の詳細が必要な場合）
+- 変更は小さく保ち、ユーザーの依頼に直接関係する範囲に絞る。
+- 無関係なコードやドキュメントを書き換えない。
+- ユーザーが明示しない限り、破壊的な Git 操作をしない。
+- 新しい抽象化より、既存のプロジェクトパターンを優先する。
+- `src/` と `include/` では、非自明な挙動や制約を補う場合だけコメントを追加する。
+- 初心者が触りやすい GUI と、短い編集→試聴サイクルを維持する。
+- ユーザーが明示しない限り、高度な DAW 機能、プラグイン、共同編集、プロ専用の深い操作を先行実装しない。
 
-## 最低限ルール
+## ドキュメント方針
 
-- `src/` と `include/` のコメント規約は `agents/standards/COMMENT_GUIDELINE.md` を既定として適用する。
-- 境界条件や運用手順の詳細が必要な場合のみ `agents/standards/COMMENT_GUIDELINE_FULL.md` を参照する。
-- 指示が競合した場合は、ユーザーの明示指示を最優先とする。
-- ドキュメントは `agents/core/AGENT.md` のドキュメント運用を適用する。
+ドキュメントは意図的に少なく保ちます。更新する場合は、関係する正本だけを短く更新します。
 
-## 運用切替（Phase D）
+- `README.md`: 現在の再開手順、次作業、よく使うコマンド。
+- `docs/Architecture.md`: アーキテクチャ、データフロー、設定、GUI、レンダリング、音源契約。
+- `docs/PRODUCT_POLICY.md`: プロダクト方針と機能判断ルール。
+- `docs/OPERATIONS.md`: コマンド、依存関係、検証、保守。
+- `docs/PRESETS.md`: プリセット一覧。
 
-- 自動更新対象は `docs/Architecture.md` / `docs/STATUS.md` / `docs/DECISIONS.md` の 3 ファイルに固定。
-- 進捗管理の正本は `docs/STATUS.md` のみとする。
-- 情報保持は `STATUS(短期) / DECISIONS(長期判断) / foundation-contract(長期契約) / architecture Special Notes(ADR詳細)` を正本とする。
-- 上記以外の md 変更は、提案テンプレで承認を取ってから反映する。
+長いステータスログ、判断ログ、プロンプト保管庫、ロードマップ履歴は再作成しません。
+完了済み作業や古い判断は Git 履歴から参照します。
+
+## 検証
+
+- 実装変更後は `.\scripts\check.ps1` を実行する。
+- レンダリング、音声出力、設定読み込み、CLI 実行に影響する場合は `.\scripts\check.ps1 -RunRuntimeSmoke` を実行する。
+- チェックを実行できない場合は、理由と残るリスクを報告する。

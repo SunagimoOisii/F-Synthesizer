@@ -1,11 +1,7 @@
 # PRESETS
 
-最終更新: 2026-03-28 (プリセット拡充: 22件追加、計54件)
-
 `config/presets/` 配下のプリセット一覧と用途メモ。
-既存プリセットを破棄し、2026-03-26 に新セットへ全面刷新。
-2026-03-28 に `analog` / `noise` プリセットを追加。
-2026-03-28 に大規模拡充（22件追加）: arpeggio, PWM, hard sync, ring mod, LFO keySync/delayMs/fadeMs, Env2 curve, modwheel, filterResonance destination, FM algo 3〜7 を積極活用。
+詳細な履歴は Git history を参照する。
 
 ## 設計方針（D-1）
 
@@ -121,12 +117,12 @@ F-Synthesizer.exe --cli --preset fm_mdpc88_pluck_arcade
 
 GUI:
 
-- Main 画面の `Preset` コンボから選択して適用する。
+- メイン画面の `Preset` コンボから選択して適用する。
 
 ## 補足
 
 - プリセットは `base.json` に差分適用される。
 - `source.smoothing` は `waveform` のみ有効。
 - FM の `modulation` ブロックは `source` 内に記述する。
-- 各方式の仕様は `docs/synth-methods/` 配下を正本とする。
+- 音源方式とレンダリング契約は `docs/Architecture.md` を正本とする。
 - 旧プリセットは削除済み（`config/presets/` には新セットのみ配置）。
