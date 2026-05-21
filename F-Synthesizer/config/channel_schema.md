@@ -67,14 +67,38 @@
 ```json
 {
   "type": "fm",
-  "carrierWave": "sine|square|saw|triangle",
-  "modWave": "sine|square|saw|triangle",
-  "carrierRatio": 1.0,
-  "modRatio": 2.0,
-  "index": 1.2,
-  "outLevel": 1.0
+  "algorithm": 0,
+  "feedback": 0.08,
+  "ops": [
+    {
+      "wave": "sine|square|saw|triangle",
+      "ratio": 2.0,
+      "level": 1.0,
+      "index": 2.4,
+      "levelEnv": {
+        "attackSec": 0.0,
+        "decaySec": 0.08,
+        "sustainLevel": 0.85,
+        "releaseSec": 0.06,
+        "curve": 0.3
+      },
+      "indexEnv": {
+        "attackSec": 0.0,
+        "decaySec": 0.06,
+        "sustainLevel": 0.4,
+        "releaseSec": 0.04,
+        "curve": 0.7
+      }
+    }
+  ],
+  "filterMode": "bypass|lowpass|highpass|bandpass",
+  "filterCutoffHz": 8000.0,
+  "filterResonance": 0.707,
+  "drive": 0.0
 }
 ```
+
+`ops` は最大4要素。`levelEnv` はそのopの出力レベル、`indexEnv` は変調深さに掛かる個別エンベロープ。旧2op省略形式は使わない。
 
 ### 4) drum
 
@@ -121,7 +145,7 @@
 - `amp`: `0.0..16.0`
 - `attackSec/decaySec/releaseSec`: `0.0..30.0`
 - `sustainLevel`: `0.0..1.0`
-- ratio / index / outLevel: `>= 0.0`
+- ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`
 - `unisonDetuneCents`: `0.0..120.0`

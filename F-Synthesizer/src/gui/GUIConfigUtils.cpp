@@ -70,6 +70,15 @@ bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b
     return true;
 }
 
+bool ModEnvelopeConfigEquals(const ModEnvelopeConfig& a, const ModEnvelopeConfig& b)
+{
+    return NearlyEq(a.attackSec, b.attackSec) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
+        NearlyEq(a.sustainLevel, b.sustainLevel) &&
+        NearlyEq(a.releaseSec, b.releaseSec) &&
+        NearlyEq(a.curve, b.curve);
+}
+
 template <typename SmoothingT>
 bool WaveformLikeSmoothingConfigEquals(const SmoothingT& a, const SmoothingT& b)
 {
@@ -196,7 +205,9 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     if (ao.wave != bo.wave ||
                         !NearlyEq(ao.ratio, bo.ratio) ||
                         !NearlyEq(ao.level, bo.level) ||
-                        !NearlyEq(ao.index, bo.index))
+                        !NearlyEq(ao.index, bo.index) ||
+                        !ModEnvelopeConfigEquals(ao.levelEnv, bo.levelEnv) ||
+                        !ModEnvelopeConfigEquals(ao.indexEnv, bo.indexEnv))
                     {
                         return false;
                     }

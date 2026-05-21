@@ -71,7 +71,7 @@
             }
 
             const char* algoLabels[] = {
-                "0: M->C  (2op compat)",
+                "0: M->C  (classic pair)",
                 "1: [M->C]+[M->C]  (2-pair)",
                 "2: M->[C+C+C]  (1mod 3car)",
                 "3: M->M->M->C  (chain)",

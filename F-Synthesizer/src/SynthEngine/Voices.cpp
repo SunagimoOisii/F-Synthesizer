@@ -35,6 +35,17 @@ void NoteOffVoiceModulation(PerSourceVoiceState& sourceState)
         {
             NoteOffModulation(st.modulation);
         }
+        if constexpr (requires { st.opLevelEnv; st.opIndexEnv; })
+        {
+            for (auto& env : st.opLevelEnv)
+            {
+                NoteOff(env);
+            }
+            for (auto& env : st.opIndexEnv)
+            {
+                NoteOff(env);
+            }
+        }
     }, sourceState);
 }
 
@@ -216,6 +227,8 @@ void InitializeVoiceAtIndex(
         for (int k = 0; k < 4; k++)
         {
             fs.opPhase[k] = 0.0;
+            NoteOn(fs.opLevelEnv[k]);
+            NoteOn(fs.opIndexEnv[k]);
         }
         ResetModulationState(fs.modulation);
         NoteOnModulation(fs.modulation, fm->modulation);

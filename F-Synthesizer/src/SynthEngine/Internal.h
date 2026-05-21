@@ -52,6 +52,8 @@ struct AnalogVoiceState
 struct FmVoiceState
 {
     std::array<double, 4> opPhase{};
+    std::array<ADSRState, 4> opLevelEnv{};
+    std::array<ADSRState, 4> opIndexEnv{};
     double op0FeedbackSample = 0.0;
     ModulationRuntimeState modulation;
     FilterInstance filter;

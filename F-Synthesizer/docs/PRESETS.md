@@ -8,6 +8,7 @@
 - 軸2: `demo_*`。1プリセット1テーマで既存機能を聴いて確認する音色。
 - 初期代表: `retro_heavy_fm_brass_ensemble`
 - `retro_heavy_*` では、PSG / bell / pluck / SFX を主役にしない。曲全体へ当てる場合は主役、低域、和音、背景、ドラムを中心に使う。
+- FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -16,8 +17,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_brass_ensemble` | FM | 厚いFMコード/ブラスの代表音色。単音でも和音でも曲に馴染む主役向け |
-| `retro_heavy_fm_lead_steelblade` | FM | 硬さを残しつつ明るすぎないFMリード |
+| `retro_heavy_fm_brass_ensemble` | FM | op個別Envで立ち上がりを押す厚いFMコード/ブラス。単音でも和音でも主役向け |
+| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Envで金属エッジを出しつつ明るすぎないFMリード |
 | `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しを持つ太いアナログ風リード |
 | `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れを控えめにした広めの上物リード |
 
@@ -25,8 +26,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | ピック感を中低域に寄せたFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | 深く沈むFMサブドライブ |
+| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Envでピック感を作り、中低域の芯を残すFMベース |
+| `retro_heavy_fm_bass_subdrive` | FM | 減衰する倍音とdriveで深く沈むFMサブドライブ |
 | `retro_heavy_analog_bass_drive` | analog | driveを効かせた重いアナログ風ベース |
 | `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に薄く敷くサブ補助 |
 
@@ -34,9 +35,9 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_chord_stack` | FM | 高域を抑えた濁りで厚みを作るFMコード |
+| `retro_heavy_fm_chord_stack` | FM | op Envで濁りの立ち上がりを整えた厚いFMコード |
 | `retro_heavy_analog_chord_brass` | analog | FM群に混ぜるブラスコードの支え役 |
-| `retro_heavy_fm_pad_organ_dark` | FM | 主旋律を邪魔しない暗めのFMオルガンパッド |
+| `retro_heavy_fm_pad_organ_dark` | FM | ゆっくりしたop Envで主旋律を邪魔しない暗めのFMオルガンパッド |
 | `retro_heavy_analog_pad_tape` | analog | driftと低いfilterで背景に置きやすいパッド |
 | `retro_heavy_wave_pad_sweep_dark` | waveform | 暗めにゆっくりfilterが動く重厚パッド |
 
@@ -52,8 +53,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_pluck_support` | FM | フレーズの輪郭を少し足す短いFM補助プラック |
-| `retro_heavy_fm_bell_support` | FM | 常時主役にしない控えめなFMベル補助 |
+| `retro_heavy_fm_pluck_support` | FM | level/index Envで短く減衰し、フレーズの輪郭を足すFM補助プラック |
+| `retro_heavy_fm_bell_support` | FM | 長めのlevel Envと短いindex Envで控えめに響くFMベル補助 |
 | `retro_heavy_wave_bell_glass_support` | waveform | 透明感を薄く足すガラス系ベル補助 |
 | `retro_heavy_psg_pulse_layer` | PSG | FM/analogの輪郭を足す薄いpulseレイヤー |
 | `retro_heavy_psg_triangle_layer` | PSG | FM/analogベースの下支え用triangleレイヤー |

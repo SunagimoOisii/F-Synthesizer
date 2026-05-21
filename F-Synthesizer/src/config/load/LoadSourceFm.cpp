@@ -6,6 +6,19 @@
 
 namespace config::internal::load
 {
+namespace
+{
+bool ParseFmOperatorEnvObject(const std::string& text, ModEnvelopeConfig& env)
+{
+    if (auto v = ReadJSONDouble(text, "attackSec")) env.attackSec = std::clamp(*v, 0.0, 10.0);
+    if (auto v = ReadJSONDouble(text, "decaySec")) env.decaySec = std::clamp(*v, 0.0, 10.0);
+    if (auto v = ReadJSONDouble(text, "sustainLevel")) env.sustainLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(text, "releaseSec")) env.releaseSec = std::clamp(*v, 0.0, 10.0);
+    if (auto v = ReadJSONDouble(text, "curve")) env.curve = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+} // namespace
+
 bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     FmConfig fm{};
@@ -84,6 +97,26 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
             {
                 fm.ops[opIndex].index = std::clamp(*index, 0.0, 32.0);
             }
+            std::string levelEnvObj;
+            bool foundLevelEnv = false;
+            if (!ExtractObjectForKey(opObj, "levelEnv", levelEnvObj, foundLevelEnv, err))
+            {
+                return false;
+            }
+            if (foundLevelEnv)
+            {
+                ParseFmOperatorEnvObject(levelEnvObj, fm.ops[opIndex].levelEnv);
+            }
+            std::string indexEnvObj;
+            bool foundIndexEnv = false;
+            if (!ExtractObjectForKey(opObj, "indexEnv", indexEnvObj, foundIndexEnv, err))
+            {
+                return false;
+            }
+            if (foundIndexEnv)
+            {
+                ParseFmOperatorEnvObject(indexEnvObj, fm.ops[opIndex].indexEnv);
+            }
 
             opCount = opIndex + 1;
             return true;
@@ -99,49 +132,8 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
     }
     else
     {
-        const auto carrier = ReadJSONString(sourceObjText, "carrierWave");
-        if (!carrier)
-        {
-            err = "fm source requires 'ops' or carrierWave/modWave/carrierRatio/modRatio/index/outLevel";
-            return false;
-        }
-        const auto mod = ReadJSONString(sourceObjText, "modWave");
-        const auto carrierRatio = ReadJSONDouble(sourceObjText, "carrierRatio");
-        const auto modRatio = ReadJSONDouble(sourceObjText, "modRatio");
-        const auto index = ReadJSONDouble(sourceObjText, "index");
-        const auto outLevel = ReadJSONDouble(sourceObjText, "outLevel");
-        if (!mod || !carrierRatio || !modRatio || !index || !outLevel)
-        {
-            err = "fm source requires carrierWave/modWave/carrierRatio/modRatio/index/outLevel";
-            return false;
-        }
-        WaveType cw{}, mw{};
-        if (!TryParseWaveType(*carrier, cw) || !TryParseWaveType(*mod, mw))
-        {
-            err = "invalid fm wave type";
-            return false;
-        }
-        if (*carrierRatio <= 0.0)
-        {
-            err = "fm.carrierRatio must be in range 0.0<..32.0";
-            return false;
-        }
-        if (*modRatio <= 0.0)
-        {
-            err = "fm.modRatio must be in range 0.0<..32.0";
-            return false;
-        }
-
-        fm.algorithm = 0;
-        fm.feedback = 0.0;
-        fm.ops[0].wave = mw;
-        fm.ops[0].ratio = *modRatio;
-        fm.ops[0].level = 1.0;
-        fm.ops[0].index = *index;
-        fm.ops[1].wave = cw;
-        fm.ops[1].ratio = *carrierRatio;
-        fm.ops[1].level = *outLevel;
-        fm.ops[1].index = 0.0;
+        err = "fm source requires 'ops' array";
+        return false;
     }
 
     if (auto v = ReadJSONString(sourceObjText, "filterMode"))

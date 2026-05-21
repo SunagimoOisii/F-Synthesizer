@@ -630,6 +630,16 @@ void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int ind
     WriteIndent(out, indent); out << "}";
 }
 
+void WriteFmOperatorEnv(std::ostream& out, const char* key, const ModEnvelopeConfig& env, int indent)
+{
+    WriteIndent(out, indent); out << "\"" << key << "\": { ";
+    out << "\"attackSec\": " << env.attackSec << ", ";
+    out << "\"decaySec\": " << env.decaySec << ", ";
+    out << "\"sustainLevel\": " << env.sustainLevel << ", ";
+    out << "\"releaseSec\": " << env.releaseSec << ", ";
+    out << "\"curve\": " << env.curve << " }";
+}
+
 template <typename SmoothingT>
 void WriteWaveformSmoothingConfig(std::ostream& out, const SmoothingT& smoothing, int indent)
 {
@@ -726,10 +736,14 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
             for (size_t i = 0; i < 4; i++)
             {
                 const FmOperator& op = v.ops[i];
-                WriteIndent(out, indent + 4); out << "{ \"wave\": \"" << WaveTypeToString(op.wave)
-                    << "\", \"ratio\": " << op.ratio
-                    << ", \"level\": " << op.level
-                    << ", \"index\": " << op.index << " }";
+                WriteIndent(out, indent + 4); out << "{\n";
+                WriteIndent(out, indent + 6); out << "\"wave\": \"" << WaveTypeToString(op.wave) << "\",\n";
+                WriteIndent(out, indent + 6); out << "\"ratio\": " << op.ratio << ",\n";
+                WriteIndent(out, indent + 6); out << "\"level\": " << op.level << ",\n";
+                WriteIndent(out, indent + 6); out << "\"index\": " << op.index << ",\n";
+                WriteFmOperatorEnv(out, "levelEnv", op.levelEnv, indent + 6); out << ",\n";
+                WriteFmOperatorEnv(out, "indexEnv", op.indexEnv, indent + 6); out << "\n";
+                WriteIndent(out, indent + 4); out << "}";
                 if (i + 1 < 4) out << ",";
                 out << "\n";
             }

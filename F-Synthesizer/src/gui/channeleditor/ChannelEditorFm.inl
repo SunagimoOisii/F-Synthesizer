@@ -7,6 +7,16 @@
                 op.ratio = std::clamp(op.ratio, 0.0, 32.0);
                 op.level = std::clamp(op.level, 0.0, 1.0);
                 op.index = std::clamp(op.index, 0.0, 32.0);
+                op.levelEnv.attackSec = std::clamp(op.levelEnv.attackSec, 0.0, 10.0);
+                op.levelEnv.decaySec = std::clamp(op.levelEnv.decaySec, 0.0, 10.0);
+                op.levelEnv.sustainLevel = std::clamp(op.levelEnv.sustainLevel, 0.0, 1.0);
+                op.levelEnv.releaseSec = std::clamp(op.levelEnv.releaseSec, 0.0, 10.0);
+                op.levelEnv.curve = std::clamp(op.levelEnv.curve, 0.0, 1.0);
+                op.indexEnv.attackSec = std::clamp(op.indexEnv.attackSec, 0.0, 10.0);
+                op.indexEnv.decaySec = std::clamp(op.indexEnv.decaySec, 0.0, 10.0);
+                op.indexEnv.sustainLevel = std::clamp(op.indexEnv.sustainLevel, 0.0, 1.0);
+                op.indexEnv.releaseSec = std::clamp(op.indexEnv.releaseSec, 0.0, 10.0);
+                op.indexEnv.curve = std::clamp(op.indexEnv.curve, 0.0, 1.0);
             }
             fm->filterCutoffHz = std::clamp(fm->filterCutoffHz, 10.0, 20000.0);
             fm->filterResonance = std::clamp(fm->filterResonance, 0.1, 18.0);
@@ -25,7 +35,7 @@
             }
 
             const char* algoLabels[] = {
-                "0: M->C  (2op compat)",
+                "0: M->C  (classic pair)",
                 "1: [M->C]+[M->C]  (2-pair)",
                 "2: M->[C+C+C]  (1mod 3car)",
                 "3: M->M->M->C  (chain)",
@@ -90,6 +100,63 @@
                     const std::string indexId = "Index##op" + std::to_string(opIdx);
                     changed |= ImGui::InputDouble(indexId.c_str(), &op.index, 0.01, 0.1, "%.3f");
                     if (updateHoverHelp) updateHoverHelp("Index を調整します。", "このオペレータの変調深さが変わります。", nullptr);
+
+                    const std::string envHeader = "Operator Envelope##opEnv" + std::to_string(opIdx);
+                    if (ImGui::TreeNode(envHeader.c_str()))
+                    {
+                        const std::string levelEnvLabel = "Level Env##levelEnv" + std::to_string(opIdx);
+                        if (ImGui::TreeNode(levelEnvLabel.c_str()))
+                        {
+                            changed |= ImGui::InputDouble(("Attack##levelEnvA" + std::to_string(opIdx)).c_str(), &op.levelEnv.attackSec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Decay##levelEnvD" + std::to_string(opIdx)).c_str(), &op.levelEnv.decaySec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Sustain##levelEnvS" + std::to_string(opIdx)).c_str(), &op.levelEnv.sustainLevel, 0.01, 0.1, "%.3f");
+                            changed |= ImGui::InputDouble(("Release##levelEnvR" + std::to_string(opIdx)).c_str(), &op.levelEnv.releaseSec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Curve##levelEnvC" + std::to_string(opIdx)).c_str(), &op.levelEnv.curve, 0.01, 0.1, "%.3f");
+                            float attackDrag = static_cast<float>(op.levelEnv.attackSec);
+                            float decayDrag = static_cast<float>(op.levelEnv.decaySec);
+                            float sustainDrag = static_cast<float>(op.levelEnv.sustainLevel);
+                            float releaseDrag = static_cast<float>(op.levelEnv.releaseSec);
+                            float curveDrag = static_cast<float>(op.levelEnv.curve);
+                            if (DrawADSRPreview(("##levelEnvPreview" + std::to_string(opIdx)).c_str(), attackDrag, decayDrag, sustainDrag, releaseDrag, curveDrag, &attackDrag, &decayDrag, &sustainDrag, &releaseDrag))
+                            {
+                                op.levelEnv.attackSec = std::max(0.0, static_cast<double>(attackDrag));
+                                op.levelEnv.decaySec = std::max(0.0, static_cast<double>(decayDrag));
+                                op.levelEnv.sustainLevel = std::clamp(static_cast<double>(sustainDrag), 0.0, 1.0);
+                                op.levelEnv.releaseSec = std::max(0.0, static_cast<double>(releaseDrag));
+                                op.levelEnv.curve = std::clamp(static_cast<double>(curveDrag), 0.0, 1.0);
+                                changed = true;
+                            }
+                            if (updateHoverHelp) updateHoverHelp("Level Env を調整します。", "このオペレータの出力レベル時間変化が変わります。", nullptr);
+                            ImGui::TreePop();
+                        }
+
+                        const std::string indexEnvLabel = "Index Env##indexEnv" + std::to_string(opIdx);
+                        if (ImGui::TreeNode(indexEnvLabel.c_str()))
+                        {
+                            changed |= ImGui::InputDouble(("Attack##indexEnvA" + std::to_string(opIdx)).c_str(), &op.indexEnv.attackSec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Decay##indexEnvD" + std::to_string(opIdx)).c_str(), &op.indexEnv.decaySec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Sustain##indexEnvS" + std::to_string(opIdx)).c_str(), &op.indexEnv.sustainLevel, 0.01, 0.1, "%.3f");
+                            changed |= ImGui::InputDouble(("Release##indexEnvR" + std::to_string(opIdx)).c_str(), &op.indexEnv.releaseSec, 0.001, 0.01, "%.3f");
+                            changed |= ImGui::InputDouble(("Curve##indexEnvC" + std::to_string(opIdx)).c_str(), &op.indexEnv.curve, 0.01, 0.1, "%.3f");
+                            float attackDrag = static_cast<float>(op.indexEnv.attackSec);
+                            float decayDrag = static_cast<float>(op.indexEnv.decaySec);
+                            float sustainDrag = static_cast<float>(op.indexEnv.sustainLevel);
+                            float releaseDrag = static_cast<float>(op.indexEnv.releaseSec);
+                            float curveDrag = static_cast<float>(op.indexEnv.curve);
+                            if (DrawADSRPreview(("##indexEnvPreview" + std::to_string(opIdx)).c_str(), attackDrag, decayDrag, sustainDrag, releaseDrag, curveDrag, &attackDrag, &decayDrag, &sustainDrag, &releaseDrag))
+                            {
+                                op.indexEnv.attackSec = std::max(0.0, static_cast<double>(attackDrag));
+                                op.indexEnv.decaySec = std::max(0.0, static_cast<double>(decayDrag));
+                                op.indexEnv.sustainLevel = std::clamp(static_cast<double>(sustainDrag), 0.0, 1.0);
+                                op.indexEnv.releaseSec = std::max(0.0, static_cast<double>(releaseDrag));
+                                op.indexEnv.curve = std::clamp(static_cast<double>(curveDrag), 0.0, 1.0);
+                                changed = true;
+                            }
+                            if (updateHoverHelp) updateHoverHelp("Index Env を調整します。", "このオペレータの変調深さ時間変化が変わります。", nullptr);
+                            ImGui::TreePop();
+                        }
+                        ImGui::TreePop();
+                    }
                 }
             }
 

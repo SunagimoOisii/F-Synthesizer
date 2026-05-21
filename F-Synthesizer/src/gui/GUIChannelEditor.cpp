@@ -41,6 +41,15 @@ std::array<config::SourceKind, config::kSourceKindCount> BuildGuiSourceKindList(
     return kinds;
 }
 
+void SetFmOperatorEnv(ModEnvelopeConfig& env, double attack, double decay, double sustain, double release, double curve)
+{
+    env.attackSec = attack;
+    env.decaySec = decay;
+    env.sustainLevel = sustain;
+    env.releaseSec = release;
+    env.curve = curve;
+}
+
 void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
 {
     fm.algorithm = std::clamp(algorithm, 0, 7);
@@ -55,6 +64,8 @@ void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
         op.ratio = 1.0;
         op.level = 1.0;
         op.index = 0.0;
+        SetFmOperatorEnv(op.levelEnv, 0.0, 0.02, 1.0, 0.05, 0.0);
+        SetFmOperatorEnv(op.indexEnv, 0.0, 0.02, 1.0, 0.05, 0.0);
     }
 
     switch (fm.algorithm)
@@ -127,6 +138,17 @@ void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
         fm.ops[2].level = 0.0;
         fm.ops[3].level = 0.0;
         break;
+    }
+
+    for (auto& op : fm.ops)
+    {
+        SetFmOperatorEnv(op.levelEnv, 0.0, 0.04, 0.88, 0.08, 0.2);
+        SetFmOperatorEnv(op.indexEnv, 0.0, 0.08, 0.65, 0.06, 0.45);
+    }
+    if (fm.algorithm == 3)
+    {
+        SetFmOperatorEnv(fm.ops[0].indexEnv, 0.0, 0.045, 0.35, 0.04, 0.7);
+        SetFmOperatorEnv(fm.ops[1].indexEnv, 0.0, 0.07, 0.55, 0.04, 0.55);
     }
 
     fm.modulation = ModulationConfig{};

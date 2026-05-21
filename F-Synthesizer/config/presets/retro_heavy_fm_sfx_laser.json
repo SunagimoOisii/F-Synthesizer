@@ -22,25 +22,81 @@
             "wave": "sine",
             "ratio": 2,
             "level": 0.82,
-            "index": 2.2
+            "index": 2.2,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.24,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.08,
+              "curve": 0.8
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.0,
+              "releaseSec": 0.04,
+              "curve": 0.95
+            }
           },
           {
             "wave": "sine",
             "ratio": 1,
             "level": 0.38,
-            "index": 0.8
+            "index": 0.8,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.24,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.08,
+              "curve": 0.8
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.0,
+              "releaseSec": 0.04,
+              "curve": 0.95
+            }
           },
           {
             "wave": "sine",
             "ratio": 4,
             "level": 0.26,
-            "index": 0.35
+            "index": 0.35,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.24,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.08,
+              "curve": 0.8
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.0,
+              "releaseSec": 0.04,
+              "curve": 0.95
+            }
           },
           {
             "wave": "sine",
             "ratio": 0.5,
             "level": 0.15,
-            "index": 0
+            "index": 0,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.24,
+              "sustainLevel": 0.0,
+              "releaseSec": 0.08,
+              "curve": 0.8
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.02,
+              "sustainLevel": 1.0,
+              "releaseSec": 0.05,
+              "curve": 0.0
+            }
           }
         ],
         "filterMode": "lowpass",

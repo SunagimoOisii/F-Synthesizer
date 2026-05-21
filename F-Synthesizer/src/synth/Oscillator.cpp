@@ -74,19 +74,19 @@ double SampleWavePhase(WaveType type, double phase, double phaseInc, double puls
 }
 
 double SampleFmPhase(
-    WaveType carrierWave,
-    WaveType modWave,
+    WaveType outputWave,
+    WaveType inputWave,
     double carrierPhase,
     double modPhase,
     double carrierPhaseInc,
     double modPhaseInc,
     double modIndex)
 {
-    double mod = SampleWavePhase(modWave, modPhase, modPhaseInc);
+    double mod = SampleWavePhase(inputWave, modPhase, modPhaseInc);
     double phaseOffset = (modIndex * mod) / (2.0 * kPi);
     double phase = carrierPhase + phaseOffset;
     phase -= std::floor(phase);
-    return SampleWavePhase(carrierWave, phase, carrierPhaseInc);
+    return SampleWavePhase(outputWave, phase, carrierPhaseInc);
 }
 
 double SampleNoise(NoiseType type)
