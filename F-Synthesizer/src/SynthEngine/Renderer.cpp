@@ -99,6 +99,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
         frame.sample += RenderAttackLayer(voices, i, in);
         frame.sample += RenderBassLayer(voices, i, in);
+        frame.sample += RenderLeadLayer(voices, i, in);
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 

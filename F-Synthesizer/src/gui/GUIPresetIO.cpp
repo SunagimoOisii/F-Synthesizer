@@ -40,6 +40,17 @@ const char* BassLayerTypeToString(BassLayerType type)
     return "drive";
 }
 
+const char* LeadLayerTypeToString(LeadLayerType type)
+{
+    switch (type)
+    {
+    case LeadLayerType::Blade: return "blade";
+    case LeadLayerType::Brass: return "brass";
+    case LeadLayerType::Edge: return "edge";
+    }
+    return "blade";
+}
+
 void WriteAttackLayerJSON(std::ostream& out, const AttackLayerConfig& layer)
 {
     out << "      \"attackLayer\": {\n";
@@ -73,6 +84,23 @@ void WriteBassLayerJSON(std::ostream& out, const BassLayerConfig& layer)
     out << "        \"gritTone\": " << layer.gritTone << ",\n";
     out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
     out << "        \"attackDecaySec\": " << layer.attackDecaySec << "\n";
+    out << "      },\n";
+}
+
+void WriteLeadLayerJSON(std::ostream& out, const LeadLayerConfig& layer)
+{
+    out << "      \"leadLayer\": {\n";
+    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
+    out << "        \"type\": \"" << LeadLayerTypeToString(layer.type) << "\",\n";
+    out << "        \"level\": " << layer.level << ",\n";
+    out << "        \"edgeLevel\": " << layer.edgeLevel << ",\n";
+    out << "        \"bodyLevel\": " << layer.bodyLevel << ",\n";
+    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
+    out << "        \"pitchBendSemis\": " << layer.pitchBendSemis << ",\n";
+    out << "        \"bendDecaySec\": " << layer.bendDecaySec << ",\n";
+    out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
+    out << "        \"attackDecaySec\": " << layer.attackDecaySec << ",\n";
+    out << "        \"drive\": " << layer.drive << "\n";
     out << "      },\n";
 }
 
@@ -272,6 +300,10 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         if (cur.bassLayer.enabled)
         {
             WriteBassLayerJSON(out, cur.bassLayer);
+        }
+        if (cur.leadLayer.enabled)
+        {
+            WriteLeadLayerJSON(out, cur.leadLayer);
         }
         config::WriteSourceJSON(out, cur.source, 6);
         out << "\n    }";

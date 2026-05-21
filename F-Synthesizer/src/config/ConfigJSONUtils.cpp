@@ -420,6 +420,17 @@ std::string BassLayerTypeToString(BassLayerType type)
     return "drive";
 }
 
+std::string LeadLayerTypeToString(LeadLayerType type)
+{
+    switch (type)
+    {
+    case LeadLayerType::Blade: return "blade";
+    case LeadLayerType::Brass: return "brass";
+    case LeadLayerType::Edge: return "edge";
+    }
+    return "blade";
+}
+
 std::string FilterModeToString(FilterMode mode)
 {
     switch (mode)
@@ -885,6 +896,23 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"gritTone\": " << layer.gritTone << ",\n";
         WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
         WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
+    if (cfg.leadLayer.enabled)
+    {
+        const auto& layer = cfg.leadLayer;
+        WriteIndent(out, 6); out << "\"leadLayer\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"type\": \"" << LeadLayerTypeToString(layer.type) << "\",\n";
+        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
+        WriteIndent(out, 8); out << "\"edgeLevel\": " << layer.edgeLevel << ",\n";
+        WriteIndent(out, 8); out << "\"bodyLevel\": " << layer.bodyLevel << ",\n";
+        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
+        WriteIndent(out, 8); out << "\"pitchBendSemis\": " << layer.pitchBendSemis << ",\n";
+        WriteIndent(out, 8); out << "\"bendDecaySec\": " << layer.bendDecaySec << ",\n";
+        WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
+        WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << ",\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

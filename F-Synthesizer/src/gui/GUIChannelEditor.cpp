@@ -481,6 +481,42 @@ bool DrawChannelEditor(
         layer.attackDecaySec = std::clamp(layer.attackDecaySec, 0.005, 0.25);
     }
 
+    if (ImGui::CollapsingHeader("Lead Layer"))
+    {
+        auto& layer = chCfg.leadLayer;
+        changed |= ImGui::Checkbox("Enabled##leadLayer", &layer.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "主旋律向けに硬いアタックと薄い厚みを重ねます。",
+                "FM/analog/waveformのリードに金属的なエッジ、軽い二重化、短いしゃくりを足します。",
+                "上げすぎると濁りやピーク過多が出ます。");
+        }
+
+        int leadType = static_cast<int>(layer.type);
+        const char* leadTypes[] = { "blade", "brass", "edge" };
+        changed |= ImGui::Combo("Type##leadLayer", &leadType, leadTypes, IM_ARRAYSIZE(leadTypes));
+        leadType = std::clamp(leadType, 0, 2);
+        layer.type = static_cast<LeadLayerType>(leadType);
+
+        changed |= ImGui::InputDouble("Level##leadLayer", &layer.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Edge Level##leadLayer", &layer.edgeLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Body Level##leadLayer", &layer.bodyLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Detune Cents##leadLayer", &layer.detuneCents, 0.5, 2.0, "%.2f");
+        changed |= ImGui::InputDouble("Attack Boost##leadLayer", &layer.attackBoost, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##leadLayer", &layer.drive, 0.01, 0.05, "%.3f");
+
+        layer.level = std::clamp(layer.level, 0.0, 1.0);
+        layer.edgeLevel = std::clamp(layer.edgeLevel, 0.0, 1.0);
+        layer.bodyLevel = std::clamp(layer.bodyLevel, 0.0, 1.0);
+        layer.detuneCents = std::clamp(layer.detuneCents, -50.0, 50.0);
+        layer.pitchBendSemis = std::clamp(layer.pitchBendSemis, -12.0, 12.0);
+        layer.bendDecaySec = std::clamp(layer.bendDecaySec, 0.005, 0.25);
+        layer.attackBoost = std::clamp(layer.attackBoost, 0.0, 1.0);
+        layer.attackDecaySec = std::clamp(layer.attackDecaySec, 0.005, 0.25);
+        layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+    }
+
     bool layer3Changed = false;
     if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {

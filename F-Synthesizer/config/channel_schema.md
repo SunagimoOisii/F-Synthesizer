@@ -59,6 +59,19 @@
     "attackBoost": 0.18,
     "attackDecaySec": 0.04
   },
+  "leadLayer": {
+    "enabled": true,
+    "type": "blade",
+    "level": 0.10,
+    "edgeLevel": 0.35,
+    "bodyLevel": 0.28,
+    "detuneCents": 4.0,
+    "pitchBendSemis": 0.4,
+    "bendDecaySec": 0.04,
+    "attackBoost": 0.16,
+    "attackDecaySec": 0.035,
+    "drive": 0.08
+  },
   "source": {
     "type": "fm",
     "...type specific fields..."
@@ -69,6 +82,8 @@
 `attackLayer` は省略可能。NoteOn直後だけ鳴る内部生成の補助音で、`source` 本体を置き換えずにアタックだけを足す。`type` は `pick|brass|metal`。ピック感、ブラスの吹き始め、金属打撃を足す用途で、強くしすぎるとピーク過多やチープなクリック感につながる。
 
 `bassLayer` は省略可能。ベース向けに持続する内部生成の補助音で、`source` 本体へ低域の芯、胴、歪んだ倍音、曲中で読める中低域の焦点を重ねる。`type` は `sub|drive|grit`。強くしすぎると低域過多、音割れ、キックとの衝突につながるため、ベースチャンネルへ薄くから中程度に使う。
+
+`leadLayer` は省略可能。主旋律向けに内部生成の硬い頭、短いしゃくり、薄い二重化を重ねる。`source` 本体を置き換えず、FM/analog/waveformのリードを前に出す用途で使う。`type` は `blade|brass|edge`。強くしすぎると濁り、過剰な金属感、ピーク過多につながる。
 
 ## source.type ごとの定義
 
@@ -194,6 +209,10 @@
 - `bassLayer.focusHz`: `60.0..1200.0`
 - `bassLayer.pitchOffsetSemis`: `-24.0..24.0`
 - `bassLayer.attackDecaySec`: `0.005..0.25`
+- `leadLayer.level/edgeLevel/bodyLevel/attackBoost/drive`: `0.0..1.0`
+- `leadLayer.detuneCents`: `-50.0..50.0`
+- `leadLayer.pitchBendSemis`: `-12.0..12.0`
+- `leadLayer.bendDecaySec/attackDecaySec`: `0.005..0.25`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

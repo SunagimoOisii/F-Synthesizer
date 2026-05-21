@@ -23,6 +23,19 @@
         "pitchOffsetSemis": -2,
         "drive": 0.05
       },
+      "leadLayer": {
+        "enabled": true,
+        "type": "brass",
+        "level": 0.08,
+        "edgeLevel": 0.22,
+        "bodyLevel": 0.32,
+        "detuneCents": 4.0,
+        "pitchBendSemis": 0.25,
+        "bendDecaySec": 0.055,
+        "attackBoost": 0.1,
+        "attackDecaySec": 0.05,
+        "drive": 0.06
+      },
       "source": {
         "type": "analog",
         "wave": "square",

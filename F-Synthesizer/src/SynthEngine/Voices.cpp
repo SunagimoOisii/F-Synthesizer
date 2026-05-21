@@ -198,6 +198,7 @@ void InitializeVoiceAtIndex(
     voices.releaseSec[i] = cfg.releaseSec;
     voices.attackLayer[i] = cfg.attackLayer;
     voices.bassLayer[i] = cfg.bassLayer;
+    voices.leadLayer[i] = cfg.leadLayer;
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -217,6 +218,8 @@ void InitializeVoiceAtIndex(
     voices.bassPhase[i] = 0.0;
     voices.bassFocusPhase[i] = 0.0;
     voices.bassLpState[i] = 0.0;
+    voices.leadPhase[i] = 0.0;
+    voices.leadDetunePhase[i] = 0.0;
 
     // ポルタメント初期化
     const double targetHz = NoteNumberToFreq(e.noteNumber);
@@ -484,6 +487,7 @@ void Voice::reserve(size_t n)
     releaseSec.reserve(n);
     attackLayer.reserve(n);
     bassLayer.reserve(n);
+    leadLayer.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -493,6 +497,8 @@ void Voice::reserve(size_t n)
     bassPhase.reserve(n);
     bassFocusPhase.reserve(n);
     bassLpState.reserve(n);
+    leadPhase.reserve(n);
+    leadDetunePhase.reserve(n);
     portamentoPitchHz.reserve(n);
     portamentoTargetHz.reserve(n);
     portamentoTimeSec.reserve(n);
@@ -517,6 +523,7 @@ void Voice::clear()
     releaseSec.clear();
     attackLayer.clear();
     bassLayer.clear();
+    leadLayer.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -526,6 +533,8 @@ void Voice::clear()
     bassPhase.clear();
     bassFocusPhase.clear();
     bassLpState.clear();
+    leadPhase.clear();
+    leadDetunePhase.clear();
     portamentoPitchHz.clear();
     portamentoTargetHz.clear();
     portamentoTimeSec.clear();
@@ -561,6 +570,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     releaseSec.push_back(0.0);
     attackLayer.emplace_back();
     bassLayer.emplace_back();
+    leadLayer.emplace_back();
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -571,6 +581,8 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     bassPhase.push_back(0.0);
     bassFocusPhase.push_back(0.0);
     bassLpState.push_back(0.0);
+    leadPhase.push_back(0.0);
+    leadDetunePhase.push_back(0.0);
     portamentoPitchHz.push_back(0.0);
     portamentoTargetHz.push_back(0.0);
     portamentoTimeSec.push_back(0.0);
@@ -696,6 +708,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(releaseSec, keepScratch);
     CompactVectorByKeep(attackLayer, keepScratch);
     CompactVectorByKeep(bassLayer, keepScratch);
+    CompactVectorByKeep(leadLayer, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);
@@ -705,6 +718,8 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(bassPhase, keepScratch);
     CompactVectorByKeep(bassFocusPhase, keepScratch);
     CompactVectorByKeep(bassLpState, keepScratch);
+    CompactVectorByKeep(leadPhase, keepScratch);
+    CompactVectorByKeep(leadDetunePhase, keepScratch);
     CompactVectorByKeep(portamentoPitchHz, keepScratch);
     CompactVectorByKeep(portamentoTargetHz, keepScratch);
     CompactVectorByKeep(portamentoTimeSec, keepScratch);

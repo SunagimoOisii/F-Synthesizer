@@ -203,3 +203,53 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     voices.bassLpState[i] += alpha * (sample - voices.bassLpState[i]);
     return voices.bassLpState[i];
 }
+
+double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const LeadLayerConfig& layer = voices.leadLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return 0.0;
+    }
+
+    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double bendDecay = std::clamp(layer.bendDecaySec, 0.005, 0.25);
+    const double bendSemis = std::clamp(layer.pitchBendSemis, -12.0, 12.0) * std::exp(-voices.ageSec[i] / bendDecay);
+    const double bendMul = std::exp2(bendSemis / 12.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor * bendMul;
+    const double detuneMul = std::exp2(std::clamp(layer.detuneCents, -50.0, 50.0) / 1200.0);
+    voices.leadPhase[i] = WrapPhase(voices.leadPhase[i] + baseInc);
+    voices.leadDetunePhase[i] = WrapPhase(voices.leadDetunePhase[i] + baseInc * detuneMul);
+
+    const double p = voices.leadPhase[i];
+    const double pd = voices.leadDetunePhase[i];
+    const double body =
+        std::sin(2.0 * kPi * p) * 0.62 +
+        std::sin(2.0 * kPi * pd) * 0.38;
+    double edge =
+        std::sin(2.0 * kPi * p * 2.01) * 0.42 +
+        std::sin(2.0 * kPi * p * 3.73) * 0.34 +
+        ((p < 0.5) ? 1.0 : -1.0) * 0.24;
+
+    double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
+    double edgeMul = std::clamp(layer.edgeLevel, 0.0, 1.0);
+    switch (layer.type)
+    {
+    case LeadLayerType::Brass:
+        bodyMul *= 1.15;
+        edgeMul *= 0.75;
+        break;
+    case LeadLayerType::Edge:
+        bodyMul *= 0.55;
+        edgeMul *= 1.30;
+        break;
+    case LeadLayerType::Blade:
+    default:
+        break;
+    }
+
+    const double attackDecay = std::clamp(layer.attackDecaySec, 0.005, 0.25);
+    const double attack = 1.0 + std::clamp(layer.attackBoost, 0.0, 1.0) * std::exp(-voices.ageSec[i] / attackDecay);
+    const double sample = (body * bodyMul + edge * edgeMul) * attack * level;
+    return AttackSoftClip(sample, layer.drive);
+}

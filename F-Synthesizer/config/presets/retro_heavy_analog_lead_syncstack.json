@@ -23,6 +23,19 @@
         "pitchOffsetSemis": 0,
         "drive": 0.06
       },
+      "leadLayer": {
+        "enabled": true,
+        "type": "blade",
+        "level": 0.09,
+        "edgeLevel": 0.34,
+        "bodyLevel": 0.24,
+        "detuneCents": 5.0,
+        "pitchBendSemis": 0.35,
+        "bendDecaySec": 0.045,
+        "attackBoost": 0.14,
+        "attackDecaySec": 0.04,
+        "drive": 0.08
+      },
       "source": {
         "type": "analog",
         "wave": "saw",

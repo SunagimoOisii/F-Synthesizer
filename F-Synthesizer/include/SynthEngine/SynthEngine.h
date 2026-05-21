@@ -283,6 +283,28 @@ struct BassLayerConfig
     double attackDecaySec = 0.045;
 };
 
+enum class LeadLayerType
+{
+    Blade,
+    Brass,
+    Edge
+};
+
+struct LeadLayerConfig
+{
+    bool enabled = false;
+    LeadLayerType type = LeadLayerType::Blade;
+    double level = 0.0;
+    double edgeLevel = 0.35;
+    double bodyLevel = 0.30;
+    double detuneCents = 4.0;
+    double pitchBendSemis = 0.0;
+    double bendDecaySec = 0.045;
+    double attackBoost = 0.0;
+    double attackDecaySec = 0.035;
+    double drive = 0.0;
+};
+
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。
 struct ChannelConfig
@@ -303,6 +325,8 @@ struct ChannelConfig
     AttackLayerConfig attackLayer{};
     // ベース向けに持続する低域と歪み成分を重ねる共通補助レイヤー。
     BassLayerConfig bassLayer{};
+    // 主旋律向けに硬いアタック、薄い倍音、デチューン感を足す共通補助レイヤー。
+    LeadLayerConfig leadLayer{};
 };
 
 struct ChannelMixState

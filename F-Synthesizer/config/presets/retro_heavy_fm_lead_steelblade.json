@@ -23,6 +23,19 @@
         "pitchOffsetSemis": 7,
         "drive": 0.1
       },
+      "leadLayer": {
+        "enabled": true,
+        "type": "blade",
+        "level": 0.13,
+        "edgeLevel": 0.42,
+        "bodyLevel": 0.26,
+        "detuneCents": 4.5,
+        "pitchBendSemis": 0.55,
+        "bendDecaySec": 0.04,
+        "attackBoost": 0.2,
+        "attackDecaySec": 0.035,
+        "drive": 0.1
+      },
       "source": {
         "type": "fm",
         "algorithm": 7,
