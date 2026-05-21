@@ -141,6 +141,7 @@ struct Voice
     std::vector<double> attackPhase;
     std::vector<uint32_t> attackNoiseState;
     std::vector<double> bassPhase;
+    std::vector<double> bassFocusPhase;
     std::vector<double> bassLpState;
     std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
     std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）

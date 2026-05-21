@@ -108,7 +108,13 @@ bool BassLayerConfigEquals(const BassLayerConfig& a, const BassLayerConfig& b)
         NearlyEq(a.cutoffHz, b.cutoffHz) &&
         NearlyEq(a.drive, b.drive) &&
         NearlyEq(a.pitchOffsetSemis, b.pitchOffsetSemis) &&
-        NearlyEq(a.velocityToDrive, b.velocityToDrive);
+        NearlyEq(a.velocityToDrive, b.velocityToDrive) &&
+        NearlyEq(a.focusHz, b.focusHz) &&
+        NearlyEq(a.focusLevel, b.focusLevel) &&
+        NearlyEq(a.bodySaturation, b.bodySaturation) &&
+        NearlyEq(a.gritTone, b.gritTone) &&
+        NearlyEq(a.attackBoost, b.attackBoost) &&
+        NearlyEq(a.attackDecaySec, b.attackDecaySec);
 }
 
 template <typename SmoothingT>

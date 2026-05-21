@@ -51,7 +51,13 @@
     "cutoffHz": 1050.0,
     "drive": 0.32,
     "pitchOffsetSemis": -12.0,
-    "velocityToDrive": 0.18
+    "velocityToDrive": 0.18,
+    "focusHz": 185.0,
+    "focusLevel": 0.24,
+    "bodySaturation": 0.22,
+    "gritTone": 0.46,
+    "attackBoost": 0.18,
+    "attackDecaySec": 0.04
   },
   "source": {
     "type": "fm",
@@ -62,7 +68,7 @@
 
 `attackLayer` は省略可能。NoteOn直後だけ鳴る内部生成の補助音で、`source` 本体を置き換えずにアタックだけを足す。`type` は `pick|brass|metal`。ピック感、ブラスの吹き始め、金属打撃を足す用途で、強くしすぎるとピーク過多やチープなクリック感につながる。
 
-`bassLayer` は省略可能。ベース向けに持続する内部生成の補助音で、`source` 本体へ低域の芯、胴、歪んだ倍音を重ねる。`type` は `sub|drive|grit`。強くしすぎると低域過多、音割れ、キックとの衝突につながるため、ベースチャンネルへ薄くから中程度に使う。
+`bassLayer` は省略可能。ベース向けに持続する内部生成の補助音で、`source` 本体へ低域の芯、胴、歪んだ倍音、曲中で読める中低域の焦点を重ねる。`type` は `sub|drive|grit`。強くしすぎると低域過多、音割れ、キックとの衝突につながるため、ベースチャンネルへ薄くから中程度に使う。
 
 ## source.type ごとの定義
 
@@ -183,8 +189,11 @@
 - `attackLayer.decaySec`: `0.001..0.25`
 - `attackLayer.pitchOffsetSemis`: `-24.0..24.0`
 - `bassLayer.level/subLevel/bodyLevel/gritLevel/drive/velocityToDrive`: `0.0..1.0`
+- `bassLayer.focusLevel/bodySaturation/gritTone/attackBoost`: `0.0..1.0`
 - `bassLayer.cutoffHz`: `40.0..8000.0`
+- `bassLayer.focusHz`: `60.0..1200.0`
 - `bassLayer.pitchOffsetSemis`: `-24.0..24.0`
+- `bassLayer.attackDecaySec`: `0.005..0.25`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

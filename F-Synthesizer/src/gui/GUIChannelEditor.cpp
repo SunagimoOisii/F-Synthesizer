@@ -461,6 +461,7 @@ bool DrawChannelEditor(
         changed |= ImGui::InputDouble("Sub Level##bassLayer", &layer.subLevel, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Body Level##bassLayer", &layer.bodyLevel, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Grit Level##bassLayer", &layer.gritLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Focus Level##bassLayer", &layer.focusLevel, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Drive##bassLayer", &layer.drive, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Cutoff Hz##bassLayer", &layer.cutoffHz, 10.0, 100.0, "%.1f");
 
@@ -468,10 +469,16 @@ bool DrawChannelEditor(
         layer.subLevel = std::clamp(layer.subLevel, 0.0, 1.0);
         layer.bodyLevel = std::clamp(layer.bodyLevel, 0.0, 1.0);
         layer.gritLevel = std::clamp(layer.gritLevel, 0.0, 1.0);
+        layer.focusLevel = std::clamp(layer.focusLevel, 0.0, 1.0);
         layer.drive = std::clamp(layer.drive, 0.0, 1.0);
         layer.cutoffHz = std::clamp(layer.cutoffHz, 40.0, 8000.0);
         layer.pitchOffsetSemis = std::clamp(layer.pitchOffsetSemis, -24.0, 24.0);
         layer.velocityToDrive = std::clamp(layer.velocityToDrive, 0.0, 1.0);
+        layer.focusHz = std::clamp(layer.focusHz, 60.0, 1200.0);
+        layer.bodySaturation = std::clamp(layer.bodySaturation, 0.0, 1.0);
+        layer.gritTone = std::clamp(layer.gritTone, 0.0, 1.0);
+        layer.attackBoost = std::clamp(layer.attackBoost, 0.0, 1.0);
+        layer.attackDecaySec = std::clamp(layer.attackDecaySec, 0.005, 0.25);
     }
 
     bool layer3Changed = false;

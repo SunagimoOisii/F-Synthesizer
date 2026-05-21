@@ -66,7 +66,13 @@ void WriteBassLayerJSON(std::ostream& out, const BassLayerConfig& layer)
     out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
     out << "        \"drive\": " << layer.drive << ",\n";
     out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-    out << "        \"velocityToDrive\": " << layer.velocityToDrive << "\n";
+    out << "        \"velocityToDrive\": " << layer.velocityToDrive << ",\n";
+    out << "        \"focusHz\": " << layer.focusHz << ",\n";
+    out << "        \"focusLevel\": " << layer.focusLevel << ",\n";
+    out << "        \"bodySaturation\": " << layer.bodySaturation << ",\n";
+    out << "        \"gritTone\": " << layer.gritTone << ",\n";
+    out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
+    out << "        \"attackDecaySec\": " << layer.attackDecaySec << "\n";
     out << "      },\n";
 }
 

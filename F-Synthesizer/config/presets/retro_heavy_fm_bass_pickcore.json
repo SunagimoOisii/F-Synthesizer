@@ -5,7 +5,7 @@
     "低域",
     "ベース"
   ],
-  "description": "BassLayerで荒い低域の圧を足したFMピックベース。芯と歪んだ倍音を両立。",
+  "description": "BassLayer v2で中低域の焦点と荒い圧を足したFMピックベース。小さい再生環境でも輪郭が残る。",
   "channels": {
     "0": {
       "amp": 0.27,
@@ -33,7 +33,13 @@
         "cutoffHz": 1050,
         "drive": 0.32,
         "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.18
+        "velocityToDrive": 0.18,
+        "focusHz": 185,
+        "focusLevel": 0.24,
+        "bodySaturation": 0.22,
+        "gritTone": 0.46,
+        "attackBoost": 0.18,
+        "attackDecaySec": 0.04
       },
       "source": {
         "type": "fm",

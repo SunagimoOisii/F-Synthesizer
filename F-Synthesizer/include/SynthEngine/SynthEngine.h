@@ -275,6 +275,12 @@ struct BassLayerConfig
     double drive = 0.0;
     double pitchOffsetSemis = -12.0;
     double velocityToDrive = 0.0;
+    double focusHz = 180.0;
+    double focusLevel = 0.0;
+    double bodySaturation = 0.0;
+    double gritTone = 0.5;
+    double attackBoost = 0.0;
+    double attackDecaySec = 0.045;
 };
 
 // 1チャンネル分の音色設定。

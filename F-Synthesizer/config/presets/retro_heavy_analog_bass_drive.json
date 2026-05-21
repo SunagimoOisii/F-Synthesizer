@@ -5,7 +5,7 @@
     "低域",
     "ベース"
   ],
-  "description": "本体driveとBassLayerを重ねたアナログ風ベース。荒い圧と低域の粘りを狙う。",
+  "description": "本体driveとBassLayer v2を重ねたアナログ風ベース。荒い圧と中低域の粘りを狙う。",
   "channels": {
     "0": {
       "amp": 0.29,
@@ -33,7 +33,13 @@
         "cutoffHz": 1250,
         "drive": 0.36,
         "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.2
+        "velocityToDrive": 0.2,
+        "focusHz": 210,
+        "focusLevel": 0.22,
+        "bodySaturation": 0.24,
+        "gritTone": 0.58,
+        "attackBoost": 0.14,
+        "attackDecaySec": 0.045
       },
       "source": {
         "type": "analog",

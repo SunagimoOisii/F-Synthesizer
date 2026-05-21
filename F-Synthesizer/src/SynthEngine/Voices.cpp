@@ -215,6 +215,7 @@ void InitializeVoiceAtIndex(
         voices.attackNoiseState[i] = 0xA5A5A5A5u;
     }
     voices.bassPhase[i] = 0.0;
+    voices.bassFocusPhase[i] = 0.0;
     voices.bassLpState[i] = 0.0;
 
     // ポルタメント初期化
@@ -490,6 +491,7 @@ void Voice::reserve(size_t n)
     attackPhase.reserve(n);
     attackNoiseState.reserve(n);
     bassPhase.reserve(n);
+    bassFocusPhase.reserve(n);
     bassLpState.reserve(n);
     portamentoPitchHz.reserve(n);
     portamentoTargetHz.reserve(n);
@@ -522,6 +524,7 @@ void Voice::clear()
     attackPhase.clear();
     attackNoiseState.clear();
     bassPhase.clear();
+    bassFocusPhase.clear();
     bassLpState.clear();
     portamentoPitchHz.clear();
     portamentoTargetHz.clear();
@@ -566,6 +569,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     attackPhase.push_back(0.0);
     attackNoiseState.push_back(0);
     bassPhase.push_back(0.0);
+    bassFocusPhase.push_back(0.0);
     bassLpState.push_back(0.0);
     portamentoPitchHz.push_back(0.0);
     portamentoTargetHz.push_back(0.0);
@@ -699,6 +703,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(attackPhase, keepScratch);
     CompactVectorByKeep(attackNoiseState, keepScratch);
     CompactVectorByKeep(bassPhase, keepScratch);
+    CompactVectorByKeep(bassFocusPhase, keepScratch);
     CompactVectorByKeep(bassLpState, keepScratch);
     CompactVectorByKeep(portamentoPitchHz, keepScratch);
     CompactVectorByKeep(portamentoTargetHz, keepScratch);

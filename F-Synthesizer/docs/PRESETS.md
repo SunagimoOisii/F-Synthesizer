@@ -10,7 +10,7 @@
 - `retro_heavy_*` では、PSG / bell / pluck / SFX を主役にしない。曲全体へ当てる場合は主役、低域、和音、背景、ドラムを中心に使う。
 - FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
 - `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
-- `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
+- `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音、中低域の焦点を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -28,10 +28,10 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayerで弾いた輪郭と荒い低域の圧を両立するFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | bassLayerで沈むサブと歪んだ胴を足し、深く押し出すFMサブドライブ |
-| `retro_heavy_analog_bass_drive` | analog | 本体driveとgrit系bassLayerを重ねた、荒い圧のあるアナログ風ベース |
-| `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に敷くサブ補助。bassLayerは薄い胴鳴り用途 |
+| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayer v2で弾いた輪郭と曲中で読める荒い圧を両立するFMベース |
+| `retro_heavy_fm_bass_subdrive` | FM | bassLayer v2で沈むサブと中低域の胴を足し、深く押し出すFMサブドライブ |
+| `retro_heavy_analog_bass_drive` | analog | 本体driveとgrit系bassLayer v2を重ねた、荒い圧と粘りのあるアナログ風ベース |
+| `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に敷くサブ補助。bassLayer v2は薄い胴鳴り用途 |
 
 ### 和音と背景
 
@@ -59,7 +59,7 @@
 | `retro_heavy_fm_bell_support` | FM | 長めのlevel Envとmetal attackLayerで控えめに響くFMベル補助 |
 | `retro_heavy_wave_bell_glass_support` | waveform | 透明感を薄く足すガラス系ベル補助 |
 | `retro_heavy_psg_pulse_layer` | PSG | FM/analogの輪郭を足す薄いpulseレイヤー |
-| `retro_heavy_psg_triangle_layer` | PSG | FM/analogベースの下支え用triangleレイヤー |
+| `retro_heavy_psg_triangle_layer` | PSG | FM/analogベースを主役化せず下から支える薄いtriangle低域レイヤー |
 | `retro_heavy_analog_motion_pulse` | analog | アルペジオではなく緩い動きで支えるpulse補助 |
 
 ### 効果音
@@ -78,7 +78,7 @@
 | `demo_fm_feedback_edge` | FM | FM feedback | feedbackで増えるエッジ |
 | `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
 | `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
-| `demo_bass_layer_drive` | analog | bassLayer | 低域の芯、胴、歪んだ倍音を重ねるBassLayer確認 |
+| `demo_bass_layer_drive` | analog | bassLayer v2 | 低域の芯、フォーカス成分、歪んだ倍音、頭の押し出しを重ねるBassLayer確認 |
 | `demo_drumkit_types` | drumkit | drum types | kick、snare、hat、tom、rim、clap、crash、rideの内部生成ドラム確認 |
 | `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
 | `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |

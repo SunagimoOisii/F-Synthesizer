@@ -154,27 +154,45 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double sine = std::sin(2.0 * kPi * p);
     const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
     const double square = (p < 0.5) ? 1.0 : -1.0;
-    const double folded = std::sin(2.0 * kPi * p * 2.0) * 0.55 + square * 0.45;
+    const double gritTone = std::clamp(layer.gritTone, 0.0, 1.0);
+    const double folded =
+        std::sin(2.0 * kPi * p * (1.5 + gritTone * 2.5)) * (0.70 - gritTone * 0.25) +
+        square * (0.30 + gritTone * 0.25);
 
     double subMul = std::clamp(layer.subLevel, 0.0, 1.0);
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
     double gritMul = std::clamp(layer.gritLevel, 0.0, 1.0);
+    double focusMul = std::clamp(layer.focusLevel, 0.0, 1.0);
     switch (layer.type)
     {
     case BassLayerType::Sub:
         gritMul *= 0.35;
         bodyMul *= 0.75;
+        focusMul *= 0.65;
         break;
     case BassLayerType::Grit:
         gritMul *= 1.35;
         bodyMul *= 1.10;
+        focusMul *= 1.10;
         break;
     case BassLayerType::Drive:
     default:
         break;
     }
 
-    double sample = sine * subMul + tri * bodyMul + folded * gritMul;
+    const double bodySat = std::clamp(layer.bodySaturation, 0.0, 1.0);
+    const double body = AttackSoftClip((sine * subMul) + (tri * bodyMul), bodySat * 0.65);
+
+    const double focusHz = std::clamp(layer.focusHz, 60.0, 1200.0);
+    voices.bassFocusPhase[i] = WrapPhase(voices.bassFocusPhase[i] + focusHz * in.dt);
+    const double focusTone =
+        std::sin(2.0 * kPi * voices.bassFocusPhase[i]) * 0.72 +
+        std::sin(4.0 * kPi * voices.bassFocusPhase[i]) * 0.28;
+
+    const double attackDecay = std::clamp(layer.attackDecaySec, 0.005, 0.25);
+    const double attackMul = 1.0 + std::clamp(layer.attackBoost, 0.0, 1.0) * std::exp(-voices.ageSec[i] / attackDecay);
+
+    double sample = (body + (folded * gritMul) + (focusTone * focusMul)) * attackMul;
     const double velNorm = std::clamp(in.velGain, 0.0, 1.0);
     const double drive = std::clamp(layer.drive + layer.velocityToDrive * velNorm, 0.0, 1.0);
     sample = AttackSoftClip(sample * level, drive);

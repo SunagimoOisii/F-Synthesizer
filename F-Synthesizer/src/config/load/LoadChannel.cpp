@@ -91,6 +91,12 @@ bool ParseBassLayerObject(const std::string& layerObjText, BassLayerConfig& laye
     if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(layerObjText, "pitchOffsetSemis")) layer.pitchOffsetSemis = std::clamp(*v, -24.0, 24.0);
     if (auto v = ReadJSONDouble(layerObjText, "velocityToDrive")) layer.velocityToDrive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "focusHz")) layer.focusHz = std::clamp(*v, 60.0, 1200.0);
+    if (auto v = ReadJSONDouble(layerObjText, "focusLevel")) layer.focusLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bodySaturation")) layer.bodySaturation = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "gritTone")) layer.gritTone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "attackBoost")) layer.attackBoost = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "attackDecaySec")) layer.attackDecaySec = std::clamp(*v, 0.005, 0.25);
     return true;
 }
 

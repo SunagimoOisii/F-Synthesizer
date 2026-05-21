@@ -5,7 +5,7 @@
     "低域",
     "ベース"
   ],
-  "description": "BassLayerで沈むサブと歪んだ胴を足したFMサブドライブ。低域の押し出し向け。",
+  "description": "BassLayer v2で沈むサブと読める胴を両立したFMサブドライブ。深さを保ちつつ曲中で埋もれにくい。",
   "channels": {
     "0": {
       "amp": 0.28,
@@ -33,7 +33,13 @@
         "cutoffHz": 820,
         "drive": 0.28,
         "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.14
+        "velocityToDrive": 0.14,
+        "focusHz": 150,
+        "focusLevel": 0.18,
+        "bodySaturation": 0.28,
+        "gritTone": 0.36,
+        "attackBoost": 0.1,
+        "attackDecaySec": 0.055
       },
       "source": {
         "type": "fm",

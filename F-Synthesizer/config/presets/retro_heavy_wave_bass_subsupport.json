@@ -5,7 +5,7 @@
     "低域",
     "補助"
   ],
-  "description": "FM/analogベースの下に敷くサブ補助。BassLayerで薄い胴鳴りも足せる低域の土台。",
+  "description": "FM/analogベースの下に敷くサブ補助。BassLayer v2で薄い胴鳴りを足せる低域の土台。",
   "channels": {
     "0": {
       "amp": 0.2,
@@ -23,7 +23,13 @@
         "cutoffHz": 650,
         "drive": 0.14,
         "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.08
+        "velocityToDrive": 0.08,
+        "focusHz": 125,
+        "focusLevel": 0.1,
+        "bodySaturation": 0.12,
+        "gritTone": 0.24,
+        "attackBoost": 0.04,
+        "attackDecaySec": 0.07
       },
       "source": {
         "type": "waveform",

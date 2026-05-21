@@ -878,7 +878,13 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
         WriteIndent(out, 8); out << "\"drive\": " << layer.drive << ",\n";
         WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-        WriteIndent(out, 8); out << "\"velocityToDrive\": " << layer.velocityToDrive << "\n";
+        WriteIndent(out, 8); out << "\"velocityToDrive\": " << layer.velocityToDrive << ",\n";
+        WriteIndent(out, 8); out << "\"focusHz\": " << layer.focusHz << ",\n";
+        WriteIndent(out, 8); out << "\"focusLevel\": " << layer.focusLevel << ",\n";
+        WriteIndent(out, 8); out << "\"bodySaturation\": " << layer.bodySaturation << ",\n";
+        WriteIndent(out, 8); out << "\"gritTone\": " << layer.gritTone << ",\n";
+        WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
+        WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

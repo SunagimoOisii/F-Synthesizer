@@ -5,7 +5,7 @@
     "低域",
     "ドライブ"
   ],
-  "description": "BassLayerのdrive設定で、ベース本体に低域の芯と歪んだ倍音を重ねるデモ。",
+  "description": "BassLayer v2で低域の芯、フォーカス成分、歪んだ倍音、頭の押し出しを重ねるデモ。",
   "channels": {
     "0": {
       "amp": 0.25,
@@ -33,7 +33,13 @@
         "cutoffHz": 1100,
         "drive": 0.38,
         "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.2
+        "velocityToDrive": 0.2,
+        "focusHz": 200,
+        "focusLevel": 0.28,
+        "bodySaturation": 0.26,
+        "gritTone": 0.52,
+        "attackBoost": 0.18,
+        "attackDecaySec": 0.045
       },
       "source": {
         "type": "analog",
