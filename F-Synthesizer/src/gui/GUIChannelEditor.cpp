@@ -505,6 +505,10 @@ bool DrawChannelEditor(
         changed |= ImGui::InputDouble("Detune Cents##leadLayer", &layer.detuneCents, 0.5, 2.0, "%.2f");
         changed |= ImGui::InputDouble("Attack Boost##leadLayer", &layer.attackBoost, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Drive##leadLayer", &layer.drive, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Character Level##leadLayer", &layer.characterLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Character Tone##leadLayer", &layer.characterTone, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Bite Level##leadLayer", &layer.biteLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Wobble Depth Cents##leadLayer", &layer.wobbleDepthCents, 0.5, 2.0, "%.2f");
 
         layer.level = std::clamp(layer.level, 0.0, 1.0);
         layer.edgeLevel = std::clamp(layer.edgeLevel, 0.0, 1.0);
@@ -515,6 +519,12 @@ bool DrawChannelEditor(
         layer.attackBoost = std::clamp(layer.attackBoost, 0.0, 1.0);
         layer.attackDecaySec = std::clamp(layer.attackDecaySec, 0.005, 0.25);
         layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+        layer.characterLevel = std::clamp(layer.characterLevel, 0.0, 1.0);
+        layer.characterTone = std::clamp(layer.characterTone, 0.0, 1.0);
+        layer.biteLevel = std::clamp(layer.biteLevel, 0.0, 1.0);
+        layer.biteDecaySec = std::clamp(layer.biteDecaySec, 0.005, 0.25);
+        layer.wobbleDepthCents = std::clamp(layer.wobbleDepthCents, 0.0, 30.0);
+        layer.wobbleRateHz = std::clamp(layer.wobbleRateHz, 0.0, 12.0);
     }
 
     bool layer3Changed = false;

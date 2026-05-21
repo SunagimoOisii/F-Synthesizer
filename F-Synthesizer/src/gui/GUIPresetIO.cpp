@@ -100,7 +100,13 @@ void WriteLeadLayerJSON(std::ostream& out, const LeadLayerConfig& layer)
     out << "        \"bendDecaySec\": " << layer.bendDecaySec << ",\n";
     out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
     out << "        \"attackDecaySec\": " << layer.attackDecaySec << ",\n";
-    out << "        \"drive\": " << layer.drive << "\n";
+    out << "        \"drive\": " << layer.drive << ",\n";
+    out << "        \"characterLevel\": " << layer.characterLevel << ",\n";
+    out << "        \"characterTone\": " << layer.characterTone << ",\n";
+    out << "        \"biteLevel\": " << layer.biteLevel << ",\n";
+    out << "        \"biteDecaySec\": " << layer.biteDecaySec << ",\n";
+    out << "        \"wobbleDepthCents\": " << layer.wobbleDepthCents << ",\n";
+    out << "        \"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
     out << "      },\n";
 }
 

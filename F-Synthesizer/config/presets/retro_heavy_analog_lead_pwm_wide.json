@@ -5,7 +5,7 @@
     "主役",
     "PWM"
   ],
-  "description": "PWMの揺れを控えめにした広めのリード。細いピコピコ感を抑えた上物。",
+  "description": "PWMの揺れを控えめにした広めのリード。leadLayer v2で薄い噛みつきと明瞭さを足した上物。",
   "channels": {
     "0": {
       "amp": 0.16,
@@ -34,7 +34,13 @@
         "bendDecaySec": 0.055,
         "attackBoost": 0.1,
         "attackDecaySec": 0.05,
-        "drive": 0.06
+        "drive": 0.06,
+        "characterLevel": 0.06,
+        "characterTone": 0.42,
+        "biteLevel": 0.06,
+        "biteDecaySec": 0.032,
+        "wobbleDepthCents": 2.5,
+        "wobbleRateHz": 3.4
       },
       "source": {
         "type": "analog",

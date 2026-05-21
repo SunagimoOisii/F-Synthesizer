@@ -129,7 +129,13 @@ bool LeadLayerConfigEquals(const LeadLayerConfig& a, const LeadLayerConfig& b)
         NearlyEq(a.bendDecaySec, b.bendDecaySec) &&
         NearlyEq(a.attackBoost, b.attackBoost) &&
         NearlyEq(a.attackDecaySec, b.attackDecaySec) &&
-        NearlyEq(a.drive, b.drive);
+        NearlyEq(a.drive, b.drive) &&
+        NearlyEq(a.characterLevel, b.characterLevel) &&
+        NearlyEq(a.characterTone, b.characterTone) &&
+        NearlyEq(a.biteLevel, b.biteLevel) &&
+        NearlyEq(a.biteDecaySec, b.biteDecaySec) &&
+        NearlyEq(a.wobbleDepthCents, b.wobbleDepthCents) &&
+        NearlyEq(a.wobbleRateHz, b.wobbleRateHz);
 }
 
 template <typename SmoothingT>

@@ -11,7 +11,7 @@
 - FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
 - `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
 - `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音、中低域の焦点を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
-- `leadLayer` は主旋律向けに硬い頭、短いしゃくり、薄い二重化を足す補助レイヤー。FM/analog/waveformの本体を置き換えず、前に出したいリードへ薄く使う。
+- `leadLayer` は主旋律向けに硬い頭、短いしゃくり、薄い二重化、FM金属寄りのクセを足す補助レイヤー。強くしすぎると濁るため、前に出したいリードへ中程度までで使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -20,10 +20,10 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_brass_ensemble` | FM | op個別Env、brass attackLayer、brass leadLayerで立ち上がりと前面感を押す厚いFMコード/ブラス |
-| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Env、metal attackLayer、blade leadLayerで硬い頭と金属エッジを出すFMリード |
-| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayerとblade leadLayerを薄く足した太いアナログ風リード |
-| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れにbrass attackLayer/leadLayerを控えめに重ねた広めの上物リード |
+| `retro_heavy_fm_brass_ensemble` | FM | op個別Env、brass attackLayer、leadLayer v2の金属倍音で立ち上がりと前面感を押す厚いFMコード/ブラス |
+| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Env、metal attackLayer、leadLayer v2のbiteと非整数倍音で硬いクセを出すFMリード |
+| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayerと控えめなleadLayer v2を足した太いアナログ風リード |
+| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れにbrass attackLayerと控えめなleadLayer v2を重ねた広めの上物リード |
 
 ### 低域
 

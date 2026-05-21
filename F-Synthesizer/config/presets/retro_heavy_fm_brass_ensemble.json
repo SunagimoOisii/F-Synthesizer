@@ -6,7 +6,7 @@
     "ブラス",
     "90年代"
   ],
-  "description": "厚いFMコード/ブラスの代表音色。単音でも和音でも曲に馴染む主役向け。",
+  "description": "厚いFMコード/ブラスの代表音色。leadLayer v2で硬い頭とFM金属寄りのクセを薄く足した主役向け。",
   "channels": {
     "0": {
       "amp": 0.2,
@@ -35,7 +35,13 @@
         "bendDecaySec": 0.05,
         "attackBoost": 0.16,
         "attackDecaySec": 0.045,
-        "drive": 0.08
+        "drive": 0.08,
+        "characterLevel": 0.12,
+        "characterTone": 0.48,
+        "biteLevel": 0.1,
+        "biteDecaySec": 0.028,
+        "wobbleDepthCents": 3.5,
+        "wobbleRateHz": 4.2
       },
       "source": {
         "type": "fm",

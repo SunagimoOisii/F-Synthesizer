@@ -214,7 +214,10 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
 
     const double level = std::clamp(layer.level, 0.0, 1.0);
     const double bendDecay = std::clamp(layer.bendDecaySec, 0.005, 0.25);
-    const double bendSemis = std::clamp(layer.pitchBendSemis, -12.0, 12.0) * std::exp(-voices.ageSec[i] / bendDecay);
+    const double wobbleDepth = std::clamp(layer.wobbleDepthCents, 0.0, 30.0);
+    const double wobbleRate = std::clamp(layer.wobbleRateHz, 0.0, 12.0);
+    const double wobbleSemis = (wobbleDepth / 100.0) * std::sin(2.0 * kPi * wobbleRate * voices.ageSec[i]);
+    const double bendSemis = std::clamp(layer.pitchBendSemis, -12.0, 12.0) * std::exp(-voices.ageSec[i] / bendDecay) + wobbleSemis;
     const double bendMul = std::exp2(bendSemis / 12.0);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor * bendMul;
     const double detuneMul = std::exp2(std::clamp(layer.detuneCents, -50.0, 50.0) / 1200.0);
@@ -230,26 +233,40 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         std::sin(2.0 * kPi * p * 2.01) * 0.42 +
         std::sin(2.0 * kPi * p * 3.73) * 0.34 +
         ((p < 0.5) ? 1.0 : -1.0) * 0.24;
+    const double characterTone = std::clamp(layer.characterTone, 0.0, 1.0);
+    const double character =
+        std::sin(2.0 * kPi * p * (2.71 + characterTone * 0.19)) * (0.58 - characterTone * 0.16) +
+        std::sin(2.0 * kPi * p * (4.13 + characterTone * 0.37)) * (0.24 + characterTone * 0.18) +
+        std::sin(2.0 * kPi * p * (5.89 + characterTone * 0.53)) * (0.10 + characterTone * 0.16);
 
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
     double edgeMul = std::clamp(layer.edgeLevel, 0.0, 1.0);
+    double characterMul = std::clamp(layer.characterLevel, 0.0, 1.0);
     switch (layer.type)
     {
     case LeadLayerType::Brass:
         bodyMul *= 1.15;
         edgeMul *= 0.75;
+        characterMul *= 0.75;
         break;
     case LeadLayerType::Edge:
         bodyMul *= 0.55;
         edgeMul *= 1.30;
+        characterMul *= 1.25;
         break;
     case LeadLayerType::Blade:
     default:
+        characterMul *= 1.10;
         break;
     }
 
     const double attackDecay = std::clamp(layer.attackDecaySec, 0.005, 0.25);
     const double attack = 1.0 + std::clamp(layer.attackBoost, 0.0, 1.0) * std::exp(-voices.ageSec[i] / attackDecay);
-    const double sample = (body * bodyMul + edge * edgeMul) * attack * level;
+    const double biteDecay = std::clamp(layer.biteDecaySec, 0.005, 0.25);
+    const double biteEnv = std::exp(-voices.ageSec[i] / biteDecay);
+    const double bite =
+        (std::sin(2.0 * kPi * p * 6.27) * 0.5 + ((p < 0.5) ? 0.5 : -0.5)) *
+        std::clamp(layer.biteLevel, 0.0, 1.0) * biteEnv;
+    const double sample = (body * bodyMul + edge * edgeMul + character * characterMul + bite) * attack * level;
     return AttackSoftClip(sample, layer.drive);
 }

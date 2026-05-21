@@ -912,7 +912,13 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"bendDecaySec\": " << layer.bendDecaySec << ",\n";
         WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
         WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << ",\n";
+        WriteIndent(out, 8); out << "\"characterLevel\": " << layer.characterLevel << ",\n";
+        WriteIndent(out, 8); out << "\"characterTone\": " << layer.characterTone << ",\n";
+        WriteIndent(out, 8); out << "\"biteLevel\": " << layer.biteLevel << ",\n";
+        WriteIndent(out, 8); out << "\"biteDecaySec\": " << layer.biteDecaySec << ",\n";
+        WriteIndent(out, 8); out << "\"wobbleDepthCents\": " << layer.wobbleDepthCents << ",\n";
+        WriteIndent(out, 8); out << "\"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

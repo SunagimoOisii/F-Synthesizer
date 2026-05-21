@@ -5,7 +5,7 @@
     "主役",
     "リード"
   ],
-  "description": "硬さを残しつつ明るすぎないFMリード。金属感は補助倍音に留める。",
+  "description": "硬さを残しつつ明るすぎないFMリード。leadLayer v2のbiteと非整数倍音でメガドラ寄りのクセを足す。",
   "channels": {
     "0": {
       "amp": 0.18,
@@ -34,7 +34,13 @@
         "bendDecaySec": 0.04,
         "attackBoost": 0.2,
         "attackDecaySec": 0.035,
-        "drive": 0.1
+        "drive": 0.1,
+        "characterLevel": 0.18,
+        "characterTone": 0.68,
+        "biteLevel": 0.16,
+        "biteDecaySec": 0.022,
+        "wobbleDepthCents": 4.5,
+        "wobbleRateHz": 5.1
       },
       "source": {
         "type": "fm",

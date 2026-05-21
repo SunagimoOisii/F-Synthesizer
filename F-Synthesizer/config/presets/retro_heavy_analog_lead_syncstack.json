@@ -5,7 +5,7 @@
     "主役",
     "sync"
   ],
-  "description": "hard syncの押し出しを持つ太いアナログ風リード。矩形の軽さより中域を重視。",
+  "description": "hard syncの押し出しを持つ太いアナログ風リード。leadLayer v2は控えめに使い、中域の芯と軽いクセを足す。",
   "channels": {
     "0": {
       "amp": 0.17,
@@ -34,7 +34,13 @@
         "bendDecaySec": 0.045,
         "attackBoost": 0.14,
         "attackDecaySec": 0.04,
-        "drive": 0.08
+        "drive": 0.08,
+        "characterLevel": 0.08,
+        "characterTone": 0.52,
+        "biteLevel": 0.08,
+        "biteDecaySec": 0.026,
+        "wobbleDepthCents": 3.0,
+        "wobbleRateHz": 3.7
       },
       "source": {
         "type": "analog",

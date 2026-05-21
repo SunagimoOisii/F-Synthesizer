@@ -142,6 +142,12 @@ bool ParseLeadLayerObject(const std::string& layerObjText, LeadLayerConfig& laye
     if (auto v = ReadJSONDouble(layerObjText, "attackBoost")) layer.attackBoost = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(layerObjText, "attackDecaySec")) layer.attackDecaySec = std::clamp(*v, 0.005, 0.25);
     if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "characterLevel")) layer.characterLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "characterTone")) layer.characterTone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "biteLevel")) layer.biteLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "biteDecaySec")) layer.biteDecaySec = std::clamp(*v, 0.005, 0.25);
+    if (auto v = ReadJSONDouble(layerObjText, "wobbleDepthCents")) layer.wobbleDepthCents = std::clamp(*v, 0.0, 30.0);
+    if (auto v = ReadJSONDouble(layerObjText, "wobbleRateHz")) layer.wobbleRateHz = std::clamp(*v, 0.0, 12.0);
     return true;
 }
 

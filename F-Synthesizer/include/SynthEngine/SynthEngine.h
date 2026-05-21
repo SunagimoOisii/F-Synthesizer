@@ -303,6 +303,12 @@ struct LeadLayerConfig
     double attackBoost = 0.0;
     double attackDecaySec = 0.035;
     double drive = 0.0;
+    double characterLevel = 0.0;
+    double characterTone = 0.5;
+    double biteLevel = 0.0;
+    double biteDecaySec = 0.025;
+    double wobbleDepthCents = 0.0;
+    double wobbleRateHz = 4.0;
 };
 
 // 1チャンネル分の音色設定。
