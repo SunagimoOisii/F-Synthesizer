@@ -134,6 +134,8 @@ struct Voice
     std::vector<AttackLayerConfig> attackLayer;
     std::vector<BassLayerConfig> bassLayer;
     std::vector<LeadLayerConfig> leadLayer;
+    std::vector<ChordLayerConfig> chordLayer;
+    std::vector<PadLayerConfig> padLayer;
     std::vector<ExpressionMapConfig> expressionMap;
     std::vector<ADSRState> env;
 
@@ -147,6 +149,12 @@ struct Voice
     std::vector<double> bassLpState;
     std::vector<double> leadPhase;
     std::vector<double> leadDetunePhase;
+    std::vector<std::array<double, 4>> chordPhase;
+    std::vector<double> chordLpState;
+    std::vector<double> padPhase;
+    std::vector<double> padDetunePhase;
+    std::vector<double> padMotionPhase;
+    std::vector<double> padLpState;
     std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
     std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）
     std::vector<double> portamentoTimeSec;  // チャンネル設定からコピーした時定数

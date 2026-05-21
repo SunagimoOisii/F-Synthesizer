@@ -12,6 +12,9 @@ struct VoiceRenderInput
     double expressionAttackMul = 1.0;
     double expressionBassMul = 1.0;
     double expressionLeadMul = 1.0;
+    double expressionChordMul = 1.0;
+    double expressionPadMul = 1.0;
+    double expressionPadBrightnessAdd = 0.0;
     double expressionDriveAdd = 0.0;
     double envGain = 1.0;
     double modwheel = 0.0;
@@ -277,4 +280,97 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         std::clamp(layer.biteLevel, 0.0, 1.0) * biteEnv;
     const double sample = (body * bodyMul + edge * edgeMul + character * characterMul + bite) * attack * level;
     return AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.45, 0.0, 1.0));
+}
+
+double RenderChordLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const ChordLayerConfig& layer = voices.chordLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return 0.0;
+    }
+
+    const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionChordMul;
+    const double detuneCents = std::clamp(layer.detuneCents, 0.0, 50.0);
+    const double spread = std::clamp(layer.spread, 0.0, 1.0);
+    double sample = 0.0;
+    double weight = 0.0;
+    for (size_t v = 0; v < layer.intervalsSemis.size(); v++)
+    {
+        const double voiceLevel = std::clamp(layer.voiceLevels[v], 0.0, 1.0);
+        if (voiceLevel <= 0.0)
+        {
+            continue;
+        }
+
+        const double centered = (static_cast<double>(v) - 1.5) / 1.5;
+        const double semis =
+            static_cast<double>(std::clamp(layer.intervalsSemis[v], -24, 24)) +
+            centered * detuneCents * spread / 100.0;
+        const double inc = voices.phaseInc[i] * in.pitchFactor * std::exp2(semis / 12.0);
+        voices.chordPhase[i][v] = WrapPhase(voices.chordPhase[i][v] + inc);
+        const double p = voices.chordPhase[i][v];
+        const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
+        const double saw = (2.0 * p) - 1.0;
+        const double tone = std::sin(2.0 * kPi * p) * 0.55 + tri * 0.30 + saw * 0.15;
+        sample += tone * voiceLevel;
+        weight += voiceLevel;
+    }
+    if (weight <= 0.0)
+    {
+        return 0.0;
+    }
+
+    sample /= weight;
+    sample = AttackSoftClip(sample * level, std::clamp(layer.drive + in.expressionDriveAdd * 0.25, 0.0, 1.0));
+
+    const double cutoff = std::clamp(layer.cutoffHz, 80.0, 10000.0);
+    const double rc = 1.0 / (2.0 * kPi * cutoff);
+    const double alpha = in.dt / (rc + in.dt);
+    voices.chordLpState[i] += alpha * (sample - voices.chordLpState[i]);
+    return voices.chordLpState[i];
+}
+
+double RenderPadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const PadLayerConfig& layer = voices.padLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return 0.0;
+    }
+
+    voices.padMotionPhase[i] = WrapPhase(voices.padMotionPhase[i] + std::clamp(layer.motionRateHz, 0.0, 8.0) * in.dt);
+    const double motion = std::sin(2.0 * kPi * voices.padMotionPhase[i]);
+    const double fadeIn = std::clamp(layer.fadeInSec, 0.005, 5.0);
+    const double fade = 1.0 - std::exp(-voices.ageSec[i] / fadeIn);
+    const double brightness = std::clamp(layer.brightness + in.expressionPadBrightnessAdd, 0.0, 1.0);
+    const double detuneCents =
+        std::clamp(layer.detuneCents, 0.0, 80.0) *
+        (1.0 + std::clamp(layer.motionDepth, 0.0, 1.0) * 0.25 * motion);
+    const double spread = std::clamp(layer.spread, 0.0, 1.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor;
+    const double detuneMul = std::exp2(detuneCents / 1200.0);
+    voices.padPhase[i] = WrapPhase(voices.padPhase[i] + baseInc / detuneMul);
+    voices.padDetunePhase[i] = WrapPhase(voices.padDetunePhase[i] + baseInc * detuneMul);
+
+    const double p0 = voices.padPhase[i];
+    const double p1 = voices.padDetunePhase[i];
+    const double saw0 = (2.0 * p0) - 1.0;
+    const double saw1 = (2.0 * p1) - 1.0;
+    const double tri0 = 4.0 * std::abs(p0 - 0.5) - 1.0;
+    const double tri1 = 4.0 * std::abs(p1 - 0.5) - 1.0;
+    const double baseTone =
+        ((saw0 * (0.25 + brightness * 0.25)) + (tri0 * (0.50 - brightness * 0.15))) * (1.0 - spread * 0.35) +
+        ((saw1 * (0.25 + brightness * 0.25)) + (tri1 * (0.50 - brightness * 0.15))) * (0.45 + spread * 0.35);
+
+    const double octaveLevel = std::clamp(layer.octaveLevel, 0.0, 1.0);
+    const double octaveTone = std::sin(4.0 * kPi * p0) * octaveLevel * (0.18 + brightness * 0.22);
+    double sample = (baseTone + octaveTone) * fade * std::clamp(layer.level, 0.0, 1.0) * in.expressionPadMul;
+    sample = AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.20, 0.0, 1.0));
+
+    const double cutoff = std::clamp(layer.cutoffHz * (0.75 + brightness * 0.75), 80.0, 10000.0);
+    const double rc = 1.0 / (2.0 * kPi * cutoff);
+    const double alpha = in.dt / (rc + in.dt);
+    voices.padLpState[i] += alpha * (sample - voices.padLpState[i]);
+    return voices.padLpState[i];
 }

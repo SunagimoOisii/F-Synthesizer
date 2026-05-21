@@ -311,6 +311,33 @@ struct LeadLayerConfig
     double wobbleRateHz = 4.0;
 };
 
+struct ChordLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    std::array<int, 4> intervalsSemis{ 0, 7, 12, 0 };
+    std::array<double, 4> voiceLevels{ 1.0, 0.72, 0.50, 0.0 };
+    double detuneCents = 3.0;
+    double spread = 0.25;
+    double cutoffHz = 2600.0;
+    double drive = 0.0;
+};
+
+struct PadLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    double octaveLevel = 0.20;
+    double detuneCents = 5.0;
+    double spread = 0.35;
+    double fadeInSec = 0.12;
+    double brightness = 0.35;
+    double motionDepth = 0.08;
+    double motionRateHz = 0.22;
+    double cutoffHz = 1800.0;
+    double drive = 0.0;
+};
+
 struct ExpressionMapConfig
 {
     bool enabled = false;
@@ -321,9 +348,13 @@ struct ExpressionMapConfig
     double velocityToAttack = 0.0;
     double velocityToBass = 0.0;
     double velocityToLead = 0.0;
+    double velocityToChord = 0.0;
+    double velocityToPad = 0.0;
     double modWheelToBrightness = 0.0;
+    double modWheelToPad = 0.0;
     double pressureToDrive = 0.0;
     double cc74ToBrightness = 0.0;
+    double cc74ToPadBrightness = 0.0;
 };
 
 // 1チャンネル分の音色設定。
@@ -348,6 +379,10 @@ struct ChannelConfig
     BassLayerConfig bassLayer{};
     // 主旋律向けに硬いアタック、薄い倍音、デチューン感を足す共通補助レイヤー。
     LeadLayerConfig leadLayer{};
+    // 和音向けに固定voicingの追加音を足す共通補助レイヤー。
+    ChordLayerConfig chordLayer{};
+    // 背景向けに暗い厚みと揺れを足す共通補助レイヤー。
+    PadLayerConfig padLayer{};
     // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
     ExpressionMapConfig expressionMap{};
 };

@@ -611,6 +611,34 @@ bool ParseTopLevelIntArrayElements(
     return true;
 }
 
+bool ParseTopLevelDoubleArrayElements(
+    const std::string& arrText,
+    const std::function<bool(size_t, double)>& onElement,
+    std::string& err)
+{
+    const auto root = ParseJSONArray(arrText);
+    if (!root)
+    {
+        err = "invalid number array";
+        return false;
+    }
+    size_t index = 0;
+    for (const auto& item : *root)
+    {
+        if (!item.is_number())
+        {
+            err = "number array contains non-number value";
+            return false;
+        }
+        if (!onElement(index, item.get<double>()))
+        {
+            return false;
+        }
+        ++index;
+    }
+    return true;
+}
+
 bool ValidateSmoothingSupport(const std::string& sourceObjText, SourceKind sourceKind, std::string& err)
 {
     std::string smoothingObj;

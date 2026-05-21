@@ -527,6 +527,77 @@ bool DrawChannelEditor(
         layer.wobbleRateHz = std::clamp(layer.wobbleRateHz, 0.0, 12.0);
     }
 
+    if (ImGui::CollapsingHeader("Chord Layer"))
+    {
+        auto& layer = chCfg.chordLayer;
+        changed |= ImGui::Checkbox("Enabled##chordLayer", &layer.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "入力ノートに固定voicingの薄い追加音を重ねます。",
+                "FM/analog/waveformの和音やブラスに厚みを足します。",
+                "強くしすぎると和音が濁り、メロディやベースを覆います。");
+        }
+
+        changed |= ImGui::InputDouble("Level##chordLayer", &layer.level, 0.01, 0.05, "%.3f");
+        for (size_t v = 0; v < layer.intervalsSemis.size(); v++)
+        {
+            int interval = layer.intervalsSemis[v];
+            std::string label = "Interval " + std::to_string(v + 1) + "##chordLayer";
+            if (ImGui::InputInt(label.c_str(), &interval, 1, 12))
+            {
+                layer.intervalsSemis[v] = std::clamp(interval, -24, 24);
+                changed = true;
+            }
+        }
+        changed |= ImGui::InputDouble("Detune Cents##chordLayer", &layer.detuneCents, 0.5, 2.0, "%.2f");
+        changed |= ImGui::InputDouble("Spread##chordLayer", &layer.spread, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Cutoff Hz##chordLayer", &layer.cutoffHz, 10.0, 100.0, "%.1f");
+        changed |= ImGui::InputDouble("Drive##chordLayer", &layer.drive, 0.01, 0.05, "%.3f");
+
+        layer.level = std::clamp(layer.level, 0.0, 1.0);
+        for (double& voiceLevel : layer.voiceLevels)
+        {
+            voiceLevel = std::clamp(voiceLevel, 0.0, 1.0);
+        }
+        layer.detuneCents = std::clamp(layer.detuneCents, 0.0, 50.0);
+        layer.spread = std::clamp(layer.spread, 0.0, 1.0);
+        layer.cutoffHz = std::clamp(layer.cutoffHz, 80.0, 10000.0);
+        layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+    }
+
+    if (ImGui::CollapsingHeader("Pad Layer"))
+    {
+        auto& layer = chCfg.padLayer;
+        changed |= ImGui::Checkbox("Enabled##padLayer", &layer.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "暗い持続レイヤーを重ねて背景の厚みを作ります。",
+                "遅いfade、軽いdetune、薄い揺れでパッドを広げます。",
+                "明るさや量を上げすぎると主旋律を邪魔します。");
+        }
+
+        changed |= ImGui::InputDouble("Level##padLayer", &layer.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Octave Level##padLayer", &layer.octaveLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Detune Cents##padLayer", &layer.detuneCents, 0.5, 2.0, "%.2f");
+        changed |= ImGui::InputDouble("Fade In##padLayer", &layer.fadeInSec, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Brightness##padLayer", &layer.brightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Motion Depth##padLayer", &layer.motionDepth, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Cutoff Hz##padLayer", &layer.cutoffHz, 10.0, 100.0, "%.1f");
+
+        layer.level = std::clamp(layer.level, 0.0, 1.0);
+        layer.octaveLevel = std::clamp(layer.octaveLevel, 0.0, 1.0);
+        layer.detuneCents = std::clamp(layer.detuneCents, 0.0, 80.0);
+        layer.spread = std::clamp(layer.spread, 0.0, 1.0);
+        layer.fadeInSec = std::clamp(layer.fadeInSec, 0.005, 5.0);
+        layer.brightness = std::clamp(layer.brightness, 0.0, 1.0);
+        layer.motionDepth = std::clamp(layer.motionDepth, 0.0, 1.0);
+        layer.motionRateHz = std::clamp(layer.motionRateHz, 0.0, 8.0);
+        layer.cutoffHz = std::clamp(layer.cutoffHz, 80.0, 10000.0);
+        layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+    }
+
     if (ImGui::CollapsingHeader("Expression Map"))
     {
         auto& map = chCfg.expressionMap;
@@ -554,9 +625,13 @@ bool DrawChannelEditor(
         map.velocityToAttack = std::clamp(map.velocityToAttack, 0.0, 1.0);
         map.velocityToBass = std::clamp(map.velocityToBass, 0.0, 1.0);
         map.velocityToLead = std::clamp(map.velocityToLead, 0.0, 1.0);
+        map.velocityToChord = std::clamp(map.velocityToChord, 0.0, 1.0);
+        map.velocityToPad = std::clamp(map.velocityToPad, 0.0, 1.0);
         map.modWheelToBrightness = std::clamp(map.modWheelToBrightness, -1.0, 1.0);
+        map.modWheelToPad = std::clamp(map.modWheelToPad, 0.0, 1.0);
         map.pressureToDrive = std::clamp(map.pressureToDrive, 0.0, 1.0);
         map.cc74ToBrightness = std::clamp(map.cc74ToBrightness, -1.0, 1.0);
+        map.cc74ToPadBrightness = std::clamp(map.cc74ToPadBrightness, -1.0, 1.0);
     }
 
     bool layer3Changed = false;

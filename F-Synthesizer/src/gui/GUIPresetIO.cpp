@@ -110,6 +110,49 @@ void WriteLeadLayerJSON(std::ostream& out, const LeadLayerConfig& layer)
     out << "      },\n";
 }
 
+void WriteChordLayerJSON(std::ostream& out, const ChordLayerConfig& layer)
+{
+    out << "      \"chordLayer\": {\n";
+    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
+    out << "        \"level\": " << layer.level << ",\n";
+    out << "        \"intervalsSemis\": [";
+    for (size_t i = 0; i < layer.intervalsSemis.size(); i++)
+    {
+        if (i > 0) out << ", ";
+        out << layer.intervalsSemis[i];
+    }
+    out << "],\n";
+    out << "        \"voiceLevels\": [";
+    for (size_t i = 0; i < layer.voiceLevels.size(); i++)
+    {
+        if (i > 0) out << ", ";
+        out << layer.voiceLevels[i];
+    }
+    out << "],\n";
+    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
+    out << "        \"spread\": " << layer.spread << ",\n";
+    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
+    out << "        \"drive\": " << layer.drive << "\n";
+    out << "      },\n";
+}
+
+void WritePadLayerJSON(std::ostream& out, const PadLayerConfig& layer)
+{
+    out << "      \"padLayer\": {\n";
+    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
+    out << "        \"level\": " << layer.level << ",\n";
+    out << "        \"octaveLevel\": " << layer.octaveLevel << ",\n";
+    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
+    out << "        \"spread\": " << layer.spread << ",\n";
+    out << "        \"fadeInSec\": " << layer.fadeInSec << ",\n";
+    out << "        \"brightness\": " << layer.brightness << ",\n";
+    out << "        \"motionDepth\": " << layer.motionDepth << ",\n";
+    out << "        \"motionRateHz\": " << layer.motionRateHz << ",\n";
+    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
+    out << "        \"drive\": " << layer.drive << "\n";
+    out << "      },\n";
+}
+
 void WriteExpressionMapJSON(std::ostream& out, const ExpressionMapConfig& map)
 {
     out << "      \"expressionMap\": {\n";
@@ -121,9 +164,13 @@ void WriteExpressionMapJSON(std::ostream& out, const ExpressionMapConfig& map)
     out << "        \"velocityToAttack\": " << map.velocityToAttack << ",\n";
     out << "        \"velocityToBass\": " << map.velocityToBass << ",\n";
     out << "        \"velocityToLead\": " << map.velocityToLead << ",\n";
+    out << "        \"velocityToChord\": " << map.velocityToChord << ",\n";
+    out << "        \"velocityToPad\": " << map.velocityToPad << ",\n";
     out << "        \"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
+    out << "        \"modWheelToPad\": " << map.modWheelToPad << ",\n";
     out << "        \"pressureToDrive\": " << map.pressureToDrive << ",\n";
-    out << "        \"cc74ToBrightness\": " << map.cc74ToBrightness << "\n";
+    out << "        \"cc74ToBrightness\": " << map.cc74ToBrightness << ",\n";
+    out << "        \"cc74ToPadBrightness\": " << map.cc74ToPadBrightness << "\n";
     out << "      },\n";
 }
 
@@ -327,6 +374,14 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         if (cur.leadLayer.enabled)
         {
             WriteLeadLayerJSON(out, cur.leadLayer);
+        }
+        if (cur.chordLayer.enabled)
+        {
+            WriteChordLayerJSON(out, cur.chordLayer);
+        }
+        if (cur.padLayer.enabled)
+        {
+            WritePadLayerJSON(out, cur.padLayer);
         }
         if (cur.expressionMap.enabled)
         {

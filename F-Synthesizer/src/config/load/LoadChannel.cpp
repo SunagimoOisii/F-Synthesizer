@@ -151,6 +151,58 @@ bool ParseLeadLayerObject(const std::string& layerObjText, LeadLayerConfig& laye
     return true;
 }
 
+bool ParseChordLayerObject(const std::string& layerObjText, ChordLayerConfig& layer, std::string& err)
+{
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "detuneCents")) layer.detuneCents = std::clamp(*v, 0.0, 50.0);
+    if (auto v = ReadJSONDouble(layerObjText, "spread")) layer.spread = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "cutoffHz")) layer.cutoffHz = std::clamp(*v, 80.0, 10000.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+
+    std::string intervalsArray;
+    bool foundIntervals = false;
+    if (!ExtractArrayForKey(layerObjText, "intervalsSemis", intervalsArray, foundIntervals, err)) { return false; }
+    if (foundIntervals)
+    {
+        if (!ParseTopLevelIntArrayElements(intervalsArray, [&](size_t index, int value) {
+            if (index >= layer.intervalsSemis.size()) { return true; }
+            layer.intervalsSemis[index] = std::clamp(value, -24, 24);
+            return true;
+        }, err)) { return false; }
+    }
+
+    std::string levelsArray;
+    bool foundLevels = false;
+    if (!ExtractArrayForKey(layerObjText, "voiceLevels", levelsArray, foundLevels, err)) { return false; }
+    if (foundLevels)
+    {
+        if (!ParseTopLevelDoubleArrayElements(levelsArray, [&](size_t index, double value) {
+            if (index >= layer.voiceLevels.size()) { return true; }
+            layer.voiceLevels[index] = std::clamp(value, 0.0, 1.0);
+            return true;
+        }, err)) { return false; }
+    }
+    return true;
+}
+
+bool ParsePadLayerObject(const std::string& layerObjText, PadLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "octaveLevel")) layer.octaveLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "detuneCents")) layer.detuneCents = std::clamp(*v, 0.0, 80.0);
+    if (auto v = ReadJSONDouble(layerObjText, "spread")) layer.spread = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "fadeInSec")) layer.fadeInSec = std::clamp(*v, 0.005, 5.0);
+    if (auto v = ReadJSONDouble(layerObjText, "brightness")) layer.brightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "motionDepth")) layer.motionDepth = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "motionRateHz")) layer.motionRateHz = std::clamp(*v, 0.0, 8.0);
+    if (auto v = ReadJSONDouble(layerObjText, "cutoffHz")) layer.cutoffHz = std::clamp(*v, 80.0, 10000.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
 bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
 {
     (void)err;
@@ -162,9 +214,13 @@ bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig
     if (auto v = ReadJSONDouble(mapObjText, "velocityToAttack")) map.velocityToAttack = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "velocityToBass")) map.velocityToBass = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "velocityToLead")) map.velocityToLead = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToChord")) map.velocityToChord = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToPad")) map.velocityToPad = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "modWheelToBrightness")) map.modWheelToBrightness = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "modWheelToPad")) map.modWheelToPad = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "pressureToDrive")) map.pressureToDrive = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "cc74ToBrightness")) map.cc74ToBrightness = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "cc74ToPadBrightness")) map.cc74ToPadBrightness = std::clamp(*v, -1.0, 1.0);
     return true;
 }
 
@@ -208,6 +264,28 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
         return false;
     }
     if (foundLeadLayer && !ParseLeadLayerObject(leadLayerObj, cfg.leadLayer, err))
+    {
+        return false;
+    }
+
+    std::string chordLayerObj;
+    bool foundChordLayer = false;
+    if (!ExtractObjectForKey(channelObjText, "chordLayer", chordLayerObj, foundChordLayer, err))
+    {
+        return false;
+    }
+    if (foundChordLayer && !ParseChordLayerObject(chordLayerObj, cfg.chordLayer, err))
+    {
+        return false;
+    }
+
+    std::string padLayerObj;
+    bool foundPadLayer = false;
+    if (!ExtractObjectForKey(channelObjText, "padLayer", padLayerObj, foundPadLayer, err))
+    {
+        return false;
+    }
+    if (foundPadLayer && !ParsePadLayerObject(padLayerObj, cfg.padLayer, err))
     {
         return false;
     }

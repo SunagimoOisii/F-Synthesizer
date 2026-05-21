@@ -5,7 +5,7 @@
     "和音",
     "コード"
   ],
-  "description": "FMを積層したコード向け音色。高域を抑えた濁りで厚みを作る。",
+  "description": "ChordLayerとPadLayerで固定voicingと暗い厚みを足したFMコード。高域を抑えた濁りで重厚さを作る。",
   "channels": {
     "0": {
       "amp": 0.15,
@@ -120,6 +120,56 @@
             }
           }
         }
+      },
+      "chordLayer": {
+        "enabled": true,
+        "level": 0.13,
+        "intervalsSemis": [
+          0,
+          7,
+          12,
+          15
+        ],
+        "voiceLevels": [
+          1.0,
+          0.62,
+          0.42,
+          0.25
+        ],
+        "detuneCents": 4.0,
+        "spread": 0.32,
+        "cutoffHz": 2400.0,
+        "drive": 0.05
+      },
+      "padLayer": {
+        "enabled": true,
+        "level": 0.08,
+        "octaveLevel": 0.14,
+        "detuneCents": 5.0,
+        "spread": 0.34,
+        "fadeInSec": 0.1,
+        "brightness": 0.28,
+        "motionDepth": 0.05,
+        "motionRateHz": 0.2,
+        "cutoffHz": 1700.0,
+        "drive": 0.03
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.86,
+        "velocityToBrightness": 0.08,
+        "velocityToFmIndex": 0.06,
+        "velocityToAttack": 0.04,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.0,
+        "velocityToChord": 0.14,
+        "velocityToPad": 0.1,
+        "modWheelToBrightness": 0.08,
+        "modWheelToPad": 0.12,
+        "pressureToDrive": 0.03,
+        "cc74ToBrightness": 0.16,
+        "cc74ToPadBrightness": 0.18
       }
     }
   }

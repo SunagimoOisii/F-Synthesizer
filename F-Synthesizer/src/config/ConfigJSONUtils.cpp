@@ -921,6 +921,49 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
+    if (cfg.chordLayer.enabled)
+    {
+        const auto& layer = cfg.chordLayer;
+        WriteIndent(out, 6); out << "\"chordLayer\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
+        WriteIndent(out, 8); out << "\"intervalsSemis\": [";
+        for (size_t v = 0; v < layer.intervalsSemis.size(); v++)
+        {
+            if (v > 0) out << ", ";
+            out << layer.intervalsSemis[v];
+        }
+        out << "],\n";
+        WriteIndent(out, 8); out << "\"voiceLevels\": [";
+        for (size_t v = 0; v < layer.voiceLevels.size(); v++)
+        {
+            if (v > 0) out << ", ";
+            out << layer.voiceLevels[v];
+        }
+        out << "],\n";
+        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
+        WriteIndent(out, 8); out << "\"spread\": " << layer.spread << ",\n";
+        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
+    if (cfg.padLayer.enabled)
+    {
+        const auto& layer = cfg.padLayer;
+        WriteIndent(out, 6); out << "\"padLayer\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
+        WriteIndent(out, 8); out << "\"octaveLevel\": " << layer.octaveLevel << ",\n";
+        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
+        WriteIndent(out, 8); out << "\"spread\": " << layer.spread << ",\n";
+        WriteIndent(out, 8); out << "\"fadeInSec\": " << layer.fadeInSec << ",\n";
+        WriteIndent(out, 8); out << "\"brightness\": " << layer.brightness << ",\n";
+        WriteIndent(out, 8); out << "\"motionDepth\": " << layer.motionDepth << ",\n";
+        WriteIndent(out, 8); out << "\"motionRateHz\": " << layer.motionRateHz << ",\n";
+        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
     if (cfg.expressionMap.enabled)
     {
         const auto& map = cfg.expressionMap;
@@ -933,9 +976,13 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"velocityToAttack\": " << map.velocityToAttack << ",\n";
         WriteIndent(out, 8); out << "\"velocityToBass\": " << map.velocityToBass << ",\n";
         WriteIndent(out, 8); out << "\"velocityToLead\": " << map.velocityToLead << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToChord\": " << map.velocityToChord << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToPad\": " << map.velocityToPad << ",\n";
         WriteIndent(out, 8); out << "\"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
+        WriteIndent(out, 8); out << "\"modWheelToPad\": " << map.modWheelToPad << ",\n";
         WriteIndent(out, 8); out << "\"pressureToDrive\": " << map.pressureToDrive << ",\n";
-        WriteIndent(out, 8); out << "\"cc74ToBrightness\": " << map.cc74ToBrightness << "\n";
+        WriteIndent(out, 8); out << "\"cc74ToBrightness\": " << map.cc74ToBrightness << ",\n";
+        WriteIndent(out, 8); out << "\"cc74ToPadBrightness\": " << map.cc74ToPadBrightness << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

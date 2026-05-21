@@ -5,7 +5,7 @@
     "背景",
     "パッド"
   ],
-  "description": "暗めにゆっくりfilterが動く重厚パッド。滑らかさを足す背景用。",
+  "description": "PadLayerで滑らかな暗い厚みを追加した重厚パッド。ゆっくりfilterが動く背景用。",
   "channels": {
     "0": {
       "amp": 0.13,
@@ -50,6 +50,56 @@
             }
           }
         }
+      },
+      "chordLayer": {
+        "enabled": true,
+        "level": 0.045,
+        "intervalsSemis": [
+          0,
+          12,
+          19,
+          0
+        ],
+        "voiceLevels": [
+          0.65,
+          0.36,
+          0.16,
+          0.0
+        ],
+        "detuneCents": 3.0,
+        "spread": 0.3,
+        "cutoffHz": 1750.0,
+        "drive": 0.015
+      },
+      "padLayer": {
+        "enabled": true,
+        "level": 0.18,
+        "octaveLevel": 0.16,
+        "detuneCents": 6.0,
+        "spread": 0.44,
+        "fadeInSec": 0.2,
+        "brightness": 0.26,
+        "motionDepth": 0.09,
+        "motionRateHz": 0.17,
+        "cutoffHz": 1550.0,
+        "drive": 0.02
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.82,
+        "velocityToAmp": 0.82,
+        "velocityToBrightness": 0.06,
+        "velocityToFmIndex": 0.04,
+        "velocityToAttack": 0.0,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.0,
+        "velocityToChord": 0.06,
+        "velocityToPad": 0.18,
+        "modWheelToBrightness": 0.06,
+        "modWheelToPad": 0.18,
+        "pressureToDrive": 0.02,
+        "cc74ToBrightness": 0.12,
+        "cc74ToPadBrightness": 0.22
       }
     }
   }

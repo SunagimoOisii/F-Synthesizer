@@ -12,7 +12,9 @@
 - `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
 - `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音、中低域の焦点を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
 - `leadLayer` は主旋律向けに硬い頭、短いしゃくり、薄い二重化、FM金属寄りのクセを足す補助レイヤー。強くしすぎると濁るため、前に出したいリードへ中程度までで使う。
-- `expressionMap` はvelocityを音量だけでなく、明るさ、FM index、attack/bass/lead layer量、driveへ薄く反映する。主要リード、ベース、ドラムでは強velocityほど輪郭と押し出しが増えるように使う。
+- `chordLayer` は和音向けに固定voicingの追加音を重ね、FM/analog/waveformのコード感と厚みを補う。
+- `padLayer` は背景向けに暗い持続音、遅いfade、軽いdetune、薄い揺れを足す。主旋律を邪魔しない厚みとして使う。
+- `expressionMap` はvelocityを音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad layer量、driveへ薄く反映する。主要リード、ベース、ドラム、和音/背景では強velocityほど輪郭と押し出しが増えるように使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -39,11 +41,11 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_chord_stack` | FM | op Envで濁りの立ち上がりを整えた厚いFMコード |
-| `retro_heavy_analog_chord_brass` | analog | brass attackLayerを薄く足し、FM群に混ぜるブラスコードの支え役 |
-| `retro_heavy_fm_pad_organ_dark` | FM | ゆっくりしたop Envで主旋律を邪魔しない暗めのFMオルガンパッド |
-| `retro_heavy_analog_pad_tape` | analog | driftと低いfilterで背景に置きやすいパッド |
-| `retro_heavy_wave_pad_sweep_dark` | waveform | 暗めにゆっくりfilterが動く重厚パッド |
+| `retro_heavy_fm_chord_stack` | FM | op Env、ChordLayer、PadLayerで固定voicingと暗い厚みを足したFMコード |
+| `retro_heavy_analog_chord_brass` | analog | brass attackLayer、ChordLayer、PadLayerを薄く足し、FM群に混ぜるブラスコードの支え役 |
+| `retro_heavy_fm_pad_organ_dark` | FM | PadLayerで暗い持続感を足し、薄いChordLayerで倍音密度を補うFMオルガンパッド |
+| `retro_heavy_analog_pad_tape` | analog | drift、低いfilter、PadLayerで背景に置きやすいテープ風パッド |
+| `retro_heavy_wave_pad_sweep_dark` | waveform | PadLayerで滑らかな暗い厚みを追加した、ゆっくりfilterが動く重厚パッド |
 
 ### ドラム
 
@@ -81,6 +83,7 @@
 | `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
 | `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
 | `demo_bass_layer_drive` | analog | bassLayer v2 | 低域の芯、フォーカス成分、歪んだ倍音、頭の押し出しを重ねるBassLayer確認 |
+| `demo_chord_pad_layer` | analog | chordLayer / padLayer | 固定voicingの追加音と暗い持続レイヤーで、単音からコード感と背景の厚みを足す確認 |
 | `demo_drumkit_types` | drumkit | drum types | kick、snare、hat、tom、rim、clap、crash、rideの内部生成ドラム確認 |
 | `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
 | `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |

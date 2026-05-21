@@ -78,6 +78,29 @@
     "wobbleDepthCents": 4.0,
     "wobbleRateHz": 4.8
   },
+  "chordLayer": {
+    "enabled": true,
+    "level": 0.12,
+    "intervalsSemis": [0, 7, 12, 15],
+    "voiceLevels": [1.0, 0.62, 0.42, 0.25],
+    "detuneCents": 4.0,
+    "spread": 0.35,
+    "cutoffHz": 2400.0,
+    "drive": 0.04
+  },
+  "padLayer": {
+    "enabled": true,
+    "level": 0.14,
+    "octaveLevel": 0.18,
+    "detuneCents": 6.0,
+    "spread": 0.42,
+    "fadeInSec": 0.18,
+    "brightness": 0.28,
+    "motionDepth": 0.08,
+    "motionRateHz": 0.18,
+    "cutoffHz": 1600.0,
+    "drive": 0.02
+  },
   "expressionMap": {
     "enabled": true,
     "velocityCurve": 0.9,
@@ -87,9 +110,13 @@
     "velocityToAttack": 0.10,
     "velocityToBass": 0.0,
     "velocityToLead": 0.16,
+    "velocityToChord": 0.12,
+    "velocityToPad": 0.16,
     "modWheelToBrightness": 0.10,
+    "modWheelToPad": 0.16,
     "pressureToDrive": 0.04,
-    "cc74ToBrightness": 0.20
+    "cc74ToBrightness": 0.20,
+    "cc74ToPadBrightness": 0.22
   },
   "source": {
     "type": "fm",
@@ -104,7 +131,11 @@
 
 `leadLayer` は省略可能。主旋律向けに内部生成の硬い頭、短いしゃくり、薄い二重化、FM金属寄りの持続倍音を重ねる。`source` 本体を置き換えず、FM/analog/waveformのリードを前に出す用途で使う。`type` は `blade|brass|edge`。`characterLevel` と `biteLevel` を強くしすぎると濁り、過剰な金属感、ピーク過多につながる。
 
-`expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`velocityToAmp` は最終音量への効き方で、`modWheelToBrightness` / `pressureToDrive` / `cc74ToBrightness` は既存MIDI表情値を音色変化へ追加で使う量。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
+`chordLayer` は省略可能。入力ノートに固定voicingの追加音を重ねる内部生成レイヤーで、和音やブラスの厚みを足す。`intervalsSemis` は入力ノートからの半音差、`voiceLevels` は各voiceの相対音量で、最大4要素まで使う。強くしすぎるとコードが濁り、主旋律やベースを覆う。
+
+`padLayer` は省略可能。暗い持続音、遅いfade、軽いdetune、薄い揺れを重ねる背景用レイヤー。`brightness` と `cutoffHz` は控えめを基本にし、主旋律を邪魔しない厚みとして使う。上げすぎると全体が曇る。
+
+`expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`modWheelToPad` はPad量、`cc74ToPadBrightness` はPadの明るさへ追加で効く。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
 
 ## source.type ごとの定義
 
@@ -236,9 +267,19 @@
 - `leadLayer.bendDecaySec/attackDecaySec/biteDecaySec`: `0.005..0.25`
 - `leadLayer.wobbleDepthCents`: `0.0..30.0`
 - `leadLayer.wobbleRateHz`: `0.0..12.0`
+- `chordLayer.level/drive/spread`: `0.0..1.0`
+- `chordLayer.intervalsSemis`: 各要素 `-24..24`、最大4要素
+- `chordLayer.voiceLevels`: 各要素 `0.0..1.0`、最大4要素
+- `chordLayer.detuneCents`: `0.0..50.0`
+- `chordLayer.cutoffHz`: `80.0..10000.0`
+- `padLayer.level/octaveLevel/spread/brightness/motionDepth/drive`: `0.0..1.0`
+- `padLayer.detuneCents`: `0.0..80.0`
+- `padLayer.fadeInSec`: `0.005..5.0`
+- `padLayer.motionRateHz`: `0.0..8.0`
+- `padLayer.cutoffHz`: `80.0..10000.0`
 - `expressionMap.velocityCurve`: `0.2..3.0`
-- `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/pressureToDrive`: `0.0..1.0`
-- `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness`: `-1.0..1.0`
+- `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/velocityToChord/velocityToPad/modWheelToPad/pressureToDrive`: `0.0..1.0`
+- `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness`: `-1.0..1.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

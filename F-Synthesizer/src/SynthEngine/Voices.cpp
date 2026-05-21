@@ -199,6 +199,8 @@ void InitializeVoiceAtIndex(
     voices.attackLayer[i] = cfg.attackLayer;
     voices.bassLayer[i] = cfg.bassLayer;
     voices.leadLayer[i] = cfg.leadLayer;
+    voices.chordLayer[i] = cfg.chordLayer;
+    voices.padLayer[i] = cfg.padLayer;
     voices.expressionMap[i] = cfg.expressionMap;
     ADSRState envState{};
     NoteOn(envState);
@@ -221,6 +223,12 @@ void InitializeVoiceAtIndex(
     voices.bassLpState[i] = 0.0;
     voices.leadPhase[i] = 0.0;
     voices.leadDetunePhase[i] = 0.0;
+    voices.chordPhase[i] = {};
+    voices.chordLpState[i] = 0.0;
+    voices.padPhase[i] = 0.0;
+    voices.padDetunePhase[i] = 0.0;
+    voices.padMotionPhase[i] = 0.0;
+    voices.padLpState[i] = 0.0;
 
     // ポルタメント初期化
     const double targetHz = NoteNumberToFreq(e.noteNumber);
@@ -489,6 +497,8 @@ void Voice::reserve(size_t n)
     attackLayer.reserve(n);
     bassLayer.reserve(n);
     leadLayer.reserve(n);
+    chordLayer.reserve(n);
+    padLayer.reserve(n);
     expressionMap.reserve(n);
     env.reserve(n);
     phase.reserve(n);
@@ -501,6 +511,12 @@ void Voice::reserve(size_t n)
     bassLpState.reserve(n);
     leadPhase.reserve(n);
     leadDetunePhase.reserve(n);
+    chordPhase.reserve(n);
+    chordLpState.reserve(n);
+    padPhase.reserve(n);
+    padDetunePhase.reserve(n);
+    padMotionPhase.reserve(n);
+    padLpState.reserve(n);
     portamentoPitchHz.reserve(n);
     portamentoTargetHz.reserve(n);
     portamentoTimeSec.reserve(n);
@@ -526,6 +542,8 @@ void Voice::clear()
     attackLayer.clear();
     bassLayer.clear();
     leadLayer.clear();
+    chordLayer.clear();
+    padLayer.clear();
     expressionMap.clear();
     env.clear();
     phase.clear();
@@ -538,6 +556,12 @@ void Voice::clear()
     bassLpState.clear();
     leadPhase.clear();
     leadDetunePhase.clear();
+    chordPhase.clear();
+    chordLpState.clear();
+    padPhase.clear();
+    padDetunePhase.clear();
+    padMotionPhase.clear();
+    padLpState.clear();
     portamentoPitchHz.clear();
     portamentoTargetHz.clear();
     portamentoTimeSec.clear();
@@ -574,6 +598,8 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     attackLayer.emplace_back();
     bassLayer.emplace_back();
     leadLayer.emplace_back();
+    chordLayer.emplace_back();
+    padLayer.emplace_back();
     expressionMap.emplace_back();
     env.emplace_back();
 
@@ -587,6 +613,12 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     bassLpState.push_back(0.0);
     leadPhase.push_back(0.0);
     leadDetunePhase.push_back(0.0);
+    chordPhase.emplace_back();
+    chordLpState.push_back(0.0);
+    padPhase.push_back(0.0);
+    padDetunePhase.push_back(0.0);
+    padMotionPhase.push_back(0.0);
+    padLpState.push_back(0.0);
     portamentoPitchHz.push_back(0.0);
     portamentoTargetHz.push_back(0.0);
     portamentoTimeSec.push_back(0.0);
@@ -713,6 +745,8 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(attackLayer, keepScratch);
     CompactVectorByKeep(bassLayer, keepScratch);
     CompactVectorByKeep(leadLayer, keepScratch);
+    CompactVectorByKeep(chordLayer, keepScratch);
+    CompactVectorByKeep(padLayer, keepScratch);
     CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
@@ -725,6 +759,12 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(bassLpState, keepScratch);
     CompactVectorByKeep(leadPhase, keepScratch);
     CompactVectorByKeep(leadDetunePhase, keepScratch);
+    CompactVectorByKeep(chordPhase, keepScratch);
+    CompactVectorByKeep(chordLpState, keepScratch);
+    CompactVectorByKeep(padPhase, keepScratch);
+    CompactVectorByKeep(padDetunePhase, keepScratch);
+    CompactVectorByKeep(padMotionPhase, keepScratch);
+    CompactVectorByKeep(padLpState, keepScratch);
     CompactVectorByKeep(portamentoPitchHz, keepScratch);
     CompactVectorByKeep(portamentoTargetHz, keepScratch);
     CompactVectorByKeep(portamentoTimeSec, keepScratch);

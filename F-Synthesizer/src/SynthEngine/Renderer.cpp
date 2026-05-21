@@ -20,6 +20,9 @@ struct ExpressionRuntime
     double attackMul = 1.0;
     double bassMul = 1.0;
     double leadMul = 1.0;
+    double chordMul = 1.0;
+    double padMul = 1.0;
+    double padBrightnessAdd = 0.0;
     double driveAdd = 0.0;
 };
 
@@ -63,6 +66,9 @@ ExpressionRuntime EvaluateExpressionMap(
     out.attackMul = AmountMul(out.expressionVelocity, map.velocityToAttack);
     out.bassMul = AmountMul(out.expressionVelocity, map.velocityToBass);
     out.leadMul = AmountMul(out.expressionVelocity, map.velocityToLead);
+    out.chordMul = AmountMul(out.expressionVelocity, map.velocityToChord);
+    out.padMul = AmountMul(out.expressionVelocity, map.velocityToPad) + Clamp01(modwheel) * Clamp01(map.modWheelToPad);
+    out.padBrightnessAdd = (Clamp01(cc74Brightness) - 0.5) * std::clamp(map.cc74ToPadBrightness, -1.0, 1.0);
     out.driveAdd = Clamp01(pressure) * Clamp01(map.pressureToDrive);
     return out;
 }
@@ -143,6 +149,9 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.expressionAttackMul = expr.attackMul;
         in.expressionBassMul = expr.bassMul;
         in.expressionLeadMul = expr.leadMul;
+        in.expressionChordMul = expr.chordMul;
+        in.expressionPadMul = expr.padMul;
+        in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
         in.expressionDriveAdd = expr.driveAdd;
         in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
         in.resonance = state.channelResonance[ch];
@@ -171,6 +180,8 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         frame.sample += RenderAttackLayer(voices, i, in);
         frame.sample += RenderBassLayer(voices, i, in);
         frame.sample += RenderLeadLayer(voices, i, in);
+        frame.sample += RenderChordLayer(voices, i, in);
+        frame.sample += RenderPadLayer(voices, i, in);
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 

@@ -5,7 +5,7 @@
     "和音",
     "ブラス"
   ],
-  "description": "ブラスコード向けの厚いアナログ風音色。FM群に混ぜる支え役。",
+  "description": "ChordLayerで薄い5度/オクターブを重ね、PadLayerで暗い胴を足したブラスコード。FM群に混ぜる支え役。",
   "channels": {
     "0": {
       "amp": 0.16,
@@ -63,6 +63,56 @@
             }
           }
         }
+      },
+      "chordLayer": {
+        "enabled": true,
+        "level": 0.11,
+        "intervalsSemis": [
+          0,
+          7,
+          12,
+          19
+        ],
+        "voiceLevels": [
+          1.0,
+          0.58,
+          0.34,
+          0.18
+        ],
+        "detuneCents": 5.0,
+        "spread": 0.38,
+        "cutoffHz": 2600.0,
+        "drive": 0.06
+      },
+      "padLayer": {
+        "enabled": true,
+        "level": 0.065,
+        "octaveLevel": 0.12,
+        "detuneCents": 6.0,
+        "spread": 0.42,
+        "fadeInSec": 0.12,
+        "brightness": 0.3,
+        "motionDepth": 0.06,
+        "motionRateHz": 0.18,
+        "cutoffHz": 1850.0,
+        "drive": 0.04
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.86,
+        "velocityToBrightness": 0.08,
+        "velocityToFmIndex": 0.06,
+        "velocityToAttack": 0.04,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.0,
+        "velocityToChord": 0.14,
+        "velocityToPad": 0.1,
+        "modWheelToBrightness": 0.08,
+        "modWheelToPad": 0.12,
+        "pressureToDrive": 0.03,
+        "cc74ToBrightness": 0.16,
+        "cc74ToPadBrightness": 0.18
       }
     }
   }

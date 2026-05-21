@@ -138,6 +138,35 @@ bool LeadLayerConfigEquals(const LeadLayerConfig& a, const LeadLayerConfig& b)
         NearlyEq(a.wobbleRateHz, b.wobbleRateHz);
 }
 
+bool ChordLayerConfigEquals(const ChordLayerConfig& a, const ChordLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        a.intervalsSemis == b.intervalsSemis &&
+        std::equal(a.voiceLevels.begin(), a.voiceLevels.end(), b.voiceLevels.begin(), [](double av, double bv) {
+            return NearlyEq(av, bv);
+        }) &&
+        NearlyEq(a.detuneCents, b.detuneCents) &&
+        NearlyEq(a.spread, b.spread) &&
+        NearlyEq(a.cutoffHz, b.cutoffHz) &&
+        NearlyEq(a.drive, b.drive);
+}
+
+bool PadLayerConfigEquals(const PadLayerConfig& a, const PadLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.octaveLevel, b.octaveLevel) &&
+        NearlyEq(a.detuneCents, b.detuneCents) &&
+        NearlyEq(a.spread, b.spread) &&
+        NearlyEq(a.fadeInSec, b.fadeInSec) &&
+        NearlyEq(a.brightness, b.brightness) &&
+        NearlyEq(a.motionDepth, b.motionDepth) &&
+        NearlyEq(a.motionRateHz, b.motionRateHz) &&
+        NearlyEq(a.cutoffHz, b.cutoffHz) &&
+        NearlyEq(a.drive, b.drive);
+}
+
 bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMapConfig& b)
 {
     return a.enabled == b.enabled &&
@@ -148,9 +177,13 @@ bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMap
         NearlyEq(a.velocityToAttack, b.velocityToAttack) &&
         NearlyEq(a.velocityToBass, b.velocityToBass) &&
         NearlyEq(a.velocityToLead, b.velocityToLead) &&
+        NearlyEq(a.velocityToChord, b.velocityToChord) &&
+        NearlyEq(a.velocityToPad, b.velocityToPad) &&
         NearlyEq(a.modWheelToBrightness, b.modWheelToBrightness) &&
+        NearlyEq(a.modWheelToPad, b.modWheelToPad) &&
         NearlyEq(a.pressureToDrive, b.pressureToDrive) &&
-        NearlyEq(a.cc74ToBrightness, b.cc74ToBrightness);
+        NearlyEq(a.cc74ToBrightness, b.cc74ToBrightness) &&
+        NearlyEq(a.cc74ToPadBrightness, b.cc74ToPadBrightness);
 }
 
 template <typename SmoothingT>
@@ -379,6 +412,8 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         AttackLayerConfigEquals(a.attackLayer, b.attackLayer) &&
         BassLayerConfigEquals(a.bassLayer, b.bassLayer) &&
         LeadLayerConfigEquals(a.leadLayer, b.leadLayer) &&
+        ChordLayerConfigEquals(a.chordLayer, b.chordLayer) &&
+        PadLayerConfigEquals(a.padLayer, b.padLayer) &&
         ExpressionMapConfigEquals(a.expressionMap, b.expressionMap) &&
         SourceConfigEquals(a.source, b.source);
 }

@@ -55,6 +55,10 @@ bool ParseTopLevelIntArrayElements(
     const std::string& arrText,
     const std::function<bool(size_t, int)>& onElement,
     std::string& err);
+bool ParseTopLevelDoubleArrayElements(
+    const std::string& arrText,
+    const std::function<bool(size_t, double)>& onElement,
+    std::string& err);
 
 bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err);
 bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& err);
