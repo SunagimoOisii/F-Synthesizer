@@ -2,64 +2,64 @@
   "tags": [
     "重厚レトロ",
     "FM",
-    "和音",
-    "コード"
+    "主役",
+    "リード"
   ],
-  "description": "FMを積層したコード向け音色。高域を抑えた濁りで厚みを作る。",
+  "description": "硬さを残しつつ明るすぎないFMリード。金属感は補助倍音に留める。",
   "channels": {
     "0": {
-      "amp": 0.15,
-      "attackSec": 0.012,
-      "decaySec": 0.24,
-      "sustainLevel": 0.78,
-      "releaseSec": 0.26,
+      "amp": 0.18,
+      "attackSec": 0.004,
+      "decaySec": 0.15,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.16,
       "source": {
         "type": "fm",
-        "algorithm": 5,
-        "feedback": 0.14,
+        "algorithm": 7,
+        "feedback": 0.24,
         "ops": [
           {
             "wave": "sine",
             "ratio": 1,
-            "level": 0.76,
-            "index": 1.1
+            "level": 0.86,
+            "index": 1.8
+          },
+          {
+            "wave": "sine",
+            "ratio": 1.5,
+            "level": 0.55,
+            "index": 0.7
           },
           {
             "wave": "sine",
             "ratio": 2,
-            "level": 0.58,
-            "index": 0.65
+            "level": 0.46,
+            "index": 0.35
           },
           {
             "wave": "sine",
             "ratio": 0.5,
-            "level": 0.54,
-            "index": 0.3
-          },
-          {
-            "wave": "sine",
-            "ratio": 3,
-            "level": 0.22,
-            "index": 0.2
+            "level": 0.36,
+            "index": 0
           }
         ],
         "filterMode": "lowpass",
-        "filterCutoffHz": 4600,
+        "filterCutoffHz": 6400,
         "filterResonance": 0.82,
-        "drive": 0.04,
+        "drive": 0.08,
         "modulation": {
           "env2": {
             "attackSec": 0.0,
-            "decaySec": 0.22,
+            "decaySec": 0.14,
             "sustainLevel": 0.0,
             "releaseSec": 0.04,
-            "curve": 0.55
+            "curve": 0.58
           },
           "routes": {
             "0": {
               "source": "env2",
               "destination": "fm.index",
-              "amount": 0.18,
+              "amount": 0.28,
               "enabled": true
             }
           }

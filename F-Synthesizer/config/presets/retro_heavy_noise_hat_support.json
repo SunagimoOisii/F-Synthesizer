@@ -3,22 +3,22 @@
     "重厚レトロ",
     "ノイズ",
     "ドラム",
-    "金属"
+    "補助"
   ],
-  "description": "金属的なハット/ノイズ層。高域のザラつきでドラムを太くする。",
+  "description": "薄く重ねるチップ風ハット補助。ドラム本体を邪魔しない短い高域アクセント。",
   "channels": {
     "9": {
-      "amp": 0.18,
+      "amp": 0.08,
       "attackSec": 0.001,
-      "decaySec": 0.08,
+      "decaySec": 0.07,
       "sustainLevel": 0.0,
       "releaseSec": 0.04,
       "source": {
         "type": "noise",
-        "noise": "blue",
+        "noise": "pink",
         "filterMode": "highpass",
-        "filterCutoffHz": 5200,
-        "filterResonance": 1.8
+        "filterCutoffHz": 4700,
+        "filterResonance": 0.65
       }
     }
   }

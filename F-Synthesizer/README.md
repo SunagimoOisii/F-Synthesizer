@@ -35,12 +35,15 @@ git status --short --branch
 # レンダリング・音声・CLI・config 読み込みを触った後だけ使う任意 smoke
 .\scripts\check.ps1 -RunRuntimeSmoke
 
+# プリセットを追加・変更・削除した後の短尺全件検証
+.\scripts\check_presets.ps1
+
 # GUI 実行
 .\build\x64\Debug\F-Synthesizer.exe
 
 # CLI 実行
 .\build\x64\Debug\F-Synthesizer.exe --cli
-.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_lead_brasswall
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_brass_ensemble
 .\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
 ```
 

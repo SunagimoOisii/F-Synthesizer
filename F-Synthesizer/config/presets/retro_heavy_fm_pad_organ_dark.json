@@ -1,0 +1,53 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "FM",
+    "背景",
+    "パッド"
+  ],
+  "description": "暗めのFMオルガンパッド。持続音の厚みを作り、主旋律を邪魔しない。",
+  "channels": {
+    "0": {
+      "amp": 0.13,
+      "attackSec": 0.025,
+      "decaySec": 0.38,
+      "sustainLevel": 0.88,
+      "releaseSec": 0.42,
+      "source": {
+        "type": "fm",
+        "algorithm": 4,
+        "feedback": 0.08,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.72,
+            "index": 0.75
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.48,
+            "index": 0.35
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.44,
+            "index": 0.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.26,
+            "index": 0
+          }
+        ],
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4200,
+        "filterResonance": 0.62,
+        "drive": 0.02
+      }
+    }
+  }
+}

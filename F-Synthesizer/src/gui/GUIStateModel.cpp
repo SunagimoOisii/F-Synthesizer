@@ -92,7 +92,7 @@ void InitializeGUIState(
     state.tonePreviewNoteNumber = 60;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
-    strncpy_s(state.presetName, sizeof(state.presetName), "retro_heavy_fm_lead_brasswall", _TRUNCATE);
+    strncpy_s(state.presetName, sizeof(state.presetName), "retro_heavy_fm_brass_ensemble", _TRUNCATE);
     state.running = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.hasRun = false;

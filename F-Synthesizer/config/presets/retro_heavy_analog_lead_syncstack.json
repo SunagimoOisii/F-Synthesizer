@@ -1,0 +1,43 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "アナログ",
+    "主役",
+    "sync"
+  ],
+  "description": "hard syncの押し出しを持つ太いアナログ風リード。矩形の軽さより中域を重視。",
+  "channels": {
+    "0": {
+      "amp": 0.17,
+      "attackSec": 0.006,
+      "decaySec": 0.18,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.18,
+      "source": {
+        "type": "analog",
+        "wave": "saw",
+        "unisonVoices": 3,
+        "unisonDetuneCents": 6,
+        "unisonSpread": 0.42,
+        "subOscLevel": 0.16,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 4300,
+        "filterResonance": 1.0,
+        "filterKeytrack": 0.28,
+        "drive": 0.22,
+        "driftDepthCents": 3,
+        "driftRateHz": 0.16,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 9.0,
+          "filterCutoffTimeMs": 18.0
+        },
+        "hardSyncEnabled": true,
+        "hardSyncRatio": 2.0
+      }
+    }
+  }
+}

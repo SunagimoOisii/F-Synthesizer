@@ -2,32 +2,32 @@
   "tags": [
     "重厚レトロ",
     "アナログ",
-    "背景",
-    "パッド"
+    "主役",
+    "PWM"
   ],
-  "description": "テープ風に揺れる厚いパッド。driftと低いfilterで背景に置きやすい。",
+  "description": "PWMの揺れを控えめにした広めのリード。細いピコピコ感を抑えた上物。",
   "channels": {
     "0": {
-      "amp": 0.13,
-      "attackSec": 0.035,
-      "decaySec": 0.42,
-      "sustainLevel": 0.88,
-      "releaseSec": 0.48,
+      "amp": 0.16,
+      "attackSec": 0.008,
+      "decaySec": 0.18,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.18,
       "source": {
         "type": "analog",
-        "wave": "saw",
+        "wave": "square",
         "unisonVoices": 3,
-        "unisonDetuneCents": 6,
-        "unisonSpread": 0.45,
-        "subOscLevel": 0.1,
-        "pulseWidth": 0.5,
+        "unisonDetuneCents": 5,
+        "unisonSpread": 0.4,
+        "subOscLevel": 0.14,
+        "pulseWidth": 0.46,
         "filterMode": "lowpass",
-        "filterCutoffHz": 2800,
-        "filterResonance": 0.72,
-        "filterKeytrack": 0.2,
-        "drive": 0.12,
-        "driftDepthCents": 5,
-        "driftRateHz": 0.14,
+        "filterCutoffHz": 4000,
+        "filterResonance": 0.9,
+        "filterKeytrack": 0.25,
+        "drive": 0.18,
+        "driftDepthCents": 3,
+        "driftRateHz": 0.18,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": true,
@@ -38,7 +38,7 @@
         "modulation": {
           "lfo1": {
             "wave": "sine",
-            "rateHz": 0.18,
+            "rateHz": 0.35,
             "depth": 1.0,
             "delaySec": 0.0,
             "fadeSec": 0.0,
@@ -47,8 +47,8 @@
           "routes": {
             "0": {
               "source": "lfo1",
-              "destination": "filterCutoffHz",
-              "amount": 0.06,
+              "destination": "pulseWidth",
+              "amount": 0.05,
               "enabled": true
             }
           }

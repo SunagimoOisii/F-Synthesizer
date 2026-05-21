@@ -2,28 +2,28 @@
   "tags": [
     "重厚レトロ",
     "アナログ",
-    "ベース",
-    "ドライブ"
+    "低域",
+    "ベース"
   ],
   "description": "driveを効かせた重いアナログ風ベース。低域の芯と少し荒い倍音。",
   "channels": {
     "0": {
-      "amp": 0.3,
+      "amp": 0.29,
       "attackSec": 0.002,
-      "decaySec": 0.12,
-      "sustainLevel": 0.8,
-      "releaseSec": 0.1,
+      "decaySec": 0.14,
+      "sustainLevel": 0.82,
+      "releaseSec": 0.12,
       "source": {
         "type": "analog",
         "wave": "saw",
         "unisonVoices": 1,
         "unisonDetuneCents": 0,
         "unisonSpread": 0,
-        "subOscLevel": 0.35,
+        "subOscLevel": 0.42,
         "pulseWidth": 0.5,
         "filterMode": "lowpass",
-        "filterCutoffHz": 2200,
-        "filterResonance": 0.9,
+        "filterCutoffHz": 2100,
+        "filterResonance": 0.82,
         "filterKeytrack": 0.35,
         "drive": 0.34,
         "driftDepthCents": 2,
@@ -31,9 +31,9 @@
         "smoothing": {
           "enabled": true,
           "pitchEnabled": true,
-          "ampTimeMs": 4.0,
-          "pitchTimeMs": 7.0,
-          "filterCutoffTimeMs": 14.0
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 9.0,
+          "filterCutoffTimeMs": 18.0
         }
       }
     }

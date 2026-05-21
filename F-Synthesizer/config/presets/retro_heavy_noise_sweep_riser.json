@@ -8,7 +8,7 @@
   "description": "狭いbandpassのノイズスイープ。場面転換や効果音向け。",
   "channels": {
     "0": {
-      "amp": 0.18,
+      "amp": 0.14,
       "attackSec": 0.001,
       "decaySec": 0.24,
       "sustainLevel": 0.0,
@@ -18,7 +18,7 @@
         "noise": "pink",
         "filterMode": "bandpass",
         "filterCutoffHz": 900,
-        "filterResonance": 3.2
+        "filterResonance": 2.4
       }
     }
   }

@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "PSG",
+    "補助",
+    "レイヤー"
+  ],
+  "description": "薄いPSG pulseレイヤー。主役ではなくFM/analogの輪郭を足す補助音。",
+  "channels": {
+    "0": {
+      "amp": 0.08,
+      "attackSec": 0.004,
+      "decaySec": 0.14,
+      "sustainLevel": 0.62,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "psg",
+        "wave": "pulse",
+        "duty": 2,
+        "volumeSteps": 10,
+        "maxVoices": 2
+      }
+    }
+  }
+}

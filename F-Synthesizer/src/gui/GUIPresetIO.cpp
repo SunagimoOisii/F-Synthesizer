@@ -234,7 +234,7 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     }
 
     std::sort(names.begin(), names.end());
-    const auto it = std::find(names.begin(), names.end(), "retro_heavy_fm_lead_brasswall");
+    const auto it = std::find(names.begin(), names.end(), "retro_heavy_fm_brass_ensemble");
     if (it != names.end() && it != names.begin())
     {
         std::rotate(names.begin(), it, it + 1);
@@ -326,7 +326,7 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
     int idx = FindPresetIndex(state, preferName);
     if (idx < 0)
     {
-        idx = FindPresetIndex(state, "retro_heavy_fm_lead_brasswall");
+        idx = FindPresetIndex(state, "retro_heavy_fm_brass_ensemble");
     }
     if (state.presetItems.empty())
     {

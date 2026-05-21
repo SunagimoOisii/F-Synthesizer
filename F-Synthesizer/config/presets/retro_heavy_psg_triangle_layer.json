@@ -1,0 +1,25 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "PSG",
+    "補助",
+    "低域"
+  ],
+  "description": "薄いPSG triangle低域レイヤー。FM/analogベースの下支え用。",
+  "channels": {
+    "0": {
+      "amp": 0.1,
+      "attackSec": 0.006,
+      "decaySec": 0.18,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "psg",
+        "wave": "triangle",
+        "duty": 3,
+        "volumeSteps": 10,
+        "maxVoices": 1
+      }
+    }
+  }
+}

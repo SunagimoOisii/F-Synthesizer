@@ -2,64 +2,65 @@
   "tags": [
     "重厚レトロ",
     "FM",
-    "和音",
-    "コード"
+    "主役",
+    "ブラス",
+    "90年代"
   ],
-  "description": "FMを積層したコード向け音色。高域を抑えた濁りで厚みを作る。",
+  "description": "厚いFMコード/ブラスの代表音色。単音でも和音でも曲に馴染む主役向け。",
   "channels": {
     "0": {
-      "amp": 0.15,
-      "attackSec": 0.012,
-      "decaySec": 0.24,
+      "amp": 0.2,
+      "attackSec": 0.006,
+      "decaySec": 0.18,
       "sustainLevel": 0.78,
-      "releaseSec": 0.26,
+      "releaseSec": 0.18,
       "source": {
         "type": "fm",
-        "algorithm": 5,
-        "feedback": 0.14,
+        "algorithm": 6,
+        "feedback": 0.2,
         "ops": [
           {
             "wave": "sine",
             "ratio": 1,
-            "level": 0.76,
-            "index": 1.1
+            "level": 0.92,
+            "index": 2.2
           },
           {
             "wave": "sine",
             "ratio": 2,
-            "level": 0.58,
-            "index": 0.65
+            "level": 0.74,
+            "index": 1.1
           },
           {
             "wave": "sine",
             "ratio": 0.5,
-            "level": 0.54,
-            "index": 0.3
+            "level": 0.55,
+            "index": 0.45
           },
           {
             "wave": "sine",
-            "ratio": 3,
-            "level": 0.22,
-            "index": 0.2
+            "ratio": 1,
+            "level": 0.48,
+            "index": 0
           }
         ],
         "filterMode": "lowpass",
-        "filterCutoffHz": 4600,
-        "filterResonance": 0.82,
-        "drive": 0.04,
+        "filterCutoffHz": 5600,
+        "filterResonance": 0.78,
+        "drive": 0.07,
         "modulation": {
           "env2": {
             "attackSec": 0.0,
-            "decaySec": 0.22,
+            "decaySec": 0.18,
             "sustainLevel": 0.0,
             "releaseSec": 0.04,
-            "curve": 0.55
+            "curve": 0.62
           },
           "routes": {
             "0": {
               "source": "env2",
               "destination": "fm.index",
-              "amount": 0.18,
+              "amount": 0.34,
               "enabled": true
             }
           }

@@ -1,0 +1,38 @@
+{
+  "tags": [
+    "重厚レトロ",
+    "波形",
+    "低域",
+    "補助"
+  ],
+  "description": "FM/analogベースの下に薄く敷くサブ補助。単体主役ではなく低域の土台向け。",
+  "channels": {
+    "0": {
+      "amp": 0.2,
+      "attackSec": 0.006,
+      "decaySec": 0.2,
+      "sustainLevel": 0.86,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "waveform",
+        "wave": "triangle",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0.65,
+        "pulseWidth": 0.5,
+        "filterMode": "lowpass",
+        "filterCutoffHz": 1800,
+        "filterResonance": 0.55,
+        "filterKeytrack": 0.25,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 8.0,
+          "filterCutoffTimeMs": 18.0
+        }
+      }
+    }
+  }
+}

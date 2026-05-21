@@ -28,6 +28,9 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 # CLI / render / audio / config 変更時だけ使う任意 runtime smoke
 .\scripts\check.ps1 -RunRuntimeSmoke
 
+# preset 変更時の短尺全件検証
+.\scripts\check_presets.ps1
+
 # GUI
 .\build\x64\Debug\F-Synthesizer.exe
 .\build\x64\Debug\F-Synthesizer.exe --gui
@@ -35,7 +38,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 # CLI
 .\build\x64\Debug\F-Synthesizer.exe --cli
 .\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
-.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_lead_brasswall
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_brass_ensemble
 .\build\x64\Debug\F-Synthesizer.exe --help
 ```
 
@@ -44,6 +47,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 - 通常導線は `.\scripts\check.ps1`。
 - `-RunRuntimeSmoke` は毎回不要。render、audio、config、CLI、実行ファイル起動に影響する変更時だけ使う。
 - runtime smoke は最小 MIDI を一時生成し、短い WAV と missing config の失敗だけを確認する。
+- preset を追加・変更・削除した場合は `.\scripts\check_presets.ps1` を使う。全 preset の内容を短尺レンダーで確認し、JSON 構文、読み込み、無音でないことをまとめて見る。
 - UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
 - 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 

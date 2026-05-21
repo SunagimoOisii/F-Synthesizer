@@ -2,58 +2,58 @@
   "tags": [
     "重厚レトロ",
     "FM",
-    "和音",
-    "コード"
+    "低域",
+    "ベース"
   ],
-  "description": "FMを積層したコード向け音色。高域を抑えた濁りで厚みを作る。",
+  "description": "深く沈むFMサブドライブ。低域の支えと少し荒い倍音を両立。",
   "channels": {
     "0": {
-      "amp": 0.15,
-      "attackSec": 0.012,
-      "decaySec": 0.24,
-      "sustainLevel": 0.78,
-      "releaseSec": 0.26,
+      "amp": 0.28,
+      "attackSec": 0.004,
+      "decaySec": 0.18,
+      "sustainLevel": 0.82,
+      "releaseSec": 0.14,
       "source": {
         "type": "fm",
-        "algorithm": 5,
-        "feedback": 0.14,
+        "algorithm": 1,
+        "feedback": 0.12,
         "ops": [
           {
             "wave": "sine",
-            "ratio": 1,
-            "level": 0.76,
-            "index": 1.1
-          },
-          {
-            "wave": "sine",
-            "ratio": 2,
-            "level": 0.58,
-            "index": 0.65
-          },
-          {
-            "wave": "sine",
             "ratio": 0.5,
-            "level": 0.54,
-            "index": 0.3
+            "level": 1.0,
+            "index": 1.4
           },
           {
             "wave": "sine",
-            "ratio": 3,
-            "level": 0.22,
+            "ratio": 1,
+            "level": 0.68,
+            "index": 0.6
+          },
+          {
+            "wave": "sine",
+            "ratio": 1.5,
+            "level": 0.28,
             "index": 0.2
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.25,
+            "level": 0.3,
+            "index": 0
           }
         ],
         "filterMode": "lowpass",
-        "filterCutoffHz": 4600,
-        "filterResonance": 0.82,
-        "drive": 0.04,
+        "filterCutoffHz": 2400,
+        "filterResonance": 0.68,
+        "drive": 0.06,
         "modulation": {
           "env2": {
             "attackSec": 0.0,
-            "decaySec": 0.22,
+            "decaySec": 0.16,
             "sustainLevel": 0.0,
             "releaseSec": 0.04,
-            "curve": 0.55
+            "curve": 0.5
           },
           "routes": {
             "0": {
