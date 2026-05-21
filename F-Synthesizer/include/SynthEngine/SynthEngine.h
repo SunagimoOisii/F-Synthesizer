@@ -194,16 +194,21 @@ struct DrumConfig
     // DrumType ごとに参照する項目が異なるため、未使用値は 0/負値で未指定を表す。
     DrumType type = DrumType::None;
     double gain = 1.0;
-    double baseFreq = 0.0;
-    double pitchDrop = 0.0;
+    double bodyFreq = 0.0;
+    double pitchStart = 0.0;
     double pitchDecaySec = 0.0;
-    double toneFreq = 0.0;
-    double toneLevel = 0.0;
-    double noiseLevel = 0.0;
+    double clickLevel = 0.0;
+    double clickDecaySec = 0.0;
+    double bodyLevel = 0.0;
+    double snapLevel = 0.0;
+    double snapDecaySec = 0.0;
+    double metalLevel = 0.0;
+    double airLevel = 0.0;
+    double decaySec = 0.0;
     double hpCut = 0.0;
     double lpCut = 0.0;
-    int toneWave = 0;
-    int noiseType = 0;
+    double drive = 0.0;
+    int noiseColor = 0;
     // one-shot アタック保護のため smoothing は非対応（契約上 waveform 専用）。
 };
 

@@ -44,9 +44,9 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_drumkit_arcade` | drumkit | 芯のある90年代アーケード寄り基本キット |
-| `retro_heavy_drumkit_impact` | drumkit | 強いpitch kickと短いトーンsnare/hat |
-| `retro_heavy_noise_hat_support` | noise | ドラム本体を邪魔しない薄いチップ風ハット補助 |
+| `retro_heavy_drumkit_arcade` | drumkit | クリック、芯、snap、金属hatを持つ90年代アーケード寄り基本キット |
+| `retro_heavy_drumkit_impact` | drumkit | 深いkickと太いsnare snapで押し出す強めのキット |
+| `retro_heavy_noise_hat_support` | noise | drumkitのhatへ薄く足す高域補助。単体主役にはしない |
 
 ### 補助
 

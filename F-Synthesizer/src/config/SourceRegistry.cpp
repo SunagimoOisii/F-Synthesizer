@@ -132,19 +132,24 @@ constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 12> kDrumParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 17> kDrumParameterSchema{ {
     { "drumType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
     { "gain", SourceParameterType::Float, 0.0, 4.0, 1.0 },
-    { "baseFreq", SourceParameterType::Float, 20.0, 20000.0, 60.0 },
-    { "pitchDrop", SourceParameterType::Float, 0.1, 16.0, 3.0 },
+    { "bodyFreq", SourceParameterType::Float, 20.0, 20000.0, 60.0 },
+    { "pitchStart", SourceParameterType::Float, 0.1, 16.0, 3.0 },
     { "pitchDecaySec", SourceParameterType::Float, 0.001, 2.0, 0.06 },
-    { "toneFreq", SourceParameterType::Float, 20.0, 20000.0, 200.0 },
-    { "toneLevel", SourceParameterType::Float, 0.0, 2.0, 0.5 },
-    { "noiseLevel", SourceParameterType::Float, 0.0, 2.0, 0.5 },
+    { "clickLevel", SourceParameterType::Float, 0.0, 2.0, 0.25 },
+    { "clickDecaySec", SourceParameterType::Float, 0.001, 1.0, 0.008 },
+    { "bodyLevel", SourceParameterType::Float, 0.0, 2.0, 0.8 },
+    { "snapLevel", SourceParameterType::Float, 0.0, 2.0, 0.7 },
+    { "snapDecaySec", SourceParameterType::Float, 0.001, 1.0, 0.055 },
+    { "metalLevel", SourceParameterType::Float, 0.0, 2.0, 0.55 },
+    { "airLevel", SourceParameterType::Float, 0.0, 2.0, 0.35 },
+    { "decaySec", SourceParameterType::Float, 0.001, 2.0, 0.045 },
     { "hpCut", SourceParameterType::Float, 20.0, 20000.0, 600.0 },
     { "lpCut", SourceParameterType::Float, 20.0, 20000.0, 9000.0 },
-    { "toneWave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
-    { "noiseType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "drive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "noiseColor", SourceParameterType::Int, 0.0, 3.0, 0.0 },
 } };
 
 // DrumKit は note(0..127) ごとに DrumConfig を持つ可変構造のため、

@@ -66,9 +66,11 @@ struct NoiseVoiceState
 struct DrumVoiceState
 {
     double time = 0.0;
-    double baseFreq = 0.0;
-    double pitchDrop = 1.0;
+    double bodyFreq = 0.0;
+    double pitchStart = 1.0;
     double pitchDecaySec = 0.0;
+    double clickPhase = 0.0;
+    std::array<double, 4> metalPhase{};
     double noisePrev = 0.0;
     double hpPrev = 0.0;
     double hpAlpha = 0.0;

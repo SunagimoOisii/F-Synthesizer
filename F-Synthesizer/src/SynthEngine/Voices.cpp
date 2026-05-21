@@ -40,29 +40,35 @@ void NoteOffVoiceModulation(PerSourceVoiceState& sourceState)
 
 void InitDrumVoice(const DrumConfig& drum, DrumVoiceState& drumState, double& phaseInc, int sampleRate)
 {
+    drumState.bodyFreq = (drum.bodyFreq > 0.0) ? drum.bodyFreq : 120.0;
+    drumState.pitchStart = (drum.pitchStart > 0.0) ? drum.pitchStart : 1.0;
+    drumState.pitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.04;
+    phaseInc = drumState.bodyFreq / sampleRate;
+
     if (drum.type == DrumType::Kick)
     {
-        drumState.baseFreq = (drum.baseFreq > 0.0) ? drum.baseFreq : 60.0;
-        drumState.pitchDrop = (drum.pitchDrop > 0.0) ? drum.pitchDrop : 3.0;
-        drumState.pitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.06;
-        phaseInc = drumState.baseFreq / sampleRate;
+        drumState.bodyFreq = (drum.bodyFreq > 0.0) ? drum.bodyFreq : 54.0;
+        drumState.pitchStart = (drum.pitchStart > 0.0) ? drum.pitchStart : 4.5;
+        drumState.pitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.045;
+        phaseInc = drumState.bodyFreq / sampleRate;
     }
     else if (drum.type == DrumType::Snare)
     {
-        drumState.baseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 200.0;
-        phaseInc = drumState.baseFreq / sampleRate;
+        drumState.bodyFreq = (drum.bodyFreq > 0.0) ? drum.bodyFreq : 210.0;
+        phaseInc = drumState.bodyFreq / sampleRate;
         const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 1200.0;
         drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 6000.0;
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 5200.0;
         drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
     }
     else if (drum.type == DrumType::Hat)
     {
-        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 6000.0;
+        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 5200.0;
         drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
-        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12000.0;
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 11000.0;
         drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
-        drumState.baseFreq = (drum.toneFreq > 0.0) ? drum.toneFreq : 8000.0;
+        drumState.bodyFreq = 7600.0;
+        phaseInc = drumState.bodyFreq / sampleRate;
     }
 }
 

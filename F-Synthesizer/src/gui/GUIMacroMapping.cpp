@@ -55,9 +55,25 @@ double SliderToLinear(float t, double minValue, double maxValue)
 
 void ApplyDrumBrightnessRoughnessMovement(DrumConfig& src, const MacroSliderState& s)
 {
-    src.baseFreq = SliderToLinear(s.brightness, 30.0, 300.0);
-    src.noiseLevel = static_cast<double>(Clamp01(s.roughness));
-    src.pitchDrop = SliderToLinear(s.movement, 0.0, 100.0);
+    src.drive = static_cast<double>(Clamp01(s.roughness));
+    if (src.type == DrumType::Kick)
+    {
+        src.bodyFreq = SliderToLinear(s.brightness, 36.0, 88.0);
+        src.clickLevel = SliderToLinear(s.roughness, 0.08, 0.55);
+        src.pitchStart = SliderToLinear(s.movement, 1.0, 7.0);
+    }
+    else if (src.type == DrumType::Snare)
+    {
+        src.bodyFreq = SliderToLinear(s.brightness, 140.0, 320.0);
+        src.snapLevel = SliderToLinear(s.roughness, 0.25, 1.2);
+        src.snapDecaySec = SliderToLinear(s.movement, 0.025, 0.11);
+    }
+    else if (src.type == DrumType::Hat)
+    {
+        src.hpCut = SliderToLinear(s.brightness, 3600.0, 7600.0);
+        src.airLevel = SliderToLinear(s.roughness, 0.15, 0.75);
+        src.decaySec = SliderToLinear(s.movement, 0.025, 0.16);
+    }
 }
 } // namespace
 
@@ -150,9 +166,24 @@ MacroSliderState ReadMacroSliders(const ChannelConfig& ch, const MacroSliderStat
         }
         else if constexpr (std::is_same_v<T, DrumConfig>)
         {
-            out.brightness = LinearToSlider(src.baseFreq, 30.0, 300.0);
-            out.roughness = Clamp01(static_cast<float>(src.noiseLevel));
-            out.movement = LinearToSlider(src.pitchDrop, 0.0, 100.0);
+            if (src.type == DrumType::Kick)
+            {
+                out.brightness = LinearToSlider(src.bodyFreq, 36.0, 88.0);
+                out.roughness = LinearToSlider(src.clickLevel, 0.08, 0.55);
+                out.movement = LinearToSlider(src.pitchStart, 1.0, 7.0);
+            }
+            else if (src.type == DrumType::Snare)
+            {
+                out.brightness = LinearToSlider(src.bodyFreq, 140.0, 320.0);
+                out.roughness = LinearToSlider(src.snapLevel, 0.25, 1.2);
+                out.movement = LinearToSlider(src.snapDecaySec, 0.025, 0.11);
+            }
+            else if (src.type == DrumType::Hat)
+            {
+                out.brightness = LinearToSlider(src.hpCut, 3600.0, 7600.0);
+                out.roughness = LinearToSlider(src.airLevel, 0.15, 0.75);
+                out.movement = LinearToSlider(src.decaySec, 0.025, 0.16);
+            }
             out.envelope = current.lastLayer2Envelope;
         }
         else if constexpr (std::is_same_v<T, DrumKitConfig>)

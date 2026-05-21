@@ -575,16 +575,21 @@ void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent)
     WriteIndent(out, indent); out << "{\n";
     WriteIndent(out, indent + 2); out << "\"drumType\": \"" << DrumTypeToString(d.type) << "\",\n";
     WriteIndent(out, indent + 2); out << "\"gain\": " << d.gain << ",\n";
-    WriteIndent(out, indent + 2); out << "\"baseFreq\": " << d.baseFreq << ",\n";
-    WriteIndent(out, indent + 2); out << "\"pitchDrop\": " << d.pitchDrop << ",\n";
+    WriteIndent(out, indent + 2); out << "\"bodyFreq\": " << d.bodyFreq << ",\n";
+    WriteIndent(out, indent + 2); out << "\"pitchStart\": " << d.pitchStart << ",\n";
     WriteIndent(out, indent + 2); out << "\"pitchDecaySec\": " << d.pitchDecaySec << ",\n";
-    WriteIndent(out, indent + 2); out << "\"toneFreq\": " << d.toneFreq << ",\n";
-    WriteIndent(out, indent + 2); out << "\"toneLevel\": " << d.toneLevel << ",\n";
-    WriteIndent(out, indent + 2); out << "\"noiseLevel\": " << d.noiseLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"clickLevel\": " << d.clickLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"clickDecaySec\": " << d.clickDecaySec << ",\n";
+    WriteIndent(out, indent + 2); out << "\"bodyLevel\": " << d.bodyLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"snapLevel\": " << d.snapLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"snapDecaySec\": " << d.snapDecaySec << ",\n";
+    WriteIndent(out, indent + 2); out << "\"metalLevel\": " << d.metalLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"airLevel\": " << d.airLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"decaySec\": " << d.decaySec << ",\n";
     WriteIndent(out, indent + 2); out << "\"hpCut\": " << d.hpCut << ",\n";
     WriteIndent(out, indent + 2); out << "\"lpCut\": " << d.lpCut << ",\n";
-    WriteIndent(out, indent + 2); out << "\"toneWave\": \"" << WaveTypeToString((WaveType)d.toneWave) << "\",\n";
-    WriteIndent(out, indent + 2); out << "\"noiseType\": \"" << NoiseTypeToString((NoiseType)d.noiseType) << "\"\n";
+    WriteIndent(out, indent + 2); out << "\"drive\": " << d.drive << ",\n";
+    WriteIndent(out, indent + 2); out << "\"noiseColor\": \"" << NoiseTypeToString((NoiseType)d.noiseColor) << "\"\n";
     WriteIndent(out, indent); out << "}";
 }
 

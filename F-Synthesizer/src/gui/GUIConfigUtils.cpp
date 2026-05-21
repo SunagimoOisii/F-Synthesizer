@@ -18,16 +18,21 @@ bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
 {
     return a.type == b.type &&
         NearlyEq(a.gain, b.gain) &&
-        NearlyEq(a.baseFreq, b.baseFreq) &&
-        NearlyEq(a.pitchDrop, b.pitchDrop) &&
+        NearlyEq(a.bodyFreq, b.bodyFreq) &&
+        NearlyEq(a.pitchStart, b.pitchStart) &&
         NearlyEq(a.pitchDecaySec, b.pitchDecaySec) &&
-        NearlyEq(a.toneFreq, b.toneFreq) &&
-        NearlyEq(a.toneLevel, b.toneLevel) &&
-        NearlyEq(a.noiseLevel, b.noiseLevel) &&
+        NearlyEq(a.clickLevel, b.clickLevel) &&
+        NearlyEq(a.clickDecaySec, b.clickDecaySec) &&
+        NearlyEq(a.bodyLevel, b.bodyLevel) &&
+        NearlyEq(a.snapLevel, b.snapLevel) &&
+        NearlyEq(a.snapDecaySec, b.snapDecaySec) &&
+        NearlyEq(a.metalLevel, b.metalLevel) &&
+        NearlyEq(a.airLevel, b.airLevel) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
         NearlyEq(a.hpCut, b.hpCut) &&
         NearlyEq(a.lpCut, b.lpCut) &&
-        a.toneWave == b.toneWave &&
-        a.noiseType == b.noiseType;
+        NearlyEq(a.drive, b.drive) &&
+        a.noiseColor == b.noiseColor;
 }
 
 bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b)

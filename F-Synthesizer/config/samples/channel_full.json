@@ -47,31 +47,36 @@
           "36": {
             "drumType": "kick",
             "gain": 0.7,
-            "baseFreq": 58.0,
-            "pitchDrop": 3.0,
-            "pitchDecaySec": 0.06
+            "bodyFreq": 58.0,
+            "pitchStart": 4.4,
+            "pitchDecaySec": 0.06,
+            "clickLevel": 0.25,
+            "clickDecaySec": 0.008,
+            "bodyLevel": 0.9,
+            "drive": 0.25
           },
           "38": {
             "drumType": "snare",
             "gain": 0.6,
-            "toneFreq": 220.0,
-            "toneLevel": 0.55,
-            "noiseLevel": 0.35,
+            "bodyFreq": 220.0,
+            "bodyLevel": 0.5,
+            "snapLevel": 0.8,
+            "snapDecaySec": 0.055,
             "hpCut": 700.0,
             "lpCut": 6000.0,
-            "toneWave": "triangle",
-            "noiseType": "white"
+            "drive": 0.22,
+            "noiseColor": "pink"
           },
           "42": {
             "drumType": "hat",
             "gain": 0.2,
-            "toneFreq": 8000.0,
-            "toneLevel": 0.2,
-            "noiseLevel": 0.2,
+            "metalLevel": 0.5,
+            "airLevel": 0.25,
+            "decaySec": 0.045,
             "hpCut": 4000.0,
             "lpCut": 6000.0,
-            "toneWave": "sine",
-            "noiseType": "white"
+            "drive": 0.15,
+            "noiseColor": "pink"
           }
         }
       }

@@ -140,29 +140,34 @@ std::shared_ptr<const std::array<ChannelConfig, 16>> BuildDefaultChannelConfigs(
 
             DrumConfig kick{ DrumType::Kick };
             kick.gain = 0.6;
-            kick.baseFreq = 60.0;
-            kick.pitchDrop = 3.0;
+            kick.bodyFreq = 58.0;
+            kick.pitchStart = 4.2;
             kick.pitchDecaySec = 0.06;
+            kick.clickLevel = 0.22;
+            kick.clickDecaySec = 0.008;
+            kick.bodyLevel = 0.9;
+            kick.drive = 0.28;
 
             DrumConfig snare{ DrumType::Snare };
             snare.gain = 0.6;
-            snare.toneFreq = 220.0;
-            snare.toneLevel = 0.55;
-            snare.noiseLevel = 0.35;
+            snare.bodyFreq = 220.0;
+            snare.bodyLevel = 0.48;
+            snare.snapLevel = 0.72;
+            snare.snapDecaySec = 0.055;
             snare.hpCut = 700.0;
             snare.lpCut = 6000.0;
-            snare.toneWave = (int)WaveType::Triangle;
-            snare.noiseType = (int)NoiseType::White;
+            snare.drive = 0.22;
+            snare.noiseColor = (int)NoiseType::Pink;
 
             DrumConfig hat{ DrumType::Hat };
             hat.gain = 0.15;
-            hat.toneFreq = 8000.0;
-            hat.toneLevel = 0.2;
-            hat.noiseLevel = 0.2;
+            hat.metalLevel = 0.46;
+            hat.airLevel = 0.28;
+            hat.decaySec = 0.045;
             hat.hpCut = 4000.0;
             hat.lpCut = 6000.0;
-            hat.toneWave = (int)WaveType::Sine;
-            hat.noiseType = (int)NoiseType::White;
+            hat.drive = 0.16;
+            hat.noiseColor = (int)NoiseType::Pink;
 
             kit->map[36] = kick;
             kit->map[38] = snare;

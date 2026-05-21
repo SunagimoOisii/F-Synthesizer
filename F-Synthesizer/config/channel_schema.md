@@ -83,18 +83,25 @@
   "type": "drum",
   "drumType": "kick|snare|hat|none",
   "gain": 0.6,
-  "baseFreq": 60.0,
-  "pitchDrop": 3.0,
+  "bodyFreq": 58.0,
+  "pitchStart": 4.5,
   "pitchDecaySec": 0.06,
-  "toneFreq": 220.0,
-  "toneLevel": 0.55,
-  "noiseLevel": 0.35,
-  "hpCut": 700.0,
-  "lpCut": 6000.0,
-  "toneWave": "triangle",
-  "noiseType": "white"
+  "clickLevel": 0.3,
+  "clickDecaySec": 0.008,
+  "bodyLevel": 0.9,
+  "snapLevel": 0.85,
+  "snapDecaySec": 0.055,
+  "metalLevel": 0.6,
+  "airLevel": 0.3,
+  "decaySec": 0.05,
+  "hpCut": 900.0,
+  "lpCut": 5600.0,
+  "drive": 0.25,
+  "noiseColor": "white|pink|brown|blue"
 }
 ```
+
+`drumType` ごとに使う主な項目は異なる。`kick` は `bodyFreq` / `pitchStart` / `clickLevel` / `bodyLevel`、`snare` は `bodyFreq` / `bodyLevel` / `snapLevel` / `snapDecaySec`、`hat` は `metalLevel` / `airLevel` / `decaySec` を中心に調整する。
 
 ### 5) drumkit
 
@@ -102,8 +109,8 @@
 {
   "type": "drumkit",
   "map": {
-    "36": { "drumType": "kick", "gain": 0.6, "baseFreq": 60.0 },
-    "38": { "drumType": "snare", "gain": 0.6, "toneFreq": 220.0 }
+    "36": { "drumType": "kick", "gain": 0.8, "bodyFreq": 54.0, "pitchStart": 4.8 },
+    "38": { "drumType": "snare", "gain": 0.8, "bodyFreq": 230.0, "snapLevel": 0.85 }
   }
 }
 ```
