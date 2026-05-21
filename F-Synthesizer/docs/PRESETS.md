@@ -46,8 +46,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_drumkit_arcade` | drumkit | クリック、芯、snap、金属hatを持つ90年代アーケード寄り基本キット |
-| `retro_heavy_drumkit_impact` | drumkit | 深いkickと太いsnare snapで押し出す強めのキット |
+| `retro_heavy_drumkit_arcade` | drumkit | kick/snare/hatにtom、rim、clap、crash、rideを加えた90年代アーケード寄り基本キット |
+| `retro_heavy_drumkit_impact` | drumkit | 深いkick、太いsnare、派手なtom/crash/rideで押し出す強めのキット |
 | `retro_heavy_noise_hat_support` | noise | drumkitのhatへ薄く足す高域補助。単体主役にはしない |
 
 ### 補助
@@ -77,6 +77,7 @@
 | `demo_fm_feedback_edge` | FM | FM feedback | feedbackで増えるエッジ |
 | `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
 | `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
+| `demo_drumkit_types` | drumkit | drum types | kick、snare、hat、tom、rim、clap、crash、rideの内部生成ドラム確認 |
 | `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
 | `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |
 | `demo_ring_mod` | waveform | ring modulation | 金属的な非整数倍音 |

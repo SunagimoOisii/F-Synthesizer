@@ -117,14 +117,16 @@
 ```json
 {
   "type": "drum",
-  "drumType": "kick|snare|hat|none",
+  "drumType": "kick|snare|hat|tom|rim|clap|crash|ride|none",
   "gain": 0.6,
   "bodyFreq": 58.0,
+  "bodyLevel": 0.9,
+  "bodyDecaySec": 0.18,
   "pitchStart": 4.5,
   "pitchDecaySec": 0.06,
-  "clickLevel": 0.3,
-  "clickDecaySec": 0.008,
-  "bodyLevel": 0.9,
+  "transientLevel": 0.3,
+  "transientDecaySec": 0.008,
+  "noiseLevel": 0.35,
   "snapLevel": 0.85,
   "snapDecaySec": 0.055,
   "metalLevel": 0.6,
@@ -133,11 +135,15 @@
   "hpCut": 900.0,
   "lpCut": 5600.0,
   "drive": 0.25,
-  "noiseColor": "white|pink|brown|blue"
+  "noiseColor": "white|pink|brown|blue",
+  "velocityToTone": 0.25,
+  "velocityToDecay": 0.10,
+  "humanizePitchCents": 2.0,
+  "humanizeDecayPct": 0.08
 }
 ```
 
-`drumType` ごとに使う主な項目は異なる。`kick` は `bodyFreq` / `pitchStart` / `clickLevel` / `bodyLevel`、`snare` は `bodyFreq` / `bodyLevel` / `snapLevel` / `snapDecaySec`、`hat` は `metalLevel` / `airLevel` / `decaySec` を中心に調整する。
+`drumType` ごとに使う主な項目は異なる。`kick` は `bodyFreq` / `pitchStart` / `transientLevel` / `bodyLevel`、`snare` は `bodyFreq` / `bodyLevel` / `snapLevel` / `snapDecaySec`、`hat` / `crash` / `ride` は `metalLevel` / `airLevel` / `decaySec`、`tom` は `bodyFreq` / `pitchStart` / `bodyDecaySec`、`rim` / `clap` は `transientLevel` / `noiseLevel` を中心に調整する。`velocityToTone` / `velocityToDecay` はMIDI velocityによる音色変化、`humanizePitchCents` / `humanizeDecayPct` は同音連打の微差に使う。
 
 ### 5) drumkit
 
@@ -146,7 +152,9 @@
   "type": "drumkit",
   "map": {
     "36": { "drumType": "kick", "gain": 0.8, "bodyFreq": 54.0, "pitchStart": 4.8 },
-    "38": { "drumType": "snare", "gain": 0.8, "bodyFreq": 230.0, "snapLevel": 0.85 }
+    "38": { "drumType": "snare", "gain": 0.8, "bodyFreq": 230.0, "snapLevel": 0.85 },
+    "41": { "drumType": "tom", "gain": 0.8, "bodyFreq": 110.0, "pitchStart": 2.4 },
+    "49": { "drumType": "crash", "gain": 0.7, "metalLevel": 0.8, "decaySec": 0.45 }
   }
 }
 ```

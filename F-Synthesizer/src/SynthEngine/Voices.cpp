@@ -81,6 +81,31 @@ void InitDrumVoice(const DrumConfig& drum, DrumVoiceState& drumState, double& ph
         drumState.bodyFreq = 7600.0;
         phaseInc = drumState.bodyFreq / sampleRate;
     }
+    else if (drum.type == DrumType::Tom)
+    {
+        drumState.bodyFreq = (drum.bodyFreq > 0.0) ? drum.bodyFreq : 150.0;
+        drumState.pitchStart = (drum.pitchStart > 0.0) ? drum.pitchStart : 2.4;
+        drumState.pitchDecaySec = (drum.pitchDecaySec > 0.0) ? drum.pitchDecaySec : 0.075;
+        phaseInc = drumState.bodyFreq / sampleRate;
+    }
+    else if (drum.type == DrumType::Rim || drum.type == DrumType::Clap)
+    {
+        drumState.bodyFreq = (drum.bodyFreq > 0.0) ? drum.bodyFreq : ((drum.type == DrumType::Rim) ? 950.0 : 780.0);
+        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : ((drum.type == DrumType::Rim) ? 1800.0 : 900.0);
+        drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : ((drum.type == DrumType::Rim) ? 7600.0 : 5200.0);
+        drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        phaseInc = drumState.bodyFreq / sampleRate;
+    }
+    else if (drum.type == DrumType::Crash || drum.type == DrumType::Ride)
+    {
+        const double hpCut = (drum.hpCut > 0.0) ? drum.hpCut : 4300.0;
+        drumState.hpAlpha = std::exp(-2.0 * kPi * hpCut / sampleRate);
+        const double lpCut = (drum.lpCut > 0.0) ? drum.lpCut : 12500.0;
+        drumState.lpAlpha = std::exp(-2.0 * kPi * lpCut / sampleRate);
+        drumState.bodyFreq = (drum.type == DrumType::Ride) ? 4200.0 : 5200.0;
+        phaseInc = drumState.bodyFreq / sampleRate;
+    }
 }
 
 template <typename SourceT, typename VoiceStateT>
@@ -274,6 +299,25 @@ void InitializeVoiceAtIndex(
         voices.sourceState[i] = DrumVoiceState{};
         auto& ds = std::get<DrumVoiceState>(voices.sourceState[i]);
         InitDrumVoice(*drum, ds, voices.phaseInc[i], sampleRate);
+        const double velNorm = std::clamp(static_cast<double>(e.velocity) / 127.0, 0.0, 1.0);
+        uint32_t seed = 0x9E3779B9u
+            ^ static_cast<uint32_t>((std::max)(0, e.noteNumber) * 73856093)
+            ^ static_cast<uint32_t>((std::max)(0, e.channel) * 19349663)
+            ^ static_cast<uint32_t>((std::max)(0, e.noteInstanceID) * 83492791);
+        if (seed == 0) seed = 0xA5A5A5A5u;
+        ds.noiseState = seed;
+        auto nextUnit = [&]() {
+            seed = seed * 1664525u + 1013904223u;
+            return (static_cast<double>((seed >> 8) & 0x00FFFFFFu) / 8388607.5) - 1.0;
+        };
+        ds.velocityNorm = velNorm;
+        ds.pitchRatio = std::exp2((nextUnit() * drum->humanizePitchCents) / 1200.0);
+        ds.decayScale = std::max(0.1, 1.0 + nextUnit() * drum->humanizeDecayPct);
+        ds.noiseState = seed;
+        for (size_t b = 0; b < ds.burstDelaySec.size(); b++)
+        {
+            ds.burstDelaySec[b] = static_cast<double>(b) * 0.008 + std::max(0.0, nextUnit()) * 0.002;
+        }
     }
     else if (std::get_if<PsgConfig>(&cfg.source))
     {

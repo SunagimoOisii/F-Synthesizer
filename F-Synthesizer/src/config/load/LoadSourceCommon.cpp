@@ -185,11 +185,13 @@ bool DrumSchemaValue(const DrumConfig& drum, const SourceParameterSchemaEntry& e
     if (std::string_view(e.id) == "drumType") { outValue = static_cast<double>(drum.type); return true; }
     if (std::string_view(e.id) == "gain") { outValue = drum.gain; return true; }
     if (std::string_view(e.id) == "bodyFreq") { outValue = drum.bodyFreq; return true; }
+    if (std::string_view(e.id) == "bodyLevel") { outValue = drum.bodyLevel; return true; }
+    if (std::string_view(e.id) == "bodyDecaySec") { outValue = drum.bodyDecaySec; return true; }
     if (std::string_view(e.id) == "pitchStart") { outValue = drum.pitchStart; return true; }
     if (std::string_view(e.id) == "pitchDecaySec") { outValue = drum.pitchDecaySec; return true; }
-    if (std::string_view(e.id) == "clickLevel") { outValue = drum.clickLevel; return true; }
-    if (std::string_view(e.id) == "clickDecaySec") { outValue = drum.clickDecaySec; return true; }
-    if (std::string_view(e.id) == "bodyLevel") { outValue = drum.bodyLevel; return true; }
+    if (std::string_view(e.id) == "transientLevel") { outValue = drum.transientLevel; return true; }
+    if (std::string_view(e.id) == "transientDecaySec") { outValue = drum.transientDecaySec; return true; }
+    if (std::string_view(e.id) == "noiseLevel") { outValue = drum.noiseLevel; return true; }
     if (std::string_view(e.id) == "snapLevel") { outValue = drum.snapLevel; return true; }
     if (std::string_view(e.id) == "snapDecaySec") { outValue = drum.snapDecaySec; return true; }
     if (std::string_view(e.id) == "metalLevel") { outValue = drum.metalLevel; return true; }
@@ -199,6 +201,10 @@ bool DrumSchemaValue(const DrumConfig& drum, const SourceParameterSchemaEntry& e
     if (std::string_view(e.id) == "lpCut") { outValue = drum.lpCut; return true; }
     if (std::string_view(e.id) == "drive") { outValue = drum.drive; return true; }
     if (std::string_view(e.id) == "noiseColor") { outValue = static_cast<double>(drum.noiseColor); return true; }
+    if (std::string_view(e.id) == "velocityToTone") { outValue = drum.velocityToTone; return true; }
+    if (std::string_view(e.id) == "velocityToDecay") { outValue = drum.velocityToDecay; return true; }
+    if (std::string_view(e.id) == "humanizePitchCents") { outValue = drum.humanizePitchCents; return true; }
+    if (std::string_view(e.id) == "humanizeDecayPct") { outValue = drum.humanizeDecayPct; return true; }
     return false;
 }
 
@@ -213,11 +219,13 @@ bool NoiseSchemaValue(const NoiseConfig& noise, const SourceParameterSchemaEntry
 bool IsDrumOptionalWhenNonPositive(std::string_view id)
 {
     return id == "bodyFreq"
+        || id == "bodyLevel"
+        || id == "bodyDecaySec"
         || id == "pitchStart"
         || id == "pitchDecaySec"
-        || id == "clickLevel"
-        || id == "clickDecaySec"
-        || id == "bodyLevel"
+        || id == "transientLevel"
+        || id == "transientDecaySec"
+        || id == "noiseLevel"
         || id == "snapLevel"
         || id == "snapDecaySec"
         || id == "metalLevel"
@@ -490,11 +498,13 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     }
     if (auto v = ReadJSONDouble(text, "gain")) drum.gain = *v;
     if (auto v = ReadJSONDouble(text, "bodyFreq")) drum.bodyFreq = *v;
+    if (auto v = ReadJSONDouble(text, "bodyLevel")) drum.bodyLevel = *v;
+    if (auto v = ReadJSONDouble(text, "bodyDecaySec")) drum.bodyDecaySec = *v;
     if (auto v = ReadJSONDouble(text, "pitchStart")) drum.pitchStart = *v;
     if (auto v = ReadJSONDouble(text, "pitchDecaySec")) drum.pitchDecaySec = *v;
-    if (auto v = ReadJSONDouble(text, "clickLevel")) drum.clickLevel = *v;
-    if (auto v = ReadJSONDouble(text, "clickDecaySec")) drum.clickDecaySec = *v;
-    if (auto v = ReadJSONDouble(text, "bodyLevel")) drum.bodyLevel = *v;
+    if (auto v = ReadJSONDouble(text, "transientLevel")) drum.transientLevel = *v;
+    if (auto v = ReadJSONDouble(text, "transientDecaySec")) drum.transientDecaySec = *v;
+    if (auto v = ReadJSONDouble(text, "noiseLevel")) drum.noiseLevel = *v;
     if (auto v = ReadJSONDouble(text, "snapLevel")) drum.snapLevel = *v;
     if (auto v = ReadJSONDouble(text, "snapDecaySec")) drum.snapDecaySec = *v;
     if (auto v = ReadJSONDouble(text, "metalLevel")) drum.metalLevel = *v;
@@ -503,6 +513,10 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     if (auto v = ReadJSONDouble(text, "hpCut")) drum.hpCut = *v;
     if (auto v = ReadJSONDouble(text, "lpCut")) drum.lpCut = *v;
     if (auto v = ReadJSONDouble(text, "drive")) drum.drive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(text, "velocityToTone")) drum.velocityToTone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(text, "velocityToDecay")) drum.velocityToDecay = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(text, "humanizePitchCents")) drum.humanizePitchCents = std::clamp(*v, 0.0, 50.0);
+    if (auto v = ReadJSONDouble(text, "humanizeDecayPct")) drum.humanizeDecayPct = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONString(text, "noiseColor"))
     {
         NoiseType n{};

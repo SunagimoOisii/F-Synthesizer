@@ -177,6 +177,31 @@ bool TryParseDrumType(const std::string& name, DrumType& outType)
         outType = DrumType::Hat;
         return true;
     }
+    if (name == "tom")
+    {
+        outType = DrumType::Tom;
+        return true;
+    }
+    if (name == "rim")
+    {
+        outType = DrumType::Rim;
+        return true;
+    }
+    if (name == "clap")
+    {
+        outType = DrumType::Clap;
+        return true;
+    }
+    if (name == "crash")
+    {
+        outType = DrumType::Crash;
+        return true;
+    }
+    if (name == "ride")
+    {
+        outType = DrumType::Ride;
+        return true;
+    }
     return false;
 }
 
@@ -364,6 +389,11 @@ std::string DrumTypeToString(DrumType d)
     case DrumType::Kick: return "kick";
     case DrumType::Snare: return "snare";
     case DrumType::Hat: return "hat";
+    case DrumType::Tom: return "tom";
+    case DrumType::Rim: return "rim";
+    case DrumType::Clap: return "clap";
+    case DrumType::Crash: return "crash";
+    case DrumType::Ride: return "ride";
     }
     return "none";
 }
@@ -587,11 +617,13 @@ void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent)
     WriteIndent(out, indent + 2); out << "\"drumType\": \"" << DrumTypeToString(d.type) << "\",\n";
     WriteIndent(out, indent + 2); out << "\"gain\": " << d.gain << ",\n";
     WriteIndent(out, indent + 2); out << "\"bodyFreq\": " << d.bodyFreq << ",\n";
+    WriteIndent(out, indent + 2); out << "\"bodyLevel\": " << d.bodyLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"bodyDecaySec\": " << d.bodyDecaySec << ",\n";
     WriteIndent(out, indent + 2); out << "\"pitchStart\": " << d.pitchStart << ",\n";
     WriteIndent(out, indent + 2); out << "\"pitchDecaySec\": " << d.pitchDecaySec << ",\n";
-    WriteIndent(out, indent + 2); out << "\"clickLevel\": " << d.clickLevel << ",\n";
-    WriteIndent(out, indent + 2); out << "\"clickDecaySec\": " << d.clickDecaySec << ",\n";
-    WriteIndent(out, indent + 2); out << "\"bodyLevel\": " << d.bodyLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"transientLevel\": " << d.transientLevel << ",\n";
+    WriteIndent(out, indent + 2); out << "\"transientDecaySec\": " << d.transientDecaySec << ",\n";
+    WriteIndent(out, indent + 2); out << "\"noiseLevel\": " << d.noiseLevel << ",\n";
     WriteIndent(out, indent + 2); out << "\"snapLevel\": " << d.snapLevel << ",\n";
     WriteIndent(out, indent + 2); out << "\"snapDecaySec\": " << d.snapDecaySec << ",\n";
     WriteIndent(out, indent + 2); out << "\"metalLevel\": " << d.metalLevel << ",\n";
@@ -600,7 +632,11 @@ void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent)
     WriteIndent(out, indent + 2); out << "\"hpCut\": " << d.hpCut << ",\n";
     WriteIndent(out, indent + 2); out << "\"lpCut\": " << d.lpCut << ",\n";
     WriteIndent(out, indent + 2); out << "\"drive\": " << d.drive << ",\n";
-    WriteIndent(out, indent + 2); out << "\"noiseColor\": \"" << NoiseTypeToString((NoiseType)d.noiseColor) << "\"\n";
+    WriteIndent(out, indent + 2); out << "\"noiseColor\": \"" << NoiseTypeToString((NoiseType)d.noiseColor) << "\",\n";
+    WriteIndent(out, indent + 2); out << "\"velocityToTone\": " << d.velocityToTone << ",\n";
+    WriteIndent(out, indent + 2); out << "\"velocityToDecay\": " << d.velocityToDecay << ",\n";
+    WriteIndent(out, indent + 2); out << "\"humanizePitchCents\": " << d.humanizePitchCents << ",\n";
+    WriteIndent(out, indent + 2); out << "\"humanizeDecayPct\": " << d.humanizeDecayPct << "\n";
     WriteIndent(out, indent); out << "}";
 }
 

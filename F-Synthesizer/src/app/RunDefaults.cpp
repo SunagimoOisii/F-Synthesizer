@@ -141,11 +141,12 @@ std::shared_ptr<const std::array<ChannelConfig, 16>> BuildDefaultChannelConfigs(
             DrumConfig kick{ DrumType::Kick };
             kick.gain = 0.6;
             kick.bodyFreq = 58.0;
+            kick.bodyLevel = 0.9;
+            kick.bodyDecaySec = 0.18;
             kick.pitchStart = 4.2;
             kick.pitchDecaySec = 0.06;
-            kick.clickLevel = 0.22;
-            kick.clickDecaySec = 0.008;
-            kick.bodyLevel = 0.9;
+            kick.transientLevel = 0.22;
+            kick.transientDecaySec = 0.008;
             kick.drive = 0.28;
 
             DrumConfig snare{ DrumType::Snare };

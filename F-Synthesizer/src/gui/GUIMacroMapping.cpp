@@ -59,16 +59,16 @@ void ApplyDrumBrightnessRoughnessMovement(DrumConfig& src, const MacroSliderStat
     if (src.type == DrumType::Kick)
     {
         src.bodyFreq = SliderToLinear(s.brightness, 36.0, 88.0);
-        src.clickLevel = SliderToLinear(s.roughness, 0.08, 0.55);
+        src.transientLevel = SliderToLinear(s.roughness, 0.08, 0.55);
         src.pitchStart = SliderToLinear(s.movement, 1.0, 7.0);
     }
-    else if (src.type == DrumType::Snare)
+    else if (src.type == DrumType::Snare || src.type == DrumType::Tom || src.type == DrumType::Rim)
     {
         src.bodyFreq = SliderToLinear(s.brightness, 140.0, 320.0);
         src.snapLevel = SliderToLinear(s.roughness, 0.25, 1.2);
         src.snapDecaySec = SliderToLinear(s.movement, 0.025, 0.11);
     }
-    else if (src.type == DrumType::Hat)
+    else if (src.type == DrumType::Hat || src.type == DrumType::Clap || src.type == DrumType::Crash || src.type == DrumType::Ride)
     {
         src.hpCut = SliderToLinear(s.brightness, 3600.0, 7600.0);
         src.airLevel = SliderToLinear(s.roughness, 0.15, 0.75);
@@ -169,16 +169,16 @@ MacroSliderState ReadMacroSliders(const ChannelConfig& ch, const MacroSliderStat
             if (src.type == DrumType::Kick)
             {
                 out.brightness = LinearToSlider(src.bodyFreq, 36.0, 88.0);
-                out.roughness = LinearToSlider(src.clickLevel, 0.08, 0.55);
+                out.roughness = LinearToSlider(src.transientLevel, 0.08, 0.55);
                 out.movement = LinearToSlider(src.pitchStart, 1.0, 7.0);
             }
-            else if (src.type == DrumType::Snare)
+            else if (src.type == DrumType::Snare || src.type == DrumType::Tom || src.type == DrumType::Rim)
             {
                 out.brightness = LinearToSlider(src.bodyFreq, 140.0, 320.0);
                 out.roughness = LinearToSlider(src.snapLevel, 0.25, 1.2);
                 out.movement = LinearToSlider(src.snapDecaySec, 0.025, 0.11);
             }
-            else if (src.type == DrumType::Hat)
+            else if (src.type == DrumType::Hat || src.type == DrumType::Clap || src.type == DrumType::Crash || src.type == DrumType::Ride)
             {
                 out.brightness = LinearToSlider(src.hpCut, 3600.0, 7600.0);
                 out.roughness = LinearToSlider(src.airLevel, 0.15, 0.75);

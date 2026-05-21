@@ -132,15 +132,17 @@ constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 17> kDrumParameterSchema{ {
-    { "drumType", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+constexpr std::array<SourceParameterSchemaEntry, 23> kDrumParameterSchema{ {
+    { "drumType", SourceParameterType::Int, 0.0, 8.0, 0.0 },
     { "gain", SourceParameterType::Float, 0.0, 4.0, 1.0 },
     { "bodyFreq", SourceParameterType::Float, 20.0, 20000.0, 60.0 },
+    { "bodyLevel", SourceParameterType::Float, 0.0, 2.0, 0.8 },
+    { "bodyDecaySec", SourceParameterType::Float, 0.001, 2.0, 0.12 },
     { "pitchStart", SourceParameterType::Float, 0.1, 16.0, 3.0 },
     { "pitchDecaySec", SourceParameterType::Float, 0.001, 2.0, 0.06 },
-    { "clickLevel", SourceParameterType::Float, 0.0, 2.0, 0.25 },
-    { "clickDecaySec", SourceParameterType::Float, 0.001, 1.0, 0.008 },
-    { "bodyLevel", SourceParameterType::Float, 0.0, 2.0, 0.8 },
+    { "transientLevel", SourceParameterType::Float, 0.0, 2.0, 0.25 },
+    { "transientDecaySec", SourceParameterType::Float, 0.001, 1.0, 0.008 },
+    { "noiseLevel", SourceParameterType::Float, 0.0, 2.0, 0.35 },
     { "snapLevel", SourceParameterType::Float, 0.0, 2.0, 0.7 },
     { "snapDecaySec", SourceParameterType::Float, 0.001, 1.0, 0.055 },
     { "metalLevel", SourceParameterType::Float, 0.0, 2.0, 0.55 },
@@ -150,6 +152,10 @@ constexpr std::array<SourceParameterSchemaEntry, 17> kDrumParameterSchema{ {
     { "lpCut", SourceParameterType::Float, 20.0, 20000.0, 9000.0 },
     { "drive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "noiseColor", SourceParameterType::Int, 0.0, 3.0, 0.0 },
+    { "velocityToTone", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "velocityToDecay", SourceParameterType::Float, -1.0, 1.0, 0.0 },
+    { "humanizePitchCents", SourceParameterType::Float, 0.0, 50.0, 0.0 },
+    { "humanizeDecayPct", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
 // DrumKit は note(0..127) ごとに DrumConfig を持つ可変構造のため、

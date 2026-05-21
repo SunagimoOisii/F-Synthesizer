@@ -188,7 +188,12 @@ enum class DrumType
     None,
     Kick,
     Snare,
-    Hat
+    Hat,
+    Tom,
+    Rim,
+    Clap,
+    Crash,
+    Ride
 };
 
 // 単発ドラム音源の設定。
@@ -199,11 +204,13 @@ struct DrumConfig
     DrumType type = DrumType::None;
     double gain = 1.0;
     double bodyFreq = 0.0;
+    double bodyLevel = 0.0;
+    double bodyDecaySec = 0.0;
     double pitchStart = 0.0;
     double pitchDecaySec = 0.0;
-    double clickLevel = 0.0;
-    double clickDecaySec = 0.0;
-    double bodyLevel = 0.0;
+    double transientLevel = 0.0;
+    double transientDecaySec = 0.0;
+    double noiseLevel = 0.0;
     double snapLevel = 0.0;
     double snapDecaySec = 0.0;
     double metalLevel = 0.0;
@@ -213,6 +220,10 @@ struct DrumConfig
     double lpCut = 0.0;
     double drive = 0.0;
     int noiseColor = 0;
+    double velocityToTone = 0.0;
+    double velocityToDecay = 0.0;
+    double humanizePitchCents = 0.0;
+    double humanizeDecayPct = 0.0;
     // one-shot アタック保護のため smoothing は非対応（契約上 waveform 専用）。
 };
 

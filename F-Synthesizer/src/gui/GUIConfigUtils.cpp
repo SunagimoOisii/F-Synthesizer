@@ -19,11 +19,13 @@ bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
     return a.type == b.type &&
         NearlyEq(a.gain, b.gain) &&
         NearlyEq(a.bodyFreq, b.bodyFreq) &&
+        NearlyEq(a.bodyLevel, b.bodyLevel) &&
+        NearlyEq(a.bodyDecaySec, b.bodyDecaySec) &&
         NearlyEq(a.pitchStart, b.pitchStart) &&
         NearlyEq(a.pitchDecaySec, b.pitchDecaySec) &&
-        NearlyEq(a.clickLevel, b.clickLevel) &&
-        NearlyEq(a.clickDecaySec, b.clickDecaySec) &&
-        NearlyEq(a.bodyLevel, b.bodyLevel) &&
+        NearlyEq(a.transientLevel, b.transientLevel) &&
+        NearlyEq(a.transientDecaySec, b.transientDecaySec) &&
+        NearlyEq(a.noiseLevel, b.noiseLevel) &&
         NearlyEq(a.snapLevel, b.snapLevel) &&
         NearlyEq(a.snapDecaySec, b.snapDecaySec) &&
         NearlyEq(a.metalLevel, b.metalLevel) &&
@@ -32,7 +34,11 @@ bool DrumConfigEquals(const DrumConfig& a, const DrumConfig& b)
         NearlyEq(a.hpCut, b.hpCut) &&
         NearlyEq(a.lpCut, b.lpCut) &&
         NearlyEq(a.drive, b.drive) &&
-        a.noiseColor == b.noiseColor;
+        a.noiseColor == b.noiseColor &&
+        NearlyEq(a.velocityToTone, b.velocityToTone) &&
+        NearlyEq(a.velocityToDecay, b.velocityToDecay) &&
+        NearlyEq(a.humanizePitchCents, b.humanizePitchCents) &&
+        NearlyEq(a.humanizeDecayPct, b.humanizeDecayPct);
 }
 
 bool ModulationConfigEquals(const ModulationConfig& a, const ModulationConfig& b)
