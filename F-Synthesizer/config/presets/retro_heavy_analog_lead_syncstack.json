@@ -13,6 +13,16 @@
       "decaySec": 0.18,
       "sustainLevel": 0.74,
       "releaseSec": 0.18,
+      "attackLayer": {
+        "enabled": true,
+        "type": "pick",
+        "level": 0.1,
+        "decaySec": 0.032,
+        "brightness": 0.52,
+        "bodyMix": 0.5,
+        "pitchOffsetSemis": 0,
+        "drive": 0.06
+      },
       "source": {
         "type": "analog",
         "wave": "saw",

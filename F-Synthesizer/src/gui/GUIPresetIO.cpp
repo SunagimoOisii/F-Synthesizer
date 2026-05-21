@@ -18,6 +18,31 @@ namespace
 {
 using Json = nlohmann::json;
 
+const char* AttackLayerTypeToString(AttackLayerType type)
+{
+    switch (type)
+    {
+    case AttackLayerType::Pick: return "pick";
+    case AttackLayerType::Brass: return "brass";
+    case AttackLayerType::Metal: return "metal";
+    }
+    return "pick";
+}
+
+void WriteAttackLayerJSON(std::ostream& out, const AttackLayerConfig& layer)
+{
+    out << "      \"attackLayer\": {\n";
+    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
+    out << "        \"type\": \"" << AttackLayerTypeToString(layer.type) << "\",\n";
+    out << "        \"level\": " << layer.level << ",\n";
+    out << "        \"decaySec\": " << layer.decaySec << ",\n";
+    out << "        \"brightness\": " << layer.brightness << ",\n";
+    out << "        \"bodyMix\": " << layer.bodyMix << ",\n";
+    out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
+    out << "        \"drive\": " << layer.drive << "\n";
+    out << "      },\n";
+}
+
 struct PresetMeta
 {
     std::vector<std::string> tags{};
@@ -207,6 +232,10 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         out << "      \"decaySec\": " << cur.decaySec << ",\n";
         out << "      \"sustainLevel\": " << cur.sustainLevel << ",\n";
         out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
+        if (cur.attackLayer.enabled)
+        {
+            WriteAttackLayerJSON(out, cur.attackLayer);
+        }
         config::WriteSourceJSON(out, cur.source, 6);
         out << "\n    }";
     }

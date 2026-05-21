@@ -126,10 +126,14 @@ struct Voice
     std::vector<double> decaySec;
     std::vector<double> sustainLevel;
     std::vector<double> releaseSec;
+    std::vector<AttackLayerConfig> attackLayer;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;
     std::vector<double> phaseInc;
+    std::vector<double> ageSec;
+    std::vector<double> attackPhase;
+    std::vector<uint32_t> attackNoiseState;
     std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
     std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）
     std::vector<double> portamentoTimeSec;  // チャンネル設定からコピーした時定数

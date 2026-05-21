@@ -226,6 +226,25 @@ struct DrumKitConfig
 
 using SourceConfig = std::variant<WaveformConfig, AnalogConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig, PsgConfig>;
 
+enum class AttackLayerType
+{
+    Pick,
+    Brass,
+    Metal
+};
+
+struct AttackLayerConfig
+{
+    bool enabled = false;
+    AttackLayerType type = AttackLayerType::Pick;
+    double level = 0.0;
+    double decaySec = 0.035;
+    double brightness = 0.5;
+    double bodyMix = 0.5;
+    double pitchOffsetSemis = 0.0;
+    double drive = 0.0;
+};
+
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。
 struct ChannelConfig
@@ -242,6 +261,8 @@ struct ChannelConfig
     double releaseSec;
     // ポルタメント時定数（0.0=オフ, 秒単位）。0 より大きい場合に前ノートからスライドする。
     double portamentoTimeSec = 0.0;
+    // NoteOn直後だけ鳴る共通アタック補助レイヤー。
+    AttackLayerConfig attackLayer{};
 };
 
 struct ChannelMixState

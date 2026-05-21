@@ -13,6 +13,16 @@
       "decaySec": 0.18,
       "sustainLevel": 0.82,
       "releaseSec": 0.14,
+      "attackLayer": {
+        "enabled": true,
+        "type": "pick",
+        "level": 0.1,
+        "decaySec": 0.045,
+        "brightness": 0.3,
+        "bodyMix": 0.82,
+        "pitchOffsetSemis": "-12",
+        "drive": 0.11
+      },
       "source": {
         "type": "fm",
         "algorithm": 1,

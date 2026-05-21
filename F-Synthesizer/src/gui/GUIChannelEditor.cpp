@@ -387,6 +387,37 @@ bool DrawChannelEditor(
         }
     }
 
+    if (ImGui::CollapsingHeader("Attack Layer"))
+    {
+        auto& layer = chCfg.attackLayer;
+        changed |= ImGui::Checkbox("Enabled##attackLayer", &layer.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "NoteOn直後だけ鳴る短い補助音を重ねます。",
+                "ピック感、ブラスの吹き始め、金属的な打撃を外部PCMなしで足します。",
+                "上げすぎるとピークやチープさが出ます。");
+        }
+
+        int attackType = static_cast<int>(layer.type);
+        const char* attackTypes[] = { "pick", "brass", "metal" };
+        changed |= ImGui::Combo("Type##attackLayer", &attackType, attackTypes, IM_ARRAYSIZE(attackTypes));
+        attackType = std::clamp(attackType, 0, 2);
+        layer.type = static_cast<AttackLayerType>(attackType);
+
+        changed |= ImGui::InputDouble("Level##attackLayer", &layer.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Decay##attackLayer", &layer.decaySec, 0.001, 0.01, "%.3f");
+        changed |= ImGui::InputDouble("Brightness##attackLayer", &layer.brightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Body Mix##attackLayer", &layer.bodyMix, 0.01, 0.05, "%.3f");
+
+        layer.level = std::clamp(layer.level, 0.0, 1.0);
+        layer.decaySec = std::clamp(layer.decaySec, 0.001, 0.25);
+        layer.brightness = std::clamp(layer.brightness, 0.0, 1.0);
+        layer.bodyMix = std::clamp(layer.bodyMix, 0.0, 1.0);
+        layer.pitchOffsetSemis = std::clamp(layer.pitchOffsetSemis, -24.0, 24.0);
+        layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+    }
+
     bool layer3Changed = false;
     if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {

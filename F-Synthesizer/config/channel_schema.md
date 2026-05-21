@@ -31,12 +31,24 @@
   "decaySec": 0.22,
   "sustainLevel": 0.90,
   "releaseSec": 0.35,
+  "attackLayer": {
+    "enabled": true,
+    "type": "pick",
+    "level": 0.12,
+    "decaySec": 0.03,
+    "brightness": 0.45,
+    "bodyMix": 0.65,
+    "pitchOffsetSemis": -12.0,
+    "drive": 0.08
+  },
   "source": {
     "type": "fm",
     "...type specific fields..."
   }
 }
 ```
+
+`attackLayer` は省略可能。NoteOn直後だけ鳴る内部生成の補助音で、`source` 本体を置き換えずにアタックだけを足す。`type` は `pick|brass|metal`。ピック感、ブラスの吹き始め、金属打撃を足す用途で、強くしすぎるとピーク過多やチープなクリック感につながる。
 
 ## source.type ごとの定義
 
@@ -145,6 +157,9 @@
 - `amp`: `0.0..16.0`
 - `attackSec/decaySec/releaseSec`: `0.0..30.0`
 - `sustainLevel`: `0.0..1.0`
+- `attackLayer.level/bodyMix/brightness/drive`: `0.0..1.0`
+- `attackLayer.decaySec`: `0.001..0.25`
+- `attackLayer.pitchOffsetSemis`: `-24.0..24.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

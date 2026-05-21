@@ -9,6 +9,7 @@
 - 初期代表: `retro_heavy_fm_brass_ensemble`
 - `retro_heavy_*` では、PSG / bell / pluck / SFX を主役にしない。曲全体へ当てる場合は主役、低域、和音、背景、ドラムを中心に使う。
 - FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
+- `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -17,18 +18,18 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_brass_ensemble` | FM | op個別Envで立ち上がりを押す厚いFMコード/ブラス。単音でも和音でも主役向け |
-| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Envで金属エッジを出しつつ明るすぎないFMリード |
-| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しを持つ太いアナログ風リード |
-| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れを控えめにした広めの上物リード |
+| `retro_heavy_fm_brass_ensemble` | FM | op個別Envとbrass attackLayerで立ち上がりを押す厚いFMコード/ブラス。単音でも和音でも主役向け |
+| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Envとmetal attackLayerで金属エッジを出しつつ明るすぎないFMリード |
+| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayerを薄く足した太いアナログ風リード |
+| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れとbrass attackLayerを控えめにした広めの上物リード |
 
 ### 低域
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Envでピック感を作り、中低域の芯を残すFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | 減衰する倍音とdriveで深く沈むFMサブドライブ |
-| `retro_heavy_analog_bass_drive` | analog | driveを効かせた重いアナログ風ベース |
+| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Envとpick attackLayerで弾いた輪郭を足し、中低域の芯を残すFMベース |
+| `retro_heavy_fm_bass_subdrive` | FM | 減衰する倍音と薄いpick attackLayerで深く沈むFMサブドライブ |
+| `retro_heavy_analog_bass_drive` | analog | driveとpick attackLayerを効かせた重いアナログ風ベース |
 | `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に薄く敷くサブ補助 |
 
 ### 和音と背景
@@ -36,7 +37,7 @@
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
 | `retro_heavy_fm_chord_stack` | FM | op Envで濁りの立ち上がりを整えた厚いFMコード |
-| `retro_heavy_analog_chord_brass` | analog | FM群に混ぜるブラスコードの支え役 |
+| `retro_heavy_analog_chord_brass` | analog | brass attackLayerを薄く足し、FM群に混ぜるブラスコードの支え役 |
 | `retro_heavy_fm_pad_organ_dark` | FM | ゆっくりしたop Envで主旋律を邪魔しない暗めのFMオルガンパッド |
 | `retro_heavy_analog_pad_tape` | analog | driftと低いfilterで背景に置きやすいパッド |
 | `retro_heavy_wave_pad_sweep_dark` | waveform | 暗めにゆっくりfilterが動く重厚パッド |
@@ -53,8 +54,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_pluck_support` | FM | level/index Envで短く減衰し、フレーズの輪郭を足すFM補助プラック |
-| `retro_heavy_fm_bell_support` | FM | 長めのlevel Envと短いindex Envで控えめに響くFMベル補助 |
+| `retro_heavy_fm_pluck_support` | FM | level/index Envとpick attackLayerで短く減衰し、フレーズの輪郭を足すFM補助プラック |
+| `retro_heavy_fm_bell_support` | FM | 長めのlevel Envとmetal attackLayerで控えめに響くFMベル補助 |
 | `retro_heavy_wave_bell_glass_support` | waveform | 透明感を薄く足すガラス系ベル補助 |
 | `retro_heavy_psg_pulse_layer` | PSG | FM/analogの輪郭を足す薄いpulseレイヤー |
 | `retro_heavy_psg_triangle_layer` | PSG | FM/analogベースの下支え用triangleレイヤー |
@@ -75,6 +76,7 @@
 | `demo_fm_algo_parallel` | FM | FM algorithm parallel | 複数carrierの並列感 |
 | `demo_fm_feedback_edge` | FM | FM feedback | feedbackで増えるエッジ |
 | `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
+| `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
 | `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
 | `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |
 | `demo_ring_mod` | waveform | ring modulation | 金属的な非整数倍音 |

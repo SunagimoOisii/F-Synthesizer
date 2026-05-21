@@ -79,6 +79,18 @@ bool ModEnvelopeConfigEquals(const ModEnvelopeConfig& a, const ModEnvelopeConfig
         NearlyEq(a.curve, b.curve);
 }
 
+bool AttackLayerConfigEquals(const AttackLayerConfig& a, const AttackLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        a.type == b.type &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
+        NearlyEq(a.brightness, b.brightness) &&
+        NearlyEq(a.bodyMix, b.bodyMix) &&
+        NearlyEq(a.pitchOffsetSemis, b.pitchOffsetSemis) &&
+        NearlyEq(a.drive, b.drive);
+}
+
 template <typename SmoothingT>
 bool WaveformLikeSmoothingConfigEquals(const SmoothingT& a, const SmoothingT& b)
 {
@@ -301,6 +313,8 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         NearlyEq(a.decaySec, b.decaySec) &&
         NearlyEq(a.sustainLevel, b.sustainLevel) &&
         NearlyEq(a.releaseSec, b.releaseSec) &&
+        NearlyEq(a.portamentoTimeSec, b.portamentoTimeSec) &&
+        AttackLayerConfigEquals(a.attackLayer, b.attackLayer) &&
         SourceConfigEquals(a.source, b.source);
 }
 

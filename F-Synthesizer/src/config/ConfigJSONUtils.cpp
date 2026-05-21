@@ -368,6 +368,17 @@ std::string DrumTypeToString(DrumType d)
     return "none";
 }
 
+std::string AttackLayerTypeToString(AttackLayerType type)
+{
+    switch (type)
+    {
+    case AttackLayerType::Pick: return "pick";
+    case AttackLayerType::Brass: return "brass";
+    case AttackLayerType::Metal: return "metal";
+    }
+    return "pick";
+}
+
 std::string FilterModeToString(FilterMode mode)
 {
     switch (mode)
@@ -793,6 +804,20 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     WriteIndent(out, 6); out << "\"sustainLevel\": " << cfg.sustainLevel << ",\n";
     WriteIndent(out, 6); out << "\"releaseSec\": " << cfg.releaseSec << ",\n";
     WriteIndent(out, 6); out << "\"portamentoTimeSec\": " << cfg.portamentoTimeSec << ",\n";
+    if (cfg.attackLayer.enabled)
+    {
+        const auto& layer = cfg.attackLayer;
+        WriteIndent(out, 6); out << "\"attackLayer\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"type\": \"" << AttackLayerTypeToString(layer.type) << "\",\n";
+        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
+        WriteIndent(out, 8); out << "\"decaySec\": " << layer.decaySec << ",\n";
+        WriteIndent(out, 8); out << "\"brightness\": " << layer.brightness << ",\n";
+        WriteIndent(out, 8); out << "\"bodyMix\": " << layer.bodyMix << ",\n";
+        WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
     WriteSourceConfig(out, cfg.source, 6);
     out << "\n";
     WriteIndent(out, 4); out << "}";

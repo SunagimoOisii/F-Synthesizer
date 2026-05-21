@@ -8,6 +8,48 @@ namespace config::internal::load
 {
 namespace
 {
+bool TryParseAttackLayerType(const std::string& name, AttackLayerType& outType)
+{
+    if (name == "pick")
+    {
+        outType = AttackLayerType::Pick;
+        return true;
+    }
+    if (name == "brass")
+    {
+        outType = AttackLayerType::Brass;
+        return true;
+    }
+    if (name == "metal")
+    {
+        outType = AttackLayerType::Metal;
+        return true;
+    }
+    return false;
+}
+
+bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& layer, std::string& err)
+{
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONString(layerObjText, "type"))
+    {
+        AttackLayerType parsed{};
+        if (!TryParseAttackLayerType(*v, parsed))
+        {
+            err = "invalid attackLayer.type: " + *v;
+            return false;
+        }
+        layer.type = parsed;
+    }
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "decaySec")) layer.decaySec = std::clamp(*v, 0.001, 0.25);
+    if (auto v = ReadJSONDouble(layerObjText, "brightness")) layer.brightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bodyMix")) layer.bodyMix = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "pitchOffsetSemis")) layer.pitchOffsetSemis = std::clamp(*v, -24.0, 24.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
 bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, std::string& err)
 {
     if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
@@ -18,6 +60,16 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
     if (auto v = ReadJSONDouble(channelObjText, "portamentoTimeSec"))
     {
         cfg.portamentoTimeSec = std::clamp(*v, 0.0, 30.0);
+    }
+    std::string attackLayerObj;
+    bool foundAttackLayer = false;
+    if (!ExtractObjectForKey(channelObjText, "attackLayer", attackLayerObj, foundAttackLayer, err))
+    {
+        return false;
+    }
+    if (foundAttackLayer && !ParseAttackLayerObject(attackLayerObj, cfg.attackLayer, err))
+    {
+        return false;
     }
 
     std::string sourceObj;
