@@ -78,6 +78,19 @@
     "wobbleDepthCents": 4.0,
     "wobbleRateHz": 4.8
   },
+  "expressionMap": {
+    "enabled": true,
+    "velocityCurve": 0.9,
+    "velocityToAmp": 0.9,
+    "velocityToBrightness": 0.14,
+    "velocityToFmIndex": 0.12,
+    "velocityToAttack": 0.10,
+    "velocityToBass": 0.0,
+    "velocityToLead": 0.16,
+    "modWheelToBrightness": 0.10,
+    "pressureToDrive": 0.04,
+    "cc74ToBrightness": 0.20
+  },
   "source": {
     "type": "fm",
     "...type specific fields..."
@@ -90,6 +103,8 @@
 `bassLayer` は省略可能。ベース向けに持続する内部生成の補助音で、`source` 本体へ低域の芯、胴、歪んだ倍音、曲中で読める中低域の焦点を重ねる。`type` は `sub|drive|grit`。強くしすぎると低域過多、音割れ、キックとの衝突につながるため、ベースチャンネルへ薄くから中程度に使う。
 
 `leadLayer` は省略可能。主旋律向けに内部生成の硬い頭、短いしゃくり、薄い二重化、FM金属寄りの持続倍音を重ねる。`source` 本体を置き換えず、FM/analog/waveformのリードを前に出す用途で使う。`type` は `blade|brass|edge`。`characterLevel` と `biteLevel` を強くしすぎると濁り、過剰な金属感、ピーク過多につながる。
+
+`expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`velocityToAmp` は最終音量への効き方で、`modWheelToBrightness` / `pressureToDrive` / `cc74ToBrightness` は既存MIDI表情値を音色変化へ追加で使う量。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
 
 ## source.type ごとの定義
 
@@ -221,6 +236,9 @@
 - `leadLayer.bendDecaySec/attackDecaySec/biteDecaySec`: `0.005..0.25`
 - `leadLayer.wobbleDepthCents`: `0.0..30.0`
 - `leadLayer.wobbleRateHz`: `0.0..12.0`
+- `expressionMap.velocityCurve`: `0.2..3.0`
+- `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/pressureToDrive`: `0.0..1.0`
+- `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness`: `-1.0..1.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

@@ -134,6 +134,7 @@ struct Voice
     std::vector<AttackLayerConfig> attackLayer;
     std::vector<BassLayerConfig> bassLayer;
     std::vector<LeadLayerConfig> leadLayer;
+    std::vector<ExpressionMapConfig> expressionMap;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;

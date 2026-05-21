@@ -417,6 +417,19 @@
             "humanizeDecayPct": 0.12
           }
         }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.8,
+        "velocityToAmp": 0.92,
+        "velocityToBrightness": 0.08,
+        "velocityToFmIndex": 0.0,
+        "velocityToAttack": 0.1,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.0,
+        "modWheelToBrightness": 0.0,
+        "pressureToDrive": 0.04,
+        "cc74ToBrightness": 0.1
       }
     }
   }

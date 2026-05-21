@@ -311,6 +311,21 @@ struct LeadLayerConfig
     double wobbleRateHz = 4.0;
 };
 
+struct ExpressionMapConfig
+{
+    bool enabled = false;
+    double velocityCurve = 1.0;
+    double velocityToAmp = 1.0;
+    double velocityToBrightness = 0.0;
+    double velocityToFmIndex = 0.0;
+    double velocityToAttack = 0.0;
+    double velocityToBass = 0.0;
+    double velocityToLead = 0.0;
+    double modWheelToBrightness = 0.0;
+    double pressureToDrive = 0.0;
+    double cc74ToBrightness = 0.0;
+};
+
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。
 struct ChannelConfig
@@ -333,6 +348,8 @@ struct ChannelConfig
     BassLayerConfig bassLayer{};
     // 主旋律向けに硬いアタック、薄い倍音、デチューン感を足す共通補助レイヤー。
     LeadLayerConfig leadLayer{};
+    // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
+    ExpressionMapConfig expressionMap{};
 };
 
 struct ChannelMixState

@@ -151,6 +151,23 @@ bool ParseLeadLayerObject(const std::string& layerObjText, LeadLayerConfig& laye
     return true;
 }
 
+bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(mapObjText, "enabled")) map.enabled = *v;
+    if (auto v = ReadJSONDouble(mapObjText, "velocityCurve")) map.velocityCurve = std::clamp(*v, 0.2, 3.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToAmp")) map.velocityToAmp = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToBrightness")) map.velocityToBrightness = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToFmIndex")) map.velocityToFmIndex = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToAttack")) map.velocityToAttack = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToBass")) map.velocityToBass = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToLead")) map.velocityToLead = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "modWheelToBrightness")) map.modWheelToBrightness = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "pressureToDrive")) map.pressureToDrive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "cc74ToBrightness")) map.cc74ToBrightness = std::clamp(*v, -1.0, 1.0);
+    return true;
+}
+
 bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, std::string& err)
 {
     if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
@@ -191,6 +208,17 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
         return false;
     }
     if (foundLeadLayer && !ParseLeadLayerObject(leadLayerObj, cfg.leadLayer, err))
+    {
+        return false;
+    }
+
+    std::string expressionMapObj;
+    bool foundExpressionMap = false;
+    if (!ExtractObjectForKey(channelObjText, "expressionMap", expressionMapObj, foundExpressionMap, err))
+    {
+        return false;
+    }
+    if (foundExpressionMap && !ParseExpressionMapObject(expressionMapObj, cfg.expressionMap, err))
     {
         return false;
     }

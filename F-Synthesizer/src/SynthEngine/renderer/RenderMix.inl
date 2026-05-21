@@ -74,13 +74,15 @@ void ApplyCommonShaper(
         }, voices.sourceState[i]);
     }
 
-    if (frame.shaperDrive > 0.0)
+    const double drive = std::clamp(frame.shaperDrive + in.expressionDriveAdd, 0.0, 1.0);
+    if (drive > 0.0)
     {
         // tanh ソフトクリップ: tanh(k*x) / tanh(k), k = drive * 20.0
-        const double k = frame.shaperDrive * 20.0;
-        if (frame.shaperDriveNorm > 0.0)
+        const double k = drive * 20.0;
+        const double norm = std::tanh(k);
+        if (norm > 0.0)
         {
-            frame.sample = std::tanh(k * frame.sample) * frame.shaperDriveNorm;
+            frame.sample = std::tanh(k * frame.sample) / norm;
         }
     }
 }

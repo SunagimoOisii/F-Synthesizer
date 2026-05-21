@@ -12,6 +12,7 @@
 - `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
 - `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音、中低域の焦点を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
 - `leadLayer` は主旋律向けに硬い頭、短いしゃくり、薄い二重化、FM金属寄りのクセを足す補助レイヤー。強くしすぎると濁るため、前に出したいリードへ中程度までで使う。
+- `expressionMap` はvelocityを音量だけでなく、明るさ、FM index、attack/bass/lead layer量、driveへ薄く反映する。主要リード、ベース、ドラムでは強velocityほど輪郭と押し出しが増えるように使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -20,18 +21,18 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_brass_ensemble` | FM | op個別Env、brass attackLayer、leadLayer v2の金属倍音で立ち上がりと前面感を押す厚いFMコード/ブラス |
-| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Env、metal attackLayer、leadLayer v2のbiteと非整数倍音で硬いクセを出すFMリード |
-| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayerと控えめなleadLayer v2を足した太いアナログ風リード |
-| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れにbrass attackLayerと控えめなleadLayer v2を重ねた広めの上物リード |
+| `retro_heavy_fm_brass_ensemble` | FM | op個別Env、brass attackLayer、leadLayer v2、expressionMapで立ち上がりとvelocity由来の前面感を押す厚いFMコード/ブラス |
+| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Env、metal attackLayer、leadLayer v2、expressionMapで強velocity時にbiteと金属倍音が増えるFMリード |
+| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayer、控えめなleadLayer v2、expressionMapを足した太いアナログ風リード |
+| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れにbrass attackLayer、控えめなleadLayer v2、expressionMapを重ねた広めの上物リード |
 
 ### 低域
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayer v2で弾いた輪郭と曲中で読める荒い圧を両立するFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | bassLayer v2で沈むサブと中低域の胴を足し、深く押し出すFMサブドライブ |
-| `retro_heavy_analog_bass_drive` | analog | 本体driveとgrit系bassLayer v2を重ねた、荒い圧と粘りのあるアナログ風ベース |
+| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayer v2、expressionMapで強velocity時のピック感と荒い圧を両立するFMベース |
+| `retro_heavy_fm_bass_subdrive` | FM | bassLayer v2とexpressionMapで沈むサブ、中低域の胴、強velocity時の押し出しを足すFMサブドライブ |
+| `retro_heavy_analog_bass_drive` | analog | 本体drive、grit系bassLayer v2、expressionMapを重ねた、荒い圧と粘りのあるアナログ風ベース |
 | `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に敷くサブ補助。bassLayer v2は薄い胴鳴り用途 |
 
 ### 和音と背景
@@ -48,8 +49,8 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_drumkit_arcade` | drumkit | kick/snare/hatにtom、rim、clap、crash、rideを加えた90年代アーケード寄り基本キット |
-| `retro_heavy_drumkit_impact` | drumkit | 深いkick、太いsnare、派手なtom/crash/rideで押し出す強めのキット |
+| `retro_heavy_drumkit_arcade` | drumkit | kick/snare/hatにtom、rim、clap、crash、rideを加え、expressionMapでvelocity差を音量と明るさへ反映する基本キット |
+| `retro_heavy_drumkit_impact` | drumkit | 深いkick、太いsnare、派手なtom/crash/rideにexpressionMapを足し、強velocityで押し出す強めのキット |
 | `retro_heavy_noise_hat_support` | noise | drumkitのhatへ薄く足す高域補助。単体主役にはしない |
 
 ### 補助

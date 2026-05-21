@@ -199,6 +199,7 @@ void InitializeVoiceAtIndex(
     voices.attackLayer[i] = cfg.attackLayer;
     voices.bassLayer[i] = cfg.bassLayer;
     voices.leadLayer[i] = cfg.leadLayer;
+    voices.expressionMap[i] = cfg.expressionMap;
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -488,6 +489,7 @@ void Voice::reserve(size_t n)
     attackLayer.reserve(n);
     bassLayer.reserve(n);
     leadLayer.reserve(n);
+    expressionMap.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -524,6 +526,7 @@ void Voice::clear()
     attackLayer.clear();
     bassLayer.clear();
     leadLayer.clear();
+    expressionMap.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -571,6 +574,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     attackLayer.emplace_back();
     bassLayer.emplace_back();
     leadLayer.emplace_back();
+    expressionMap.emplace_back();
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -709,6 +713,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(attackLayer, keepScratch);
     CompactVectorByKeep(bassLayer, keepScratch);
     CompactVectorByKeep(leadLayer, keepScratch);
+    CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);

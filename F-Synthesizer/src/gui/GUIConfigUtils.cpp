@@ -138,6 +138,21 @@ bool LeadLayerConfigEquals(const LeadLayerConfig& a, const LeadLayerConfig& b)
         NearlyEq(a.wobbleRateHz, b.wobbleRateHz);
 }
 
+bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMapConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.velocityCurve, b.velocityCurve) &&
+        NearlyEq(a.velocityToAmp, b.velocityToAmp) &&
+        NearlyEq(a.velocityToBrightness, b.velocityToBrightness) &&
+        NearlyEq(a.velocityToFmIndex, b.velocityToFmIndex) &&
+        NearlyEq(a.velocityToAttack, b.velocityToAttack) &&
+        NearlyEq(a.velocityToBass, b.velocityToBass) &&
+        NearlyEq(a.velocityToLead, b.velocityToLead) &&
+        NearlyEq(a.modWheelToBrightness, b.modWheelToBrightness) &&
+        NearlyEq(a.pressureToDrive, b.pressureToDrive) &&
+        NearlyEq(a.cc74ToBrightness, b.cc74ToBrightness);
+}
+
 template <typename SmoothingT>
 bool WaveformLikeSmoothingConfigEquals(const SmoothingT& a, const SmoothingT& b)
 {
@@ -364,6 +379,7 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         AttackLayerConfigEquals(a.attackLayer, b.attackLayer) &&
         BassLayerConfigEquals(a.bassLayer, b.bassLayer) &&
         LeadLayerConfigEquals(a.leadLayer, b.leadLayer) &&
+        ExpressionMapConfigEquals(a.expressionMap, b.expressionMap) &&
         SourceConfigEquals(a.source, b.source);
 }
 

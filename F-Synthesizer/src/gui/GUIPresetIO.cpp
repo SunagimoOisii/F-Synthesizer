@@ -110,6 +110,23 @@ void WriteLeadLayerJSON(std::ostream& out, const LeadLayerConfig& layer)
     out << "      },\n";
 }
 
+void WriteExpressionMapJSON(std::ostream& out, const ExpressionMapConfig& map)
+{
+    out << "      \"expressionMap\": {\n";
+    out << "        \"enabled\": " << (map.enabled ? "true" : "false") << ",\n";
+    out << "        \"velocityCurve\": " << map.velocityCurve << ",\n";
+    out << "        \"velocityToAmp\": " << map.velocityToAmp << ",\n";
+    out << "        \"velocityToBrightness\": " << map.velocityToBrightness << ",\n";
+    out << "        \"velocityToFmIndex\": " << map.velocityToFmIndex << ",\n";
+    out << "        \"velocityToAttack\": " << map.velocityToAttack << ",\n";
+    out << "        \"velocityToBass\": " << map.velocityToBass << ",\n";
+    out << "        \"velocityToLead\": " << map.velocityToLead << ",\n";
+    out << "        \"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
+    out << "        \"pressureToDrive\": " << map.pressureToDrive << ",\n";
+    out << "        \"cc74ToBrightness\": " << map.cc74ToBrightness << "\n";
+    out << "      },\n";
+}
+
 struct PresetMeta
 {
     std::vector<std::string> tags{};
@@ -310,6 +327,10 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         if (cur.leadLayer.enabled)
         {
             WriteLeadLayerJSON(out, cur.leadLayer);
+        }
+        if (cur.expressionMap.enabled)
+        {
+            WriteExpressionMapJSON(out, cur.expressionMap);
         }
         config::WriteSourceJSON(out, cur.source, 6);
         out << "\n    }";

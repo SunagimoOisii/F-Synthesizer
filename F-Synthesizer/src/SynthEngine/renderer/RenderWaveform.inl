@@ -26,7 +26,7 @@ void RenderWaveformLikeSourceCommon(
         state.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure },
+        ModulationInput{ in.expressionVelocity, in.modwheel, in.channelPressure, in.polyPressure },
         4);
     double pitchMul = mod.pitchMul;
 

@@ -6,6 +6,13 @@ struct VoiceRenderInput
     double pitchFactor = 1.0;
     double ccGain = 1.0;
     double velGain = 1.0;
+    double velocityNorm = 1.0;
+    double expressionVelocity = 1.0;
+    double expressionFmIndexMul = 1.0;
+    double expressionAttackMul = 1.0;
+    double expressionBassMul = 1.0;
+    double expressionLeadMul = 1.0;
+    double expressionDriveAdd = 0.0;
     double envGain = 1.0;
     double modwheel = 0.0;
     double channelPressure = 0.0;
@@ -134,7 +141,8 @@ double RenderAttackLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     }
     }
 
-    return AttackSoftClip(sample * std::clamp(layer.level, 0.0, 1.0), layer.drive);
+    const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionAttackMul;
+    return AttackSoftClip(sample * level, std::clamp(layer.drive + in.expressionDriveAdd * 0.35, 0.0, 1.0));
 }
 
 double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
@@ -145,7 +153,7 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         return 0.0;
     }
 
-    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionBassMul;
     const double pitchMul = std::exp2(std::clamp(layer.pitchOffsetSemis, -24.0, 24.0) / 12.0);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
     voices.bassPhase[i] = WrapPhase(voices.bassPhase[i] + baseInc);
@@ -161,7 +169,7 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
 
     double subMul = std::clamp(layer.subLevel, 0.0, 1.0);
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
-    double gritMul = std::clamp(layer.gritLevel, 0.0, 1.0);
+    double gritMul = std::clamp(layer.gritLevel, 0.0, 1.0) * (1.0 + (in.expressionBassMul - 1.0) * 0.45);
     double focusMul = std::clamp(layer.focusLevel, 0.0, 1.0);
     switch (layer.type)
     {
@@ -193,8 +201,8 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double attackMul = 1.0 + std::clamp(layer.attackBoost, 0.0, 1.0) * std::exp(-voices.ageSec[i] / attackDecay);
 
     double sample = (body + (folded * gritMul) + (focusTone * focusMul)) * attackMul;
-    const double velNorm = std::clamp(in.velGain, 0.0, 1.0);
-    const double drive = std::clamp(layer.drive + layer.velocityToDrive * velNorm, 0.0, 1.0);
+    const double velNorm = std::clamp(in.expressionVelocity, 0.0, 1.0);
+    const double drive = std::clamp(layer.drive + layer.velocityToDrive * velNorm + in.expressionDriveAdd, 0.0, 1.0);
     sample = AttackSoftClip(sample * level, drive);
 
     const double cutoff = std::clamp(layer.cutoffHz, 40.0, 8000.0);
@@ -212,7 +220,7 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         return 0.0;
     }
 
-    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionLeadMul;
     const double bendDecay = std::clamp(layer.bendDecaySec, 0.005, 0.25);
     const double wobbleDepth = std::clamp(layer.wobbleDepthCents, 0.0, 30.0);
     const double wobbleRate = std::clamp(layer.wobbleRateHz, 0.0, 12.0);
@@ -241,7 +249,7 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
 
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
     double edgeMul = std::clamp(layer.edgeLevel, 0.0, 1.0);
-    double characterMul = std::clamp(layer.characterLevel, 0.0, 1.0);
+    double characterMul = std::clamp(layer.characterLevel, 0.0, 1.0) * (1.0 + (in.expressionLeadMul - 1.0) * 0.45);
     switch (layer.type)
     {
     case LeadLayerType::Brass:
@@ -268,5 +276,5 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         (std::sin(2.0 * kPi * p * 6.27) * 0.5 + ((p < 0.5) ? 0.5 : -0.5)) *
         std::clamp(layer.biteLevel, 0.0, 1.0) * biteEnv;
     const double sample = (body * bodyMul + edge * edgeMul + character * characterMul + bite) * attack * level;
-    return AttackSoftClip(sample, layer.drive);
+    return AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.45, 0.0, 1.0));
 }

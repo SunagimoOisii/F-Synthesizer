@@ -66,6 +66,19 @@
         },
         "hardSyncEnabled": true,
         "hardSyncRatio": 2.0
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.85,
+        "velocityToAmp": 0.88,
+        "velocityToBrightness": 0.16,
+        "velocityToFmIndex": 0.0,
+        "velocityToAttack": 0.1,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.12,
+        "modWheelToBrightness": 0.12,
+        "pressureToDrive": 0.05,
+        "cc74ToBrightness": 0.25
       }
     }
   }

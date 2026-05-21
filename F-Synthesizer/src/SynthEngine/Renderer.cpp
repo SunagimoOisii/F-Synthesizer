@@ -10,6 +10,63 @@ namespace
 {
 constexpr double kPi = 3.14159265358979323846;
 
+struct ExpressionRuntime
+{
+    double velocityNorm = 1.0;
+    double expressionVelocity = 1.0;
+    double ampVelocity = 1.0;
+    double brightnessAdd = 0.0;
+    double fmIndexMul = 1.0;
+    double attackMul = 1.0;
+    double bassMul = 1.0;
+    double leadMul = 1.0;
+    double driveAdd = 0.0;
+};
+
+double Clamp01(double v)
+{
+    return std::clamp(v, 0.0, 1.0);
+}
+
+double AmountMul(double expressionVelocity, double amount)
+{
+    return 1.0 + expressionVelocity * Clamp01(amount);
+}
+
+ExpressionRuntime EvaluateExpressionMap(
+    const ExpressionMapConfig& map,
+    int velocity,
+    double modwheel,
+    double pressure,
+    double cc74Brightness)
+{
+    ExpressionRuntime out{};
+    out.velocityNorm = Clamp01(static_cast<double>(std::clamp(velocity, 0, 127)) / 127.0);
+
+    if (!map.enabled)
+    {
+        out.expressionVelocity = out.velocityNorm;
+        out.ampVelocity = VelocityToGain(velocity);
+        return out;
+    }
+
+    const double curve = std::clamp(map.velocityCurve, 0.2, 3.0);
+    out.expressionVelocity = std::pow(std::max(out.velocityNorm, 1.0e-6), curve);
+
+    const double velocityToAmp = Clamp01(map.velocityToAmp);
+    out.ampVelocity = std::clamp((1.0 - velocityToAmp) + out.expressionVelocity * velocityToAmp, 0.0, 1.0);
+    out.brightnessAdd =
+        (out.expressionVelocity - 0.5) * std::clamp(map.velocityToBrightness, -1.0, 1.0) +
+        Clamp01(modwheel) * std::clamp(map.modWheelToBrightness, -1.0, 1.0) +
+        (Clamp01(cc74Brightness) - 0.5) * std::clamp(map.cc74ToBrightness, -1.0, 1.0);
+    out.fmIndexMul = AmountMul(out.expressionVelocity, map.velocityToFmIndex);
+    out.attackMul = AmountMul(out.expressionVelocity, map.velocityToAttack);
+    out.bassMul = AmountMul(out.expressionVelocity, map.velocityToBass);
+    out.leadMul = AmountMul(out.expressionVelocity, map.velocityToLead);
+    out.driveAdd = Clamp01(pressure) * Clamp01(map.pressureToDrive);
+    return out;
+}
+
 #include "renderer/RenderCommon.inl"
 #include "renderer/RenderWaveform.inl"
 #include "renderer/RenderFm.inl"
@@ -54,7 +111,6 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 
         VoiceRenderInput in{};
         in.dt = dt;
-        in.velGain = VelocityToGain(voices.velocity[i]);
         in.envGain = envGain;
         const int ch = voices.channelIndex[i];
         // mute/solo/mixGain 判定は事前計算済みフラグを参照する。
@@ -73,7 +129,22 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.channelPressure = state.channelPressure[ch];
         const int note = std::clamp(voices.noteNumber[i], 0, 127);
         in.polyPressure = state.channelPolyPressure[ch][note];
-        in.brightness = state.channelBrightness[ch];
+        const double pressure = (std::max)(in.channelPressure, in.polyPressure);
+        const ExpressionRuntime expr = EvaluateExpressionMap(
+            voices.expressionMap[i],
+            voices.velocity[i],
+            in.modwheel,
+            pressure,
+            state.channelBrightness[ch]);
+        in.velocityNorm = expr.velocityNorm;
+        in.expressionVelocity = expr.expressionVelocity;
+        in.velGain = expr.ampVelocity;
+        in.expressionFmIndexMul = expr.fmIndexMul;
+        in.expressionAttackMul = expr.attackMul;
+        in.expressionBassMul = expr.bassMul;
+        in.expressionLeadMul = expr.leadMul;
+        in.expressionDriveAdd = expr.driveAdd;
+        in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
         in.resonance = state.channelResonance[ch];
 
         // ポルタメント: 現在ピッチをターゲットへ指数平滑しつつ pitchFactor へ反映する。

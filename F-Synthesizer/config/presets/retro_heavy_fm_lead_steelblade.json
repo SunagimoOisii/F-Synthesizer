@@ -149,6 +149,19 @@
             }
           }
         }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.9,
+        "velocityToBrightness": 0.2,
+        "velocityToFmIndex": 0.18,
+        "velocityToAttack": 0.16,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.2,
+        "modWheelToBrightness": 0.14,
+        "pressureToDrive": 0.06,
+        "cc74ToBrightness": 0.25
       }
     }
   }

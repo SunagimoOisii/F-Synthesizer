@@ -44,9 +44,9 @@ void RenderFmSource(
         fs.modulation,
         src.modulation,
         in.dt,
-        ModulationInput{ in.velGain, in.modwheel, in.channelPressure, in.polyPressure },
+        ModulationInput{ in.expressionVelocity, in.modwheel, in.channelPressure, in.polyPressure },
         4);
-    const double indexScale = mod.fmIndexMul;
+    const double indexScale = mod.fmIndexMul * in.expressionFmIndexMul;
     const double feedbackSample = fs.op0FeedbackSample * src.feedback;
     const double ampScale = mod.ampMul;
     double opLevel[4]{};

@@ -921,6 +921,23 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
+    if (cfg.expressionMap.enabled)
+    {
+        const auto& map = cfg.expressionMap;
+        WriteIndent(out, 6); out << "\"expressionMap\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"velocityCurve\": " << map.velocityCurve << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToAmp\": " << map.velocityToAmp << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToBrightness\": " << map.velocityToBrightness << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToFmIndex\": " << map.velocityToFmIndex << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToAttack\": " << map.velocityToAttack << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToBass\": " << map.velocityToBass << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToLead\": " << map.velocityToLead << ",\n";
+        WriteIndent(out, 8); out << "\"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
+        WriteIndent(out, 8); out << "\"pressureToDrive\": " << map.pressureToDrive << ",\n";
+        WriteIndent(out, 8); out << "\"cc74ToBrightness\": " << map.cc74ToBrightness << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
     WriteSourceConfig(out, cfg.source, 6);
     out << "\n";
     WriteIndent(out, 4); out << "}";

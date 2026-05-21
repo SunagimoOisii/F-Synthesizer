@@ -527,6 +527,38 @@ bool DrawChannelEditor(
         layer.wobbleRateHz = std::clamp(layer.wobbleRateHz, 0.0, 12.0);
     }
 
+    if (ImGui::CollapsingHeader("Expression Map"))
+    {
+        auto& map = chCfg.expressionMap;
+        changed |= ImGui::Checkbox("Enabled##expressionMap", &map.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "Velocityを音量だけでなく音色変化にも割り当てます。",
+                "強く弾いた音で明るさ、FM index、各Layerの押し出しを自然に増やします。",
+                "上げすぎると強弱差が過剰になり、ピークや音色の暴れが出ます。");
+        }
+
+        changed |= ImGui::InputDouble("Velocity Curve##expressionMap", &map.velocityCurve, 0.05, 0.1, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Amp##expressionMap", &map.velocityToAmp, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Brightness##expressionMap", &map.velocityToBrightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To FM Index##expressionMap", &map.velocityToFmIndex, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Attack##expressionMap", &map.velocityToAttack, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Bass##expressionMap", &map.velocityToBass, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Lead##expressionMap", &map.velocityToLead, 0.01, 0.05, "%.3f");
+
+        map.velocityCurve = std::clamp(map.velocityCurve, 0.2, 3.0);
+        map.velocityToAmp = std::clamp(map.velocityToAmp, 0.0, 1.0);
+        map.velocityToBrightness = std::clamp(map.velocityToBrightness, -1.0, 1.0);
+        map.velocityToFmIndex = std::clamp(map.velocityToFmIndex, 0.0, 1.0);
+        map.velocityToAttack = std::clamp(map.velocityToAttack, 0.0, 1.0);
+        map.velocityToBass = std::clamp(map.velocityToBass, 0.0, 1.0);
+        map.velocityToLead = std::clamp(map.velocityToLead, 0.0, 1.0);
+        map.modWheelToBrightness = std::clamp(map.modWheelToBrightness, -1.0, 1.0);
+        map.pressureToDrive = std::clamp(map.pressureToDrive, 0.0, 1.0);
+        map.cc74ToBrightness = std::clamp(map.cc74ToBrightness, -1.0, 1.0);
+    }
+
     bool layer3Changed = false;
     if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {
