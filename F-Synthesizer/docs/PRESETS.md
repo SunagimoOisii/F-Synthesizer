@@ -10,6 +10,7 @@
 - `retro_heavy_*` では、PSG / bell / pluck / SFX を主役にしない。曲全体へ当てる場合は主役、低域、和音、背景、ドラムを中心に使う。
 - FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
 - `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
+- `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
 - 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
 
 ## 重厚レトロ
@@ -27,10 +28,10 @@
 
 | プリセット | 音源方式 | 用途メモ |
 |---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Envとpick attackLayerで弾いた輪郭を足し、中低域の芯を残すFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | 減衰する倍音と薄いpick attackLayerで深く沈むFMサブドライブ |
-| `retro_heavy_analog_bass_drive` | analog | driveとpick attackLayerを効かせた重いアナログ風ベース |
-| `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に薄く敷くサブ補助 |
+| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayerで弾いた輪郭と荒い低域の圧を両立するFMベース |
+| `retro_heavy_fm_bass_subdrive` | FM | bassLayerで沈むサブと歪んだ胴を足し、深く押し出すFMサブドライブ |
+| `retro_heavy_analog_bass_drive` | analog | 本体driveとgrit系bassLayerを重ねた、荒い圧のあるアナログ風ベース |
+| `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に敷くサブ補助。bassLayerは薄い胴鳴り用途 |
 
 ### 和音と背景
 
@@ -77,6 +78,7 @@
 | `demo_fm_feedback_edge` | FM | FM feedback | feedbackで増えるエッジ |
 | `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
 | `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
+| `demo_bass_layer_drive` | analog | bassLayer | 低域の芯、胴、歪んだ倍音を重ねるBassLayer確認 |
 | `demo_drumkit_types` | drumkit | drum types | kick、snare、hat、tom、rim、clap、crash、rideの内部生成ドラム確認 |
 | `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
 | `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |

@@ -5,7 +5,7 @@
     "低域",
     "ベース"
   ],
-  "description": "ピック感を中低域に寄せたFMベース。短い高域より芯の太さを優先。",
+  "description": "BassLayerで荒い低域の圧を足したFMピックベース。芯と歪んだ倍音を両立。",
   "channels": {
     "0": {
       "amp": 0.27,
@@ -20,8 +20,20 @@
         "decaySec": 0.03,
         "brightness": 0.4,
         "bodyMix": 0.72,
-        "pitchOffsetSemis": "-12",
+        "pitchOffsetSemis": -12,
         "drive": 0.08
+      },
+      "bassLayer": {
+        "enabled": true,
+        "type": "drive",
+        "level": 0.28,
+        "subLevel": 0.42,
+        "bodyLevel": 0.5,
+        "gritLevel": 0.34,
+        "cutoffHz": 1050,
+        "drive": 0.32,
+        "pitchOffsetSemis": -12,
+        "velocityToDrive": 0.18
       },
       "source": {
         "type": "fm",

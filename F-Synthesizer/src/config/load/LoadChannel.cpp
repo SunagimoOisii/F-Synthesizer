@@ -28,6 +28,26 @@ bool TryParseAttackLayerType(const std::string& name, AttackLayerType& outType)
     return false;
 }
 
+bool TryParseBassLayerType(const std::string& name, BassLayerType& outType)
+{
+    if (name == "sub")
+    {
+        outType = BassLayerType::Sub;
+        return true;
+    }
+    if (name == "drive")
+    {
+        outType = BassLayerType::Drive;
+        return true;
+    }
+    if (name == "grit")
+    {
+        outType = BassLayerType::Grit;
+        return true;
+    }
+    return false;
+}
+
 bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -50,6 +70,30 @@ bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& 
     return true;
 }
 
+bool ParseBassLayerObject(const std::string& layerObjText, BassLayerConfig& layer, std::string& err)
+{
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONString(layerObjText, "type"))
+    {
+        BassLayerType parsed{};
+        if (!TryParseBassLayerType(*v, parsed))
+        {
+            err = "invalid bassLayer.type: " + *v;
+            return false;
+        }
+        layer.type = parsed;
+    }
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "subLevel")) layer.subLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bodyLevel")) layer.bodyLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "gritLevel")) layer.gritLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "cutoffHz")) layer.cutoffHz = std::clamp(*v, 40.0, 8000.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "pitchOffsetSemis")) layer.pitchOffsetSemis = std::clamp(*v, -24.0, 24.0);
+    if (auto v = ReadJSONDouble(layerObjText, "velocityToDrive")) layer.velocityToDrive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
 bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, std::string& err)
 {
     if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
@@ -68,6 +112,17 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
         return false;
     }
     if (foundAttackLayer && !ParseAttackLayerObject(attackLayerObj, cfg.attackLayer, err))
+    {
+        return false;
+    }
+
+    std::string bassLayerObj;
+    bool foundBassLayer = false;
+    if (!ExtractObjectForKey(channelObjText, "bassLayer", bassLayerObj, foundBassLayer, err))
+    {
+        return false;
+    }
+    if (foundBassLayer && !ParseBassLayerObject(bassLayerObj, cfg.bassLayer, err))
     {
         return false;
     }

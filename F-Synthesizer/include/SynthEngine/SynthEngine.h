@@ -256,6 +256,27 @@ struct AttackLayerConfig
     double drive = 0.0;
 };
 
+enum class BassLayerType
+{
+    Sub,
+    Drive,
+    Grit
+};
+
+struct BassLayerConfig
+{
+    bool enabled = false;
+    BassLayerType type = BassLayerType::Drive;
+    double level = 0.0;
+    double subLevel = 0.45;
+    double bodyLevel = 0.35;
+    double gritLevel = 0.20;
+    double cutoffHz = 900.0;
+    double drive = 0.0;
+    double pitchOffsetSemis = -12.0;
+    double velocityToDrive = 0.0;
+};
+
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。
 struct ChannelConfig
@@ -274,6 +295,8 @@ struct ChannelConfig
     double portamentoTimeSec = 0.0;
     // NoteOn直後だけ鳴る共通アタック補助レイヤー。
     AttackLayerConfig attackLayer{};
+    // ベース向けに持続する低域と歪み成分を重ねる共通補助レイヤー。
+    BassLayerConfig bassLayer{};
 };
 
 struct ChannelMixState

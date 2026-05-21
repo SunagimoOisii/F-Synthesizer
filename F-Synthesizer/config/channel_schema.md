@@ -41,6 +41,18 @@
     "pitchOffsetSemis": -12.0,
     "drive": 0.08
   },
+  "bassLayer": {
+    "enabled": true,
+    "type": "drive",
+    "level": 0.28,
+    "subLevel": 0.42,
+    "bodyLevel": 0.50,
+    "gritLevel": 0.34,
+    "cutoffHz": 1050.0,
+    "drive": 0.32,
+    "pitchOffsetSemis": -12.0,
+    "velocityToDrive": 0.18
+  },
   "source": {
     "type": "fm",
     "...type specific fields..."
@@ -49,6 +61,8 @@
 ```
 
 `attackLayer` は省略可能。NoteOn直後だけ鳴る内部生成の補助音で、`source` 本体を置き換えずにアタックだけを足す。`type` は `pick|brass|metal`。ピック感、ブラスの吹き始め、金属打撃を足す用途で、強くしすぎるとピーク過多やチープなクリック感につながる。
+
+`bassLayer` は省略可能。ベース向けに持続する内部生成の補助音で、`source` 本体へ低域の芯、胴、歪んだ倍音を重ねる。`type` は `sub|drive|grit`。強くしすぎると低域過多、音割れ、キックとの衝突につながるため、ベースチャンネルへ薄くから中程度に使う。
 
 ## source.type ごとの定義
 
@@ -168,6 +182,9 @@
 - `attackLayer.level/bodyMix/brightness/drive`: `0.0..1.0`
 - `attackLayer.decaySec`: `0.001..0.25`
 - `attackLayer.pitchOffsetSemis`: `-24.0..24.0`
+- `bassLayer.level/subLevel/bodyLevel/gritLevel/drive/velocityToDrive`: `0.0..1.0`
+- `bassLayer.cutoffHz`: `40.0..8000.0`
+- `bassLayer.pitchOffsetSemis`: `-24.0..24.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `unisonVoices`: `1..8`

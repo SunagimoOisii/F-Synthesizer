@@ -5,7 +5,7 @@
     "低域",
     "補助"
   ],
-  "description": "FM/analogベースの下に薄く敷くサブ補助。単体主役ではなく低域の土台向け。",
+  "description": "FM/analogベースの下に敷くサブ補助。BassLayerで薄い胴鳴りも足せる低域の土台。",
   "channels": {
     "0": {
       "amp": 0.2,
@@ -13,6 +13,18 @@
       "decaySec": 0.2,
       "sustainLevel": 0.86,
       "releaseSec": 0.16,
+      "bassLayer": {
+        "enabled": true,
+        "type": "sub",
+        "level": 0.18,
+        "subLevel": 0.62,
+        "bodyLevel": 0.24,
+        "gritLevel": 0.08,
+        "cutoffHz": 650,
+        "drive": 0.14,
+        "pitchOffsetSemis": -12,
+        "velocityToDrive": 0.08
+      },
       "source": {
         "type": "waveform",
         "wave": "triangle",

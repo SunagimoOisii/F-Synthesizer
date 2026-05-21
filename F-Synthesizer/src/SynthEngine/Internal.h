@@ -132,6 +132,7 @@ struct Voice
     std::vector<double> sustainLevel;
     std::vector<double> releaseSec;
     std::vector<AttackLayerConfig> attackLayer;
+    std::vector<BassLayerConfig> bassLayer;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;
@@ -139,6 +140,8 @@ struct Voice
     std::vector<double> ageSec;
     std::vector<double> attackPhase;
     std::vector<uint32_t> attackNoiseState;
+    std::vector<double> bassPhase;
+    std::vector<double> bassLpState;
     std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
     std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）
     std::vector<double> portamentoTimeSec;  // チャンネル設定からコピーした時定数

@@ -97,6 +97,20 @@ bool AttackLayerConfigEquals(const AttackLayerConfig& a, const AttackLayerConfig
         NearlyEq(a.drive, b.drive);
 }
 
+bool BassLayerConfigEquals(const BassLayerConfig& a, const BassLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        a.type == b.type &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.subLevel, b.subLevel) &&
+        NearlyEq(a.bodyLevel, b.bodyLevel) &&
+        NearlyEq(a.gritLevel, b.gritLevel) &&
+        NearlyEq(a.cutoffHz, b.cutoffHz) &&
+        NearlyEq(a.drive, b.drive) &&
+        NearlyEq(a.pitchOffsetSemis, b.pitchOffsetSemis) &&
+        NearlyEq(a.velocityToDrive, b.velocityToDrive);
+}
+
 template <typename SmoothingT>
 bool WaveformLikeSmoothingConfigEquals(const SmoothingT& a, const SmoothingT& b)
 {
@@ -321,6 +335,7 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         NearlyEq(a.releaseSec, b.releaseSec) &&
         NearlyEq(a.portamentoTimeSec, b.portamentoTimeSec) &&
         AttackLayerConfigEquals(a.attackLayer, b.attackLayer) &&
+        BassLayerConfigEquals(a.bassLayer, b.bassLayer) &&
         SourceConfigEquals(a.source, b.source);
 }
 

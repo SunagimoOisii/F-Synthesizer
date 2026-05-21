@@ -136,3 +136,52 @@ double RenderAttackLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
 
     return AttackSoftClip(sample * std::clamp(layer.level, 0.0, 1.0), layer.drive);
 }
+
+double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const BassLayerConfig& layer = voices.bassLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return 0.0;
+    }
+
+    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double pitchMul = std::exp2(std::clamp(layer.pitchOffsetSemis, -24.0, 24.0) / 12.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
+    voices.bassPhase[i] = WrapPhase(voices.bassPhase[i] + baseInc);
+
+    const double p = voices.bassPhase[i];
+    const double sine = std::sin(2.0 * kPi * p);
+    const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
+    const double square = (p < 0.5) ? 1.0 : -1.0;
+    const double folded = std::sin(2.0 * kPi * p * 2.0) * 0.55 + square * 0.45;
+
+    double subMul = std::clamp(layer.subLevel, 0.0, 1.0);
+    double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
+    double gritMul = std::clamp(layer.gritLevel, 0.0, 1.0);
+    switch (layer.type)
+    {
+    case BassLayerType::Sub:
+        gritMul *= 0.35;
+        bodyMul *= 0.75;
+        break;
+    case BassLayerType::Grit:
+        gritMul *= 1.35;
+        bodyMul *= 1.10;
+        break;
+    case BassLayerType::Drive:
+    default:
+        break;
+    }
+
+    double sample = sine * subMul + tri * bodyMul + folded * gritMul;
+    const double velNorm = std::clamp(in.velGain, 0.0, 1.0);
+    const double drive = std::clamp(layer.drive + layer.velocityToDrive * velNorm, 0.0, 1.0);
+    sample = AttackSoftClip(sample * level, drive);
+
+    const double cutoff = std::clamp(layer.cutoffHz, 40.0, 8000.0);
+    const double rc = 1.0 / (2.0 * kPi * cutoff);
+    const double alpha = in.dt / (rc + in.dt);
+    voices.bassLpState[i] += alpha * (sample - voices.bassLpState[i]);
+    return voices.bassLpState[i];
+}

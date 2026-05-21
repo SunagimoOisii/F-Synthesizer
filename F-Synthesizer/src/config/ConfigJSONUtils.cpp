@@ -409,6 +409,17 @@ std::string AttackLayerTypeToString(AttackLayerType type)
     return "pick";
 }
 
+std::string BassLayerTypeToString(BassLayerType type)
+{
+    switch (type)
+    {
+    case BassLayerType::Sub: return "sub";
+    case BassLayerType::Drive: return "drive";
+    case BassLayerType::Grit: return "grit";
+    }
+    return "drive";
+}
+
 std::string FilterModeToString(FilterMode mode)
 {
     switch (mode)
@@ -852,6 +863,22 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"bodyMix\": " << layer.bodyMix << ",\n";
         WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
         WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
+        WriteIndent(out, 6); out << "},\n";
+    }
+    if (cfg.bassLayer.enabled)
+    {
+        const auto& layer = cfg.bassLayer;
+        WriteIndent(out, 6); out << "\"bassLayer\": {\n";
+        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"type\": \"" << BassLayerTypeToString(layer.type) << "\",\n";
+        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
+        WriteIndent(out, 8); out << "\"subLevel\": " << layer.subLevel << ",\n";
+        WriteIndent(out, 8); out << "\"bodyLevel\": " << layer.bodyLevel << ",\n";
+        WriteIndent(out, 8); out << "\"gritLevel\": " << layer.gritLevel << ",\n";
+        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
+        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << ",\n";
+        WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToDrive\": " << layer.velocityToDrive << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

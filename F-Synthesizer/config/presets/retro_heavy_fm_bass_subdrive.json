@@ -5,7 +5,7 @@
     "低域",
     "ベース"
   ],
-  "description": "深く沈むFMサブドライブ。低域の支えと少し荒い倍音を両立。",
+  "description": "BassLayerで沈むサブと歪んだ胴を足したFMサブドライブ。低域の押し出し向け。",
   "channels": {
     "0": {
       "amp": 0.28,
@@ -20,8 +20,20 @@
         "decaySec": 0.045,
         "brightness": 0.3,
         "bodyMix": 0.82,
-        "pitchOffsetSemis": "-12",
+        "pitchOffsetSemis": -12,
         "drive": 0.11
+      },
+      "bassLayer": {
+        "enabled": true,
+        "type": "drive",
+        "level": 0.32,
+        "subLevel": 0.58,
+        "bodyLevel": 0.42,
+        "gritLevel": 0.24,
+        "cutoffHz": 820,
+        "drive": 0.28,
+        "pitchOffsetSemis": -12,
+        "velocityToDrive": 0.14
       },
       "source": {
         "type": "fm",

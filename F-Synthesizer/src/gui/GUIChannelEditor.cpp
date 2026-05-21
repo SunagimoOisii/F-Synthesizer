@@ -439,6 +439,41 @@ bool DrawChannelEditor(
         layer.drive = std::clamp(layer.drive, 0.0, 1.0);
     }
 
+    if (ImGui::CollapsingHeader("Bass Layer"))
+    {
+        auto& layer = chCfg.bassLayer;
+        changed |= ImGui::Checkbox("Enabled##bassLayer", &layer.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "ベース向けに持続する低域と歪み成分を重ねます。",
+                "FM/analog/waveformの本体にサブ、胴、荒い倍音を足して押し出しを作ります。",
+                "上げすぎると低域過多やピーク過多になります。");
+        }
+
+        int bassType = static_cast<int>(layer.type);
+        const char* bassTypes[] = { "sub", "drive", "grit" };
+        changed |= ImGui::Combo("Type##bassLayer", &bassType, bassTypes, IM_ARRAYSIZE(bassTypes));
+        bassType = std::clamp(bassType, 0, 2);
+        layer.type = static_cast<BassLayerType>(bassType);
+
+        changed |= ImGui::InputDouble("Level##bassLayer", &layer.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Sub Level##bassLayer", &layer.subLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Body Level##bassLayer", &layer.bodyLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Grit Level##bassLayer", &layer.gritLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##bassLayer", &layer.drive, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Cutoff Hz##bassLayer", &layer.cutoffHz, 10.0, 100.0, "%.1f");
+
+        layer.level = std::clamp(layer.level, 0.0, 1.0);
+        layer.subLevel = std::clamp(layer.subLevel, 0.0, 1.0);
+        layer.bodyLevel = std::clamp(layer.bodyLevel, 0.0, 1.0);
+        layer.gritLevel = std::clamp(layer.gritLevel, 0.0, 1.0);
+        layer.drive = std::clamp(layer.drive, 0.0, 1.0);
+        layer.cutoffHz = std::clamp(layer.cutoffHz, 40.0, 8000.0);
+        layer.pitchOffsetSemis = std::clamp(layer.pitchOffsetSemis, -24.0, 24.0);
+        layer.velocityToDrive = std::clamp(layer.velocityToDrive, 0.0, 1.0);
+    }
+
     bool layer3Changed = false;
     if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {

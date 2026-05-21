@@ -29,6 +29,17 @@ const char* AttackLayerTypeToString(AttackLayerType type)
     return "pick";
 }
 
+const char* BassLayerTypeToString(BassLayerType type)
+{
+    switch (type)
+    {
+    case BassLayerType::Sub: return "sub";
+    case BassLayerType::Drive: return "drive";
+    case BassLayerType::Grit: return "grit";
+    }
+    return "drive";
+}
+
 void WriteAttackLayerJSON(std::ostream& out, const AttackLayerConfig& layer)
 {
     out << "      \"attackLayer\": {\n";
@@ -40,6 +51,22 @@ void WriteAttackLayerJSON(std::ostream& out, const AttackLayerConfig& layer)
     out << "        \"bodyMix\": " << layer.bodyMix << ",\n";
     out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
     out << "        \"drive\": " << layer.drive << "\n";
+    out << "      },\n";
+}
+
+void WriteBassLayerJSON(std::ostream& out, const BassLayerConfig& layer)
+{
+    out << "      \"bassLayer\": {\n";
+    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
+    out << "        \"type\": \"" << BassLayerTypeToString(layer.type) << "\",\n";
+    out << "        \"level\": " << layer.level << ",\n";
+    out << "        \"subLevel\": " << layer.subLevel << ",\n";
+    out << "        \"bodyLevel\": " << layer.bodyLevel << ",\n";
+    out << "        \"gritLevel\": " << layer.gritLevel << ",\n";
+    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
+    out << "        \"drive\": " << layer.drive << ",\n";
+    out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
+    out << "        \"velocityToDrive\": " << layer.velocityToDrive << "\n";
     out << "      },\n";
 }
 
@@ -235,6 +262,10 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         if (cur.attackLayer.enabled)
         {
             WriteAttackLayerJSON(out, cur.attackLayer);
+        }
+        if (cur.bassLayer.enabled)
+        {
+            WriteBassLayerJSON(out, cur.bassLayer);
         }
         config::WriteSourceJSON(out, cur.source, 6);
         out << "\n    }";

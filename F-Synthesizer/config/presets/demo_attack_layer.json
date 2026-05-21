@@ -20,7 +20,7 @@
         "decaySec": 0.03,
         "brightness": 0.46,
         "bodyMix": 0.7,
-        "pitchOffsetSemis": "-12",
+        "pitchOffsetSemis": -12,
         "drive": 0.08
       },
       "source": {
@@ -128,7 +128,7 @@
         "decaySec": 0.065,
         "brightness": 0.42,
         "bodyMix": 0.62,
-        "pitchOffsetSemis": "-2",
+        "pitchOffsetSemis": -2,
         "drive": 0.06
       },
       "source": {
