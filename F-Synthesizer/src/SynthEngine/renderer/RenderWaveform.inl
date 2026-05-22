@@ -68,6 +68,8 @@ void RenderWaveformLikeSourceCommon(
     const double effectivePW = std::clamp(src.pulseWidth + mod.pulseWidthAdd, 0.05, 0.95);
 
     double unisonSum = 0.0;
+    double unisonL = 0.0;
+    double unisonR = 0.0;
     for (int uv = 0; uv < unisonVoices; uv++)
     {
         const double pos = (unisonVoices <= 1) ? 0.0 : (static_cast<double>(uv) / (unisonVoices - 1));
@@ -76,15 +78,23 @@ void RenderWaveformLikeSourceCommon(
         const double phaseOffset = centered * spread * 0.08;
         const double uvPhase = WrapPhase(voices.phase[i] * ratio + phaseOffset);
         const double uvInc = phaseInc * ratio;
-        unisonSum += SampleWavePhase(src.wave, uvPhase, uvInc, effectivePW);
+        const double uvSample = SampleWavePhase(src.wave, uvPhase, uvInc, effectivePW);
+        const double pan = centered * spread * 0.55;
+        unisonSum += uvSample;
+        unisonL += uvSample * (1.0 - pan);
+        unisonR += uvSample * (1.0 + pan);
     }
 
     double mainWave = unisonSum / unisonVoices;
+    double stereoL = unisonL / unisonVoices;
+    double stereoR = unisonR / unisonVoices;
     if (subOscLevel > 0.0)
     {
         const double subPhase = WrapPhase(voices.phase[i] * 0.5);
         const double subWave = SampleWavePhase(src.wave, subPhase, phaseInc * 0.5, effectivePW);
         mainWave = (mainWave + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+        stereoL = (stereoL + (subOscLevel * subWave)) / (1.0 + subOscLevel);
+        stereoR = (stereoR + (subOscLevel * subWave)) / (1.0 + subOscLevel);
     }
     if (src.ringModEnabled && src.ringModMix > 0.0)
     {
@@ -93,9 +103,13 @@ void RenderWaveformLikeSourceCommon(
         const double ringSignal = std::sin(2.0 * kPi * state.ringPhase);
         const double mix = std::clamp(src.ringModMix, 0.0, 1.0);
         mainWave *= (1.0 - mix) + mix * ringSignal;
+        stereoL *= (1.0 - mix) + mix * ringSignal;
+        stereoR *= (1.0 - mix) + mix * ringSignal;
     }
 
     frame.sample = mainWave;
+    frame.stereoOffsetL = (stereoL - mainWave) * 0.5;
+    frame.stereoOffsetR = (stereoR - mainWave) * 0.5;
     frame.ampMul = mod.ampMul;
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     double effectiveCutoff = src.filterCutoffHz * mod.filterCutoffMul;

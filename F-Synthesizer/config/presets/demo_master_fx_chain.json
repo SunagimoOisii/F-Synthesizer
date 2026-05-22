@@ -106,7 +106,7 @@
       }
     }
   },
-  "masterEffects": {
+  "effects": {
     "sampleRateReducer": {
       "ratio": 0.22
     },

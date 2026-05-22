@@ -21,5 +21,21 @@
         "maxVoices": 1
       }
     }
+  },
+  "effects": {
+    "chorus": {
+      "enabled": true,
+      "mix": 0.10,
+      "baseDelayMs": 14.0,
+      "depthMs": 3.0,
+      "rateHz": 0.24,
+      "feedback": 0.03
+    },
+    "reverb": {
+      "enabled": true,
+      "mix": 0.07,
+      "roomSize": 0.34,
+      "damping": 0.60
+    }
   }
 }

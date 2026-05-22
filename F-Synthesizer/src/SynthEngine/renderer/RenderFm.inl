@@ -91,18 +91,20 @@ void RenderFmSource(
     {
         const double mod0 = op0 * opLevel[0];
         const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, opIndex[2]) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, opIndex[3]) * opLevel[3];
-        frame.sample = (out1 + out3) * 0.5 * ampScale;
+        const double cross = (mod0 + feedbackSample) * 0.35;
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], cross, opIndex[2] * 1.15) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, opIndex[3] * 1.10) * opLevel[3];
+        frame.sample = (out1 * 0.48 + out3 * 0.52) * ampScale;
         break;
     }
     case 5:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod0, opIndex[2]) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod0, opIndex[3]) * opLevel[3];
-        frame.sample = (out1 + out2 + out3) / 3.0 * ampScale;
+        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1] * 1.20) * opLevel[1];
+        const double shared = (mod0 * 0.70) + (mod1 * 0.30);
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], shared, opIndex[2] * 1.10) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], shared - mod1 * 0.20, opIndex[3] * 0.95) * opLevel[3];
+        frame.sample = (mod1 * 0.25 + out2 * 0.38 + out3 * 0.37) * ampScale;
         break;
     }
     case 6:

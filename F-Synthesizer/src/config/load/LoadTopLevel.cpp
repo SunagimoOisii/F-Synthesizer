@@ -20,6 +20,13 @@ bool ParseEffectsObject(const std::string& text, AppConfig& cfg, std::string& er
     }
     if (!foundEffects)
     {
+        if (!ExtractObjectForKey(text, "masterEffects", effectsObj, foundEffects, err))
+        {
+            return false;
+        }
+    }
+    if (!foundEffects)
+    {
         return true;
     }
 

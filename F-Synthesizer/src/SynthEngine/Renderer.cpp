@@ -180,21 +180,28 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         frame.sample += RenderAttackLayer(voices, i, in);
         frame.sample += RenderBassLayer(voices, i, in);
         frame.sample += RenderLeadLayer(voices, i, in);
-        frame.sample += RenderChordLayer(voices, i, in);
-        frame.sample += RenderPadLayer(voices, i, in);
+        const StereoFrame chord = RenderChordLayer(voices, i, in);
+        const StereoFrame pad = RenderPadLayer(voices, i, in);
+        frame.sample += (chord.left + chord.right + pad.left + pad.right) * 0.5;
+        frame.stereoOffsetL += (chord.left - chord.right + pad.left - pad.right) * 0.5;
+        frame.stereoOffsetR += (chord.right - chord.left + pad.right - pad.left) * 0.5;
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 
-        const double mono = 
+        const double gain =
             frame.sourceGain *
             voices.amp[i] *
             in.ccGain *
             in.velGain *
-            frame.sample *
             in.envGain *
             frame.ampMul;
+        const double mono = gain * frame.sample;
+        const double stereoL = gain * (frame.sample + frame.stereoOffsetL);
+        const double stereoR = gain * (frame.sample + frame.stereoOffsetR);
         sum.left += in.mixGainL * mono;
         sum.right += in.mixGainR * mono;
+        sum.left += in.mixGainL * (stereoL - mono);
+        sum.right += in.mixGainR * (stereoR - mono);
     }
 
     return sum;

@@ -104,6 +104,11 @@ function Invoke-CLI {
             Output = "CLI command timed out after ${TimeoutSec}s: $($CliArgs -join ' ')"
         }
     }
+    $p.Refresh()
+    $exitCode = $p.ExitCode
+    if ($null -eq $exitCode) {
+        $exitCode = 0
+    }
 
     $out = ""
     if (Test-Path $stdoutPath) {
@@ -118,7 +123,7 @@ function Invoke-CLI {
     Remove-Item -Path $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
 
     return [PSCustomObject]@{
-        ExitCode = $p.ExitCode
+        ExitCode = $exitCode
         Output = $out
     }
 }
@@ -206,7 +211,7 @@ try {
 
         $presetConfig = $null
         try {
-            $presetConfig = Get-Content -Path $preset.FullName -Raw | ConvertFrom-Json
+            $presetConfig = Get-Content -Path $preset.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
         }
         catch {
             $failures.Add("${name}: JSON parse failed: $($_.Exception.Message)")

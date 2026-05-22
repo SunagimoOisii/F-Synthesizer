@@ -181,6 +181,8 @@ enum class CommonShaperKind
 struct SourceRenderFrame
 {
     double sample = 0.0;
+    double stereoOffsetL = 0.0;
+    double stereoOffsetR = 0.0;
     double ampMul = 1.0;
     double sourceGain = 1.0;
     double shaperCutoffHz = 0.0;
