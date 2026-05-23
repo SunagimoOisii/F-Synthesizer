@@ -97,6 +97,7 @@ GUI 状態に依存しません。
 ## 音とレンダリング契約
 
 - 音質判断は `docs/PRODUCT_POLICY.md` に従い、継続開発性を落とさない範囲で「気持ちよい音」と短い feedback を優先する。
+- 実戦向けの周期波形は、波形生成段階で不要な aliasing や段差ノイズを増やさない。PSG noise、DrumKit の noise、SFX noise は意図的な音源として扱い、この基準の対象外にする。
 - source 非依存の modulation と shared shaping は common engine path に置く。
 - source 固有の挙動は、その音源方式に本当に必要な場合だけ該当 renderer に置く。
 - Master effects は固定順で処理する: sample-rate reducer、bit crusher、chorus、flanger、delay、reverb。

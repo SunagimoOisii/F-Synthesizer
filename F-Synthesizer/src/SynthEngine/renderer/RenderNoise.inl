@@ -23,18 +23,16 @@ void RenderPsgSource(
     switch (src.wave)
     {
     case PsgWaveType::Square:
-        s = (ps.phase < 0.5) ? 1.0 : -1.0;
+        s = SampleWavePhase(WaveType::Square, ps.phase, phaseInc, 0.5);
         break;
     case PsgWaveType::Pulse:
     {
-        const double threshold = (src.duty + 1) / 8.0;
-        s = (ps.phase < threshold) ? 1.0 : -1.0;
+        const double pulseWidth = std::clamp((src.duty + 1) / 8.0, 0.05, 0.95);
+        s = SampleWavePhase(WaveType::Square, ps.phase, phaseInc, pulseWidth);
         break;
     }
     case PsgWaveType::Triangle:
-        if (ps.phase < 0.25)      s = ps.phase * 4.0;
-        else if (ps.phase < 0.75) s = 2.0 - ps.phase * 4.0;
-        else                      s = ps.phase * 4.0 - 4.0;
+        s = SampleWavePhase(WaveType::Triangle, ps.phase, phaseInc);
         break;
     case PsgWaveType::Noise:
     {

@@ -37,6 +37,29 @@ double PolyBlep(double t, double dt)
     }
     return 0.0;
 }
+
+double SampleBandLimitedTriangle(double phase, double phaseInc)
+{
+    const double dt = std::fabs(phaseInc);
+    if (dt <= 0.0 || dt >= 0.5)
+    {
+        return 1.0 - 4.0 * std::fabs(phase - 0.5);
+    }
+
+    const int maxHarmonic = static_cast<int>(std::floor(0.5 / dt));
+    const int cappedMaxHarmonic = std::min(maxHarmonic, 255);
+    if (cappedMaxHarmonic < 1)
+    {
+        return 0.0;
+    }
+
+    double sum = 0.0;
+    for (int n = 1; n <= cappedMaxHarmonic; n += 2)
+    {
+        sum += std::cos(2.0 * kPi * static_cast<double>(n) * phase) / static_cast<double>(n * n);
+    }
+    return -(8.0 / (kPi * kPi)) * sum;
+}
 } // namespace
 
 double SampleWavePhase(WaveType type, double phase, double phaseInc, double pulseWidth)
@@ -66,7 +89,7 @@ double SampleWavePhase(WaveType type, double phase, double phaseInc, double puls
     }
 
     case WaveType::Triangle:
-        return 1.0 - 4.0 * std::fabs(p - 0.5);
+        return SampleBandLimitedTriangle(p, dt);
 
     default:
         return 0.0;

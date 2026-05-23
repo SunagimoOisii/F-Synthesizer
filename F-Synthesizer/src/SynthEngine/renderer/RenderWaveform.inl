@@ -13,6 +13,33 @@ double ArpSemitoneRatio(int semitoneOffset)
     return kRatioLut[static_cast<size_t>(clamped + 24)];
 }
 
+template <typename StateT>
+void ApplyHardSyncFade(StateT& state, double& mainWave, double& stereoL, double& stereoR)
+{
+    constexpr int kHardSyncFadeTotal = 4;
+    if (state.hardSyncFadeRemaining <= 0)
+    {
+        return;
+    }
+
+    const double t = static_cast<double>(kHardSyncFadeTotal - state.hardSyncFadeRemaining + 1) /
+        static_cast<double>(kHardSyncFadeTotal + 1);
+    mainWave = state.hardSyncFadeFromMain * (1.0 - t) + mainWave * t;
+    stereoL = state.hardSyncFadeFromL * (1.0 - t) + stereoL * t;
+    stereoR = state.hardSyncFadeFromR * (1.0 - t) + stereoR * t;
+    state.hardSyncFadeRemaining--;
+}
+
+template <typename StateT>
+void BeginHardSyncFade(StateT& state, double mainWave, double stereoL, double stereoR)
+{
+    constexpr int kHardSyncFadeTotal = 4;
+    state.hardSyncFadeFromMain = mainWave;
+    state.hardSyncFadeFromL = stereoL;
+    state.hardSyncFadeFromR = stereoR;
+    state.hardSyncFadeRemaining = kHardSyncFadeTotal;
+}
+
 template <typename SourceT, typename StateT, bool EnableDrift>
 void RenderWaveformLikeSourceCommon(
     const SourceT& src,
@@ -107,6 +134,8 @@ void RenderWaveformLikeSourceCommon(
         stereoR *= (1.0 - mix) + mix * ringSignal;
     }
 
+    ApplyHardSyncFade(state, mainWave, stereoL, stereoR);
+
     frame.sample = mainWave;
     frame.stereoOffsetL = (stereoL - mainWave) * 0.5;
     frame.stereoOffsetR = (stereoR - mainWave) * 0.5;
@@ -127,10 +156,14 @@ void RenderWaveformLikeSourceCommon(
     {
         const double syncInc = phaseInc * std::clamp(src.hardSyncRatio, 0.5, 8.0);
         const double prevSync = state.syncPhase;
-        state.syncPhase = WrapPhase(state.syncPhase + syncInc);
-        if (state.syncPhase < prevSync)
+        const double nextSync = prevSync + syncInc;
+        state.syncPhase = WrapPhase(nextSync);
+        if (nextSync >= 1.0)
         {
-            voices.phase[i] = 0.0;
+            const double overshoot = nextSync - std::floor(nextSync);
+            const double afterResetFraction = (syncInc > 0.0) ? (overshoot / syncInc) : 0.0;
+            voices.phase[i] = WrapPhase(phaseInc * std::clamp(afterResetFraction, 0.0, 1.0));
+            BeginHardSyncFade(state, mainWave, stereoL, stereoR);
         }
         else
         {

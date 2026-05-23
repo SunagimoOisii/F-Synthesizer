@@ -18,6 +18,10 @@ struct WaveformVoiceState
     SmoothedParam pitchSmoothing;
     SmoothedParam filterCutoffSmoothing;
     double syncPhase = 0.0;
+    double hardSyncFadeFromMain = 0.0;
+    double hardSyncFadeFromL = 0.0;
+    double hardSyncFadeFromR = 0.0;
+    int hardSyncFadeRemaining = 0;
     double ringPhase = 0.0;
     int arpStep = 0;
     double arpElapsedSec = 0.0;
@@ -41,6 +45,10 @@ struct AnalogVoiceState
     // ノートオン時に確定するボイス固有のドリフト位相オフセット [0..1)。
     double driftPhaseOffset = 0.0;
     double syncPhase = 0.0;
+    double hardSyncFadeFromMain = 0.0;
+    double hardSyncFadeFromL = 0.0;
+    double hardSyncFadeFromR = 0.0;
+    int hardSyncFadeRemaining = 0;
     double ringPhase = 0.0;
     int arpStep = 0;
     double arpElapsedSec = 0.0;
