@@ -1,0 +1,45 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.1,
+      "attackSec": 0.008,
+      "decaySec": 0.34,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.28,
+      "source": {
+        "type": "waveform",
+        "wave": "triangle",
+        "unisonVoices": 1,
+        "unisonDetuneCents": 0,
+        "unisonSpread": 0,
+        "subOscLevel": 0,
+        "pulseWidth": 0.5,
+        "smoothing": {
+          "enabled": true,
+          "pitchEnabled": true,
+          "ampTimeMs": 5.0,
+          "pitchTimeMs": 8.0,
+          "filterCutoffTimeMs": 18.0
+        },
+        "ringModEnabled": true,
+        "ringModRatio": 1.5,
+        "ringModMix": 0.18,
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 5200,
+          "resonance": 0.58,
+          "keytrack": 0.1,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
+    }
+  },
+  "tags": [
+    "重厚レトロ",
+    "Keys",
+    "bell",
+    "waveform"
+  ],
+  "description": "ガラス系ベルキー。短いアクセントや上物用、常時鳴らすと薄くなりやすい。"
+}

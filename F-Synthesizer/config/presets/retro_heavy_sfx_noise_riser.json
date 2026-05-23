@@ -1,0 +1,29 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.14,
+      "attackSec": 0.001,
+      "decaySec": 0.24,
+      "sustainLevel": 0.0,
+      "releaseSec": 0.12,
+      "source": {
+        "type": "noise",
+        "noise": "pink",
+        "filter": {
+          "mode": "bandpass",
+          "cutoffHz": 900,
+          "resonance": 2.4,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
+    }
+  },
+  "tags": [
+    "重厚レトロ",
+    "SFX",
+    "riser",
+    "noise"
+  ],
+  "description": "ノイズスイープのライザー。場面転換用で、通常フレーズには使わない。"
+}

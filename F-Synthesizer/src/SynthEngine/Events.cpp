@@ -216,7 +216,17 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
                 {
                     ChannelConfig drumCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
                     drumCfg.source = drum;
-                    state.voices.AddVoice(drumCfg, e, sampleRate);
+                    drumCfg.drumBus = kit->drumBus;
+                    MIDIEvent drumEvent = e;
+                    const double ceiling = std::clamp(kit->velocityCeiling, 0.0, 1.0);
+                    const double curve = std::clamp(kit->velocityCurve, 0.2, 3.0);
+                    const double velNorm = std::clamp(static_cast<double>(drumEvent.velocity) / 127.0, 0.0, 1.0);
+                    const double shaped = std::pow(velNorm, curve);
+                    drumEvent.velocity = std::clamp(
+                        static_cast<int>(std::round(127.0 * std::min(shaped, ceiling))),
+                        0,
+                        127);
+                    state.voices.AddVoice(drumCfg, drumEvent, sampleRate);
                 }
             }
             else

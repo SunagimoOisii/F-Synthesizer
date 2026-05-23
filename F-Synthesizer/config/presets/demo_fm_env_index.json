@@ -1,67 +1,67 @@
 {
   "channels": {
     "0": {
-      "amp": 0.18,
+      "amp": 0.2,
       "attackSec": 0.002,
-      "decaySec": 0.14,
-      "sustainLevel": 0.7,
+      "decaySec": 0.16,
+      "sustainLevel": 0.68,
       "releaseSec": 0.1,
       "source": {
         "type": "fm",
-        "algorithm": 6,
-        "feedback": 0.58,
+        "algorithm": 3,
+        "feedback": 0.1,
         "ops": [
           {
             "wave": "sine",
             "ratio": 1,
             "level": 1,
-            "index": 2.0,
+            "index": 1.2,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.7999999999999999,
+              "decaySec": 0.18,
+              "sustainLevel": 0.7799999999999999,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.4
             },
             "indexEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.08,
-              "sustainLevel": 0.5,
+              "decaySec": 0.12,
+              "sustainLevel": 0.15,
               "releaseSec": 0.04,
-              "curve": 0.75
+              "curve": 0.9
             }
           },
           {
             "wave": "sine",
             "ratio": 2,
-            "level": 0.76,
-            "index": 0.8,
+            "level": 0.8,
+            "index": 0.4,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.7999999999999999,
+              "decaySec": 0.18,
+              "sustainLevel": 0.7799999999999999,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.4
             },
             "indexEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.08,
-              "sustainLevel": 0.5,
+              "decaySec": 0.12,
+              "sustainLevel": 0.15,
               "releaseSec": 0.04,
-              "curve": 0.75
+              "curve": 0.9
             }
           },
           {
             "wave": "sine",
-            "ratio": 1,
-            "level": 0.55,
+            "ratio": 3,
+            "level": 0.4,
             "index": 0,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.72,
+              "decaySec": 0.18,
+              "sustainLevel": 0.7,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.4
             },
             "indexEnv": {
               "attackSec": 0.0,
@@ -73,15 +73,15 @@
           },
           {
             "wave": "sine",
-            "ratio": 3,
-            "level": 0.3,
+            "ratio": 1,
+            "level": 0.2,
             "index": 0,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.72,
+              "decaySec": 0.18,
+              "sustainLevel": 0.7,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.4
             },
             "indexEnv": {
               "attackSec": 0.0,
@@ -92,11 +92,28 @@
             }
           }
         ],
-        "drive": 0.0,
+        "drive": 0,
+        "modulation": {
+          "env2": {
+            "attackSec": 0,
+            "decaySec": 0.1,
+            "sustainLevel": 0,
+            "releaseSec": 0.04,
+            "curve": 0.85
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.85,
+              "enabled": true
+            }
+          }
+        },
         "filter": {
           "mode": "lowpass",
-          "cutoffHz": 7800,
-          "resonance": 1.1,
+          "cutoffHz": 7200,
+          "resonance": 0.8,
           "drive": 0.0
         }
       },
@@ -106,8 +123,8 @@
   "tags": [
     "demo",
     "FM",
-    "feedback",
+    "Env2",
     "検証"
   ],
-  "description": "FM feedbackでエッジとざらつきが増えることを確認する検査用プリセット。"
+  "description": "Env2からFM indexへ送った短いアタック変化を確認する検査用プリセット。"
 }

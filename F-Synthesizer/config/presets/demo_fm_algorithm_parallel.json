@@ -2,86 +2,86 @@
   "channels": {
     "0": {
       "amp": 0.18,
-      "attackSec": 0.002,
-      "decaySec": 0.14,
-      "sustainLevel": 0.7,
-      "releaseSec": 0.1,
+      "attackSec": 0.003,
+      "decaySec": 0.16,
+      "sustainLevel": 0.74,
+      "releaseSec": 0.12,
       "source": {
         "type": "fm",
-        "algorithm": 6,
-        "feedback": 0.58,
+        "algorithm": 7,
+        "feedback": 0.05,
         "ops": [
           {
             "wave": "sine",
             "ratio": 1,
-            "level": 1,
-            "index": 2.0,
+            "level": 0.68,
+            "index": 1.0,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.7999999999999999,
+              "decaySec": 0.1,
+              "sustainLevel": 0.83,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.3
             },
             "indexEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.08,
+              "decaySec": 0.09,
               "sustainLevel": 0.5,
-              "releaseSec": 0.04,
-              "curve": 0.75
+              "releaseSec": 0.05,
+              "curve": 0.65
             }
           },
           {
             "wave": "sine",
             "ratio": 2,
-            "level": 0.76,
-            "index": 0.8,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.7999999999999999,
-              "releaseSec": 0.08,
-              "curve": 0.25
-            },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.08,
-              "sustainLevel": 0.5,
-              "releaseSec": 0.04,
-              "curve": 0.75
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 1,
             "level": 0.55,
-            "index": 0,
+            "index": 0.7,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.72,
+              "decaySec": 0.1,
+              "sustainLevel": 0.83,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.3
             },
             "indexEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.5,
               "releaseSec": 0.05,
-              "curve": 0.0
+              "curve": 0.65
             }
           },
           {
             "wave": "sine",
             "ratio": 3,
-            "level": 0.3,
+            "level": 0.44,
+            "index": 0.3,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.1,
+              "sustainLevel": 0.83,
+              "releaseSec": 0.08,
+              "curve": 0.3
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.5,
+              "releaseSec": 0.05,
+              "curve": 0.65
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 4,
+            "level": 0.34,
             "index": 0,
             "levelEnv": {
               "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.72,
+              "decaySec": 0.1,
+              "sustainLevel": 0.75,
               "releaseSec": 0.08,
-              "curve": 0.25
+              "curve": 0.3
             },
             "indexEnv": {
               "attackSec": 0.0,
@@ -95,8 +95,8 @@
         "drive": 0.0,
         "filter": {
           "mode": "lowpass",
-          "cutoffHz": 7800,
-          "resonance": 1.1,
+          "cutoffHz": 9000,
+          "resonance": 0.75,
           "drive": 0.0
         }
       },
@@ -106,8 +106,8 @@
   "tags": [
     "demo",
     "FM",
-    "feedback",
+    "algorithm",
     "検証"
   ],
-  "description": "FM feedbackでエッジとざらつきが増えることを確認する検査用プリセット。"
+  "description": "FM algorithmの並列carrier感を確認する検査用プリセット。和音ではなく構造差を聴く。"
 }

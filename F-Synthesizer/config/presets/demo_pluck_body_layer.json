@@ -1,0 +1,168 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.12,
+      "attackSec": 0.004,
+      "decaySec": 0.16,
+      "sustainLevel": 0.34,
+      "releaseSec": 0.14,
+      "source": {
+        "type": "fm",
+        "algorithm": 0,
+        "feedback": 0.1,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.78,
+            "index": 1.25,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.11,
+              "sustainLevel": 0.16,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.055,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.035,
+              "curve": 0.9
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.42,
+            "index": 0.45,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.11,
+              "sustainLevel": 0.16,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.055,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.035,
+              "curve": 0.9
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.26,
+            "index": 0.15,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.11,
+              "sustainLevel": 0.16,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.055,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.035,
+              "curve": 0.9
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.14,
+            "index": 0,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.11,
+              "sustainLevel": 0.08,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.02,
+              "sustainLevel": 1.0,
+              "releaseSec": 0.05,
+              "curve": 0.0
+            }
+          }
+        ],
+        "drive": 0.03,
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.14,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.04,
+            "curve": 0.55
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.18,
+              "enabled": true
+            }
+          }
+        },
+        "filter": {
+          "mode": "ladderLowpass",
+          "cutoffHz": 4800,
+          "resonance": 0.72,
+          "drive": 0.18
+        }
+      },
+      "layers": {
+        "attack": {
+          "enabled": true,
+          "type": "pick",
+          "level": 0.12,
+          "decaySec": 0.026,
+          "brightness": 0.58,
+          "bodyMix": 0.46,
+          "pitchOffsetSemis": 0,
+          "drive": 0.07
+        },
+        "pluck": {
+          "enabled": true,
+          "level": 0.22,
+          "decaySec": 0.22,
+          "brightness": 0.66,
+          "noiseMix": 0.32,
+          "pitchOffsetSemis": 0,
+          "bodySend": 0.52,
+          "drive": 0.12
+        },
+        "body": {
+          "enabled": true,
+          "mix": 0.24,
+          "size": 0.48,
+          "tone": 0.58,
+          "damping": 0.28,
+          "stereo": 0.22,
+          "drive": 0.08
+        }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.9,
+        "velocityToPluck": 0.35,
+        "velocityToBody": 0.22,
+        "pressureToFilterDrive": 0.18
+      }
+    }
+  },
+  "tags": [
+    "demo",
+    "pluck",
+    "body",
+    "検証"
+  ],
+  "description": "PluckとBodyレイヤーでピックの頭と箱鳴りが足されることを確認する検査用プリセット。"
+}

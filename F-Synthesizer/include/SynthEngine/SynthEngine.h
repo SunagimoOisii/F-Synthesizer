@@ -231,12 +231,28 @@ struct DrumConfig
     // one-shot アタック保護のため smoothing は非対応（契約上 waveform 専用）。
 };
 
+struct DrumBusConfig
+{
+    bool enabled = false;
+    double level = 1.0;
+    double attackTrim = 0.0;
+    double sustainLift = 0.0;
+    double glue = 0.0;
+    double presenceCut = 0.0;
+    double lowTighten = 0.0;
+    double roomSend = 0.0;
+    double driveTrim = 0.0;
+};
+
 // DrumKit 用の note(0..127) マップ。
 // 各ノートは DrumConfig を持ち、None で未割り当てを表す。
 struct DrumKitConfig
 {
     // GM想定の note(0..127) -> DrumConfig マップ。
     std::array<DrumConfig, 128> map;
+    DrumBusConfig drumBus{};
+    double velocityCeiling = 1.0;
+    double velocityCurve = 1.0;
 };
 
 using SourceConfig = std::variant<WaveformConfig, AnalogConfig, NoiseConfig, FmConfig, DrumConfig, DrumKitConfig, PsgConfig>;
@@ -434,6 +450,7 @@ struct ChannelConfig
     PluckLayerConfig pluckLayer{};
     StringLayerConfig stringLayer{};
     BodyLayerConfig bodyLayer{};
+    DrumBusConfig drumBus{};
     // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
     ExpressionMapConfig expressionMap{};
 };

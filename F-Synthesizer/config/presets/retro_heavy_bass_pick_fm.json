@@ -1,0 +1,172 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.27,
+      "attackSec": 0.002,
+      "decaySec": 0.12,
+      "sustainLevel": 0.76,
+      "releaseSec": 0.11,
+      "source": {
+        "type": "fm",
+        "algorithm": 3,
+        "feedback": 0.16,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 1.0,
+            "index": 2.0,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.07,
+              "curve": 0.2
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.035,
+              "sustainLevel": 0.28,
+              "releaseSec": 0.035,
+              "curve": 0.85
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.78,
+            "index": 0.9,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.07,
+              "curve": 0.2
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.035,
+              "sustainLevel": 0.28,
+              "releaseSec": 0.035,
+              "curve": 0.85
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.34,
+            "index": 0.35,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.07,
+              "curve": 0.2
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.035,
+              "sustainLevel": 0.28,
+              "releaseSec": 0.035,
+              "curve": 0.85
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.24,
+            "index": 0,
+            "levelEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.09,
+              "sustainLevel": 0.78,
+              "releaseSec": 0.07,
+              "curve": 0.2
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.02,
+              "sustainLevel": 1.0,
+              "releaseSec": 0.05,
+              "curve": 0.0
+            }
+          }
+        ],
+        "drive": 0.05,
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.1,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.04,
+            "curve": 0.55
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.26,
+              "enabled": true
+            }
+          }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 3000,
+          "resonance": 0.72,
+          "drive": 0.0
+        }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.9,
+        "velocityToBrightness": 0.08,
+        "velocityToFmIndex": 0.1,
+        "velocityToAttack": 0.14,
+        "velocityToBass": 0.2,
+        "velocityToLead": 0.0,
+        "modWheelToBrightness": 0.04,
+        "pressureToDrive": 0.06,
+        "cc74ToBrightness": 0.15
+      },
+      "layers": {
+        "bass": {
+          "enabled": true,
+          "type": "drive",
+          "level": 0.28,
+          "subLevel": 0.42,
+          "bodyLevel": 0.5,
+          "gritLevel": 0.34,
+          "cutoffHz": 1050,
+          "drive": 0.32,
+          "pitchOffsetSemis": -12,
+          "velocityToDrive": 0.18,
+          "focusHz": 185,
+          "focusLevel": 0.24,
+          "bodySaturation": 0.22,
+          "gritTone": 0.46,
+          "attackBoost": 0.18,
+          "attackDecaySec": 0.04
+        },
+        "attack": {
+          "enabled": true,
+          "type": "pick",
+          "level": 0.15,
+          "decaySec": 0.03,
+          "brightness": 0.4,
+          "bodyMix": 0.72,
+          "pitchOffsetSemis": -12,
+          "drive": 0.08
+        }
+      }
+    }
+  },
+  "tags": [
+    "重厚レトロ",
+    "Bass",
+    "pick",
+    "FM"
+  ],
+  "description": "ピック感のあるFMベース。速い刻みや小さい再生環境で輪郭を残したい低域向け。"
+}

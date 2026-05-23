@@ -205,6 +205,7 @@ void InitializeVoiceAtIndex(
     voices.pluckLayer[i] = cfg.pluckLayer;
     voices.stringLayer[i] = cfg.stringLayer;
     voices.bodyLayer[i] = cfg.bodyLayer;
+    voices.drumBus[i] = cfg.drumBus;
     voices.expressionMap[i] = cfg.expressionMap;
     ADSRState envState{};
     NoteOn(envState);
@@ -516,6 +517,7 @@ void Voice::reserve(size_t n)
     pluckLayer.reserve(n);
     stringLayer.reserve(n);
     bodyLayer.reserve(n);
+    drumBus.reserve(n);
     expressionMap.reserve(n);
     env.reserve(n);
     phase.reserve(n);
@@ -572,6 +574,7 @@ void Voice::clear()
     pluckLayer.clear();
     stringLayer.clear();
     bodyLayer.clear();
+    drumBus.clear();
     expressionMap.clear();
     env.clear();
     phase.clear();
@@ -639,6 +642,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     pluckLayer.emplace_back();
     stringLayer.emplace_back();
     bodyLayer.emplace_back();
+    drumBus.emplace_back();
     expressionMap.emplace_back();
     env.emplace_back();
 
@@ -797,6 +801,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(pluckLayer, keepScratch);
     CompactVectorByKeep(stringLayer, keepScratch);
     CompactVectorByKeep(bodyLayer, keepScratch);
+    CompactVectorByKeep(drumBus, keepScratch);
     CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);

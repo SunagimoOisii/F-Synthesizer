@@ -110,6 +110,20 @@ struct ChannelAdsrOffset
     double release = 0.0;
 };
 
+struct DrumBusRuntimeState
+{
+    double envFast = 0.0;
+    double envSlow = 0.0;
+    double presenceLpL = 0.0;
+    double presenceLpR = 0.0;
+    double lowLpL = 0.0;
+    double lowLpR = 0.0;
+    double roomL = 0.0;
+    double roomR = 0.0;
+    double roomDiffL = 0.0;
+    double roomDiffR = 0.0;
+};
+
 struct Voice
 {
     // SoA 構造:
@@ -139,6 +153,7 @@ struct Voice
     std::vector<PluckLayerConfig> pluckLayer;
     std::vector<StringLayerConfig> stringLayer;
     std::vector<BodyLayerConfig> bodyLayer;
+    std::vector<DrumBusConfig> drumBus;
     std::vector<ExpressionMapConfig> expressionMap;
     std::vector<ADSRState> env;
 
@@ -224,6 +239,7 @@ struct RenderState
     std::array<bool, 16> channelPortamentoOn{};
     std::array<double, 16> channelMixGainL{};
     std::array<double, 16> channelMixGainR{};
+    std::array<DrumBusRuntimeState, 16> drumBusState{};
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};
     std::array<bool, 16> channelRenderable{};

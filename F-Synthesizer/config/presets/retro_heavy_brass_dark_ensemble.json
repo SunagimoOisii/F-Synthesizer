@@ -1,0 +1,208 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.13,
+      "attackSec": 0.012,
+      "decaySec": 0.24,
+      "sustainLevel": 0.78,
+      "releaseSec": 0.26,
+      "source": {
+        "type": "fm",
+        "algorithm": 5,
+        "feedback": 0.14,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.76,
+            "index": 1.1,
+            "levelEnv": {
+              "attackSec": 0.004,
+              "decaySec": 0.16,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.14,
+              "curve": 0.35
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.12,
+              "sustainLevel": 0.55,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.58,
+            "index": 0.65,
+            "levelEnv": {
+              "attackSec": 0.004,
+              "decaySec": 0.16,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.14,
+              "curve": 0.35
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.12,
+              "sustainLevel": 0.55,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.54,
+            "index": 0.3,
+            "levelEnv": {
+              "attackSec": 0.004,
+              "decaySec": 0.16,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.14,
+              "curve": 0.35
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.12,
+              "sustainLevel": 0.55,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 3,
+            "level": 0.22,
+            "index": 0.2,
+            "levelEnv": {
+              "attackSec": 0.004,
+              "decaySec": 0.16,
+              "sustainLevel": 0.86,
+              "releaseSec": 0.14,
+              "curve": 0.35
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.12,
+              "sustainLevel": 0.55,
+              "releaseSec": 0.06,
+              "curve": 0.65
+            }
+          }
+        ],
+        "drive": 0.04,
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.22,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.04,
+            "curve": 0.55
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.18,
+              "enabled": true
+            }
+          }
+        },
+        "filter": {
+          "mode": "ladderLowpass",
+          "cutoffHz": 4600,
+          "resonance": 0.82,
+          "drive": 0.12
+        }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.86,
+        "velocityToBrightness": 0.08,
+        "velocityToFmIndex": 0.06,
+        "velocityToAttack": 0.04,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.0,
+        "velocityToChord": 0.14,
+        "velocityToPad": 0.1,
+        "modWheelToBrightness": 0.08,
+        "modWheelToPad": 0.12,
+        "pressureToDrive": 0.03,
+        "cc74ToBrightness": 0.16,
+        "cc74ToPadBrightness": 0.18,
+        "velocityToString": 0.22,
+        "velocityToBody": 0.16,
+        "modWheelToString": 0.16,
+        "cc74ToStringBrightness": 0.22,
+        "pressureToFilterDrive": 0.12
+      },
+      "layers": {
+        "pad": {
+          "enabled": true,
+          "level": 0.08,
+          "octaveLevel": 0.14,
+          "detuneCents": 5.0,
+          "spread": 0.34,
+          "fadeInSec": 0.1,
+          "brightness": 0.28,
+          "motionDepth": 0.05,
+          "motionRateHz": 0.2,
+          "cutoffHz": 1700.0,
+          "drive": 0.03
+        },
+        "chord": {
+          "enabled": true,
+          "level": 0.13,
+          "intervalsSemis": [
+            0,
+            7,
+            12,
+            15
+          ],
+          "voiceLevels": [
+            1.0,
+            0.62,
+            0.42,
+            0.25
+          ],
+          "detuneCents": 4.0,
+          "spread": 0.32,
+          "cutoffHz": 2400.0,
+          "drive": 0.05
+        },
+        "string": {
+          "enabled": true,
+          "level": 0.12,
+          "bowLevel": 0.28,
+          "detuneCents": 9.0,
+          "spread": 0.58,
+          "fadeInSec": 0.1,
+          "brightness": 0.46,
+          "motionDepth": 0.16,
+          "motionRateHz": 0.42,
+          "bodySend": 0.48,
+          "drive": 0.06
+        },
+        "body": {
+          "enabled": true,
+          "mix": 0.18,
+          "size": 0.62,
+          "tone": 0.43,
+          "damping": 0.36,
+          "stereo": 0.38,
+          "drive": 0.05
+        }
+      }
+    }
+  },
+  "tags": [
+    "重厚レトロ",
+    "Brass",
+    "dark ensemble",
+    "FM"
+  ],
+  "description": "暗いブラスアンサンブル代役。中域の厚みを足す用途で、高域主役にはしない。"
+}

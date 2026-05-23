@@ -41,6 +41,103 @@ double AmountMul(double expressionVelocity, double amount)
     return 1.0 + expressionVelocity * Clamp01(amount);
 }
 
+double OnePoleAlpha(double cutoffHz, double sampleRate)
+{
+    return 1.0 - std::exp(-2.0 * kPi * std::clamp(cutoffHz, 20.0, sampleRate * 0.45) / sampleRate);
+}
+
+double SoftClipNorm(double x, double drive)
+{
+    const double amount = std::clamp(drive, 0.0, 1.0);
+    if (amount <= 0.0)
+    {
+        return x;
+    }
+    const double k = 1.0 + amount * 8.0;
+    return std::tanh(x * k) / std::tanh(k);
+}
+
+StereoFrame ApplyDrumBus(
+    DrumBusRuntimeState& st,
+    const DrumBusConfig& cfg,
+    StereoFrame in,
+    int sampleRate)
+{
+    if (!cfg.enabled)
+    {
+        return in;
+    }
+
+    double l = in.left;
+    double r = in.right;
+    const double monoAbs = std::abs((l + r) * 0.5);
+    const double fastA = OnePoleAlpha(120.0, sampleRate);
+    const double slowA = OnePoleAlpha(12.0, sampleRate);
+    st.envFast += (monoAbs - st.envFast) * fastA;
+    st.envSlow += (monoAbs - st.envSlow) * slowA;
+
+    const double transient = std::max(0.0, st.envFast - st.envSlow);
+    const double attackGain = 1.0 - std::clamp(cfg.attackTrim, 0.0, 1.0) * std::clamp(transient * 5.0, 0.0, 0.55);
+    l *= attackGain;
+    r *= attackGain;
+
+    const double glue = std::clamp(cfg.glue, 0.0, 1.0);
+    if (glue > 0.0)
+    {
+        const double threshold = 0.24 + (1.0 - glue) * 0.34;
+        const double over = std::max(0.0, st.envFast - threshold);
+        const double gain = 1.0 / (1.0 + over * (2.0 + glue * 8.0));
+        l *= gain;
+        r *= gain;
+    }
+
+    const double lowA = OnePoleAlpha(95.0 + std::clamp(cfg.lowTighten, 0.0, 1.0) * 80.0, sampleRate);
+    st.lowLpL += (l - st.lowLpL) * lowA;
+    st.lowLpR += (r - st.lowLpR) * lowA;
+    l -= st.lowLpL * std::clamp(cfg.lowTighten, 0.0, 1.0) * 0.32;
+    r -= st.lowLpR * std::clamp(cfg.lowTighten, 0.0, 1.0) * 0.32;
+
+    const double presence = std::clamp(cfg.presenceCut, 0.0, 1.0);
+    if (presence > 0.0)
+    {
+        const double presA = OnePoleAlpha(3200.0 - presence * 1000.0, sampleRate);
+        st.presenceLpL += (l - st.presenceLpL) * presA;
+        st.presenceLpR += (r - st.presenceLpR) * presA;
+        l = l * (1.0 - presence * 0.48) + st.presenceLpL * (presence * 0.48);
+        r = r * (1.0 - presence * 0.48) + st.presenceLpR * (presence * 0.48);
+    }
+
+    const double sustain = std::clamp(cfg.sustainLift, 0.0, 1.0);
+    if (sustain > 0.0)
+    {
+        const double bodyGain = 1.0 + sustain * (0.18 + 0.18 * (1.0 - std::clamp(transient * 6.0, 0.0, 1.0)));
+        l *= bodyGain;
+        r *= bodyGain;
+    }
+
+    const double roomSend = std::clamp(cfg.roomSend, 0.0, 1.0);
+    if (roomSend > 0.0)
+    {
+        const double mono = (l + r) * 0.5;
+        st.roomL = st.roomL * 0.84 + mono * 0.16;
+        st.roomR = st.roomR * 0.79 - mono * 0.13;
+        st.roomDiffL = st.roomDiffL * 0.68 + st.roomR * 0.32;
+        st.roomDiffR = st.roomDiffR * 0.72 - st.roomL * 0.28;
+        l += (st.roomL + st.roomDiffL * 0.45) * roomSend * 0.32;
+        r += (st.roomR + st.roomDiffR * 0.45) * roomSend * 0.32;
+    }
+
+    const double driveTrim = std::clamp(cfg.driveTrim, 0.0, 1.0);
+    if (driveTrim > 0.0)
+    {
+        l = l * (1.0 - driveTrim * 0.18) + SoftClipNorm(l, 0.16) * (driveTrim * 0.18);
+        r = r * (1.0 - driveTrim * 0.18) + SoftClipNorm(r, 0.16) * (driveTrim * 0.18);
+    }
+
+    const double level = std::clamp(cfg.level, 0.0, 2.0);
+    return StereoFrame{ l * level, r * level };
+}
+
 ExpressionRuntime EvaluateExpressionMap(
     const ExpressionMapConfig& map,
     int velocity,
@@ -94,7 +191,9 @@ ExpressionRuntime EvaluateExpressionMap(
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 {
     // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
-    StereoFrame sum{};
+    std::array<StereoFrame, 16> channelSums{};
+    std::array<DrumBusConfig, 16> channelDrumBus{};
+    std::array<bool, 16> channelHasDrumBus{};
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;
 
@@ -216,11 +315,25 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         const double mono = gain * frame.sample;
         const double stereoL = gain * (frame.sample + frame.stereoOffsetL);
         const double stereoR = gain * (frame.sample + frame.stereoOffsetR);
-        sum.left += in.mixGainL * mono;
-        sum.right += in.mixGainR * mono;
-        sum.left += in.mixGainL * (stereoL - mono);
-        sum.right += in.mixGainR * (stereoR - mono);
+        channelSums[ch].left += stereoL;
+        channelSums[ch].right += stereoR;
+        if (voices.drumBus[i].enabled)
+        {
+            channelDrumBus[ch] = voices.drumBus[i];
+            channelHasDrumBus[ch] = true;
+        }
     }
 
+    StereoFrame sum{};
+    for (int ch = 0; ch < 16; ch++)
+    {
+        StereoFrame frame = channelSums[ch];
+        if (channelHasDrumBus[ch])
+        {
+            frame = ApplyDrumBus(state.drumBusState[ch], channelDrumBus[ch], frame, sound.fs);
+        }
+        sum.left += frame.left * state.channelMixGainL[ch];
+        sum.right += frame.right * state.channelMixGainR[ch];
+    }
     return sum;
 }

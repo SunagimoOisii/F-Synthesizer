@@ -668,6 +668,34 @@ void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent)
     WriteIndent(out, indent); out << "}";
 }
 
+void WriteDrumBusConfig(std::ostream& out, const DrumBusConfig& bus, int indent)
+{
+    WriteIndent(out, indent); out << "\"drumBus\": {\n";
+    WriteIndent(out, indent + 2); out << "\"enabled\": " << (bus.enabled ? "true" : "false") << ",\n";
+    WriteIndent(out, indent + 2); out << "\"level\": " << bus.level << ",\n";
+    WriteIndent(out, indent + 2); out << "\"attackTrim\": " << bus.attackTrim << ",\n";
+    WriteIndent(out, indent + 2); out << "\"sustainLift\": " << bus.sustainLift << ",\n";
+    WriteIndent(out, indent + 2); out << "\"glue\": " << bus.glue << ",\n";
+    WriteIndent(out, indent + 2); out << "\"presenceCut\": " << bus.presenceCut << ",\n";
+    WriteIndent(out, indent + 2); out << "\"lowTighten\": " << bus.lowTighten << ",\n";
+    WriteIndent(out, indent + 2); out << "\"roomSend\": " << bus.roomSend << ",\n";
+    WriteIndent(out, indent + 2); out << "\"driveTrim\": " << bus.driveTrim << "\n";
+    WriteIndent(out, indent); out << "}";
+}
+
+bool ShouldWriteDrumBus(const DrumBusConfig& bus)
+{
+    return bus.enabled ||
+        bus.level != 1.0 ||
+        bus.attackTrim != 0.0 ||
+        bus.sustainLift != 0.0 ||
+        bus.glue != 0.0 ||
+        bus.presenceCut != 0.0 ||
+        bus.lowTighten != 0.0 ||
+        bus.roomSend != 0.0 ||
+        bus.driveTrim != 0.0;
+}
+
 void WriteModulationConfig(std::ostream& out, const ModulationConfig& m, int indent)
 {
     WriteIndent(out, indent); out << "\"modulation\": {\n";
@@ -834,6 +862,16 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         else if constexpr (std::is_same_v<T, DrumKitConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::DrumKit) << "\",\n";
+            if (ShouldWriteDrumBus(v.drumBus))
+            {
+                WriteDrumBusConfig(out, v.drumBus, indent + 2);
+                out << ",\n";
+            }
+            if (v.velocityCeiling != 1.0 || v.velocityCurve != 1.0)
+            {
+                WriteIndent(out, indent + 2); out << "\"velocityCeiling\": " << v.velocityCeiling << ",\n";
+                WriteIndent(out, indent + 2); out << "\"velocityCurve\": " << v.velocityCurve << ",\n";
+            }
             WriteIndent(out, indent + 2); out << "\"map\": {\n";
             bool first = true;
             for (int note = 0; note < 128; note++)

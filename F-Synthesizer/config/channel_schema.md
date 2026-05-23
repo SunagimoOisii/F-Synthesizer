@@ -237,6 +237,19 @@
 ```json
 {
   "type": "drumkit",
+  "drumBus": {
+    "enabled": true,
+    "level": 0.98,
+    "attackTrim": 0.30,
+    "sustainLift": 0.18,
+    "glue": 0.45,
+    "presenceCut": 0.25,
+    "lowTighten": 0.20,
+    "roomSend": 0.12,
+    "driveTrim": 0.18
+  },
+  "velocityCeiling": 0.95,
+  "velocityCurve": 1.05,
   "map": {
     "36": { "drumType": "kick", "gain": 0.8, "bodyFreq": 54.0, "pitchStart": 4.8 },
     "38": { "drumType": "snare", "gain": 0.8, "bodyFreq": 230.0, "snapLevel": 0.85 },
@@ -245,6 +258,8 @@
   }
 }
 ```
+
+`drumBus` は drumkit 全体を合算した後の配置処理。`attackTrim` は先端を抑え、`sustainLift` は胴と余韻を補い、`glue` はピークをまとめ、`presenceCut` はスネア/ハットの前面感を抑える。`lowTighten` はキック低域を締め、`roomSend` は短い部屋鳴りを足し、`driveTrim` は歪みの張り出しを少し丸める。`velocityCeiling` / `velocityCurve` は外部MIDIの強velocityでドラムだけが飛び出すのを抑える。
 
 ## バリデーション範囲
 
@@ -282,6 +297,10 @@
 - `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness`: `-1.0..1.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
+- `drumBus.level`: `0.0..2.0`
+- `drumBus.attackTrim/sustainLift/glue/presenceCut/lowTighten/roomSend/driveTrim`: `0.0..1.0`
+- `drumkit.velocityCeiling`: `0.0..1.0`
+- `drumkit.velocityCurve`: `0.2..3.0`
 - `unisonVoices`: `1..8`
 - `unisonDetuneCents`: `0.0..120.0`
 - `unisonSpread`: `0.0..1.0`

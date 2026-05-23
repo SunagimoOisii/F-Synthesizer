@@ -1,11 +1,4 @@
 {
-  "tags": [
-    "機能デモ",
-    "エフェクト",
-    "マスターエフェクト",
-    "チェーン"
-  ],
-  "description": "機能デモ: master effect chain。bit crush、chorus、flanger、delay、reverbをまとめて確認する。",
   "channels": {
     "0": {
       "amp": 0.18,
@@ -147,5 +140,12 @@
       "roomSize": 0.62,
       "damping": 0.45
     }
-  }
+  },
+  "tags": [
+    "demo",
+    "master effects",
+    "mix",
+    "検証"
+  ],
+  "description": "bit crush、chorus、flanger、delay、reverbのマスターエフェクトチェーンを確認する検査用プリセット。"
 }

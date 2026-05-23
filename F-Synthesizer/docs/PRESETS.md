@@ -1,122 +1,138 @@
 # PRESETS
 
-`config/presets/` 配下のプリセット一覧と用途メモです。履歴は Git 履歴を参照します。
+`config/presets/` 配下のプリセット一覧と用途メモです。現在のプリセット体系は、互換性よりも「何の楽器として使うか」を優先します。
 
 ## 設計方針
 
-- 軸1: `retro_heavy_*`。90年代アーケード/FM寄りの、実曲に馴染む重厚レトロ音色。
-- 軸2: `demo_*`。1プリセット1テーマで既存機能を聴いて確認する音色。
-- 初期代表: `retro_heavy_fm_brass_ensemble`
-- `retro_heavy_*` では、PSG / bell / pluck / SFX を主役にしない。曲全体へ当てる場合は主役、低域、和音、背景、ドラムを中心に使う。
-- FMは各opの `levelEnv` / `indexEnv` でアタック、胴、余韻を分ける。ベースのピック感やブラスの立ち上がりはプリセット内のop個別Envで作る。
-- `attackLayer` は外部PCMなしで短いピック、吹き始め、金属打撃を足す補助レイヤー。強くしすぎるとピークやチープなクリック感が出るため、主役/低域/ベルへ薄く使う。
-- `bassLayer` はベース向けに低域の芯、胴、歪んだ倍音、中低域の焦点を足す補助レイヤー。使いすぎると低域過多やキックとの衝突が出るため、ベースch中心に使う。
-- `leadLayer` は主旋律向けに硬い頭、短いしゃくり、薄い二重化、FM金属寄りのクセを足す補助レイヤー。強くしすぎると濁るため、前に出したいリードへ中程度までで使う。
-- `chordLayer` は和音向けに固定voicingの追加音を重ね、FM/analog/waveformのコード感と厚みを補う。
-- `padLayer` は背景向けに暗い持続音、遅いfade、軽いdetune、薄い揺れを足す。主旋律を邪魔しない厚みとして使う。
-- `expressionMap` はvelocityを音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad layer量、driveへ薄く反映する。主要リード、ベース、ドラム、和音/背景では強velocityほど輪郭と押し出しが増えるように使う。
-- 命名: `<軸>_<音源方式>_<役割または機能>_<キャラクター>`
-
-## 重厚レトロ
-
-### 主役
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_fm_brass_ensemble` | FM | op個別Env、brass attackLayer、leadLayer v2、expressionMapで立ち上がりとvelocity由来の前面感を押す厚いFMコード/ブラス |
-| `retro_heavy_fm_lead_steelblade` | FM | 短いindex Env、metal attackLayer、leadLayer v2、expressionMapで強velocity時にbiteと金属倍音が増えるFMリード |
-| `retro_heavy_analog_lead_syncstack` | analog | hard syncの押し出しにpick attackLayer、控えめなleadLayer v2、expressionMapを足した太いアナログ風リード |
-| `retro_heavy_analog_lead_pwm_wide` | analog | PWMの揺れにbrass attackLayer、控えめなleadLayer v2、expressionMapを重ねた広めの上物リード |
-
-### 低域
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_fm_bass_pickcore` | FM | 短いindex Env、pick attackLayer、drive系bassLayer v2、expressionMapで強velocity時のピック感と荒い圧を両立するFMベース |
-| `retro_heavy_fm_bass_subdrive` | FM | bassLayer v2とexpressionMapで沈むサブ、中低域の胴、強velocity時の押し出しを足すFMサブドライブ |
-| `retro_heavy_analog_bass_drive` | analog | 本体drive、grit系bassLayer v2、expressionMapを重ねた、荒い圧と粘りのあるアナログ風ベース |
-| `retro_heavy_wave_bass_subsupport` | waveform | FM/analogベースの下に敷くサブ補助。bassLayer v2は薄い胴鳴り用途 |
-
-### 和音と背景
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_fm_chord_stack` | FM | op Env、ChordLayer、PadLayerで固定voicingと暗い厚みを足したFMコード |
-| `retro_heavy_analog_chord_brass` | analog | brass attackLayer、ChordLayer、PadLayerを薄く足し、FM群に混ぜるブラスコードの支え役 |
-| `retro_heavy_fm_pad_organ_dark` | FM | PadLayerで暗い持続感を足し、薄いChordLayerで倍音密度を補うFMオルガンパッド |
-| `retro_heavy_analog_pad_tape` | analog | drift、低いfilter、PadLayerで背景に置きやすいテープ風パッド |
-| `retro_heavy_wave_pad_sweep_dark` | waveform | PadLayerで滑らかな暗い厚みを追加した、ゆっくりfilterが動く重厚パッド |
-
-### ドラム
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_drumkit_arcade` | drumkit | kick/snare/hatにtom、rim、clap、crash、rideを加え、expressionMapでvelocity差を音量と明るさへ反映する基本キット |
-| `retro_heavy_drumkit_impact` | drumkit | 深いkick、太いsnare、派手なtom/crash/rideにexpressionMapを足し、強velocityで押し出す強めのキット |
-| `retro_heavy_noise_hat_support` | noise | drumkitのhatへ薄く足す高域補助。単体主役にはしない |
-
-### 補助
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_fm_pluck_support` | FM | level/index Envとpick attackLayerで短く減衰し、フレーズの輪郭を足すFM補助プラック |
-| `retro_heavy_fm_bell_support` | FM | 長めのlevel Envとmetal attackLayerで控えめに響くFMベル補助 |
-| `retro_heavy_wave_bell_glass_support` | waveform | 透明感を薄く足すガラス系ベル補助 |
-| `retro_heavy_psg_pulse_layer` | PSG | FM/analogの輪郭を足す薄いpulseレイヤー |
-| `retro_heavy_psg_triangle_layer` | PSG | FM/analogベースを主役化せず下から支える薄いtriangle低域レイヤー |
-| `retro_heavy_analog_motion_pulse` | analog | アルペジオではなく緩い動きで支えるpulse補助 |
-
-### 効果音
-
-| プリセット | 音源方式 | 用途メモ |
-|---|---|---|
-| `retro_heavy_fm_sfx_laser` | FM | 通常曲の主役ではなく、短い効果音用途 |
-| `retro_heavy_noise_sweep_riser` | noise | 場面転換や効果音向けのノイズスイープ |
+- `demo_*` は機能検証用です。1プリセット1テーマで、完成音色ではなく差分を聴くために使います。
+- `retro_heavy_*` は実戦用です。名前は `retro_heavy_<instrument>_<role_or_character>` を基本にし、音源方式名は必要な場合だけタグや説明文で補足します。
+- 実戦プリセットは「バンド + ゲーム」編成を想定し、Bass / Lead / Guitar / Strings / Keys / Brass / Pad / Drums / SFX / Support に分けます。
+- PSG、bell、noise、SFX は主役にしすぎず、補助用途として音量と説明を抑えています。
+- DrumKit は `drumBus` 前提です。音量を下げるだけでなく、attack、glue、presence、room で太さを残しながら前に出すぎない配置を作ります。
+- `layers.pluck`、`layers.string`、`layers.body` は、アコギ代役、弦風レイヤー、箱鳴り/胴鳴りを作る共通レイヤーです。
+- `source.filter.mode = ladderLowpass` は、clean biquad より太く癖のあるローパスとして使います。
 
 ## 機能デモ
 
-| プリセット | 音源方式 | 機能テーマ | 用途メモ |
-|---|---|---|---|
-| `demo_fm_algo_stack` | FM | FM algorithm stack | 縦積み変調の濃い倍音 |
-| `demo_fm_algo_parallel` | FM | FM algorithm parallel | 複数carrierの並列感 |
-| `demo_fm_feedback_edge` | FM | FM feedback | feedbackで増えるエッジ |
-| `demo_fm_env2_index` | FM | Env2 -> fm.index | アタック時のFM index変化 |
-| `demo_attack_layer` | FM/analog | attackLayer | pick、brass、metalの内部生成アタックを比較 |
-| `demo_bass_layer_drive` | analog | bassLayer v2 | 低域の芯、フォーカス成分、歪んだ倍音、頭の押し出しを重ねるBassLayer確認 |
-| `demo_chord_pad_layer` | analog | chordLayer / padLayer | 固定voicingの追加音と暗い持続レイヤーで、単音からコード感と背景の厚みを足す確認 |
-| `demo_drumkit_types` | drumkit | drum types | kick、snare、hat、tom、rim、clap、crash、rideの内部生成ドラム確認 |
-| `demo_pwm_lfo` | waveform | LFO -> pulseWidth | PWMによる矩形波の揺れ |
-| `demo_hard_sync` | analog | hard sync | sync ratioによる鋭い倍音 |
-| `demo_ring_mod` | waveform | ring modulation | 金属的な非整数倍音 |
-| `demo_arpeggio_steps` | analog | arpeggio | 8step半音列の音程変化 |
-| `demo_lfo_sample_hold` | analog | Sample&Hold LFO | ランダム段階filter変調 |
-| `demo_lfo_delay_fade` | analog | LFO delay/fade | 後から立ち上がるビブラート |
-| `demo_env2_curve` | FM | Env2 curve | 指数的なindex減衰 |
-| `demo_filter_resonance` | analog | filter resonance | 共振スイープの癖 |
-| `demo_modwheel_filter` | analog | modWheel -> filterCutoffHz | MIDI CCで明るさを操作 |
-| `demo_pressure_amp` | FM | pressure -> amp/filter | Aftertouch入力の確認 |
-| `demo_noise_filter` | noise | noise bandpass | ノイズに音程感を付ける |
-| `demo_master_fx_chain` | FM | master effects | bit crushからreverbまでのチェーン確認 |
+| プリセット | 確認する機能 | 聴くポイント |
+|---|---|---|
+| `demo_fm_algorithm_stack` | FM stack algorithm | 縦積み変調の濃さ |
+| `demo_fm_algorithm_parallel` | FM parallel algorithm | 並列carrierの分離感 |
+| `demo_fm_feedback_edge` | FM feedback | feedbackで増える金属的エッジ |
+| `demo_fm_env_index` | FM index envelope | アタックから減衰する倍音 |
+| `demo_filter_ladder_drive` | Ladder lowpass + drive | clean filterでは出ない太さと歪み |
+| `demo_filter_resonance_sweep` | Filter resonance | cutoff/resonanceの癖 |
+| `demo_pluck_body_layer` | Pluck + Body | ピック頭と胴鳴りの足され方 |
+| `demo_string_layer_motion` | String layer | detune、bow/noise、揺れ、spread |
+| `demo_drum_bus_placement` | Drum Bus | ドラムのattack抑制、glue、room配置 |
+| `demo_drumkit_models` | DrumKit models | kick/snare/hat/tom/rim/clap/cymbalの基本音 |
+| `demo_modulation_lfo_motion` | LFO modulation | 周期的な明るさや揺れ |
+| `demo_expression_velocity` | Expression map | velocityで音量以外の表情が変わる挙動 |
+| `demo_master_fx_chain` | Master effects | reducer、crusher、chorus、flanger、delay、reverb |
+
+## 実戦プリセット
+
+### Bass
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_bass_synth_drive` | 歪んだ芯のあるシンセベース。主低域向け。 |
+| `retro_heavy_bass_pick_fm` | ピック感のあるFMベース。刻みや速いリフ向け。 |
+| `retro_heavy_bass_sub_anchor` | 曲の底を支えるサブ。目立たせすぎない低域用。 |
+| `retro_heavy_bass_sub_support` | 他のベースを補強する薄いサブ補助。単体主役には不向き。 |
+| `retro_heavy_bass_chip_triangle` | PSG/三角波系の低域補助。チップ感を足す用途。 |
+
+### Lead
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_lead_hardsync_main` | hard sync系の主旋律。太いが和音には向かない。 |
+| `retro_heavy_lead_metal_fm` | 金属的なFMリード。強いメロディやソロ向け。 |
+| `retro_heavy_lead_wide_pwm` | 広がりのあるpulse lead。中央を空けたい上物向け。 |
+| `retro_heavy_lead_motion_pulse` | 動きのあるpulse lead。長く伸ばす旋律に向く。 |
+| `retro_heavy_lead_brass_fm` | ブラス寄りの押し出しを持つリード。短いフレーズ向け。 |
+
+### Guitar
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_guitar_acoustic_pluck` | レトロなアコギ代役。アルペジオや刻み向け。 |
+| `retro_heavy_guitar_muted_chop` | ミュートギター風の短い刻み。持続音には不向き。 |
+| `retro_heavy_guitar_power_chord` | パワーコード代役。低中域を埋めるリフ向け。 |
+| `retro_heavy_guitar_glass_harmonics` | ハーモニクス/ベル寄りの補助ギター。主役にしすぎない。 |
+
+### Strings
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_strings_synth_section` | シンセ弦セクション。コードや持続音で厚みを作る。 |
+| `retro_heavy_strings_dark_pad` | 暗いストリングスパッド。背景に沈める用途。 |
+| `retro_heavy_strings_bowed_lead` | 弓弾き風のリード。対旋律や長い旋律向け。 |
+| `retro_heavy_strings_ensemble_wide` | 広い弦アンサンブル。左右の背景を作る用途。 |
+
+### Keys
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_keys_electric_piano` | FM電気ピアノ代役。コード、リフ、アルペジオ向け。 |
+| `retro_heavy_keys_dark_organ` | 暗いオルガンパッド。中域の支えに使う。 |
+| `retro_heavy_keys_glass_bell` | ガラス/ベル系キー。アクセントや高域補助向け。 |
+| `retro_heavy_keys_chip_pulse` | チップ系キー。細い輪郭を足す補助パート向け。 |
+
+### Brass
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_brass_fm_stab` | FMブラススタブ。短いアクセントやヒット向け。 |
+| `retro_heavy_brass_analog_chord` | アナログ風ブラスコード。和音の押し出し用。 |
+| `retro_heavy_brass_dark_ensemble` | 暗いブラス集合音。派手すぎない中域補強向け。 |
+
+### Pad
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_pad_tape_warm` | テープ風の温かい背景パッド。 |
+| `retro_heavy_pad_dark_sweep` | 暗いfilter sweepパッド。場面転換や長いコード向け。 |
+| `retro_heavy_pad_wide_background` | 左右に広い背景パッド。主旋律の後ろに置く。 |
+| `retro_heavy_pad_motion_pulse` | pulseが揺れる動的パッド。単純な白玉を避けたい時に使う。 |
+
+### Drums
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_drums_arcade_kit` | 軽めの標準アーケードキット。MIDIドラムの基本置換向け。 |
+| `retro_heavy_drums_impact_kit` | 強いが前に出すぎないインパクトキット。主ドラム向け。 |
+| `retro_heavy_drums_glued_backbeat` | Drum Busを強めたミックス向けキット。太く奥へ置く用途。 |
+
+### SFX / Support
+
+| プリセット | 用途メモ |
+|---|---|
+| `retro_heavy_sfx_laser_fm` | FMレーザー効果音。曲全体へ割り当てない。 |
+| `retro_heavy_sfx_noise_riser` | ノイズライザー。場面転換やビルドアップ向け。 |
+| `retro_heavy_support_noise_hat` | ハイハット補助。DrumKitの高域へ薄く混ぜる。 |
+| `retro_heavy_support_psg_pulse` | PSG pulse補助。FM/analogの輪郭を薄く足す。 |
+| `retro_heavy_support_psg_triangle` | PSG triangle補助。低域の芯を薄く支える。 |
 
 ## 使い方
 
 CLI:
 
 ```powershell
-F-Synthesizer.exe --cli --preset retro_heavy_fm_brass_ensemble
-F-Synthesizer.exe --cli --preset demo_hard_sync
+F-Synthesizer.exe --cli --preset retro_heavy_bass_synth_drive
+F-Synthesizer.exe --cli --preset demo_filter_ladder_drive
 ```
 
 GUI:
 
-- メイン画面の `Preset` コンボから選択して適用する。
-- `tags` と説明文は Layer1 Discovery の絞り込み・説明表示に使う。
-- 実曲へ割り当てる場合は、主役、低域、和音、背景、ドラムを中心に選ぶ。補助と効果音は全体へ広く当てない。
+- メイン画面の `Preset` コンボから選択して適用します。
+- `tags` と `description` はプリセット検索・説明表示に使います。
+- 実曲へ割り当てる場合は、Bass / Lead / Guitar / Strings / Keys / Brass / Pad / Drums から役割で選び、SFX / Support は補助として薄く使います。
 
 ## 補足
 
-- プリセットは `base.json` に差分適用される。
-- ファイル名は CLI 指定しやすいように英数字と underscore で統一する。
-- 説明文とドキュメントは日本語で記述する。
-- PSG の `maxVoices` はチップ制約を表す設定値だが、現行レンダーでは未適用。PSGプリセットは主役ではなく薄い補助レイヤーとして扱う。
-- 音源方式とレンダリング契約は `docs/Architecture.md` を正本とする。
+- プリセットは `base.json` に差分適用されます。
+- ファイル名は CLI 指定しやすいように英数字と underscore で統一します。
+- 説明文とドキュメントは日本語で記述します。
+- PSG の `maxVoices` はチップ制約を表す設定値ですが、現行レンダーでは未適用です。
+- 音源方式とレンダリング契約は `docs/Architecture.md` を正本とします。

@@ -1,0 +1,173 @@
+{
+  "channels": {
+    "0": {
+      "amp": 0.18,
+      "attackSec": 0.004,
+      "decaySec": 0.15,
+      "sustainLevel": 0.72,
+      "releaseSec": 0.16,
+      "source": {
+        "type": "fm",
+        "algorithm": 7,
+        "feedback": 0.24,
+        "ops": [
+          {
+            "wave": "sine",
+            "ratio": 1,
+            "level": 0.86,
+            "index": 1.8,
+            "levelEnv": {
+              "attackSec": 0.002,
+              "decaySec": 0.12,
+              "sustainLevel": 0.82,
+              "releaseSec": 0.12,
+              "curve": 0.25
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.075,
+              "sustainLevel": 0.48,
+              "releaseSec": 0.05,
+              "curve": 0.7
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 1.5,
+            "level": 0.55,
+            "index": 0.7,
+            "levelEnv": {
+              "attackSec": 0.002,
+              "decaySec": 0.12,
+              "sustainLevel": 0.82,
+              "releaseSec": 0.12,
+              "curve": 0.25
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.075,
+              "sustainLevel": 0.48,
+              "releaseSec": 0.05,
+              "curve": 0.7
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 2,
+            "level": 0.46,
+            "index": 0.35,
+            "levelEnv": {
+              "attackSec": 0.002,
+              "decaySec": 0.12,
+              "sustainLevel": 0.82,
+              "releaseSec": 0.12,
+              "curve": 0.25
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.075,
+              "sustainLevel": 0.48,
+              "releaseSec": 0.05,
+              "curve": 0.7
+            }
+          },
+          {
+            "wave": "sine",
+            "ratio": 0.5,
+            "level": 0.36,
+            "index": 0,
+            "levelEnv": {
+              "attackSec": 0.002,
+              "decaySec": 0.12,
+              "sustainLevel": 0.74,
+              "releaseSec": 0.12,
+              "curve": 0.25
+            },
+            "indexEnv": {
+              "attackSec": 0.0,
+              "decaySec": 0.02,
+              "sustainLevel": 1.0,
+              "releaseSec": 0.05,
+              "curve": 0.0
+            }
+          }
+        ],
+        "drive": 0.08,
+        "modulation": {
+          "env2": {
+            "attackSec": 0.0,
+            "decaySec": 0.14,
+            "sustainLevel": 0.0,
+            "releaseSec": 0.04,
+            "curve": 0.58
+          },
+          "routes": {
+            "0": {
+              "source": "env2",
+              "destination": "fm.index",
+              "amount": 0.28,
+              "enabled": true
+            }
+          }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 6400,
+          "resonance": 0.82,
+          "drive": 0.0
+        }
+      },
+      "expressionMap": {
+        "enabled": true,
+        "velocityCurve": 0.9,
+        "velocityToAmp": 0.9,
+        "velocityToBrightness": 0.2,
+        "velocityToFmIndex": 0.18,
+        "velocityToAttack": 0.16,
+        "velocityToBass": 0.0,
+        "velocityToLead": 0.2,
+        "modWheelToBrightness": 0.14,
+        "pressureToDrive": 0.06,
+        "cc74ToBrightness": 0.25
+      },
+      "layers": {
+        "lead": {
+          "enabled": true,
+          "type": "blade",
+          "level": 0.13,
+          "edgeLevel": 0.42,
+          "bodyLevel": 0.26,
+          "detuneCents": 4.5,
+          "pitchBendSemis": 0.55,
+          "bendDecaySec": 0.04,
+          "attackBoost": 0.2,
+          "attackDecaySec": 0.035,
+          "drive": 0.1,
+          "characterLevel": 0.18,
+          "characterTone": 0.68,
+          "biteLevel": 0.16,
+          "biteDecaySec": 0.022,
+          "wobbleDepthCents": 4.5,
+          "wobbleRateHz": 5.1
+        },
+        "attack": {
+          "enabled": true,
+          "type": "metal",
+          "level": 0.13,
+          "decaySec": 0.034,
+          "brightness": 0.62,
+          "bodyMix": 0.48,
+          "pitchOffsetSemis": 7,
+          "drive": 0.1
+        }
+      }
+    }
+  },
+  "tags": [
+    "重厚レトロ",
+    "Lead",
+    "metal",
+    "FM"
+  ],
+  "description": "金属的な倍音を持つFMリード。明るすぎないが前に出したい主旋律向け。"
+}

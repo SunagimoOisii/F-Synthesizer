@@ -1,9 +1,28 @@
 #include "Internal.h"
 
+#include <algorithm>
+
 #include "../ConfigFileInternal.h"
 
 namespace config::internal::load
 {
+namespace
+{
+bool ParseDrumBusObject(const std::string& busObjText, DrumBusConfig& bus)
+{
+    if (auto v = ReadJSONBool(busObjText, "enabled")) bus.enabled = *v;
+    if (auto v = ReadJSONDouble(busObjText, "level")) bus.level = std::clamp(*v, 0.0, 2.0);
+    if (auto v = ReadJSONDouble(busObjText, "attackTrim")) bus.attackTrim = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "sustainLift")) bus.sustainLift = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "glue")) bus.glue = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "presenceCut")) bus.presenceCut = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "lowTighten")) bus.lowTighten = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "roomSend")) bus.roomSend = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(busObjText, "driveTrim")) bus.driveTrim = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+} // namespace
+
 bool ParseDrumSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     // 旧フォーマット("type": "drum")を drumkit(note 60)へ自動変換してロードする。
@@ -71,6 +90,24 @@ bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSourc
         {
             return false;
         }
+    }
+    std::string drumBusObj;
+    bool drumBusFound = false;
+    if (!ExtractObjectForKey(sourceObjText, "drumBus", drumBusObj, drumBusFound, err))
+    {
+        return false;
+    }
+    if (drumBusFound)
+    {
+        ParseDrumBusObject(drumBusObj, kit.drumBus);
+    }
+    if (auto v = ReadJSONDouble(sourceObjText, "velocityCeiling"))
+    {
+        kit.velocityCeiling = std::clamp(*v, 0.0, 1.0);
+    }
+    if (auto v = ReadJSONDouble(sourceObjText, "velocityCurve"))
+    {
+        kit.velocityCurve = std::clamp(*v, 0.2, 3.0);
     }
     outSource = kit;
     return true;
