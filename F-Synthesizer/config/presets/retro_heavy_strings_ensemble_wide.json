@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Strings ensemble wide",
+  "category": "Pad",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

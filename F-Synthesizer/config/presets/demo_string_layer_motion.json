@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "String layer motion",
+  "category": "Pad",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

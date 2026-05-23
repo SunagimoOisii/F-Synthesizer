@@ -332,7 +332,7 @@ bool DrawChannelEditor(
         return edited;
     };
 #include "channeleditor/ChannelEditorModulation.inl"
-    ImGui::TextDisabled("Soundタブは音色定義のみ編集します（ミックス/割当はMusicタブ）。");
+    ImGui::TextDisabled("Advancedの音色詳細は音色定義のみ編集します（ミックス/割当はMixerで扱います）。");
 
     ImGui::Separator();
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];

@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Strings bowed lead",
+  "category": "Lead",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

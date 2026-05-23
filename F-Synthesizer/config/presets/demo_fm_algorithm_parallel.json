@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Fm algorithm parallel",
+  "category": "Lead",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

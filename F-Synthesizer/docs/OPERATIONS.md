@@ -56,9 +56,10 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 GUI、preview、piano-roll、step sequencer、export に触れた場合は、次の主要導線を短く確認します。
 
 1. `.\build\x64\Debug\F-Synthesizer.exe --gui` を起動する。
-2. 作る: Sound の preset 一覧、音源タイプ切替、Layer2 マクロ、音源詳細を操作し、Tone Preview が鳴ることを確認する。
-3. 遊ぶ: ピアノロールでノート追加、選択、移動、プレビュー再生を確認する。ch10 ドラム運用ではステップシーケンサーを開き、複数 step の発音を確認する。
-4. 書き出す: 出力先を指定して短く書き出し、WAV が生成されることを確認する。
+2. Play: Sound Card の選択、4 マクロ、簡易キーボード、Tone Preview が動くことを確認する。
+3. Compose: MIDI 読み込み、ピアノロールのノート追加/選択/移動、ch10 ドラム運用のステップシーケンサーを確認する。
+4. Export: 出力先を指定して短く書き出し、WAV が生成されることを確認する。
+5. Advanced: 音源詳細、Master FX、Mixer/割当、検査用 preset に到達できることを確認する。
 5. Sound Preview、Waveform、Spectrum、VU が無反応または明らかな無音表示になっていないことを確認する。
 
 ## 実装前確認

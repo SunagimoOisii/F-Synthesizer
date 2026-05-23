@@ -284,6 +284,9 @@
     <ClInclude Include="src\\gui\\main\\MainWindow.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="src\\gui\\main\\ExperienceViews.inl">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="src\\gui\\main\\Layer1Discovery.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

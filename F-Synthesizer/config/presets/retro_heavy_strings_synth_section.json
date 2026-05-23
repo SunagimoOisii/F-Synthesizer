@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Strings synth section",
+  "category": "Pad",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

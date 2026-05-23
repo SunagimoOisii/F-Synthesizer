@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Guitar power chord",
+  "category": "Keys",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

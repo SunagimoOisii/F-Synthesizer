@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Pad dark sweep",
+  "category": "Pad",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

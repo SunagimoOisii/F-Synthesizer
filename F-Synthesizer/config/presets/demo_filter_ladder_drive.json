@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Filter ladder drive",
+  "category": "Lead",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

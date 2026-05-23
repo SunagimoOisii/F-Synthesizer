@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Drums impact kit",
+  "category": "Drums",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

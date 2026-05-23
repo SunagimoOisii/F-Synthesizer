@@ -386,7 +386,7 @@ bool IsGuiSelectableSourceKind(SourceKind kind)
     }
 
     const SourceCapability capability = SourceCapabilityOf(kind);
-    // Soundタブでは one-shot 単発の Drum 直編集を避け、DrumKit を正規導線として残す。
+    // GUIでは one-shot 単発の Drum 直編集を避け、DrumKit を正規導線として残す。
     return !capability.isPercussion || kind == SourceKind::DrumKit;
 }
 

@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Support psg pulse",
+  "category": "Support",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

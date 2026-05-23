@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Bass pick fm",
+  "category": "Bass",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

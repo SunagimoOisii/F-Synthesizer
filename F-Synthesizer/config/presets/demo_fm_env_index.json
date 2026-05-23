@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Fm env index",
+  "category": "Lead",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

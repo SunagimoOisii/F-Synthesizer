@@ -45,7 +45,7 @@ struct GUIPersistentState
     float extraReleaseSec = 0.3f;
     MasterEffectConfig masterEffects{};
     int UIScaleIndex = 1; // 0=100%, 1=125%, 2=150%
-    int UIModeTab = 0; // 0=作る, 1=遊ぶ, 2=書き出す
+    int UIModeTab = 0; // 0=Play, 1=Compose, 2=Export, 3=Advanced
     int UIThemeIndex = 0; // 0=Blueprint Beat Light, 1=Blueprint Beat Dark
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
@@ -60,6 +60,9 @@ struct GUIPersistentState
     std::vector<std::string> presetItems{};
     std::vector<std::vector<std::string>> presetItemTags{};
     std::vector<std::string> presetItemDescriptions{};
+    std::vector<std::string> presetItemDisplayNames{};
+    std::vector<std::string> presetItemCategories{};
+    std::vector<bool> presetItemInternal{};
     std::string lastOutputPath{};
     std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
@@ -103,6 +106,8 @@ struct GUITransientState
     // Sound タブ Undo/Redo スタック（セッション中のみ保持）
     std::deque<SoundUndoEntry> soundUndoStack;
     std::deque<SoundUndoEntry> soundRedoStack;
+    int playCategoryIndex = 0;
+    bool playInspectorOpen = true;
 };
 
 // 非同期Run/Preview再生に関係する状態。

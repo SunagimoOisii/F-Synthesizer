@@ -178,6 +178,9 @@ struct PresetMeta
 {
     std::vector<std::string> tags{};
     std::string description{};
+    std::string displayName{};
+    std::string category{};
+    bool internalOnly = false;
     config::SourceKind sourceKind = config::SourceKind::Count;
 };
 
@@ -200,6 +203,54 @@ config::SourceKind SourceKindFromTypeString(const std::string& type)
     return config::SourceKind::Count;
 }
 
+std::string DisplayNameFromPresetName(const std::string& name)
+{
+    std::string display = name;
+    const std::string retroPrefix = "retro_heavy_";
+    if (display.rfind(retroPrefix, 0) == 0)
+    {
+        display = display.substr(retroPrefix.size());
+    }
+    const std::string demoPrefix = "demo_";
+    if (display.rfind(demoPrefix, 0) == 0)
+    {
+        display = display.substr(demoPrefix.size());
+    }
+    for (char& c : display)
+    {
+        if (c == '_')
+        {
+            c = ' ';
+        }
+    }
+    if (!display.empty())
+    {
+        display[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(display[0])));
+    }
+    return display;
+}
+
+std::string CategoryFromPresetNameAndTags(const std::string& name, const std::vector<std::string>& tags)
+{
+    auto has = [&](const char* key) {
+        if (ToLower(name).find(key) != std::string::npos)
+        {
+            return true;
+        }
+        return std::any_of(tags.begin(), tags.end(), [&](const std::string& tag) {
+            return tag.find(key) != std::string::npos;
+        });
+    };
+    if (has("drum")) return "Drums";
+    if (has("bass")) return "Bass";
+    if (has("lead")) return "Lead";
+    if (has("pad") || has("string")) return "Pad";
+    if (has("key") || has("brass") || has("guitar")) return "Keys";
+    if (has("sfx") || has("laser") || has("riser")) return "SFX";
+    if (has("support")) return "Support";
+    return "Lead";
+}
+
 PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
 {
     PresetMeta meta{};
@@ -219,6 +270,18 @@ PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
     {
         meta.description = root["description"].get<std::string>();
     }
+    if (root.contains("displayName") && root["displayName"].is_string())
+    {
+        meta.displayName = root["displayName"].get<std::string>();
+    }
+    if (root.contains("category") && root["category"].is_string())
+    {
+        meta.category = root["category"].get<std::string>();
+    }
+    if (root.contains("internal") && root["internal"].is_boolean())
+    {
+        meta.internalOnly = root["internal"].get<bool>();
+    }
     if (root.contains("tags") && root["tags"].is_array())
     {
         for (const auto& tag : root["tags"])
@@ -228,6 +291,26 @@ PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
                 meta.tags.push_back(ToLower(tag.get<std::string>()));
             }
         }
+    }
+    for (const std::string& tag : meta.tags)
+    {
+        if (tag == "demo" || tag == "internal" || tag == "test" || tag == "inspection")
+        {
+            meta.internalOnly = true;
+        }
+    }
+    const std::string stem = presetPath.stem().string();
+    if (stem.rfind("demo_", 0) == 0)
+    {
+        meta.internalOnly = true;
+    }
+    if (meta.displayName.empty())
+    {
+        meta.displayName = DisplayNameFromPresetName(stem);
+    }
+    if (meta.category.empty())
+    {
+        meta.category = CategoryFromPresetNameAndTags(stem, meta.tags);
     }
 
     const Json* projectRoot = &root;
@@ -453,18 +536,33 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
     state.presetItems.clear();
     state.presetItemTags.clear();
     state.presetItemDescriptions.clear();
+    state.presetItemDisplayNames.clear();
+    state.presetItemCategories.clear();
+    state.presetItemInternal.clear();
     state.presetItems.reserve(all.size());
     state.presetItemTags.reserve(all.size());
     state.presetItemDescriptions.reserve(all.size());
+    state.presetItemDisplayNames.reserve(all.size());
+    state.presetItemCategories.reserve(all.size());
+    state.presetItemInternal.reserve(all.size());
+    const bool playMode = (state.UIModeTab == 0);
+    const bool advancedMode = (state.UIModeTab == 3);
     for (const auto& name : all)
     {
         const auto it = metaByName.find(name);
         const PresetMeta* meta = (it != metaByName.end()) ? &it->second : nullptr;
-        if (meta != nullptr && PresetMatchesSourceKind(name, kind, *meta))
+        const bool includeByMode = meta != nullptr
+            && ((playMode && !meta->internalOnly)
+                || advancedMode
+                || (!playMode && !advancedMode && !meta->internalOnly && PresetMatchesSourceKind(name, kind, *meta)));
+        if (includeByMode)
         {
             state.presetItems.push_back(name);
             state.presetItemTags.push_back(meta->tags);
             state.presetItemDescriptions.push_back(meta->description);
+            state.presetItemDisplayNames.push_back(meta->displayName);
+            state.presetItemCategories.push_back(meta->category);
+            state.presetItemInternal.push_back(meta->internalOnly);
         }
     }
     const bool allowUnfilteredFallback = (kind == config::SourceKind::Count);
@@ -473,8 +571,14 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
         state.presetItems = std::move(all);
         state.presetItemTags.clear();
         state.presetItemDescriptions.clear();
+        state.presetItemDisplayNames.clear();
+        state.presetItemCategories.clear();
+        state.presetItemInternal.clear();
         state.presetItemTags.reserve(state.presetItems.size());
         state.presetItemDescriptions.reserve(state.presetItems.size());
+        state.presetItemDisplayNames.reserve(state.presetItems.size());
+        state.presetItemCategories.reserve(state.presetItems.size());
+        state.presetItemInternal.reserve(state.presetItems.size());
         for (const auto& name : state.presetItems)
         {
             const auto it = metaByName.find(name);
@@ -482,11 +586,17 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
             {
                 state.presetItemTags.push_back(it->second.tags);
                 state.presetItemDescriptions.push_back(it->second.description);
+                state.presetItemDisplayNames.push_back(it->second.displayName);
+                state.presetItemCategories.push_back(it->second.category);
+                state.presetItemInternal.push_back(it->second.internalOnly);
             }
             else
             {
                 state.presetItemTags.emplace_back();
                 state.presetItemDescriptions.emplace_back();
+                state.presetItemDisplayNames.push_back(DisplayNameFromPresetName(name));
+                state.presetItemCategories.push_back(CategoryFromPresetNameAndTags(name, state.presetItemTags.back()));
+                state.presetItemInternal.push_back(name.rfind("demo_", 0) == 0);
             }
         }
     }

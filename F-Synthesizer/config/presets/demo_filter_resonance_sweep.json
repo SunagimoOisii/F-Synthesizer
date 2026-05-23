@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Filter resonance sweep",
+  "category": "Lead",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

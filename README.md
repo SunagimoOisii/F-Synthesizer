@@ -15,7 +15,7 @@ F-Synthesizer は C++ 製デスクトップシンセサイザのワークスペ�
 
 - MIDI 解析は Note / Tempo / CC / Pitch Bend / Pressure / 基本的なチャンネル処理に対応。
 - レンダリングは waveform、PSG 風プリセット、noise、FM、drum、drumkit を扱う。
-- GUI は「遊ぶ / 作る / 書き出す」導線を中心に、ピアノロール直接編集とステップシーケンサーを持つ。
+- GUI は `Play / Compose / Export / Advanced` 導線を中心に、Sound Card 選択、ピアノロール直接編集、ステップシーケンサーを持つ。
 - 音作りは、短いプレビュー導線、初心者向け操作、レトロゲーム風の音色を優先する。
 
 ## 次にやること

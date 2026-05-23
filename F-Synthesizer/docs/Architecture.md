@@ -77,7 +77,6 @@ GUI 状態に依存しません。
   - `analog`: waveform 系の減算的音源。drive と drift を持つ。
   - `fm`: algorithm ベースの FM 音源。operator ratio、output level、feedback、modulation しやすい index を持つ。
   - `noise`: white / pink / brown noise と shared filter shaping。
-  - `drum`: kick / snare / hat 風の単体 drum voice。
   - `drumkit`: ch10 運用向けの note number map。
 - source capability と schema の共通挙動は、GUI や load code へ重複実装せず `SourceRegistry` に集約する。
 - 未知の config key は警告にできるが、不正値や未対応 source field は load error にする。
@@ -85,9 +84,12 @@ GUI 状態に依存しません。
 ## GUI 契約
 
 - UI は短い編集→試聴サイクルを最優先する。
-- 主導線は「遊ぶ / 作る / 書き出す」。
-- Sound 編集では、初心者向け macro control を preview control の近くに置く。
-- 詳細 source control はあってよいが、使える音へ到達する唯一の導線にしない。
+- 主導線は `Play / Compose / Export / Advanced`。
+- `Play` は起動直後の画面で、音楽用途の Sound Card、4 つの感覚的な macro、試聴、簡易キーボードだけを前面に出す。
+- `Compose` は MIDI、ピアノロール、ステップシーケンサー、簡易チャンネル割当を扱う。
+- `Export` は WAV 書き出しに集中し、形式設定は折りたたみの詳細設定に置く。
+- `Advanced` は詳細 source control、Master FX、Mixer/割当、検査用 preset の到達先にする。
+- 専門的な音色編集は Play に常時表示せず、Advanced または Play の Inspector 導線から開く。
 - Piano-roll 編集と drum step-sequencer 編集は、preview と export の両方へ反映する。
 - GUI 状態は `config/gui_state.json` に保存する。Piano-roll project は `config/piano_roll_project.json` に保存する。
 - GUI code は sound synthesis を直接実装せず、app/core のレンダリング経路を呼ぶ。

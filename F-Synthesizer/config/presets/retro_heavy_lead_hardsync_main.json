@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Lead hardsync main",
+  "category": "Lead",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

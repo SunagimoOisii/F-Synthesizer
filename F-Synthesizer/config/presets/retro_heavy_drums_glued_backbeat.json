@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Drums glued backbeat",
+  "category": "Drums",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

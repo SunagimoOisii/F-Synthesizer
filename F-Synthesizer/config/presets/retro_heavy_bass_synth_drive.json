@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Bass synth drive",
+  "category": "Bass",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

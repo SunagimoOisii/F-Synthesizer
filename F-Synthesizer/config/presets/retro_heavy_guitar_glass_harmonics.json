@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Guitar glass harmonics",
+  "category": "Keys",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Drums arcade kit",
+  "category": "Drums",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

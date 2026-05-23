@@ -274,8 +274,9 @@ void RepairGUIStatePaths(
         state.UIScaleIndex = 1;
         repaired = true;
     }
-    if (state.UIModeTab < 0 || state.UIModeTab > 2)
+    if (state.UIModeTab != 0)
     {
+        // GUI刷新後は旧タブ状態を引き継がず、初回成功体験の Play から開始する。
         state.UIModeTab = 0;
         repaired = true;
     }

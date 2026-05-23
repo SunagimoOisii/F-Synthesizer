@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Support noise hat",
+  "category": "Support",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

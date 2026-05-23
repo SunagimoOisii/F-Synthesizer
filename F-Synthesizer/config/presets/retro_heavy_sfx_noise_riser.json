@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Sfx noise riser",
+  "category": "SFX",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

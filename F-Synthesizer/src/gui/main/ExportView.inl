@@ -1,5 +1,5 @@
 // ExportView.inl
-// 「書き出す」専用ビュー（UIModeTab == 2 用）。
+// Export 専用ビュー（UIModeTab == 2 用）。
 // DrawExportView(state, updateHoverHelp) を MainWindow.inl の Export ブランチから呼び出す。
 // GUIMain.cpp 匿名名前空間に VUMeter.inl の後に #include して使用する。
 
@@ -50,14 +50,42 @@ static void DrawExportView(
         }
     }
 
-    // ---- フォーマットサマリー（読み取り専用） ----
+    // ---- フォーマットサマリー + 詳細 ----
     ImGui::Separator();
     ImGui::TextDisabled("形式: %d Hz / %dbit   連番保存: %s",
         state.sampleRate, state.bits, state.serialSave ? "ON" : "OFF");
     updateHoverHelp(
         "現在のフォーマット設定のサマリーです。",
-        "詳細設定は 音楽 タブの レンダー設定 で変更できます。",
+        "詳細設定を開くと形式と余韻を変更できます。",
         nullptr);
+    if (ImGui::CollapsingHeader("詳細設定"))
+    {
+        state.presetDirty |= ImGui::InputInt("サンプルレート", &state.sampleRate);
+        updateHoverHelp(
+            "出力サンプルレートを設定します。",
+            "音質・負荷・サイズが変わります。",
+            "高すぎる値は処理時間を増やします。");
+        state.presetDirty |= ImGui::InputInt("最小秒数", &state.initialSeconds);
+        updateHoverHelp(
+            "最低レンダ秒数を設定します。",
+            "出力の最小長さを確保します。",
+            "短くしすぎると余韻が切れやすくなります。");
+        state.presetDirty |= ImGui::InputInt("ビット深度", &state.bits);
+        updateHoverHelp(
+            "出力ビット深度を設定します。",
+            "ダイナミックレンジと互換性が変わります。",
+            "現行実装は16bitのみ有効です。");
+        state.presetDirty |= ImGui::InputFloat("追加リリース (秒)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
+        updateHoverHelp(
+            "ノート終端後の追加リリース時間を設定します。",
+            "尻切れを抑え、余韻を確保します。",
+            "長くしすぎると書き出し時間とサイズが増えます。");
+        state.presetDirty |= ImGui::Checkbox("連番保存", &state.serialSave);
+        updateHoverHelp(
+            "連番保存を切り替えます。",
+            "同名出力の上書きを避けます。",
+            "無効時は同名ファイルを上書きします。");
+    }
 
     // ---- 出力対象 ----
     ImGui::Separator();

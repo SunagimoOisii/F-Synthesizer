@@ -6,6 +6,8 @@
 
 - `demo_*` は機能検証用です。1プリセット1テーマで、完成音色ではなく差分を聴くために使います。
 - `retro_heavy_*` は実戦用です。名前は `retro_heavy_<instrument>_<role_or_character>` を基本にし、音源方式名は必要な場合だけタグや説明文で補足します。
+- GUI の Play では `internal: false` の実戦プリセットだけを Sound Card として表示し、`displayName` と `category` をカード表示に使います。
+- `internal: true` の検証用プリセットは Advanced から到達します。
 - 実戦プリセットは「バンド + ゲーム」編成を想定し、Bass / Lead / Guitar / Strings / Keys / Brass / Pad / Drums / SFX / Support に分けます。
 - PSG、bell、noise、SFX は主役にしすぎず、補助用途として音量と説明を抑えています。
 - DrumKit は `drumBus` 前提です。音量を下げるだけでなく、attack、glue、presence、room で太さを残しながら前に出すぎない配置を作ります。

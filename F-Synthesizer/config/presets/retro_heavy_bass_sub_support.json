@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Bass sub support",
+  "category": "Bass",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

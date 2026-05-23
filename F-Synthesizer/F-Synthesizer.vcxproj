@@ -238,6 +238,7 @@
     <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="src\\gui\\main\\MainWindow.inl" />
+    <ClInclude Include="src\\gui\\main\\ExperienceViews.inl" />
     <ClInclude Include="src\\gui\\main\\Layer1Discovery.inl" />
     <ClInclude Include="src\\gui\\main\\Layer2Macros.inl" />
     <ClInclude Include="src\\gui\\main\\RunLoop.inl" />

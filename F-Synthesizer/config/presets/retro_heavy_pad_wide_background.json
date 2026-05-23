@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Pad wide background",
+  "category": "Pad",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

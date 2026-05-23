@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Keys chip pulse",
+  "category": "Keys",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

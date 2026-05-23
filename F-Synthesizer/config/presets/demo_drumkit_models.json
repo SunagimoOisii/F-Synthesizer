@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Drumkit models",
+  "category": "Drums",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

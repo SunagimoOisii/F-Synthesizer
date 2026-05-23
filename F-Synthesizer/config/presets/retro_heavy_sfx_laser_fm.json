@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Sfx laser fm",
+  "category": "SFX",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

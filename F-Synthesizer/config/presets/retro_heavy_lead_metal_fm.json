@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Lead metal fm",
+  "category": "Lead",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

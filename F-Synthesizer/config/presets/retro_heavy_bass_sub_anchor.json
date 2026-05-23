@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Bass sub anchor",
+  "category": "Bass",
+  "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {

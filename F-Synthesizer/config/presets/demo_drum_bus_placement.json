@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Drum bus placement",
+  "category": "Drums",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {

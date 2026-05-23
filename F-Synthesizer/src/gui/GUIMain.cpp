@@ -65,6 +65,7 @@ using ::RedoSound;
 #include "main/VUMeter.inl"
 #include "main/StepSequencer.inl"
 #include "main/ExportView.inl"
+#include "main/ExperienceViews.inl"
 #include "main/MainWindow.inl"
 } // namespace
 

@@ -12,21 +12,21 @@ MacroLabels GetMacroLabels(const SourceConfig& src)
 {
     if (std::holds_alternative<FmConfig>(src))
     {
-        return { "明るさ (FB)", "荒さ (Index)", "揺れ (LFO)", "鳴り方 (ADSR)" };
+        return { "明るさ", "荒さ", "揺れ", "鳴り方" };
     }
     if (std::holds_alternative<NoiseConfig>(src))
     {
-        return { "明るさ (Filter)", "荒さ (Res)", nullptr, "鳴り方 (ADSR)" };
+        return { "明るさ", "荒さ", nullptr, "鳴り方" };
     }
     if (std::holds_alternative<DrumConfig>(src) || std::holds_alternative<DrumKitConfig>(src))
     {
-        return { "明るさ (Pitch)", "荒さ (Noise)", "揺れ (Sweep)", "鳴り方 (Decay)" };
+        return { "明るさ", "荒さ", "動き", "長さ" };
     }
     if (std::holds_alternative<PsgConfig>(src))
     {
-        return { "明るさ (Duty)", nullptr, nullptr, "鳴り方 (ADSR)" };
+        return { "明るさ", nullptr, nullptr, "鳴り方" };
     }
-    return { "明るさ (Filter)", "荒さ (Res+Drive)", "揺れ (LFO)", "鳴り方 (ADSR)" };
+    return { "明るさ", "荒さ", "揺れ", "鳴り方" };
 }
 
 // マクロスライダーをパラメータへ反映し、Auto Tone Preview を要求する。

@@ -1,4 +1,7 @@
-{
+﻿{
+  "displayName": "Fm algorithm stack",
+  "category": "Lead",
+  "internal": true,
   "format": "projectModel.v1",
   "project": {
     "channels": {
