@@ -29,7 +29,6 @@ bool ParseWaveformSource(const std::string& sourceObjText, SourceConfig& outSour
 bool ParseAnalogSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
-bool ParseDrumSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 bool ParsePsgSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err);
 

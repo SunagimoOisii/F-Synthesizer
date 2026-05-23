@@ -29,6 +29,8 @@ F-Synthesizer/x64/
 F-Synthesizer/imgui.ini
 F-Synthesizer/assets/midi/imgui.ini
 F-Synthesizer/build/*.i
+F-Synthesizer/config/gui_state.json
+F-Synthesizer/config/piano_roll_project.json
 
 # CMake 関連
 CMakeFiles/

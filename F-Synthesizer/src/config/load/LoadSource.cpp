@@ -36,9 +36,9 @@ bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource
     case SourceKind::Analog: return ParseAnalogSource(sourceObjText, outSource, err);
     case SourceKind::Noise: return ParseNoiseSource(sourceObjText, outSource, err);
     case SourceKind::Fm: return ParseFmSource(sourceObjText, outSource, err);
-    case SourceKind::Drum: return ParseDrumSource(sourceObjText, outSource, err);
     case SourceKind::DrumKit: return ParseDrumKitSource(sourceObjText, outSource, err);
     case SourceKind::Psg: return ParsePsgSource(sourceObjText, outSource, err);
+    case SourceKind::Drum:
     case SourceKind::Count:
         break;
     }

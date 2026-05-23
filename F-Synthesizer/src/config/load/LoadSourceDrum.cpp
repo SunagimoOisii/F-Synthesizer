@@ -23,25 +23,6 @@ bool ParseDrumBusObject(const std::string& busObjText, DrumBusConfig& bus)
 }
 } // namespace
 
-bool ParseDrumSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
-{
-    // 旧フォーマット("type": "drum")を drumkit(note 60)へ自動変換してロードする。
-    DrumConfig drum{};
-    if (!ParseDrumConfigObject(sourceObjText, drum, err))
-    {
-        return false;
-    }
-    if (!ValidateDrumBySchema(drum, err))
-    {
-        return false;
-    }
-    DrumKitConfig kit{};
-    for (auto& d : kit.map) d.type = DrumType::None;
-    kit.map[60] = drum;
-    outSource = kit;
-    return true;
-}
-
 bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     // DrumKit は差分上書き方式。未指定ノートは DrumType::None のまま保持する。

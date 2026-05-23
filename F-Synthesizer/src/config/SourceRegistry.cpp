@@ -178,7 +178,7 @@ bool TryParseSourceKind(std::string_view typeName, SourceKind& outKind)
 {
     for (const auto& k : kSourceKinds)
     {
-        if (typeName == k.typeName)
+        if (k.kind != SourceKind::Drum && typeName == k.typeName)
         {
             outKind = k.kind;
             return true;

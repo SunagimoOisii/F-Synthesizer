@@ -199,40 +199,7 @@
 
 `ops` は最大4要素。`levelEnv` はそのopの出力レベル、`indexEnv` は変調深さに掛かる個別エンベロープ。旧2op省略形式は使わない。
 
-### 4) drum
-
-```json
-{
-  "type": "drum",
-  "drumType": "kick|snare|hat|tom|rim|clap|crash|ride|none",
-  "gain": 0.6,
-  "bodyFreq": 58.0,
-  "bodyLevel": 0.9,
-  "bodyDecaySec": 0.18,
-  "pitchStart": 4.5,
-  "pitchDecaySec": 0.06,
-  "transientLevel": 0.3,
-  "transientDecaySec": 0.008,
-  "noiseLevel": 0.35,
-  "snapLevel": 0.85,
-  "snapDecaySec": 0.055,
-  "metalLevel": 0.6,
-  "airLevel": 0.3,
-  "decaySec": 0.05,
-  "hpCut": 900.0,
-  "lpCut": 5600.0,
-  "drive": 0.25,
-  "noiseColor": "white|pink|brown|blue",
-  "velocityToTone": 0.25,
-  "velocityToDecay": 0.10,
-  "humanizePitchCents": 2.0,
-  "humanizeDecayPct": 0.08
-}
-```
-
-`drumType` ごとに使う主な項目は異なる。`kick` は `bodyFreq` / `pitchStart` / `transientLevel` / `bodyLevel`、`snare` は `bodyFreq` / `bodyLevel` / `snapLevel` / `snapDecaySec`、`hat` / `crash` / `ride` は `metalLevel` / `airLevel` / `decaySec`、`tom` は `bodyFreq` / `pitchStart` / `bodyDecaySec`、`rim` / `clap` は `transientLevel` / `noiseLevel` を中心に調整する。`velocityToTone` / `velocityToDecay` はMIDI velocityによる音色変化、`humanizePitchCents` / `humanizeDecayPct` は同音連打の微差に使う。
-
-### 5) drumkit
+### 4) drumkit
 
 ```json
 {
@@ -260,6 +227,8 @@
 ```
 
 `drumBus` は drumkit 全体を合算した後の配置処理。`attackTrim` は先端を抑え、`sustainLift` は胴と余韻を補い、`glue` はピークをまとめ、`presenceCut` はスネア/ハットの前面感を抑える。`lowTighten` はキック低域を締め、`roomSend` は短い部屋鳴りを足し、`driveTrim` は歪みの張り出しを少し丸める。`velocityCeiling` / `velocityCurve` は外部MIDIの強velocityでドラムだけが飛び出すのを抑える。
+
+`map` の各 note value は DrumConfig を表す。`drumType` ごとに使う主な項目は異なる。`kick` は `bodyFreq` / `pitchStart` / `transientLevel` / `bodyLevel`、`snare` は `bodyFreq` / `bodyLevel` / `snapLevel` / `snapDecaySec`、`hat` / `crash` / `ride` は `metalLevel` / `airLevel` / `decaySec`、`tom` は `bodyFreq` / `pitchStart` / `bodyDecaySec`、`rim` / `clap` は `transientLevel` / `noiseLevel` を中心に調整する。
 
 ## バリデーション範囲
 

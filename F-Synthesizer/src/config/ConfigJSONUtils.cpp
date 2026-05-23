@@ -307,17 +307,12 @@ bool TryParseModSource(const std::string& name, ModSource& outSource)
 
 bool TryParseModDestination(const std::string& name, ModDestination& outDestination)
 {
-    // 互換方針:
-    // - 新命名: pitchMul / filterCutoffHz
-    // - 旧命名: pitch / filterCutoff も読込だけ許可する。
-    // - pan は現行モノラル経路では非採用のため非受理。
-    // - source固有 destination は source.type ごとの検証で受理可否を制御する。
     if (name == "none")
     {
         outDestination = ModDestination::None;
         return true;
     }
-    if (name == "pitch" || name == "pitchMul")
+    if (name == "pitchMul")
     {
         outDestination = ModDestination::Pitch;
         return true;
@@ -327,7 +322,7 @@ bool TryParseModDestination(const std::string& name, ModDestination& outDestinat
         outDestination = ModDestination::Amp;
         return true;
     }
-    if (name == "filterCutoff" || name == "filterCutoffHz")
+    if (name == "filterCutoffHz")
     {
         outDestination = ModDestination::FilterCutoff;
         return true;
