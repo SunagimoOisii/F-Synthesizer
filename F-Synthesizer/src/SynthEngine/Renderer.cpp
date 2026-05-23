@@ -299,10 +299,13 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         const StereoFrame chord = RenderChordLayer(voices, i, in);
         const StereoFrame pad = RenderPadLayer(voices, i, in);
         const StereoFrame harmonic = RenderHarmonicLayer(voices, i, in);
-        frame.sample += (pluck.left + pluck.right + stringLayer.left + stringLayer.right + chord.left + chord.right + pad.left + pad.right + harmonic.left + harmonic.right) * 0.5;
-        frame.stereoOffsetL += (pluck.left - pluck.right + stringLayer.left - stringLayer.right + chord.left - chord.right + pad.left - pad.right + harmonic.left - harmonic.right) * 0.5;
-        frame.stereoOffsetR += (pluck.right - pluck.left + stringLayer.right - stringLayer.left + chord.right - chord.left + pad.right - pad.left + harmonic.right - harmonic.left) * 0.5;
+        const StereoFrame powerChord = RenderPowerChordLayer(voices, i, in);
+        const StereoFrame chug = RenderChugLayer(voices, i, in);
+        frame.sample += (pluck.left + pluck.right + stringLayer.left + stringLayer.right + chord.left + chord.right + pad.left + pad.right + harmonic.left + harmonic.right + powerChord.left + powerChord.right + chug.left + chug.right) * 0.5;
+        frame.stereoOffsetL += (pluck.left - pluck.right + stringLayer.left - stringLayer.right + chord.left - chord.right + pad.left - pad.right + harmonic.left - harmonic.right + powerChord.left - powerChord.right + chug.left - chug.right) * 0.5;
+        frame.stereoOffsetR += (pluck.right - pluck.left + stringLayer.right - stringLayer.left + chord.right - chord.left + pad.right - pad.left + harmonic.right - harmonic.left + powerChord.right - powerChord.left + chug.right - chug.left) * 0.5;
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
+        ApplyAmpCabLayer(voices, i, in, frame);
         ApplyBodyLayer(voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
         voices.ageSec[i] += in.dt;

@@ -242,10 +242,11 @@ std::string CategoryFromPresetNameAndTags(const std::string& name, const std::ve
         });
     };
     if (has("drum")) return "Drums";
+    if (has("guitar")) return "Guitar";
     if (has("bass")) return "Bass";
     if (has("lead")) return "Lead";
     if (has("pad") || has("string")) return "Pad";
-    if (has("key") || has("brass") || has("guitar")) return "Keys";
+    if (has("key") || has("brass")) return "Keys";
     if (has("sfx") || has("laser") || has("riser")) return "SFX";
     if (has("support")) return "Support";
     return "Lead";

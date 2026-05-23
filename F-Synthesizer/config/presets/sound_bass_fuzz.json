@@ -1,0 +1,36 @@
+{
+  "displayName": "Bass Fuzz",
+  "category": "Bass",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.19,
+        "attackSec": 0.002,
+        "decaySec": 0.16,
+        "sustainLevel": 0.84,
+        "releaseSec": 0.11,
+        "source": {
+          "type": "analog",
+          "wave": "square",
+          "unisonVoices": 1,
+          "unisonDetuneCents": 0,
+          "unisonSpread": 0,
+          "subOscLevel": 0.34,
+          "pulseWidth": 0.42,
+          "drive": 0.12,
+          "driftDepthCents": 1.0,
+          "driftRateHz": 0.14,
+          "filter": { "mode": "lowpass", "cutoffHz": 1250, "resonance": 0.66, "keytrack": 0.24, "drive": 0.0 }
+        },
+        "layers": {
+          "bass": { "enabled": true, "type": "grit", "level": 0.30, "subLevel": 0.28, "bodyLevel": 0.48, "gritLevel": 0.34, "cutoffHz": 1050, "drive": 0.20, "pitchOffsetSemis": -12, "velocityToDrive": 0.16, "focusHz": 180, "focusLevel": 0.16, "bodySaturation": 0.24, "gritTone": 0.62, "attackBoost": 0.10, "attackDecaySec": 0.040 },
+          "ampCab": { "enabled": true, "drive": 0.30, "tone": 0.36, "cabLow": 0.12, "cabHigh": 0.44, "presence": 0.14, "output": 0.76 }
+        }
+      }
+    }
+  },
+  "tags": ["bass", "fuzz", "rock", "heavy"],
+  "description": "荒さを整理したファズベース風の音。ロックの厚みや重いリフの下支えに使う。"
+}

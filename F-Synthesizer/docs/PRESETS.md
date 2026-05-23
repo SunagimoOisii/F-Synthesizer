@@ -7,7 +7,7 @@
 - 実戦用 Sound Card は `sound_<category>_<name>` の形式で管理します。
 - Play では `internal: false` の実戦 preset だけを表示します。
 - Advanced では `internal: true` の `demo_*` 検証 preset に到達できます。
-- 実戦カテゴリは `Lead / Bass / Pad / Keys / Drums / SFX / Support` に固定します。
+- 実戦カテゴリは `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` に固定します。
 - 表示名は短い英語名、説明文は初心者が用途を判断できる日本語短文にします。
 - tags は用途と質感を表す英語 lowercase を基本にします。
 - 旧実戦 preset は廃止し、CLI でも新しい `sound_*` 名を使います。
@@ -19,6 +19,7 @@
 - layer 内部の saw / triangle / pulse / square は、実戦音源では anti-alias 処理された生成経路を使うことを前提にします。レイヤー追加でメイン音源の低ノイズ方針を迂回しないようにします。
 - `layers.body` は `mode` を必ず明示します。Pad では `harmonic` を基本にし、Pluck の箱鳴りでは `box`、金属的な検証音では `metal` を使います。
 - `layers.harmonic` は押した音の整数倍音だけを足す安全な補助レイヤーです。Keys Organ では Chord / String / Body を使わず、HarmonicLayer で中域の厚みを作ります。
+- `layers.powerChord` は Guitar 用に、押した音を基準に5度とオクターブだけを足す補助レイヤーです。`layers.chug` は短いミュート感、`layers.ampCab` はチャンネル単位の歪みと箱鳴り整理に使います。
 
 ## 実戦 Sound Card
 
@@ -30,6 +31,17 @@
 | `sound_lead_metal` | Lead Metal | 金属的な倍音を控えめに整えた強いリード。 |
 | `sound_lead_sync` | Lead Sync | 同期感のあるレトロリード。反復フレーズやオブリ向け。 |
 | `sound_lead_wide` | Lead Wide | ノイズ感を抑えた、広がりのある太いリード。 |
+| `sound_lead_guitarish` | Lead Guitarish | ギター風の歪みを持つロック向けリード。 |
+
+### Guitar
+
+| Preset | 表示名 | 用途メモ |
+|---|---|---|
+| `sound_guitar_clean` | Guitar Clean | クリーンギター風。アルペジオや軽いコード向け。 |
+| `sound_guitar_crunch` | Guitar Crunch | 軽く歪んだリズムギター風。伴奏や短いリフ向け。 |
+| `sound_guitar_drive` | Guitar Drive | 太く歪んだギター風。前に出るリフや単音向け。 |
+| `sound_guitar_power` | Guitar Power | 5度とオクターブを足すパワーコード風。太いリフ向け。 |
+| `sound_guitar_mute` | Guitar Mute | 短く刻むミュートギター風。チャグや低いリズム向け。 |
 
 ### Bass
 
@@ -39,6 +51,8 @@
 | `sound_bass_pick` | Bass Pick | ざらつきを抑えた、ピック感のあるFMベース。 |
 | `sound_bass_sub` | Bass Sub | 低域の芯を優先したサブベース。 |
 | `sound_bass_chip` | Bass Chip | 階段感を抑えたチップ系低域補助。 |
+| `sound_bass_rock_pick` | Bass Rock Pick | ピック感を強めたロックベース。 |
+| `sound_bass_fuzz` | Bass Fuzz | 荒さを整理したファズベース。 |
 
 ### Pad
 
@@ -55,6 +69,7 @@
 |---|---|---|
 | `sound_keys_electric` | Keys Electric | 丸いエレクトリックキー。コードや短いリフ向け。 |
 | `sound_keys_organ` | Keys Organ | HarmonicLayerで倍音を足し、弦や胴鳴りを混ぜずに支えるオルガン系キー。 |
+| `sound_keys_rock_organ` | Keys Rock Organ | AmpCabで押し出しを足したロック向けオルガン。 |
 | `sound_keys_bell` | Keys Bell | 金属感を控えめにしたベルキー。高域アクセント向け。 |
 | `sound_keys_pluck` | Keys Pluck | 耳に残るざらつきを抑えた短いプラック音。 |
 
@@ -65,6 +80,8 @@
 | `sound_drums_arcade` | Drums Arcade | ノイズ成分を整理した標準的なアーケードドラム。 |
 | `sound_drums_impact` | Drums Impact | 押し出しを残しつつ、過剰な歪みを抑えたドラム。 |
 | `sound_drums_glue` | Drums Glue | 曲中でまとまりやすい、派手すぎないドラム。 |
+| `sound_drums_rock` | Drums Rock | ギターやベースと合わせる標準ロックドラム。 |
+| `sound_drums_hard` | Drums Hard | 重いリフ向けの硬めのロックドラム。 |
 
 ### SFX
 
@@ -107,6 +124,7 @@ CLI:
 
 ```powershell
 F-Synthesizer.exe --cli --preset sound_lead_blade
+F-Synthesizer.exe --cli --preset sound_guitar_power
 F-Synthesizer.exe --cli --preset sound_drums_arcade
 F-Synthesizer.exe --cli --preset demo_filter_ladder_drive
 ```

@@ -1,0 +1,43 @@
+{
+  "displayName": "Guitar Clean",
+  "category": "Guitar",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.16,
+        "attackSec": 0.004,
+        "decaySec": 0.16,
+        "sustainLevel": 0.68,
+        "releaseSec": 0.16,
+        "source": {
+          "type": "analog",
+          "wave": "triangle",
+          "unisonVoices": 2,
+          "unisonDetuneCents": 3.0,
+          "unisonSpread": 0.22,
+          "subOscLevel": 0.06,
+          "pulseWidth": 0.48,
+          "drive": 0.02,
+          "driftDepthCents": 1.5,
+          "driftRateHz": 0.2,
+          "filter": {
+            "mode": "lowpass",
+            "cutoffHz": 3400,
+            "resonance": 0.68,
+            "keytrack": 0.22,
+            "drive": 0.0
+          }
+        },
+        "layers": {
+          "attack": { "enabled": true, "type": "pick", "level": 0.12, "decaySec": 0.026, "brightness": 0.46, "bodyMix": 0.42, "pitchOffsetSemis": 0, "drive": 0.01 },
+          "pluck": { "enabled": true, "level": 0.13, "decaySec": 0.22, "brightness": 0.44, "noiseMix": 0.035, "pitchOffsetSemis": 0, "bodySend": 0.18, "drive": 0.015 },
+          "ampCab": { "enabled": true, "drive": 0.08, "tone": 0.55, "cabLow": 0.24, "cabHigh": 0.66, "presence": 0.22, "output": 0.82 }
+        }
+      }
+    }
+  },
+  "tags": ["guitar", "clean", "rock", "pick"],
+  "description": "軽く弾いたクリーンギター風の音。コードの輪郭やアルペジオを前に出したい時に使う。"
+}

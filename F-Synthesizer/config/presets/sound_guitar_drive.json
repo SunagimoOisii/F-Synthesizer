@@ -1,0 +1,37 @@
+{
+  "displayName": "Guitar Drive",
+  "category": "Guitar",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.13,
+        "attackSec": 0.002,
+        "decaySec": 0.13,
+        "sustainLevel": 0.82,
+        "releaseSec": 0.13,
+        "source": {
+          "type": "analog",
+          "wave": "saw",
+          "unisonVoices": 3,
+          "unisonDetuneCents": 4.5,
+          "unisonSpread": 0.36,
+          "subOscLevel": 0.10,
+          "pulseWidth": 0.44,
+          "drive": 0.08,
+          "driftDepthCents": 2.0,
+          "driftRateHz": 0.16,
+          "filter": { "mode": "lowpass", "cutoffHz": 2900, "resonance": 0.68, "keytrack": 0.20, "drive": 0.0 }
+        },
+        "layers": {
+          "attack": { "enabled": true, "type": "pick", "level": 0.12, "decaySec": 0.022, "brightness": 0.54, "bodyMix": 0.46, "pitchOffsetSemis": 0, "drive": 0.03 },
+          "lead": { "enabled": true, "type": "edge", "level": 0.08, "edgeLevel": 0.28, "bodyLevel": 0.22, "detuneCents": 3.0, "pitchBendSemis": 0.12, "bendDecaySec": 0.04, "attackBoost": 0.05, "attackDecaySec": 0.03, "drive": 0.05, "characterLevel": 0.08, "characterTone": 0.58, "biteLevel": 0.03, "biteDecaySec": 0.025, "wobbleDepthCents": 1.0, "wobbleRateHz": 3.5 },
+          "ampCab": { "enabled": true, "drive": 0.42, "tone": 0.58, "cabLow": 0.32, "cabHigh": 0.54, "presence": 0.36, "output": 0.72 }
+        }
+      }
+    }
+  },
+  "tags": ["guitar", "drive", "rock", "lead"],
+  "description": "太く歪んだギター風の音。リフや前に出る単音フレーズに使う。"
+}

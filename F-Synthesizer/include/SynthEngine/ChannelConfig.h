@@ -164,6 +164,41 @@ struct HarmonicLayerConfig
     double stereo = 0.12;
 };
 
+struct PowerChordLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    double fifthLevel = 0.72;
+    double octaveLevel = 0.42;
+    double detuneCents = 3.0;
+    double spread = 0.18;
+    double tone = 0.48;
+    double drive = 0.0;
+};
+
+struct ChugLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    double decaySec = 0.12;
+    double lowPunch = 0.55;
+    double pick = 0.35;
+    double tone = 0.45;
+    double tightness = 0.55;
+    double drive = 0.0;
+};
+
+struct AmpCabLayerConfig
+{
+    bool enabled = false;
+    double drive = 0.0;
+    double tone = 0.52;
+    double cabLow = 0.18;
+    double cabHigh = 0.72;
+    double presence = 0.28;
+    double output = 0.85;
+};
+
 struct ExpressionMapConfig
 {
     bool enabled = false;
@@ -219,6 +254,9 @@ struct ChannelConfig
     StringLayerConfig stringLayer{};
     BodyLayerConfig bodyLayer{};
     HarmonicLayerConfig harmonicLayer{};
+    PowerChordLayerConfig powerChordLayer{};
+    ChugLayerConfig chugLayer{};
+    AmpCabLayerConfig ampCabLayer{};
     DrumBusConfig drumBus{};
     // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
     ExpressionMapConfig expressionMap{};

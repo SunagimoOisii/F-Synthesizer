@@ -929,7 +929,13 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     const auto& harmonic = cfg.harmonicLayer;
     WriteIndent(out, 8); out << "\"harmonic\": { \"enabled\": " << (harmonic.enabled ? "true" : "false") << ", \"level\": " << harmonic.level << ", \"harmonicLevels\": [";
     for (size_t h = 0; h < harmonic.harmonicLevels.size(); h++) { if (h > 0) out << ", "; out << harmonic.harmonicLevels[h]; }
-    out << "], \"brightness\": " << harmonic.brightness << ", \"keyClick\": " << harmonic.keyClick << ", \"attackSec\": " << harmonic.attackSec << ", \"releaseDamp\": " << harmonic.releaseDamp << ", \"drive\": " << harmonic.drive << ", \"stereo\": " << harmonic.stereo << " }\n";
+    out << "], \"brightness\": " << harmonic.brightness << ", \"keyClick\": " << harmonic.keyClick << ", \"attackSec\": " << harmonic.attackSec << ", \"releaseDamp\": " << harmonic.releaseDamp << ", \"drive\": " << harmonic.drive << ", \"stereo\": " << harmonic.stereo << " },\n";
+    const auto& powerChord = cfg.powerChordLayer;
+    WriteIndent(out, 8); out << "\"powerChord\": { \"enabled\": " << (powerChord.enabled ? "true" : "false") << ", \"level\": " << powerChord.level << ", \"fifthLevel\": " << powerChord.fifthLevel << ", \"octaveLevel\": " << powerChord.octaveLevel << ", \"detuneCents\": " << powerChord.detuneCents << ", \"spread\": " << powerChord.spread << ", \"tone\": " << powerChord.tone << ", \"drive\": " << powerChord.drive << " },\n";
+    const auto& chug = cfg.chugLayer;
+    WriteIndent(out, 8); out << "\"chug\": { \"enabled\": " << (chug.enabled ? "true" : "false") << ", \"level\": " << chug.level << ", \"decaySec\": " << chug.decaySec << ", \"lowPunch\": " << chug.lowPunch << ", \"pick\": " << chug.pick << ", \"tone\": " << chug.tone << ", \"tightness\": " << chug.tightness << ", \"drive\": " << chug.drive << " },\n";
+    const auto& ampCab = cfg.ampCabLayer;
+    WriteIndent(out, 8); out << "\"ampCab\": { \"enabled\": " << (ampCab.enabled ? "true" : "false") << ", \"drive\": " << ampCab.drive << ", \"tone\": " << ampCab.tone << ", \"cabLow\": " << ampCab.cabLow << ", \"cabHigh\": " << ampCab.cabHigh << ", \"presence\": " << ampCab.presence << ", \"output\": " << ampCab.output << " }\n";
     WriteIndent(out, 6); out << "},\n";
     if (cfg.expressionMap.enabled)
     {

@@ -1,0 +1,37 @@
+{
+  "displayName": "Guitar Power",
+  "category": "Guitar",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.12,
+        "attackSec": 0.002,
+        "decaySec": 0.12,
+        "sustainLevel": 0.84,
+        "releaseSec": 0.12,
+        "source": {
+          "type": "analog",
+          "wave": "saw",
+          "unisonVoices": 2,
+          "unisonDetuneCents": 3.0,
+          "unisonSpread": 0.24,
+          "subOscLevel": 0.08,
+          "pulseWidth": 0.45,
+          "drive": 0.06,
+          "driftDepthCents": 1.5,
+          "driftRateHz": 0.12,
+          "filter": { "mode": "lowpass", "cutoffHz": 2600, "resonance": 0.66, "keytrack": 0.18, "drive": 0.0 }
+        },
+        "layers": {
+          "attack": { "enabled": true, "type": "pick", "level": 0.10, "decaySec": 0.024, "brightness": 0.48, "bodyMix": 0.48, "pitchOffsetSemis": 0, "drive": 0.02 },
+          "powerChord": { "enabled": true, "level": 0.34, "fifthLevel": 0.78, "octaveLevel": 0.40, "detuneCents": 4.0, "spread": 0.22, "tone": 0.54, "drive": 0.08 },
+          "ampCab": { "enabled": true, "drive": 0.46, "tone": 0.52, "cabLow": 0.34, "cabHigh": 0.50, "presence": 0.32, "output": 0.68 }
+        }
+      }
+    }
+  },
+  "tags": ["guitar", "powerchord", "rock", "heavy"],
+  "description": "押した音を基準に5度とオクターブを足すパワーコード風の音。太いリフに使う。"
+}

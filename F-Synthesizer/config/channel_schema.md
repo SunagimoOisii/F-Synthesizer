@@ -143,6 +143,12 @@
 
 `harmonicLayer` は省略可能。入力ノートの整数倍音だけを sine 加算で足す補助レイヤー。`harmonicLevels` は 1, 2, 3, 4, 5, 6, 8, 10 倍音の相対量で、ChordLayer のように別音程は足さない。Organ / clean Keys で、String や Body を混ぜずに中域の厚みを作る用途で使う。
 
+`powerChordLayer` は省略可能。入力ノートを基準に、5度とオクターブだけを足すGuitar向け補助レイヤー。任意和音は作らず、押した音以外に用途不明な音程を混ぜない。
+
+`chugLayer` は省略可能。palm mute / chug 向けに短い減衰、低域パンチ、pick感を足す補助レイヤー。noise source は使わず、短い周期波形でミュート感を作る。
+
+`ampCabLayer` は省略可能。チャンネル単位の歪み、tone、cab low/high、presence、output をまとめる後段レイヤー。Master FX ではなく Sound Card の音作りとして使う。
+
 `expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad/pluck/string/body layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`modWheelToPad` はPad量、`cc74ToPadBrightness` はPadの明るさへ追加で効く。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
 
 ## source.type ごとの定義
@@ -281,6 +287,12 @@
 - `harmonicLayer.level/brightness/keyClick/releaseDamp/drive/stereo`: `0.0..1.0`
 - `harmonicLayer.harmonicLevels`: 各要素 `0.0..1.0`、8要素、対象倍音は `1,2,3,4,5,6,8,10`
 - `harmonicLayer.attackSec`: `0.001..0.25`
+- `powerChordLayer.level/fifthLevel/octaveLevel/spread/tone/drive`: `0.0..1.0`
+- `powerChordLayer.detuneCents`: `0.0..18.0`
+- `chugLayer.level/lowPunch/pick/tone/tightness/drive`: `0.0..1.0`
+- `chugLayer.decaySec`: `0.025..0.75`
+- `ampCabLayer.drive/tone/cabLow/cabHigh/presence`: `0.0..1.0`
+- `ampCabLayer.output`: `0.0..1.4`
 - `expressionMap.velocityCurve`: `0.2..3.0`
 - `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/velocityToChord/velocityToPad/velocityToPluck/velocityToString/velocityToBody/modWheelToPad/modWheelToString/pressureToDrive/pressureToFilterDrive`: `0.0..1.0`
 - `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness/cc74ToStringBrightness`: `-1.0..1.0`

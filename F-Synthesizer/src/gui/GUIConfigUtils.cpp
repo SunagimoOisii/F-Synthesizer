@@ -221,6 +221,41 @@ bool HarmonicLayerConfigEquals(const HarmonicLayerConfig& a, const HarmonicLayer
         NearlyEq(a.stereo, b.stereo);
 }
 
+bool PowerChordLayerConfigEquals(const PowerChordLayerConfig& a, const PowerChordLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.fifthLevel, b.fifthLevel) &&
+        NearlyEq(a.octaveLevel, b.octaveLevel) &&
+        NearlyEq(a.detuneCents, b.detuneCents) &&
+        NearlyEq(a.spread, b.spread) &&
+        NearlyEq(a.tone, b.tone) &&
+        NearlyEq(a.drive, b.drive);
+}
+
+bool ChugLayerConfigEquals(const ChugLayerConfig& a, const ChugLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
+        NearlyEq(a.lowPunch, b.lowPunch) &&
+        NearlyEq(a.pick, b.pick) &&
+        NearlyEq(a.tone, b.tone) &&
+        NearlyEq(a.tightness, b.tightness) &&
+        NearlyEq(a.drive, b.drive);
+}
+
+bool AmpCabLayerConfigEquals(const AmpCabLayerConfig& a, const AmpCabLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.drive, b.drive) &&
+        NearlyEq(a.tone, b.tone) &&
+        NearlyEq(a.cabLow, b.cabLow) &&
+        NearlyEq(a.cabHigh, b.cabHigh) &&
+        NearlyEq(a.presence, b.presence) &&
+        NearlyEq(a.output, b.output);
+}
+
 bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMapConfig& b)
 {
     return a.enabled == b.enabled &&
@@ -480,6 +515,9 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         StringLayerConfigEquals(a.stringLayer, b.stringLayer) &&
         BodyLayerConfigEquals(a.bodyLayer, b.bodyLayer) &&
         HarmonicLayerConfigEquals(a.harmonicLayer, b.harmonicLayer) &&
+        PowerChordLayerConfigEquals(a.powerChordLayer, b.powerChordLayer) &&
+        ChugLayerConfigEquals(a.chugLayer, b.chugLayer) &&
+        AmpCabLayerConfigEquals(a.ampCabLayer, b.ampCabLayer) &&
         ExpressionMapConfigEquals(a.expressionMap, b.expressionMap) &&
         SourceConfigEquals(a.source, b.source);
 }

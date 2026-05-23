@@ -680,6 +680,67 @@ bool DrawChannelEditor(
         harmonic.stereo = std::clamp(harmonic.stereo, 0.0, 1.0);
     }
 
+    if (ImGui::CollapsingHeader("Rock Layers"))
+    {
+        auto& powerChord = chCfg.powerChordLayer;
+        changed |= ImGui::Checkbox("Enabled##powerChordLayer", &powerChord.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "押した音を基準に5度とオクターブだけを足します。",
+                "ギターのPower Chord向けで、ChordLayerのような複雑な和音は作りません。",
+                "LevelやDriveを上げすぎると低域が濁ります。");
+        }
+        changed |= ImGui::InputDouble("Level##powerChordLayer", &powerChord.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Fifth Level##powerChordLayer", &powerChord.fifthLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Octave Level##powerChordLayer", &powerChord.octaveLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Detune Cents##powerChordLayer", &powerChord.detuneCents, 0.1, 1.0, "%.2f");
+        changed |= ImGui::InputDouble("Spread##powerChordLayer", &powerChord.spread, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Tone##powerChordLayer", &powerChord.tone, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##powerChordLayer", &powerChord.drive, 0.01, 0.05, "%.3f");
+        powerChord.level = std::clamp(powerChord.level, 0.0, 1.0);
+        powerChord.fifthLevel = std::clamp(powerChord.fifthLevel, 0.0, 1.0);
+        powerChord.octaveLevel = std::clamp(powerChord.octaveLevel, 0.0, 1.0);
+        powerChord.detuneCents = std::clamp(powerChord.detuneCents, 0.0, 18.0);
+        powerChord.spread = std::clamp(powerChord.spread, 0.0, 1.0);
+        powerChord.tone = std::clamp(powerChord.tone, 0.0, 1.0);
+        powerChord.drive = std::clamp(powerChord.drive, 0.0, 1.0);
+
+        ImGui::Separator();
+        auto& chug = chCfg.chugLayer;
+        changed |= ImGui::Checkbox("Enabled##chugLayer", &chug.enabled);
+        changed |= ImGui::InputDouble("Level##chugLayer", &chug.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Decay##chugLayer", &chug.decaySec, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Low Punch##chugLayer", &chug.lowPunch, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Pick##chugLayer", &chug.pick, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Tone##chugLayer", &chug.tone, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Tightness##chugLayer", &chug.tightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##chugLayer", &chug.drive, 0.01, 0.05, "%.3f");
+        chug.level = std::clamp(chug.level, 0.0, 1.0);
+        chug.decaySec = std::clamp(chug.decaySec, 0.025, 0.75);
+        chug.lowPunch = std::clamp(chug.lowPunch, 0.0, 1.0);
+        chug.pick = std::clamp(chug.pick, 0.0, 1.0);
+        chug.tone = std::clamp(chug.tone, 0.0, 1.0);
+        chug.tightness = std::clamp(chug.tightness, 0.0, 1.0);
+        chug.drive = std::clamp(chug.drive, 0.0, 1.0);
+
+        ImGui::Separator();
+        auto& ampCab = chCfg.ampCabLayer;
+        changed |= ImGui::Checkbox("Enabled##ampCabLayer", &ampCab.enabled);
+        changed |= ImGui::InputDouble("Drive##ampCabLayer", &ampCab.drive, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Tone##ampCabLayer", &ampCab.tone, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Cab Low##ampCabLayer", &ampCab.cabLow, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Cab High##ampCabLayer", &ampCab.cabHigh, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Presence##ampCabLayer", &ampCab.presence, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Output##ampCabLayer", &ampCab.output, 0.01, 0.05, "%.3f");
+        ampCab.drive = std::clamp(ampCab.drive, 0.0, 1.0);
+        ampCab.tone = std::clamp(ampCab.tone, 0.0, 1.0);
+        ampCab.cabLow = std::clamp(ampCab.cabLow, 0.0, 1.0);
+        ampCab.cabHigh = std::clamp(ampCab.cabHigh, 0.0, 1.0);
+        ampCab.presence = std::clamp(ampCab.presence, 0.0, 1.0);
+        ampCab.output = std::clamp(ampCab.output, 0.0, 1.4);
+    }
+
     if (ImGui::CollapsingHeader("Expression Map"))
     {
         auto& map = chCfg.expressionMap;

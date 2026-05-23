@@ -1,0 +1,37 @@
+{
+  "displayName": "Guitar Crunch",
+  "category": "Guitar",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.145,
+        "attackSec": 0.003,
+        "decaySec": 0.14,
+        "sustainLevel": 0.76,
+        "releaseSec": 0.14,
+        "source": {
+          "type": "analog",
+          "wave": "saw",
+          "unisonVoices": 2,
+          "unisonDetuneCents": 4.0,
+          "unisonSpread": 0.28,
+          "subOscLevel": 0.08,
+          "pulseWidth": 0.46,
+          "drive": 0.05,
+          "driftDepthCents": 2.0,
+          "driftRateHz": 0.18,
+          "filter": { "mode": "lowpass", "cutoffHz": 3200, "resonance": 0.70, "keytrack": 0.24, "drive": 0.0 }
+        },
+        "layers": {
+          "attack": { "enabled": true, "type": "pick", "level": 0.13, "decaySec": 0.024, "brightness": 0.52, "bodyMix": 0.50, "pitchOffsetSemis": 0, "drive": 0.02 },
+          "pluck": { "enabled": true, "level": 0.10, "decaySec": 0.18, "brightness": 0.50, "noiseMix": 0.04, "pitchOffsetSemis": 0, "bodySend": 0.15, "drive": 0.03 },
+          "ampCab": { "enabled": true, "drive": 0.25, "tone": 0.56, "cabLow": 0.28, "cabHigh": 0.58, "presence": 0.30, "output": 0.78 }
+        }
+      }
+    }
+  },
+  "tags": ["guitar", "crunch", "rock", "drive"],
+  "description": "軽く歪んだリズムギター風の音。ロックの伴奏や短いリフに使う。"
+}

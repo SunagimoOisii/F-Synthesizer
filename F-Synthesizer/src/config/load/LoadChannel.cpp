@@ -301,6 +301,47 @@ bool ParseHarmonicLayerObject(const std::string& layerObjText, HarmonicLayerConf
     return true;
 }
 
+bool ParsePowerChordLayerObject(const std::string& layerObjText, PowerChordLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "fifthLevel")) layer.fifthLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "octaveLevel")) layer.octaveLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "detuneCents")) layer.detuneCents = std::clamp(*v, 0.0, 18.0);
+    if (auto v = ReadJSONDouble(layerObjText, "spread")) layer.spread = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "tone")) layer.tone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
+bool ParseChugLayerObject(const std::string& layerObjText, ChugLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "decaySec")) layer.decaySec = std::clamp(*v, 0.025, 0.75);
+    if (auto v = ReadJSONDouble(layerObjText, "lowPunch")) layer.lowPunch = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "pick")) layer.pick = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "tone")) layer.tone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "tightness")) layer.tightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
+bool ParseAmpCabLayerObject(const std::string& layerObjText, AmpCabLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "tone")) layer.tone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "cabLow")) layer.cabLow = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "cabHigh")) layer.cabHigh = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "presence")) layer.presence = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "output")) layer.output = std::clamp(*v, 0.0, 1.4);
+    return true;
+}
+
 bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
 {
     (void)err;
@@ -442,6 +483,39 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
         return false;
     }
     if (foundHarmonicLayer && !ParseHarmonicLayerObject(harmonicLayerObj, cfg.harmonicLayer, err))
+    {
+        return false;
+    }
+
+    std::string powerChordLayerObj;
+    bool foundPowerChordLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "powerChord", powerChordLayerObj, foundPowerChordLayer, err))
+    {
+        return false;
+    }
+    if (foundPowerChordLayer && !ParsePowerChordLayerObject(powerChordLayerObj, cfg.powerChordLayer, err))
+    {
+        return false;
+    }
+
+    std::string chugLayerObj;
+    bool foundChugLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "chug", chugLayerObj, foundChugLayer, err))
+    {
+        return false;
+    }
+    if (foundChugLayer && !ParseChugLayerObject(chugLayerObj, cfg.chugLayer, err))
+    {
+        return false;
+    }
+
+    std::string ampCabLayerObj;
+    bool foundAmpCabLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "ampCab", ampCabLayerObj, foundAmpCabLayer, err))
+    {
+        return false;
+    }
+    if (foundAmpCabLayer && !ParseAmpCabLayerObject(ampCabLayerObj, cfg.ampCabLayer, err))
     {
         return false;
     }

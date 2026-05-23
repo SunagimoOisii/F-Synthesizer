@@ -1,0 +1,37 @@
+{
+  "displayName": "Guitar Mute",
+  "category": "Guitar",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.15,
+        "attackSec": 0.001,
+        "decaySec": 0.055,
+        "sustainLevel": 0.28,
+        "releaseSec": 0.08,
+        "source": {
+          "type": "analog",
+          "wave": "square",
+          "unisonVoices": 1,
+          "unisonDetuneCents": 0,
+          "unisonSpread": 0,
+          "subOscLevel": 0.12,
+          "pulseWidth": 0.38,
+          "drive": 0.06,
+          "driftDepthCents": 0.8,
+          "driftRateHz": 0.12,
+          "filter": { "mode": "lowpass", "cutoffHz": 2100, "resonance": 0.68, "keytrack": 0.16, "drive": 0.0 }
+        },
+        "layers": {
+          "attack": { "enabled": true, "type": "pick", "level": 0.12, "decaySec": 0.016, "brightness": 0.44, "bodyMix": 0.38, "pitchOffsetSemis": 0, "drive": 0.02 },
+          "chug": { "enabled": true, "level": 0.36, "decaySec": 0.105, "lowPunch": 0.72, "pick": 0.42, "tone": 0.38, "tightness": 0.72, "drive": 0.10 },
+          "ampCab": { "enabled": true, "drive": 0.38, "tone": 0.44, "cabLow": 0.36, "cabHigh": 0.46, "presence": 0.26, "output": 0.74 }
+        }
+      }
+    }
+  },
+  "tags": ["guitar", "mute", "chug", "rock"],
+  "description": "短く刻むミュートギター風の音。低いリズムパターンやチャグに使う。"
+}

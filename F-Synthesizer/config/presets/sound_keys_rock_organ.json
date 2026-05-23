@@ -1,0 +1,36 @@
+{
+  "displayName": "Keys Rock Organ",
+  "category": "Keys",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.15,
+        "attackSec": 0.004,
+        "decaySec": 0.12,
+        "sustainLevel": 0.86,
+        "releaseSec": 0.16,
+        "source": {
+          "type": "fm",
+          "algorithm": 5,
+          "feedback": 0.05,
+          "ops": [
+            { "wave": "sine", "ratio": 1.0, "level": 0.68, "index": 0.18, "levelEnv": { "attackSec": 0.004, "decaySec": 0.12, "sustainLevel": 0.90, "releaseSec": 0.14, "curve": 0.20 }, "indexEnv": { "attackSec": 0.004, "decaySec": 0.10, "sustainLevel": 0.45, "releaseSec": 0.08, "curve": 0.35 } },
+            { "wave": "sine", "ratio": 2.0, "level": 0.42, "index": 0.08, "levelEnv": { "attackSec": 0.004, "decaySec": 0.12, "sustainLevel": 0.82, "releaseSec": 0.14, "curve": 0.20 }, "indexEnv": { "attackSec": 0.004, "decaySec": 0.10, "sustainLevel": 0.35, "releaseSec": 0.08, "curve": 0.35 } },
+            { "wave": "sine", "ratio": 3.0, "level": 0.24, "index": 0.04, "levelEnv": { "attackSec": 0.004, "decaySec": 0.12, "sustainLevel": 0.72, "releaseSec": 0.14, "curve": 0.20 }, "indexEnv": { "attackSec": 0.004, "decaySec": 0.10, "sustainLevel": 0.25, "releaseSec": 0.08, "curve": 0.35 } },
+            { "wave": "sine", "ratio": 4.0, "level": 0.12, "index": 0.0, "levelEnv": { "attackSec": 0.004, "decaySec": 0.12, "sustainLevel": 0.62, "releaseSec": 0.14, "curve": 0.20 }, "indexEnv": { "attackSec": 0.0, "decaySec": 0.02, "sustainLevel": 1.0, "releaseSec": 0.05, "curve": 0.0 } }
+          ],
+          "drive": 0.02,
+          "filter": { "mode": "lowpass", "cutoffHz": 3800, "resonance": 0.68, "drive": 0.0 }
+        },
+        "layers": {
+          "harmonic": { "enabled": true, "level": 0.36, "harmonicLevels": [1.0, 0.62, 0.42, 0.26, 0.14, 0.08, 0.04, 0.02], "brightness": 0.54, "keyClick": 0.10, "attackSec": 0.006, "releaseDamp": 0.28, "drive": 0.03, "stereo": 0.10 },
+          "ampCab": { "enabled": true, "drive": 0.18, "tone": 0.58, "cabLow": 0.22, "cabHigh": 0.62, "presence": 0.32, "output": 0.78 }
+        }
+      }
+    }
+  },
+  "tags": ["keys", "organ", "rock"],
+  "description": "ロック向けの押し出しがあるオルガン。コードの背景やリフの補強に使う。"
+}

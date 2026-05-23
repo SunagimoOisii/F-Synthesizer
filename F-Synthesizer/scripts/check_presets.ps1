@@ -238,6 +238,12 @@ function Assert-PracticalPresetLayerPolicy {
     if (Test-JsonProperty -Object $PresetConfig -Name "category") {
         $category = [string]$PresetConfig.category
     }
+    if ($category -ne "") {
+        $allowedCategories = @("Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support")
+        if ($allowedCategories -notcontains $category) {
+            throw "${Name}: invalid practical preset category '${category}'."
+        }
+    }
     $displayName = ""
     if (Test-JsonProperty -Object $PresetConfig -Name "displayName") {
         $displayName = [string]$PresetConfig.displayName
@@ -258,6 +264,11 @@ function Assert-PracticalPresetLayerPolicy {
         }
         if ((Test-LayerEnabled -Layers $layers -Name "string") -and $category -ne "Pad") {
             throw "${Name}: string layer is only allowed for practical Pad presets."
+        }
+        foreach ($guitarLayer in @("powerChord", "chug")) {
+            if ((Test-LayerEnabled -Layers $layers -Name $guitarLayer) -and $category -ne "Guitar") {
+                throw "${Name}: ${guitarLayer} layer is only allowed for practical Guitar presets."
+            }
         }
         if ($category -eq "Keys" -and $displayName -like "*Organ*") {
             foreach ($forbidden in @("chord", "string", "body")) {

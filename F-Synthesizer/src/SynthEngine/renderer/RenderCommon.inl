@@ -566,6 +566,139 @@ StereoFrame RenderHarmonicLayer(Voice& voices, size_t i, const VoiceRenderInput&
     };
 }
 
+StereoFrame RenderPowerChordLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const PowerChordLayerConfig& layer = voices.powerChordLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return {};
+    }
+
+    constexpr std::array<double, 3> semis{ 0.0, 7.0, 12.0 };
+    const std::array<double, 3> levels{
+        1.0,
+        std::clamp(layer.fifthLevel, 0.0, 1.0),
+        std::clamp(layer.octaveLevel, 0.0, 1.0)
+    };
+    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double spread = std::clamp(layer.spread, 0.0, 1.0);
+    const double tone = std::clamp(layer.tone, 0.0, 1.0);
+    const double detune = std::clamp(layer.detuneCents, 0.0, 18.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor;
+    double left = 0.0;
+    double right = 0.0;
+    double weight = 0.0;
+
+    for (size_t v = 0; v < semis.size(); v++)
+    {
+        if (levels[v] <= 0.0)
+        {
+            continue;
+        }
+        const double centered = (static_cast<double>(v) - 1.0);
+        const double incL = baseInc * std::exp2((semis[v] - detune * spread * 0.01 * centered) / 12.0);
+        const double incR = baseInc * std::exp2((semis[v] + detune * spread * 0.01 * centered) / 12.0);
+        const double pL = StepLayerPhase(voices.powerChordPhase[i][v], incL);
+        const double pR = StepLayerPhase(voices.powerChordPhaseR[i][v], incR);
+        const double toneL =
+            LayerWave(WaveType::Triangle, pL, incL) * (0.50 - tone * 0.12) +
+            LayerWave(WaveType::Saw, pL, incL) * (0.14 + tone * 0.18) +
+            LayerWave(WaveType::Sine, pL, incL) * 0.18;
+        const double toneR =
+            LayerWave(WaveType::Triangle, pR, incR) * (0.50 - tone * 0.12) +
+            LayerWave(WaveType::Saw, pR, incR) * (0.14 + tone * 0.18) +
+            LayerWave(WaveType::Sine, pR, incR) * 0.18;
+        const double pan = centered * spread * 0.18;
+        left += toneL * levels[v] * (1.0 - pan);
+        right += toneR * levels[v] * (1.0 + pan);
+        weight += levels[v];
+    }
+
+    if (weight <= 0.0)
+    {
+        return {};
+    }
+
+    const double drive = std::clamp(layer.drive + in.expressionDriveAdd * 0.25, 0.0, 1.0);
+    return StereoFrame{
+        AttackSoftClip((left / weight) * level, drive),
+        AttackSoftClip((right / weight) * level, drive)
+    };
+}
+
+StereoFrame RenderChugLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const ChugLayerConfig& layer = voices.chugLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return {};
+    }
+
+    const double age = voices.ageSec[i];
+    const double decay = std::clamp(layer.decaySec, 0.025, 0.75);
+    const double env = std::exp(-age / decay);
+    if (env < 0.0002)
+    {
+        return {};
+    }
+
+    const double tight = std::clamp(layer.tightness, 0.0, 1.0);
+    const double tone = std::clamp(layer.tone, 0.0, 1.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor;
+    const double p = StepLayerPhase(voices.chugPhase[i], baseInc);
+    const double bodyInc = baseInc * 0.5;
+    const double bp = StepLayerPhase(voices.chugBodyPhase[i], bodyInc);
+    const double pickEnv = std::exp(-age / (0.006 + (1.0 - tight) * 0.025));
+    const double body =
+        LayerWave(WaveType::Sine, bp, bodyInc) * std::clamp(layer.lowPunch, 0.0, 1.0) +
+        LayerWave(WaveType::Triangle, p, baseInc) * (0.35 + tone * 0.20);
+    const double pick =
+        (LayerWave(WaveType::Triangle, WrapPhase(p * 3.0), baseInc * 3.0) * 0.55 +
+            LayerWave(WaveType::Square, p, baseInc, 0.42) * 0.25) *
+        std::clamp(layer.pick, 0.0, 1.0) * pickEnv;
+    double sample = (body + pick) * env * std::clamp(layer.level, 0.0, 1.0);
+    sample = AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.3, 0.0, 1.0));
+
+    const double cutoff = std::clamp(450.0 + tone * 3600.0 - tight * 260.0, 120.0, 7200.0);
+    const double alpha = OnePoleAlphaFromCutoff(cutoff, in.dt);
+    voices.chugLpState[i] += alpha * (sample - voices.chugLpState[i]);
+    return StereoFrame{ voices.chugLpState[i], voices.chugLpState[i] };
+}
+
+void ApplyAmpCabLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceRenderFrame& frame)
+{
+    const AmpCabLayerConfig& layer = voices.ampCabLayer[i];
+    if (!layer.enabled)
+    {
+        return;
+    }
+
+    const double tone = std::clamp(layer.tone, 0.0, 1.0);
+    const double drive = std::clamp(layer.drive + in.expressionDriveAdd * 0.35, 0.0, 1.0);
+    const double output = std::clamp(layer.output, 0.0, 1.4);
+    const double presence = std::clamp(layer.presence, 0.0, 1.0);
+    const double lowCut = std::clamp(70.0 + std::clamp(layer.cabLow, 0.0, 1.0) * 260.0, 40.0, 520.0);
+    const double highCut = std::clamp(1450.0 + std::clamp(layer.cabHigh, 0.0, 1.0) * 7600.0 + tone * 1200.0, 900.0, 11000.0);
+
+    auto process = [&](double x, double& hpState, double& lpState) {
+        const double hpAlpha = OnePoleAlphaFromCutoff(lowCut, in.dt);
+        hpState += hpAlpha * (x - hpState);
+        double y = x - hpState;
+        y = AttackSoftClip(y * (1.0 + drive * 5.5), drive);
+        const double lpAlpha = OnePoleAlphaFromCutoff(highCut, in.dt);
+        lpState += lpAlpha * (y - lpState);
+        const double low = lpState;
+        const double edge = y - low;
+        return (low + edge * presence * 0.55) * output;
+    };
+
+    const double left = process(frame.sample + frame.stereoOffsetL, voices.ampCabHpStateL[i], voices.ampCabLpStateL[i]);
+    const double right = process(frame.sample + frame.stereoOffsetR, voices.ampCabHpStateR[i], voices.ampCabLpStateR[i]);
+    frame.sample = (left + right) * 0.5;
+    frame.stereoOffsetL = left - frame.sample;
+    frame.stereoOffsetR = right - frame.sample;
+}
+
 void ApplyBodyLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceRenderFrame& frame)
 {
     const BodyLayerConfig& layer = voices.bodyLayer[i];

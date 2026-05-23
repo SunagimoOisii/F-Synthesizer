@@ -1,7 +1,7 @@
 namespace
 {
 static constexpr const char* kPlayCategories[] = {
-    "All", "Lead", "Bass", "Pad", "Keys", "Drums", "SFX", "Support"
+    "All", "Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support"
 };
 
 static const std::string& PresetDisplayName(const GUIState& state, int index)
