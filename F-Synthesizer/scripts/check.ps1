@@ -195,14 +195,16 @@ function Run-RuntimeSmoke {
 
     $json = @"
 {
-  "midiPath": "$midiPath",
-  "wavPath": "$wavPathNorm",
-  "targetChannel": 0,
-  "defaultWave": "saw",
-  "initialSeconds": 0.25,
-  "bits": 16,
-  "sampleRate": 22050,
-  "extraReleaseSec": 0.01
+  "format": "projectModel.v1",
+  "project": {
+    "midiPath": "$midiPath",
+    "wavPath": "$wavPathNorm",
+    "targetChannel": 0,
+    "initialSeconds": 0.25,
+    "bits": 16,
+    "sampleRate": 22050,
+    "extraReleaseSec": 0.01
+  }
 }
 "@
     Set-Content -Path $configPath -Value $json -Encoding UTF8

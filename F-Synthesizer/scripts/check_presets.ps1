@@ -150,6 +150,47 @@ function Parse-RenderStats {
     }
 }
 
+function Assert-ProjectModelJsonShape {
+    param(
+        [object]$Config,
+        [string]$Label
+    )
+
+    if ($Config.PSObject.Properties.Name -notcontains "format") {
+        throw "${Label}: missing format."
+    }
+    if ($Config.format -ne "projectModel.v1") {
+        throw "${Label}: unsupported format '$($Config.format)'."
+    }
+    if ($Config.PSObject.Properties.Name -notcontains "project" -or $null -eq $Config.project) {
+        throw "${Label}: missing project object."
+    }
+    if ($Config.project -isnot [pscustomobject]) {
+        throw "${Label}: project must be an object."
+    }
+
+    foreach ($legacyKey in @("channels", "channelMix", "effects")) {
+        if ($Config.PSObject.Properties.Name -contains $legacyKey) {
+            throw "${Label}: legacy top-level '$legacyKey' must be under project."
+        }
+    }
+}
+
+function Read-ProjectModelJson {
+    param(
+        [string]$Path
+    )
+
+    try {
+        $config = Get-Content -Path $Path -Raw -Encoding UTF8 | ConvertFrom-Json
+        Assert-ProjectModelJsonShape -Config $config -Label ([System.IO.Path]::GetFileName($Path))
+        return $config
+    }
+    catch {
+        throw "ProjectModel JSON check failed for ${Path}: $($_.Exception.Message)"
+    }
+}
+
 function Write-ShortPresetConfig {
     param(
         [object]$PresetConfig,
@@ -188,6 +229,65 @@ function Write-ShortPresetConfig {
     $PresetConfig | ConvertTo-Json -Depth 80 | Set-Content -Path $ConfigPath -Encoding UTF8
 }
 
+function Invoke-ShortRenderCheck {
+    param(
+        [string]$ExePath,
+        [object]$ProjectConfig,
+        [string]$Name,
+        [string]$RenderConfigPath,
+        [string]$MidiPath,
+        [string]$WavPath,
+        [double]$InitialSeconds,
+        [int]$SampleRate,
+        [int]$TimeoutSec
+    )
+
+    Write-ShortPresetConfig -PresetConfig $ProjectConfig -ConfigPath $RenderConfigPath -MidiPath $MidiPath -WavPath $WavPath -InitialSeconds $InitialSeconds -SampleRate $SampleRate
+
+    $result = Invoke-CLI -ExePath $ExePath -CliArgs @("--cli", "--config", $RenderConfigPath) -TimeoutSec $TimeoutSec
+    if ($result.ExitCode -ne 0) {
+        throw "${Name}: CLI failed exit=$($result.ExitCode)`n$($result.Output)"
+    }
+
+    $stats = Parse-RenderStats -Text $result.Output
+    if ($stats.NonZero -le 0) {
+        throw "${Name}: render output is silent. $($stats.Line)"
+    }
+
+    if (-not (Test-Path $WavPath)) {
+        throw "${Name}: WAV not found: $WavPath"
+    }
+    $wav = Get-Item $WavPath
+    if ($wav.Length -le 44) {
+        throw "${Name}: WAV is empty or header-only: $WavPath"
+    }
+}
+
+function Invoke-NamedConfigChecks {
+    param(
+        [string]$RepoRoot,
+        [string]$ExePath,
+        [string]$CheckDir,
+        [string]$MidiPath,
+        [double]$InitialSeconds,
+        [int]$SampleRate,
+        [int]$TimeoutSec
+    )
+
+    $namedConfigs = @(
+        (Join-Path $RepoRoot "config/base.json"),
+        (Join-Path $RepoRoot "config/default.json")
+    )
+
+    foreach ($configPath in $namedConfigs) {
+        $name = [System.IO.Path]::GetFileNameWithoutExtension($configPath)
+        $config = Read-ProjectModelJson -Path $configPath
+        $wavPath = Join-Path $CheckDir "${name}_config.wav"
+        $renderConfigPath = Join-Path $CheckDir "${name}_config.render.json"
+        Invoke-ShortRenderCheck -ExePath $ExePath -ProjectConfig $config -Name "config/${name}" -RenderConfigPath $renderConfigPath -MidiPath $MidiPath -WavPath $wavPath -InitialSeconds $InitialSeconds -SampleRate $SampleRate -TimeoutSec $TimeoutSec
+    }
+}
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $repoRoot
 try {
@@ -223,47 +323,33 @@ try {
     Write-BytesFile -Path $midiPath -Bytes (New-MIDIFileBytes -TrackData $noteTrack)
 
     $failures = New-Object System.Collections.Generic.List[string]
+    try {
+        Invoke-NamedConfigChecks -RepoRoot $repoRoot -ExePath $exePath -CheckDir $checkDir -MidiPath $midiPath -InitialSeconds $InitialSeconds -SampleRate $SampleRate -TimeoutSec $TimeoutSec
+    }
+    catch {
+        $failures.Add($_.Exception.Message)
+    }
+
     foreach ($preset in $presets) {
         $name = [System.IO.Path]::GetFileNameWithoutExtension($preset.Name)
 
         $presetConfig = $null
         try {
-            $presetConfig = Get-Content -Path $preset.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+            $presetConfig = Read-ProjectModelJson -Path $preset.FullName
         }
         catch {
-            $failures.Add("${name}: JSON parse failed: $($_.Exception.Message)")
+            $failures.Add("${name}: $($_.Exception.Message)")
             continue
         }
 
         $wavPath = Join-Path $checkDir "$name.wav"
         $renderConfigPath = Join-Path $checkDir "$name.render.json"
-        Write-ShortPresetConfig -PresetConfig $presetConfig -ConfigPath $renderConfigPath -MidiPath $midiPath -WavPath $wavPath -InitialSeconds $InitialSeconds -SampleRate $SampleRate
-
-        $result = Invoke-CLI -ExePath $exePath -CliArgs @("--cli", "--config", $renderConfigPath) -TimeoutSec $TimeoutSec
-        if ($result.ExitCode -ne 0) {
-            $failures.Add("${name}: CLI failed exit=$($result.ExitCode)`n$($result.Output)")
-            continue
-        }
 
         try {
-            $stats = Parse-RenderStats -Text $result.Output
-            if ($stats.NonZero -le 0) {
-                $failures.Add("${name}: render output is silent. $($stats.Line)")
-                continue
-            }
+            Invoke-ShortRenderCheck -ExePath $exePath -ProjectConfig $presetConfig -Name $name -RenderConfigPath $renderConfigPath -MidiPath $midiPath -WavPath $wavPath -InitialSeconds $InitialSeconds -SampleRate $SampleRate -TimeoutSec $TimeoutSec
         }
         catch {
-            $failures.Add("${name}: $($_.Exception.Message)`n$($result.Output)")
-            continue
-        }
-
-        if (-not (Test-Path $wavPath)) {
-            $failures.Add("${name}: WAV not found: $wavPath")
-            continue
-        }
-        $wav = Get-Item $wavPath
-        if ($wav.Length -le 44) {
-            $failures.Add("${name}: WAV is empty or header-only: $wavPath")
+            $failures.Add($_.Exception.Message)
             continue
         }
     }
@@ -277,7 +363,7 @@ try {
         exit 1
     }
 
-    Write-Host "Preset check completed: $($presets.Count) presets OK."
+    Write-Host "Preset check completed: config/base.json, config/default.json, and $($presets.Count) presets OK."
 }
 finally {
     Pop-Location
