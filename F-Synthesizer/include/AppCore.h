@@ -8,7 +8,8 @@
 
 #include "core/AudioBuffer.h"
 #include "midi/MIDIParser.h"
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/EffectsConfig.h"
 
 enum class RunMode
 {

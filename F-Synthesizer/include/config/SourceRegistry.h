@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <string_view>
 
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/SourceConfig.h"
 
 namespace config
 {

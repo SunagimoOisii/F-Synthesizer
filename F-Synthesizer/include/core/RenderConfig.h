@@ -5,7 +5,8 @@
 
 #include "midi/MIDIParser.h"
 #include "midi/Sequencer.h"
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/EffectsConfig.h"
 
 // SynthEngine へ渡す実行用モデル。
 // 保存形式やGUI状態ではなく、1回のrenderに必要な入力だけを束ねる。

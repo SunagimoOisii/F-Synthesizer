@@ -2,7 +2,7 @@
 
 #include <iosfwd>
 
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/SourceConfig.h"
 
 namespace config
 {

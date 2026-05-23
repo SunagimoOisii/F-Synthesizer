@@ -3,7 +3,8 @@
 #include <ostream>
 #include <string>
 
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/SourceConfig.h"
 
 namespace gui
 {

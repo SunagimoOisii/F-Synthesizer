@@ -51,6 +51,16 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 - UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
 - 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 
+## 手動 GUI 確認
+
+GUI、preview、piano-roll、step sequencer、export に触れた場合は、次の主要導線を短く確認します。
+
+1. `.\build\x64\Debug\F-Synthesizer.exe --gui` を起動する。
+2. 作る: Sound の preset 一覧、音源タイプ切替、Layer2 マクロ、音源詳細を操作し、Tone Preview が鳴ることを確認する。
+3. 遊ぶ: ピアノロールでノート追加、選択、移動、プレビュー再生を確認する。ch10 ドラム運用ではステップシーケンサーを開き、複数 step の発音を確認する。
+4. 書き出す: 出力先を指定して短く書き出し、WAV が生成されることを確認する。
+5. Sound Preview、Waveform、Spectrum、VU が無反応または明らかな無音表示になっていないことを確認する。
+
 ## 実装前確認
 
 大きめの変更では、コード編集前に次を確認します。

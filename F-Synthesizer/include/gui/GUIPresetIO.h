@@ -5,7 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "AppCore.h"
+#include "SynthEngine/ChannelConfig.h"
+
+struct AppConfig;
 
 namespace gui
 {

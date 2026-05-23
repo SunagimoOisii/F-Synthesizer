@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SynthEngine/SynthEngine.h"
+#include "SynthEngine/ChannelConfig.h"
 #include "gui/GUIMacroSliders.h"
 
 // スライダー値 -> パラメータ書き込み。
