@@ -189,6 +189,7 @@
     <ClCompile Include="src\\midi\\MIDIReader.cpp" />
     <ClCompile Include="src\\midi\\MIDIParser.cpp" />
     <ClCompile Include="src\\midi\\MIDIPipeline.cpp" />
+    <ClCompile Include="src\\project\\ProjectModel.cpp" />
     <ClCompile Include="src\\synth\\Oscillator.cpp" />
     <ClCompile Include="src\\midi\\Sequencer.cpp" />
     <ClCompile Include="src\\SoundGenerate.cpp" />
@@ -254,6 +255,7 @@
     <ClInclude Include="include\\synth\\Oscillator.h" />
     <ClInclude Include="include\\midi\\Sequencer.h" />
     <ClInclude Include="include\\midi\\MIDIPipeline.h" />
+    <ClInclude Include="include\\project\\ProjectModel.h" />
     <ClInclude Include="include\\SynthEngine\\AnalogConfig.h" />
     <ClInclude Include="include\\SynthEngine\\ChannelConfig.h" />
     <ClInclude Include="include\\SynthEngine\\DrumConfig.h" />
