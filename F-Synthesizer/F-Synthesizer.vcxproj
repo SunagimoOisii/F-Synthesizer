@@ -178,6 +178,7 @@
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
     <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
+    <ClCompile Include="src\\gui\\GUIProjectFacade.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
     <ClCompile Include="src\\gui\\GUIMacroMapping.cpp" />
     <ClCompile Include="src\\gui\\GUISoundHistory.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="include\\gui\\GUIMacroMapping.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />
+    <ClInclude Include="include\\gui\\GUIProjectFacade.h" />
     <ClInclude Include="include\\gui\\GUIRunHelpers.h" />
     <ClInclude Include="include\\gui\\GUIMacroSliders.h" />
     <ClInclude Include="include\\gui\\GUISoundHistory.h" />

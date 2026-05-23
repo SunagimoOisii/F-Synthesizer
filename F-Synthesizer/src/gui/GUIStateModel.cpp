@@ -5,6 +5,7 @@
 
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIPlatform.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
 
@@ -12,45 +13,18 @@ namespace gui
 {
 void EnsureChannelConfigs(GUIState& state)
 {
-    if (state.channelConfigs)
-    {
-        return;
-    }
-    // GUI状態が欠けているときは既定Configから埋め、nullの分岐を残さない。
-    AppConfig cfg = DefaultConfig();
-    state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
-    if (cfg.channelConfigs)
-    {
-        *state.channelConfigs = *cfg.channelConfigs;
-    }
+    (void)MutableChannelConfigs(state);
 }
 
 void EnsureChannelMixStates(GUIState& state)
 {
-    if (state.channelMixStates)
-    {
-        return;
-    }
-    AppConfig cfg = DefaultConfig();
-    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
-    if (cfg.channelMixStates)
-    {
-        *state.channelMixStates = *cfg.channelMixStates;
-    }
+    (void)MutableChannelMixStates(state);
 }
 
 AppConfig BuildConfigFromGUI(const GUIState& state)
 {
     // GUI入力をRun境界のAppConfig形式にそろえる唯一の変換点。
-    AppConfig cfg = DefaultConfig();
-    cfg.midiPath = Utf8ToPath(state.midiPath);
-    cfg.wavPath = Utf8ToPath(state.wavPath);
-    cfg.targetChannel = state.targetChannel;
-    cfg.sampleRate = state.sampleRate;
-    cfg.initialSeconds = state.initialSeconds;
-    cfg.bits = state.bits;
-    cfg.extraReleaseSec = state.extraReleaseSec;
-    cfg.masterEffects = state.masterEffects;
+    AppConfig cfg = ToAppConfig(BuildProjectModelFromGUI(state));
     if (state.channelConfigs)
     {
         auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
@@ -73,15 +47,7 @@ void InitializeGUIState(
     const std::function<void(const std::string&)>& refreshPresetItems)
 {
     StopPreviewAudio(state.playback);
-    AppConfig cfg = DefaultConfig();
-    CopyPath(state.midiPath, sizeof(state.midiPath), cfg.midiPath);
-    CopyPath(state.wavPath, sizeof(state.wavPath), cfg.wavPath);
-    state.targetChannel = cfg.targetChannel;
-    state.sampleRate = cfg.sampleRate;
-    state.initialSeconds = cfg.initialSeconds;
-    state.bits = cfg.bits;
-    state.extraReleaseSec = static_cast<float>(cfg.extraReleaseSec);
-    state.masterEffects = cfg.masterEffects;
+    ApplyProjectModelToGUI(state, DefaultProjectModel());
     state.UIScaleIndex = 1;
     state.UIModeTab = 0;
     state.UIThemeIndex = 0;
@@ -129,16 +95,6 @@ void InitializeGUIState(
         refreshPresetItems(state.presetName);
     }
 
-    state.channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
-    if (cfg.channelConfigs)
-    {
-        *state.channelConfigs = *cfg.channelConfigs;
-    }
-    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
-    if (cfg.channelMixStates)
-    {
-        *state.channelMixStates = *cfg.channelMixStates;
-    }
     state.soloPreviewBackup = *state.channelMixStates;
 }
 
