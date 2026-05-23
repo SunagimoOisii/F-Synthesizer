@@ -40,16 +40,15 @@ GUI 状態に依存しません。
 - Config は JSON load/save、preset merge、schema validation を担当し、GUI と renderer に同じ契約を重複させない。
 - Source capability と schema の共通判断は `SourceRegistry` に集約する。
 
-## 移行後のモデル境界
+## モデル境界
 
-アーキテクチャ改善中は、既存の `AppConfig` と `GUIState` を急に廃止せず、次のモデルへ段階移行します。
+保存、GUI、実行時レンダリングの境界は、次のモデルで分けます。
 
-- `ProjectModel`: 保存、preset、config の正本。JSON load/save は最終的にこのモデルを入出力する。
-- `EditorModel`: GUI 編集用の状態。GUI 操作感を維持しながら `GUIState` から段階的に移す。
+- `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力する。
 - `RenderConfig`: SynthEngine へ渡す実行用モデル。GUI や保存形式に依存しない render 入力にする。
-- `AppConfig`: 当面の CLI/GUI 実行境界。移行中は `ProjectModel` から生成し、既存実行経路との互換を保つ。
-- GUI Facade: 既存画面コードから `ProjectModel` / `EditorModel` へアクセスするための中間層。`GUIState` の全面置換を避け、画面ごとに移行する。
-- `GUIState` は互換用の集約型として残し、内部は永続状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
+- `AppConfig`: CLI/GUI 実行境界。`ProjectModel` から生成し、app 層の実行条件をまとめる。
+- GUI Facade: 既存画面コードから `ProjectModel` へアクセスするための中間層。GUI と保存モデルの変換点を集約する。
+- `GUIState`: 互換用の集約型。内部は永続状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
 
 ## 肥大化リスク
 
