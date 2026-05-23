@@ -33,6 +33,67 @@ static std::string PresetDescription(const GUIState& state, int index)
     return {};
 }
 
+static std::string ChannelLabel(int channel)
+{
+    channel = std::clamp(channel, 0, 15);
+    std::string label = "ch" + std::to_string(channel + 1);
+    if (channel == 9)
+    {
+        label += " Drums";
+    }
+    return label;
+}
+
+static std::string SlotSourceLabel(const GUIState& state, int slot)
+{
+    slot = std::clamp(slot, 0, 15);
+    if (!state.channelConfigs)
+    {
+        return "slot s" + std::to_string(slot);
+    }
+
+    const config::SourceKind sourceKind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
+    return "slot s" + std::to_string(slot) + " / " + config::SourceKindToDisplayName(sourceKind);
+}
+
+template <typename HelpFn>
+static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
+{
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    if (ImGui::Button("曲で使う"))
+    {
+        ImGui::OpenPopup("use_sound_slot_in_compose");
+    }
+    updateHoverHelp(
+        "選択中のSound Slotを曲で使います。",
+        "MIDIチャンネルへ割り当ててComposeへ移動します。",
+        nullptr);
+
+    if (ImGui::BeginPopup("use_sound_slot_in_compose"))
+    {
+        ImGui::Text("使う音: %s", SlotSourceLabel(state, slot).c_str());
+        ImGui::Separator();
+        if (ImGui::BeginTable("use_sound_slot_channels", 4, ImGuiTableFlags_SizingStretchSame))
+        {
+            for (int ch = 0; ch < 16; ++ch)
+            {
+                ImGui::TableNextColumn();
+                const std::string label = ChannelLabel(ch);
+                if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 0.0f)))
+                {
+                    state.channelAssignments[ch] = slot;
+                    state.pianoRoll.displayChannel = ch;
+                    state.UIModeTab = 1;
+                    state.presetDirty = true;
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::EndTable();
+        }
+        ImGui::EndPopup();
+    }
+}
+
 template <typename ApplyPresetFn, typename HelpFn>
 static void DrawPlayView(
     GUIState& state,
@@ -147,6 +208,12 @@ static void DrawPlayView(
         {
             DrawVirtualKeyboard(state);
         }
+        DrawUseInComposeControl(
+            state,
+            [&](const char* what, const char* impact, const char* caution)
+            {
+                updateHoverHelp(what, impact, caution);
+            });
 
         if (showInspector)
         {
@@ -229,20 +296,40 @@ static void DrawComposeView(
 
     ImGui::Separator();
     const int displayCh = std::clamp(state.pianoRoll.displayChannel, 0, 15);
-    ImGui::Text("表示チャンネル: ch%d", displayCh);
+    ImGui::Text("表示チャンネル: %s", ChannelLabel(displayCh).c_str());
     int assigned = std::clamp(state.channelAssignments[displayCh], 0, 15);
+    ImGui::Text("このチャンネルで使う音: %s", SlotSourceLabel(state, assigned).c_str());
     ImGui::SetNextItemWidth(220.0f);
     if (ImGui::SliderInt("使うSound Card", &assigned, 0, 15, "slot %d"))
     {
         state.channelAssignments[displayCh] = assigned;
         state.presetDirty = true;
     }
-    updateHoverHelp("表示中チャンネルの音色を選びます。", "深いミックス設定はAdvancedにあります。", nullptr);
+    updateHoverHelp("Playで作ったslotをこのチャンネルで使います。", "曲のチャンネルとSound Slotを結びます。", nullptr);
     ImGui::SameLine();
     if (ImGui::Button("Advancedでミックス"))
     {
         state.UIModeTab = 3;
     }
+    ChannelMixState& displayMix = (*state.channelMixStates)[displayCh];
+    auto sliderMixDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
+    {
+        float v = static_cast<float>(value);
+        const bool edited = ImGui::SliderFloat(label, &v, minV, maxV, fmt);
+        if (edited)
+        {
+            value = static_cast<double>(v);
+            state.presetDirty = true;
+        }
+        return edited;
+    };
+    ImGui::SetNextItemWidth(220.0f);
+    sliderMixDouble("曲での音量", displayMix.level, 0.0f, 2.0f, "%.2f");
+    updateHoverHelp("表示中チャンネルの音量を調整します。", "曲の中で前後のバランスを合わせます。", nullptr);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(220.0f);
+    sliderMixDouble("左右", displayMix.pan, -1.0f, 1.0f, "%.2f");
+    updateHoverHelp("表示中チャンネルの左右位置を調整します。", "左/中央/右の配置を決めます。", nullptr);
 
     auto applyDrumCh10Setup = [&]()
     {

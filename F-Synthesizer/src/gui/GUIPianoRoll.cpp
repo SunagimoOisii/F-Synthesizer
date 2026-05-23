@@ -35,7 +35,11 @@ void DrawPianoRollPanel(
 
     ImGui::TextUnformatted("ピアノロール");
     ImGui::SetNextItemWidth(140.0f);
-    ImGui::SliderInt("表示チャンネル", &state.displayChannel, 0, 15);
+    int displayChannelOneBased = ClampChannel(state.displayChannel) + 1;
+    if (ImGui::SliderInt("表示チャンネル", &displayChannelOneBased, 1, 16, "ch%d"))
+    {
+        state.displayChannel = ClampChannel(displayChannelOneBased - 1);
+    }
     ImGui::SameLine();
     ImGui::Text("スナップ: %s", SnapLabel(state.snapIndex));
     ImGui::SameLine();
