@@ -9,6 +9,7 @@
 #include <string>
 
 #include "AppCore.h"
+#include "project/ProjectModel.h"
 
 namespace config::internal
 {
@@ -54,6 +55,8 @@ std::shared_ptr<std::array<ChannelMixState, 16>> MakeMutableChannelMixStates(con
 
 bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
 bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
+bool LoadProjectModelFileInternal(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
+bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);
 
 void WriteIndent(std::ostream& out, int indent);
 void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent);

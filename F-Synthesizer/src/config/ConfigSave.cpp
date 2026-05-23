@@ -6,7 +6,7 @@
 
 namespace config::internal
 {
-bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppConfig& config, std::string& err)
+bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err)
 {
     std::error_code ec;
     if (configPath.has_parent_path())
@@ -20,6 +20,8 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
         err = "failed to open output file";
         return false;
     }
+
+    const AppConfig config = ToAppConfig(model);
 
     out << "{\n";
     out << "  \"midiPath\": \"" << EscapeJSON(PathToUtf8(config.midiPath)) << "\",\n";
@@ -88,5 +90,11 @@ bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppCo
     out << "}\n";
 
     return true;
+}
+
+bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppConfig& config, std::string& err)
+{
+    const ProjectModel model = ProjectModelFromAppConfig(config);
+    return SaveProjectModelFileInternal(configPath, model, err);
 }
 } // namespace config::internal

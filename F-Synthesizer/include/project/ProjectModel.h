@@ -3,6 +3,7 @@
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <string>
 
 #include "AppCore.h"
 
@@ -25,3 +26,5 @@ struct ProjectModel
 ProjectModel DefaultProjectModel();
 AppConfig ToAppConfig(const ProjectModel& model);
 ProjectModel ProjectModelFromAppConfig(const AppConfig& config);
+bool LoadProjectModelFile(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
+bool SaveProjectModelFile(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);
