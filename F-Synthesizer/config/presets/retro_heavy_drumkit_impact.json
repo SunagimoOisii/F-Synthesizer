@@ -416,6 +416,12 @@
             "humanizePitchCents": 3.0,
             "humanizeDecayPct": 0.14
           }
+        },
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
         }
       },
       "expressionMap": {
@@ -430,7 +436,8 @@
         "modWheelToBrightness": 0.0,
         "pressureToDrive": 0.05,
         "cc74ToBrightness": 0.1
-      }
+      },
+      "layers": {}
     }
   }
 }

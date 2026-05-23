@@ -13,34 +13,6 @@
       "decaySec": 0.14,
       "sustainLevel": 0.8,
       "releaseSec": 0.12,
-      "attackLayer": {
-        "enabled": true,
-        "type": "pick",
-        "level": 0.1,
-        "decaySec": 0.03,
-        "brightness": 0.32,
-        "bodyMix": 0.76,
-        "pitchOffsetSemis": -12,
-        "drive": 0.08
-      },
-      "bassLayer": {
-        "enabled": true,
-        "type": "drive",
-        "level": 0.34,
-        "subLevel": 0.46,
-        "bodyLevel": 0.5,
-        "gritLevel": 0.38,
-        "cutoffHz": 1100,
-        "drive": 0.38,
-        "pitchOffsetSemis": -12,
-        "velocityToDrive": 0.2,
-        "focusHz": 200,
-        "focusLevel": 0.28,
-        "bodySaturation": 0.26,
-        "gritTone": 0.52,
-        "attackBoost": 0.18,
-        "attackDecaySec": 0.045
-      },
       "source": {
         "type": "analog",
         "wave": "saw",
@@ -49,10 +21,6 @@
         "unisonSpread": 0,
         "subOscLevel": 0.28,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 1900,
-        "filterResonance": 0.76,
-        "filterKeytrack": 0.35,
         "drive": 0.3,
         "driftDepthCents": 1.5,
         "driftRateHz": 0.18,
@@ -62,6 +30,43 @@
           "ampTimeMs": 5.0,
           "pitchTimeMs": 8.0,
           "filterCutoffTimeMs": 16.0
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 1900,
+          "resonance": 0.76,
+          "keytrack": 0.35,
+          "drive": 0.0
+        }
+      },
+      "layers": {
+        "bass": {
+          "enabled": true,
+          "type": "drive",
+          "level": 0.34,
+          "subLevel": 0.46,
+          "bodyLevel": 0.5,
+          "gritLevel": 0.38,
+          "cutoffHz": 1100,
+          "drive": 0.38,
+          "pitchOffsetSemis": -12,
+          "velocityToDrive": 0.2,
+          "focusHz": 200,
+          "focusLevel": 0.28,
+          "bodySaturation": 0.26,
+          "gritTone": 0.52,
+          "attackBoost": 0.18,
+          "attackDecaySec": 0.045
+        },
+        "attack": {
+          "enabled": true,
+          "type": "pick",
+          "level": 0.1,
+          "decaySec": 0.03,
+          "brightness": 0.32,
+          "bodyMix": 0.76,
+          "pitchOffsetSemis": -12,
+          "drive": 0.08
         }
       }
     }

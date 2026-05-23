@@ -18,8 +18,15 @@
         "wave": "pulse",
         "duty": 2,
         "volumeSteps": 10,
-        "maxVoices": 2
-      }
+        "maxVoices": 2,
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   },
   "effects": {

@@ -13,16 +13,6 @@
       "decaySec": 0.26,
       "sustainLevel": 0.8,
       "releaseSec": 0.28,
-      "attackLayer": {
-        "enabled": true,
-        "type": "brass",
-        "level": 0.11,
-        "decaySec": 0.07,
-        "brightness": 0.38,
-        "bodyMix": 0.68,
-        "pitchOffsetSemis": -5,
-        "drive": 0.06
-      },
       "source": {
         "type": "analog",
         "wave": "saw",
@@ -31,10 +21,6 @@
         "unisonSpread": 0.42,
         "subOscLevel": 0.12,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 3600,
-        "filterResonance": 1.05,
-        "filterKeytrack": 0.32,
         "drive": 0.2,
         "driftDepthCents": 4,
         "driftRateHz": 0.16,
@@ -62,40 +48,14 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 3600,
+          "resonance": 1.05,
+          "keytrack": 0.32,
+          "drive": 0.0
         }
-      },
-      "chordLayer": {
-        "enabled": true,
-        "level": 0.11,
-        "intervalsSemis": [
-          0,
-          7,
-          12,
-          19
-        ],
-        "voiceLevels": [
-          1.0,
-          0.58,
-          0.34,
-          0.18
-        ],
-        "detuneCents": 5.0,
-        "spread": 0.38,
-        "cutoffHz": 2600.0,
-        "drive": 0.06
-      },
-      "padLayer": {
-        "enabled": true,
-        "level": 0.065,
-        "octaveLevel": 0.12,
-        "detuneCents": 6.0,
-        "spread": 0.42,
-        "fadeInSec": 0.12,
-        "brightness": 0.3,
-        "motionDepth": 0.06,
-        "motionRateHz": 0.18,
-        "cutoffHz": 1850.0,
-        "drive": 0.04
       },
       "expressionMap": {
         "enabled": true,
@@ -113,6 +73,51 @@
         "pressureToDrive": 0.03,
         "cc74ToBrightness": 0.16,
         "cc74ToPadBrightness": 0.18
+      },
+      "layers": {
+        "pad": {
+          "enabled": true,
+          "level": 0.065,
+          "octaveLevel": 0.12,
+          "detuneCents": 6.0,
+          "spread": 0.42,
+          "fadeInSec": 0.12,
+          "brightness": 0.3,
+          "motionDepth": 0.06,
+          "motionRateHz": 0.18,
+          "cutoffHz": 1850.0,
+          "drive": 0.04
+        },
+        "attack": {
+          "enabled": true,
+          "type": "brass",
+          "level": 0.11,
+          "decaySec": 0.07,
+          "brightness": 0.38,
+          "bodyMix": 0.68,
+          "pitchOffsetSemis": -5,
+          "drive": 0.06
+        },
+        "chord": {
+          "enabled": true,
+          "level": 0.11,
+          "intervalsSemis": [
+            0,
+            7,
+            12,
+            19
+          ],
+          "voiceLevels": [
+            1.0,
+            0.58,
+            0.34,
+            0.18
+          ],
+          "detuneCents": 5.0,
+          "spread": 0.38,
+          "cutoffHz": 2600.0,
+          "drive": 0.06
+        }
       }
     }
   }

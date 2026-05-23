@@ -167,6 +167,44 @@ bool PadLayerConfigEquals(const PadLayerConfig& a, const PadLayerConfig& b)
         NearlyEq(a.drive, b.drive);
 }
 
+bool PluckLayerConfigEquals(const PluckLayerConfig& a, const PluckLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.decaySec, b.decaySec) &&
+        NearlyEq(a.brightness, b.brightness) &&
+        NearlyEq(a.noiseMix, b.noiseMix) &&
+        NearlyEq(a.pitchOffsetSemis, b.pitchOffsetSemis) &&
+        NearlyEq(a.bodySend, b.bodySend) &&
+        NearlyEq(a.drive, b.drive);
+}
+
+bool StringLayerConfigEquals(const StringLayerConfig& a, const StringLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        NearlyEq(a.bowLevel, b.bowLevel) &&
+        NearlyEq(a.detuneCents, b.detuneCents) &&
+        NearlyEq(a.spread, b.spread) &&
+        NearlyEq(a.fadeInSec, b.fadeInSec) &&
+        NearlyEq(a.brightness, b.brightness) &&
+        NearlyEq(a.motionDepth, b.motionDepth) &&
+        NearlyEq(a.motionRateHz, b.motionRateHz) &&
+        NearlyEq(a.bodySend, b.bodySend) &&
+        NearlyEq(a.drive, b.drive);
+}
+
+bool BodyLayerConfigEquals(const BodyLayerConfig& a, const BodyLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.mix, b.mix) &&
+        NearlyEq(a.size, b.size) &&
+        NearlyEq(a.tone, b.tone) &&
+        NearlyEq(a.damping, b.damping) &&
+        NearlyEq(a.stereo, b.stereo) &&
+        NearlyEq(a.drive, b.drive);
+}
+
 bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMapConfig& b)
 {
     return a.enabled == b.enabled &&
@@ -179,11 +217,17 @@ bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMap
         NearlyEq(a.velocityToLead, b.velocityToLead) &&
         NearlyEq(a.velocityToChord, b.velocityToChord) &&
         NearlyEq(a.velocityToPad, b.velocityToPad) &&
+        NearlyEq(a.velocityToPluck, b.velocityToPluck) &&
+        NearlyEq(a.velocityToString, b.velocityToString) &&
+        NearlyEq(a.velocityToBody, b.velocityToBody) &&
         NearlyEq(a.modWheelToBrightness, b.modWheelToBrightness) &&
         NearlyEq(a.modWheelToPad, b.modWheelToPad) &&
+        NearlyEq(a.modWheelToString, b.modWheelToString) &&
         NearlyEq(a.pressureToDrive, b.pressureToDrive) &&
+        NearlyEq(a.pressureToFilterDrive, b.pressureToFilterDrive) &&
         NearlyEq(a.cc74ToBrightness, b.cc74ToBrightness) &&
-        NearlyEq(a.cc74ToPadBrightness, b.cc74ToPadBrightness);
+        NearlyEq(a.cc74ToPadBrightness, b.cc74ToPadBrightness) &&
+        NearlyEq(a.cc74ToStringBrightness, b.cc74ToStringBrightness);
 }
 
 template <typename SmoothingT>
@@ -247,6 +291,7 @@ bool WaveformLikeSourceConfigEqualsCommon(
         !NearlyEq(a.filterCutoffHz, b.filterCutoffHz) ||
         !NearlyEq(a.filterResonance, b.filterResonance) ||
         !NearlyEq(a.filterKeytrack, b.filterKeytrack) ||
+        !NearlyEq(a.filterDrive, b.filterDrive) ||
         !ArpeggioConfigEquals(a.arpeggio, b.arpeggio) ||
         !smoothingEq(a.smoothing, b.smoothing) ||
         !ModulationConfigEquals(a.modulation, b.modulation))
@@ -292,7 +337,11 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
             }
             else if constexpr (std::is_same_v<T, NoiseConfig>)
             {
-                return av.noise == bv->noise;
+                return av.noise == bv->noise &&
+                    av.filterMode == bv->filterMode &&
+                    NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) &&
+                    NearlyEq(av.filterResonance, bv->filterResonance) &&
+                    NearlyEq(av.filterDrive, bv->filterDrive);
             }
             else if constexpr (std::is_same_v<T, FmConfig>)
             {
@@ -301,6 +350,8 @@ bool SourceConfigEquals(const SourceConfig& a, const SourceConfig& b)
                     av.filterMode != bv->filterMode ||
                     !NearlyEq(av.filterCutoffHz, bv->filterCutoffHz) ||
                     !NearlyEq(av.filterResonance, bv->filterResonance) ||
+                    !NearlyEq(av.filterDrive, bv->filterDrive) ||
+                    !NearlyEq(av.drive, bv->drive) ||
                     !ModulationConfigEquals(av.modulation, bv->modulation))
                 {
                     return false;
@@ -414,6 +465,9 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         LeadLayerConfigEquals(a.leadLayer, b.leadLayer) &&
         ChordLayerConfigEquals(a.chordLayer, b.chordLayer) &&
         PadLayerConfigEquals(a.padLayer, b.padLayer) &&
+        PluckLayerConfigEquals(a.pluckLayer, b.pluckLayer) &&
+        StringLayerConfigEquals(a.stringLayer, b.stringLayer) &&
+        BodyLayerConfigEquals(a.bodyLayer, b.bodyLayer) &&
         ExpressionMapConfigEquals(a.expressionMap, b.expressionMap) &&
         SourceConfigEquals(a.source, b.source);
 }

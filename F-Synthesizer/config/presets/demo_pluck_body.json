@@ -1,11 +1,11 @@
 {
   "tags": [
-    "重厚レトロ",
-    "FM",
-    "補助",
-    "プラック"
+    "demo",
+    "pluck",
+    "body",
+    "ladder"
   ],
-  "description": "短いFM補助プラック。主役ではなくフレーズの輪郭を少し足す用途。",
+  "description": "Pluck/Body共通レイヤーとladderLowpassの代表デモ。硬いプラックに箱鳴りを足す。",
   "channels": {
     "0": {
       "amp": 0.12,

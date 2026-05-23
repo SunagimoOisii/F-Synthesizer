@@ -13,16 +13,6 @@
       "decaySec": 0.36,
       "sustainLevel": 0.0,
       "releaseSec": 0.28,
-      "attackLayer": {
-        "enabled": true,
-        "type": "metal",
-        "level": 0.14,
-        "decaySec": 0.075,
-        "brightness": 0.7,
-        "bodyMix": 0.42,
-        "pitchOffsetSemis": 12,
-        "drive": 0.06
-      },
       "source": {
         "type": "fm",
         "algorithm": 2,
@@ -109,10 +99,25 @@
             }
           }
         ],
-        "filterMode": "lowpass",
-        "filterCutoffHz": 6200,
-        "filterResonance": 0.55,
-        "drive": 0.0
+        "drive": 0.0,
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 6200,
+          "resonance": 0.55,
+          "drive": 0.0
+        }
+      },
+      "layers": {
+        "attack": {
+          "enabled": true,
+          "type": "metal",
+          "level": 0.14,
+          "decaySec": 0.075,
+          "brightness": 0.7,
+          "bodyMix": 0.42,
+          "pitchOffsetSemis": 12,
+          "drive": 0.06
+        }
       }
     }
   }

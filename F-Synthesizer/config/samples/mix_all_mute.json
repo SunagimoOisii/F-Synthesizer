@@ -8,21 +8,53 @@
   "sampleRate": 44100,
   "extraReleaseSec": 0.3,
   "channelMix": {
-    "0": {"mute": true},
-    "1": {"mute": true},
-    "2": {"mute": true},
-    "3": {"mute": true},
-    "4": {"mute": true},
-    "5": {"mute": true},
-    "6": {"mute": true},
-    "7": {"mute": true},
-    "8": {"mute": true},
-    "9": {"mute": true},
-    "10": {"mute": true},
-    "11": {"mute": true},
-    "12": {"mute": true},
-    "13": {"mute": true},
-    "14": {"mute": true},
-    "15": {"mute": true}
+    "0": {
+      "mute": true
+    },
+    "1": {
+      "mute": true
+    },
+    "2": {
+      "mute": true
+    },
+    "3": {
+      "mute": true
+    },
+    "4": {
+      "mute": true
+    },
+    "5": {
+      "mute": true
+    },
+    "6": {
+      "mute": true
+    },
+    "7": {
+      "mute": true
+    },
+    "8": {
+      "mute": true
+    },
+    "9": {
+      "mute": true
+    },
+    "10": {
+      "mute": true
+    },
+    "11": {
+      "mute": true
+    },
+    "12": {
+      "mute": true
+    },
+    "13": {
+      "mute": true
+    },
+    "14": {
+      "mute": true
+    },
+    "15": {
+      "mute": true
+    }
   }
 }

@@ -16,10 +16,14 @@
       "source": {
         "type": "noise",
         "noise": "pink",
-        "filterMode": "bandpass",
-        "filterCutoffHz": 1200,
-        "filterResonance": 5.0
-      }
+        "filter": {
+          "mode": "bandpass",
+          "cutoffHz": 1200,
+          "resonance": 5.0,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

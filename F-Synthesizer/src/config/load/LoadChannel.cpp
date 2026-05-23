@@ -203,6 +203,50 @@ bool ParsePadLayerObject(const std::string& layerObjText, PadLayerConfig& layer,
     return true;
 }
 
+bool ParsePluckLayerObject(const std::string& layerObjText, PluckLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "decaySec")) layer.decaySec = std::clamp(*v, 0.02, 2.0);
+    if (auto v = ReadJSONDouble(layerObjText, "brightness")) layer.brightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "noiseMix")) layer.noiseMix = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "pitchOffsetSemis")) layer.pitchOffsetSemis = std::clamp(*v, -24.0, 24.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bodySend")) layer.bodySend = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
+bool ParseStringLayerObject(const std::string& layerObjText, StringLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bowLevel")) layer.bowLevel = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "detuneCents")) layer.detuneCents = std::clamp(*v, 0.0, 80.0);
+    if (auto v = ReadJSONDouble(layerObjText, "spread")) layer.spread = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "fadeInSec")) layer.fadeInSec = std::clamp(*v, 0.005, 3.0);
+    if (auto v = ReadJSONDouble(layerObjText, "brightness")) layer.brightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "motionDepth")) layer.motionDepth = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "motionRateHz")) layer.motionRateHz = std::clamp(*v, 0.0, 12.0);
+    if (auto v = ReadJSONDouble(layerObjText, "bodySend")) layer.bodySend = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
+bool ParseBodyLayerObject(const std::string& layerObjText, BodyLayerConfig& layer, std::string& err)
+{
+    (void)err;
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "mix")) layer.mix = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "size")) layer.size = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "tone")) layer.tone = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "damping")) layer.damping = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "stereo")) layer.stereo = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    return true;
+}
+
 bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
 {
     (void)err;
@@ -216,11 +260,17 @@ bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig
     if (auto v = ReadJSONDouble(mapObjText, "velocityToLead")) map.velocityToLead = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "velocityToChord")) map.velocityToChord = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "velocityToPad")) map.velocityToPad = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToPluck")) map.velocityToPluck = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToString")) map.velocityToString = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "velocityToBody")) map.velocityToBody = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "modWheelToBrightness")) map.modWheelToBrightness = std::clamp(*v, -1.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "modWheelToPad")) map.modWheelToPad = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "modWheelToString")) map.modWheelToString = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "pressureToDrive")) map.pressureToDrive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "pressureToFilterDrive")) map.pressureToFilterDrive = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "cc74ToBrightness")) map.cc74ToBrightness = std::clamp(*v, -1.0, 1.0);
     if (auto v = ReadJSONDouble(mapObjText, "cc74ToPadBrightness")) map.cc74ToPadBrightness = std::clamp(*v, -1.0, 1.0);
+    if (auto v = ReadJSONDouble(mapObjText, "cc74ToStringBrightness")) map.cc74ToStringBrightness = std::clamp(*v, -1.0, 1.0);
     return true;
 }
 
@@ -235,9 +285,17 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
     {
         cfg.portamentoTimeSec = std::clamp(*v, 0.0, 30.0);
     }
+    std::string layersObj;
+    bool foundLayers = false;
+    if (!ExtractObjectForKey(channelObjText, "layers", layersObj, foundLayers, err))
+    {
+        return false;
+    }
+    const std::string& layerRoot = foundLayers ? layersObj : channelObjText;
+
     std::string attackLayerObj;
     bool foundAttackLayer = false;
-    if (!ExtractObjectForKey(channelObjText, "attackLayer", attackLayerObj, foundAttackLayer, err))
+    if (!ExtractObjectForKey(layerRoot, "attack", attackLayerObj, foundAttackLayer, err))
     {
         return false;
     }
@@ -248,7 +306,7 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
 
     std::string bassLayerObj;
     bool foundBassLayer = false;
-    if (!ExtractObjectForKey(channelObjText, "bassLayer", bassLayerObj, foundBassLayer, err))
+    if (!ExtractObjectForKey(layerRoot, "bass", bassLayerObj, foundBassLayer, err))
     {
         return false;
     }
@@ -259,7 +317,7 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
 
     std::string leadLayerObj;
     bool foundLeadLayer = false;
-    if (!ExtractObjectForKey(channelObjText, "leadLayer", leadLayerObj, foundLeadLayer, err))
+    if (!ExtractObjectForKey(layerRoot, "lead", leadLayerObj, foundLeadLayer, err))
     {
         return false;
     }
@@ -270,7 +328,7 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
 
     std::string chordLayerObj;
     bool foundChordLayer = false;
-    if (!ExtractObjectForKey(channelObjText, "chordLayer", chordLayerObj, foundChordLayer, err))
+    if (!ExtractObjectForKey(layerRoot, "chord", chordLayerObj, foundChordLayer, err))
     {
         return false;
     }
@@ -281,11 +339,44 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
 
     std::string padLayerObj;
     bool foundPadLayer = false;
-    if (!ExtractObjectForKey(channelObjText, "padLayer", padLayerObj, foundPadLayer, err))
+    if (!ExtractObjectForKey(layerRoot, "pad", padLayerObj, foundPadLayer, err))
     {
         return false;
     }
     if (foundPadLayer && !ParsePadLayerObject(padLayerObj, cfg.padLayer, err))
+    {
+        return false;
+    }
+
+    std::string pluckLayerObj;
+    bool foundPluckLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "pluck", pluckLayerObj, foundPluckLayer, err))
+    {
+        return false;
+    }
+    if (foundPluckLayer && !ParsePluckLayerObject(pluckLayerObj, cfg.pluckLayer, err))
+    {
+        return false;
+    }
+
+    std::string stringLayerObj;
+    bool foundStringLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "string", stringLayerObj, foundStringLayer, err))
+    {
+        return false;
+    }
+    if (foundStringLayer && !ParseStringLayerObject(stringLayerObj, cfg.stringLayer, err))
+    {
+        return false;
+    }
+
+    std::string bodyLayerObj;
+    bool foundBodyLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "body", bodyLayerObj, foundBodyLayer, err))
+    {
+        return false;
+    }
+    if (foundBodyLayer && !ParseBodyLayerObject(bodyLayerObj, cfg.bodyLayer, err))
     {
         return false;
     }

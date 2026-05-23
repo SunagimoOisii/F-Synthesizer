@@ -1,37 +1,40 @@
 {
   "tags": [
-    "重厚レトロ",
-    "波形",
-    "背景",
-    "パッド"
+    "demo",
+    "string",
+    "body",
+    "stereo"
   ],
-  "description": "PadLayerで滑らかな暗い厚みを追加した重厚パッド。ゆっくりfilterが動く背景用。",
+  "description": "String/Body共通レイヤーの代表デモ。FM/シンセ弦風の揺れと胴鳴りを確認する。",
   "channels": {
     "0": {
       "amp": 0.13,
-      "attackSec": 0.03,
-      "decaySec": 0.4,
-      "sustainLevel": 0.86,
-      "releaseSec": 0.46,
+      "attackSec": 0.035,
+      "decaySec": 0.42,
+      "sustainLevel": 0.88,
+      "releaseSec": 0.48,
       "source": {
-        "type": "waveform",
+        "type": "analog",
         "wave": "saw",
         "unisonVoices": 3,
-        "unisonDetuneCents": 5,
-        "unisonSpread": 0.38,
-        "subOscLevel": 0.08,
+        "unisonDetuneCents": 6,
+        "unisonSpread": 0.45,
+        "subOscLevel": 0.1,
         "pulseWidth": 0.5,
+        "drive": 0.12,
+        "driftDepthCents": 5,
+        "driftRateHz": 0.14,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": true,
           "ampTimeMs": 5.0,
-          "pitchTimeMs": 8.0,
+          "pitchTimeMs": 9.0,
           "filterCutoffTimeMs": 18.0
         },
         "modulation": {
           "lfo1": {
             "wave": "sine",
-            "rateHz": 0.15,
+            "rateHz": 0.18,
             "depth": 1.0,
             "delaySec": 0.0,
             "fadeSec": 0.0,
@@ -41,17 +44,17 @@
             "0": {
               "source": "lfo1",
               "destination": "filterCutoffHz",
-              "amount": 0.1,
+              "amount": 0.06,
               "enabled": true
             }
           }
         },
         "filter": {
           "mode": "ladderLowpass",
-          "cutoffHz": 3000,
-          "resonance": 0.82,
-          "keytrack": 0.22,
-          "drive": 0.12
+          "cutoffHz": 2800,
+          "resonance": 0.72,
+          "keytrack": 0.2,
+          "drive": 0.16
         }
       },
       "expressionMap": {
@@ -79,20 +82,20 @@
       "layers": {
         "pad": {
           "enabled": true,
-          "level": 0.18,
-          "octaveLevel": 0.16,
-          "detuneCents": 6.0,
-          "spread": 0.44,
-          "fadeInSec": 0.2,
-          "brightness": 0.26,
-          "motionDepth": 0.09,
-          "motionRateHz": 0.17,
-          "cutoffHz": 1550.0,
-          "drive": 0.02
+          "level": 0.17,
+          "octaveLevel": 0.18,
+          "detuneCents": 7.0,
+          "spread": 0.48,
+          "fadeInSec": 0.24,
+          "brightness": 0.22,
+          "motionDepth": 0.1,
+          "motionRateHz": 0.14,
+          "cutoffHz": 1450.0,
+          "drive": 0.03
         },
         "chord": {
           "enabled": true,
-          "level": 0.045,
+          "level": 0.05,
           "intervalsSemis": [
             0,
             12,
@@ -100,19 +103,19 @@
             0
           ],
           "voiceLevels": [
-            0.65,
-            0.36,
-            0.16,
+            0.7,
+            0.38,
+            0.18,
             0.0
           ],
-          "detuneCents": 3.0,
-          "spread": 0.3,
-          "cutoffHz": 1750.0,
-          "drive": 0.015
+          "detuneCents": 4.0,
+          "spread": 0.32,
+          "cutoffHz": 1800.0,
+          "drive": 0.02
         },
         "string": {
           "enabled": true,
-          "level": 0.14,
+          "level": 0.18,
           "bowLevel": 0.28,
           "detuneCents": 9.0,
           "spread": 0.58,
@@ -125,7 +128,7 @@
         },
         "body": {
           "enabled": true,
-          "mix": 0.22,
+          "mix": 0.26,
           "size": 0.62,
           "tone": 0.43,
           "damping": 0.36,

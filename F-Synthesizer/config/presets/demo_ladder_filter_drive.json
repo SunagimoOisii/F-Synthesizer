@@ -1,11 +1,11 @@
 {
   "tags": [
-    "機能デモ",
-    "アナログ",
-    "フィルター",
-    "レゾナンス"
+    "demo",
+    "filter",
+    "ladder",
+    "drive"
   ],
-  "description": "機能デモ: filter resonance。共振を強めたスイープの癖を確認する。",
+  "description": "ladderLowpassとfilter driveの代表デモ。clean filterとの差が出る太い低域と潰れを確認する。",
   "channels": {
     "0": {
       "amp": 0.18,
@@ -57,14 +57,24 @@
           }
         },
         "filter": {
-          "mode": "lowpass",
-          "cutoffHz": 2600,
-          "resonance": 4.0,
+          "mode": "ladderLowpass",
+          "cutoffHz": 1800,
+          "resonance": 4.2,
           "keytrack": 0.35,
-          "drive": 0.0
+          "drive": 0.38
         }
       },
-      "layers": {}
+      "layers": {
+        "body": {
+          "enabled": true,
+          "mix": 0.16,
+          "size": 0.42,
+          "tone": 0.52,
+          "damping": 0.32,
+          "stereo": 0.18,
+          "drive": 0.08
+        }
+      }
     }
   }
 }

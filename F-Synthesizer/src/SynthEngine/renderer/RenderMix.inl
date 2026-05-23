@@ -69,6 +69,7 @@ void ApplyCommonShaper(
                 SetFilterCutoffHz(st.filter, filterCutoffHz);
                 const double baseResonance = SourceFilterResonance(src);
                 SetFilterResonance(st.filter, baseResonance * ResonanceScaleFromCc(in.resonance) * frame.shaperResonanceMul);
+                SetFilterDrive(st.filter, std::clamp(frame.shaperFilterDrive + in.expressionFilterDriveAdd, 0.0, 1.0));
                 frame.sample = ProcessFilterSample(st.filter, frame.sample);
             }
         }, voices.sourceState[i]);

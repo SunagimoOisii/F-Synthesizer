@@ -21,10 +21,6 @@
         "unisonSpread": 0.45,
         "subOscLevel": 0.1,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 2800,
-        "filterResonance": 0.72,
-        "filterKeytrack": 0.2,
         "drive": 0.12,
         "driftDepthCents": 5,
         "driftRateHz": 0.14,
@@ -52,40 +48,14 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "ladderLowpass",
+          "cutoffHz": 2800,
+          "resonance": 0.72,
+          "keytrack": 0.2,
+          "drive": 0.16
         }
-      },
-      "chordLayer": {
-        "enabled": true,
-        "level": 0.05,
-        "intervalsSemis": [
-          0,
-          12,
-          19,
-          0
-        ],
-        "voiceLevels": [
-          0.7,
-          0.38,
-          0.18,
-          0.0
-        ],
-        "detuneCents": 4.0,
-        "spread": 0.32,
-        "cutoffHz": 1800.0,
-        "drive": 0.02
-      },
-      "padLayer": {
-        "enabled": true,
-        "level": 0.17,
-        "octaveLevel": 0.18,
-        "detuneCents": 7.0,
-        "spread": 0.48,
-        "fadeInSec": 0.24,
-        "brightness": 0.22,
-        "motionDepth": 0.1,
-        "motionRateHz": 0.14,
-        "cutoffHz": 1450.0,
-        "drive": 0.03
       },
       "expressionMap": {
         "enabled": true,
@@ -102,7 +72,69 @@
         "modWheelToPad": 0.18,
         "pressureToDrive": 0.02,
         "cc74ToBrightness": 0.12,
-        "cc74ToPadBrightness": 0.22
+        "cc74ToPadBrightness": 0.22,
+        "velocityToString": 0.22,
+        "velocityToBody": 0.16,
+        "modWheelToString": 0.16,
+        "cc74ToStringBrightness": 0.22,
+        "pressureToFilterDrive": 0.12
+      },
+      "layers": {
+        "pad": {
+          "enabled": true,
+          "level": 0.17,
+          "octaveLevel": 0.18,
+          "detuneCents": 7.0,
+          "spread": 0.48,
+          "fadeInSec": 0.24,
+          "brightness": 0.22,
+          "motionDepth": 0.1,
+          "motionRateHz": 0.14,
+          "cutoffHz": 1450.0,
+          "drive": 0.03
+        },
+        "chord": {
+          "enabled": true,
+          "level": 0.05,
+          "intervalsSemis": [
+            0,
+            12,
+            19,
+            0
+          ],
+          "voiceLevels": [
+            0.7,
+            0.38,
+            0.18,
+            0.0
+          ],
+          "detuneCents": 4.0,
+          "spread": 0.32,
+          "cutoffHz": 1800.0,
+          "drive": 0.02
+        },
+        "string": {
+          "enabled": true,
+          "level": 0.18,
+          "bowLevel": 0.28,
+          "detuneCents": 9.0,
+          "spread": 0.58,
+          "fadeInSec": 0.1,
+          "brightness": 0.46,
+          "motionDepth": 0.16,
+          "motionRateHz": 0.42,
+          "bodySend": 0.48,
+          "drive": 0.06
+        },
+        "body": {
+          "enabled": true,
+          "mix": 0.26,
+          "size": 0.62,
+          "tone": 0.43,
+          "damping": 0.36,
+          "stereo": 0.38,
+          "drive": 0.05
+        }
       }
     }
   }

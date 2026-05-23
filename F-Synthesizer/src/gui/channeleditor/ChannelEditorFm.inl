@@ -160,7 +160,7 @@
                 }
             }
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
             int filterModeIdx = 0;
             switch (fm->filterMode)
             {
@@ -168,6 +168,7 @@
             case FilterMode::LowPass: filterModeIdx = 1; break;
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
+            case FilterMode::LadderLowPass: filterModeIdx = 4; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -178,6 +179,7 @@
                 case 1: fm->filterMode = FilterMode::LowPass; break;
                 case 2: fm->filterMode = FilterMode::HighPass; break;
                 case 3: fm->filterMode = FilterMode::BandPass; break;
+                case 4: fm->filterMode = FilterMode::LadderLowPass; break;
                 default: fm->filterMode = FilterMode::Bypass; break;
                 }
                 changed = true;
@@ -194,6 +196,9 @@
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", fm->filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Drive", fm->filterDrive, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Drive を調整します。", "ladderLowpass の入力段で太さと潰れが増えます。", nullptr);
 
             changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true, false);
         }

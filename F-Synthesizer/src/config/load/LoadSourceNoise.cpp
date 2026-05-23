@@ -1,5 +1,7 @@
 #include "Internal.h"
 
+#include <algorithm>
+
 #include "../ConfigFileInternal.h"
 
 namespace config::internal::load
@@ -20,7 +22,14 @@ bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource,
     }
     NoiseConfig nz{};
     nz.noise = n;
-    if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+    std::string filterObj;
+    bool foundFilter = false;
+    if (!ExtractObjectForKey(sourceObjText, "filter", filterObj, foundFilter, err))
+    {
+        return false;
+    }
+    const std::string& filterText = foundFilter ? filterObj : sourceObjText;
+    if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
         if (!TryParseFilterMode(*v, mode))
@@ -30,13 +39,17 @@ bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource,
         }
         nz.filterMode = mode;
     }
-    if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
+    if (auto v = ReadJSONDouble(filterText, "cutoffHz"))
     {
         nz.filterCutoffHz = *v;
     }
-    if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
+    if (auto v = ReadJSONDouble(filterText, "resonance"))
     {
         nz.filterResonance = *v;
+    }
+    if (auto v = ReadJSONDouble(filterText, "drive"))
+    {
+        nz.filterDrive = std::clamp(*v, 0.0, 1.0);
     }
     if (!ValidateNoiseBySchema(nz, err))
     {

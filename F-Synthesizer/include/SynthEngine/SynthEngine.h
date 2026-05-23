@@ -54,6 +54,7 @@ struct WaveformConfig
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    double filterDrive = 0.0;
     // キートラック量（0.0=なし, 1.0=フルトラック）。基準ノートは C4(60)。
     double filterKeytrack = 0.0;
     // ウェーブシェーパーのドライブ量（0.0=バイパス, 1.0=最大クリップ）。
@@ -95,6 +96,7 @@ struct AnalogConfig
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    double filterDrive = 0.0;
     double filterKeytrack = 0.0;
     double drive = 0.0;
     // アナログ固有: ボイスごとのピッチドリフト。
@@ -115,6 +117,7 @@ struct NoiseConfig
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    double filterDrive = 0.0;
 };
 
 // FM オペレータ1個分の設定。
@@ -154,6 +157,7 @@ struct FmConfig
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;
     double filterResonance = 0.707;
+    double filterDrive = 0.0;
     // ウェーブシェーパーのドライブ量（0.0=バイパス, 1.0=最大クリップ）。
     double drive = 0.0;
     // 共通 Modulation レイヤー（fm.index / pitchMul / amp をサポート）。
@@ -338,6 +342,44 @@ struct PadLayerConfig
     double drive = 0.0;
 };
 
+struct PluckLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    double decaySec = 0.18;
+    double brightness = 0.55;
+    double noiseMix = 0.35;
+    double pitchOffsetSemis = 0.0;
+    double bodySend = 0.35;
+    double drive = 0.0;
+};
+
+struct StringLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    double bowLevel = 0.25;
+    double detuneCents = 7.0;
+    double spread = 0.45;
+    double fadeInSec = 0.08;
+    double brightness = 0.45;
+    double motionDepth = 0.12;
+    double motionRateHz = 0.7;
+    double bodySend = 0.40;
+    double drive = 0.0;
+};
+
+struct BodyLayerConfig
+{
+    bool enabled = false;
+    double mix = 0.0;
+    double size = 0.5;
+    double tone = 0.45;
+    double damping = 0.35;
+    double stereo = 0.25;
+    double drive = 0.0;
+};
+
 struct ExpressionMapConfig
 {
     bool enabled = false;
@@ -350,11 +392,17 @@ struct ExpressionMapConfig
     double velocityToLead = 0.0;
     double velocityToChord = 0.0;
     double velocityToPad = 0.0;
+    double velocityToPluck = 0.0;
+    double velocityToString = 0.0;
+    double velocityToBody = 0.0;
     double modWheelToBrightness = 0.0;
     double modWheelToPad = 0.0;
+    double modWheelToString = 0.0;
     double pressureToDrive = 0.0;
+    double pressureToFilterDrive = 0.0;
     double cc74ToBrightness = 0.0;
     double cc74ToPadBrightness = 0.0;
+    double cc74ToStringBrightness = 0.0;
 };
 
 // 1チャンネル分の音色設定。
@@ -383,6 +431,9 @@ struct ChannelConfig
     ChordLayerConfig chordLayer{};
     // 背景向けに暗い厚みと揺れを足す共通補助レイヤー。
     PadLayerConfig padLayer{};
+    PluckLayerConfig pluckLayer{};
+    StringLayerConfig stringLayer{};
+    BodyLayerConfig bodyLayer{};
     // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
     ExpressionMapConfig expressionMap{};
 };

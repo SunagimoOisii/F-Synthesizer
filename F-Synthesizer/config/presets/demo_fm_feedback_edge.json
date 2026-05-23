@@ -99,11 +99,15 @@
             }
           }
         ],
-        "filterMode": "lowpass",
-        "filterCutoffHz": 7800,
-        "filterResonance": 1.1,
-        "drive": 0.0
-      }
+        "drive": 0.0,
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 7800,
+          "resonance": 1.1,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

@@ -18,14 +18,21 @@
         "wave": "triangle",
         "duty": 3,
         "volumeSteps": 8,
-        "maxVoices": 1
-      }
+        "maxVoices": 1,
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   },
   "effects": {
     "chorus": {
       "enabled": true,
-      "mix": 0.10,
+      "mix": 0.1,
       "baseDelayMs": 14.0,
       "depthMs": 3.0,
       "rateHz": 0.24,
@@ -35,7 +42,7 @@
       "enabled": true,
       "mix": 0.07,
       "roomSize": 0.34,
-      "damping": 0.60
+      "damping": 0.6
     }
   }
 }

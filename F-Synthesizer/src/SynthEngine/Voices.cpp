@@ -134,6 +134,7 @@ void InitWaveformLikeVoiceStateCommon(
     SetFilterMode(state.filter, src.filterMode);
     SetFilterCutoffHz(state.filter, src.filterCutoffHz);
     SetFilterResonance(state.filter, src.filterResonance);
+    SetFilterDrive(state.filter, src.filterDrive);
     ResetFilterState(state.filter);
 
     state.syncPhase = 0.0;
@@ -201,6 +202,9 @@ void InitializeVoiceAtIndex(
     voices.leadLayer[i] = cfg.leadLayer;
     voices.chordLayer[i] = cfg.chordLayer;
     voices.padLayer[i] = cfg.padLayer;
+    voices.pluckLayer[i] = cfg.pluckLayer;
+    voices.stringLayer[i] = cfg.stringLayer;
+    voices.bodyLayer[i] = cfg.bodyLayer;
     voices.expressionMap[i] = cfg.expressionMap;
     ADSRState envState{};
     NoteOn(envState);
@@ -229,6 +233,14 @@ void InitializeVoiceAtIndex(
     voices.padDetunePhase[i] = 0.0;
     voices.padMotionPhase[i] = 0.0;
     voices.padLpState[i] = 0.0;
+    voices.pluckPhase[i] = 0.0;
+    voices.pluckLpState[i] = 0.0;
+    voices.stringPhaseA[i] = 0.0;
+    voices.stringPhaseB[i] = 0.25;
+    voices.stringMotionPhase[i] = 0.0;
+    voices.bodyStateL[i] = {};
+    voices.bodyStateR[i] = {};
+    voices.bodyPhase[i] = {};
 
     // ポルタメント初期化
     const double targetHz = NoteNumberToFreq(e.noteNumber);
@@ -288,6 +300,7 @@ void InitializeVoiceAtIndex(
         SetFilterMode(fs.filter, fm->filterMode);
         SetFilterCutoffHz(fs.filter, fm->filterCutoffHz);
         SetFilterResonance(fs.filter, fm->filterResonance);
+        SetFilterDrive(fs.filter, fm->filterDrive);
         ResetFilterState(fs.filter);
         if (fm->drive > 0.0)
         {
@@ -308,6 +321,7 @@ void InitializeVoiceAtIndex(
         SetFilterMode(ns.filter, noise->filterMode);
         SetFilterCutoffHz(ns.filter, noise->filterCutoffHz);
         SetFilterResonance(ns.filter, noise->filterResonance);
+        SetFilterDrive(ns.filter, noise->filterDrive);
         ResetFilterState(ns.filter);
     }
     else if (const auto* drum = std::get_if<DrumConfig>(&cfg.source))
@@ -499,6 +513,9 @@ void Voice::reserve(size_t n)
     leadLayer.reserve(n);
     chordLayer.reserve(n);
     padLayer.reserve(n);
+    pluckLayer.reserve(n);
+    stringLayer.reserve(n);
+    bodyLayer.reserve(n);
     expressionMap.reserve(n);
     env.reserve(n);
     phase.reserve(n);
@@ -517,6 +534,14 @@ void Voice::reserve(size_t n)
     padDetunePhase.reserve(n);
     padMotionPhase.reserve(n);
     padLpState.reserve(n);
+    pluckPhase.reserve(n);
+    pluckLpState.reserve(n);
+    stringPhaseA.reserve(n);
+    stringPhaseB.reserve(n);
+    stringMotionPhase.reserve(n);
+    bodyStateL.reserve(n);
+    bodyStateR.reserve(n);
+    bodyPhase.reserve(n);
     portamentoPitchHz.reserve(n);
     portamentoTargetHz.reserve(n);
     portamentoTimeSec.reserve(n);
@@ -544,6 +569,9 @@ void Voice::clear()
     leadLayer.clear();
     chordLayer.clear();
     padLayer.clear();
+    pluckLayer.clear();
+    stringLayer.clear();
+    bodyLayer.clear();
     expressionMap.clear();
     env.clear();
     phase.clear();
@@ -562,6 +590,14 @@ void Voice::clear()
     padDetunePhase.clear();
     padMotionPhase.clear();
     padLpState.clear();
+    pluckPhase.clear();
+    pluckLpState.clear();
+    stringPhaseA.clear();
+    stringPhaseB.clear();
+    stringMotionPhase.clear();
+    bodyStateL.clear();
+    bodyStateR.clear();
+    bodyPhase.clear();
     portamentoPitchHz.clear();
     portamentoTargetHz.clear();
     portamentoTimeSec.clear();
@@ -600,6 +636,9 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     leadLayer.emplace_back();
     chordLayer.emplace_back();
     padLayer.emplace_back();
+    pluckLayer.emplace_back();
+    stringLayer.emplace_back();
+    bodyLayer.emplace_back();
     expressionMap.emplace_back();
     env.emplace_back();
 
@@ -619,6 +658,14 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     padDetunePhase.push_back(0.0);
     padMotionPhase.push_back(0.0);
     padLpState.push_back(0.0);
+    pluckPhase.push_back(0.0);
+    pluckLpState.push_back(0.0);
+    stringPhaseA.push_back(0.0);
+    stringPhaseB.push_back(0.0);
+    stringMotionPhase.push_back(0.0);
+    bodyStateL.emplace_back();
+    bodyStateR.emplace_back();
+    bodyPhase.emplace_back();
     portamentoPitchHz.push_back(0.0);
     portamentoTargetHz.push_back(0.0);
     portamentoTimeSec.push_back(0.0);
@@ -747,6 +794,9 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(leadLayer, keepScratch);
     CompactVectorByKeep(chordLayer, keepScratch);
     CompactVectorByKeep(padLayer, keepScratch);
+    CompactVectorByKeep(pluckLayer, keepScratch);
+    CompactVectorByKeep(stringLayer, keepScratch);
+    CompactVectorByKeep(bodyLayer, keepScratch);
     CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
@@ -765,6 +815,14 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(padDetunePhase, keepScratch);
     CompactVectorByKeep(padMotionPhase, keepScratch);
     CompactVectorByKeep(padLpState, keepScratch);
+    CompactVectorByKeep(pluckPhase, keepScratch);
+    CompactVectorByKeep(pluckLpState, keepScratch);
+    CompactVectorByKeep(stringPhaseA, keepScratch);
+    CompactVectorByKeep(stringPhaseB, keepScratch);
+    CompactVectorByKeep(stringMotionPhase, keepScratch);
+    CompactVectorByKeep(bodyStateL, keepScratch);
+    CompactVectorByKeep(bodyStateR, keepScratch);
+    CompactVectorByKeep(bodyPhase, keepScratch);
     CompactVectorByKeep(portamentoPitchHz, keepScratch);
     CompactVectorByKeep(portamentoTargetHz, keepScratch);
     CompactVectorByKeep(portamentoTimeSec, keepScratch);

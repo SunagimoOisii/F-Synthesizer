@@ -14,35 +14,6 @@
       "decaySec": 0.18,
       "sustainLevel": 0.78,
       "releaseSec": 0.18,
-      "attackLayer": {
-        "enabled": true,
-        "type": "brass",
-        "level": 0.16,
-        "decaySec": 0.06,
-        "brightness": 0.46,
-        "bodyMix": 0.58,
-        "pitchOffsetSemis": -2,
-        "drive": 0.08
-      },
-      "leadLayer": {
-        "enabled": true,
-        "type": "brass",
-        "level": 0.1,
-        "edgeLevel": 0.24,
-        "bodyLevel": 0.38,
-        "detuneCents": 3.5,
-        "pitchBendSemis": 0.35,
-        "bendDecaySec": 0.05,
-        "attackBoost": 0.16,
-        "attackDecaySec": 0.045,
-        "drive": 0.08,
-        "characterLevel": 0.12,
-        "characterTone": 0.48,
-        "biteLevel": 0.1,
-        "biteDecaySec": 0.028,
-        "wobbleDepthCents": 3.5,
-        "wobbleRateHz": 4.2
-      },
       "source": {
         "type": "fm",
         "algorithm": 6,
@@ -129,9 +100,6 @@
             }
           }
         ],
-        "filterMode": "lowpass",
-        "filterCutoffHz": 5600,
-        "filterResonance": 0.78,
         "drive": 0.07,
         "modulation": {
           "env2": {
@@ -149,6 +117,12 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 5600,
+          "resonance": 0.78,
+          "drive": 0.0
         }
       },
       "expressionMap": {
@@ -163,6 +137,37 @@
         "modWheelToBrightness": 0.12,
         "pressureToDrive": 0.04,
         "cc74ToBrightness": 0.25
+      },
+      "layers": {
+        "lead": {
+          "enabled": true,
+          "type": "brass",
+          "level": 0.1,
+          "edgeLevel": 0.24,
+          "bodyLevel": 0.38,
+          "detuneCents": 3.5,
+          "pitchBendSemis": 0.35,
+          "bendDecaySec": 0.05,
+          "attackBoost": 0.16,
+          "attackDecaySec": 0.045,
+          "drive": 0.08,
+          "characterLevel": 0.12,
+          "characterTone": 0.48,
+          "biteLevel": 0.1,
+          "biteDecaySec": 0.028,
+          "wobbleDepthCents": 3.5,
+          "wobbleRateHz": 4.2
+        },
+        "attack": {
+          "enabled": true,
+          "type": "brass",
+          "level": 0.16,
+          "decaySec": 0.06,
+          "brightness": 0.46,
+          "bodyMix": 0.58,
+          "pitchOffsetSemis": -2,
+          "drive": 0.08
+        }
       }
     }
   }

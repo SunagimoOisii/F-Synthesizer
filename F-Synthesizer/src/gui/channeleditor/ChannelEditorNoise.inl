@@ -2,6 +2,7 @@
         {
             nz->filterCutoffHz = std::clamp(nz->filterCutoffHz, 10.0, 20000.0);
             nz->filterResonance = std::clamp(nz->filterResonance, 0.1, 18.0);
+            nz->filterDrive = std::clamp(nz->filterDrive, 0.0, 1.0);
 
             int idx = NoiseToIndex(nz->noise);
             const char* noises[] = { "white", "pink", "brown", "blue" };
@@ -9,7 +10,7 @@
             if (updateHoverHelp) updateHoverHelp("Noise を選択します。", "ノイズ種別（色）が変わります。", nullptr);
             nz->noise = NoiseFromIndex(idx);
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
             int filterModeIdx = 0;
             switch (nz->filterMode)
             {
@@ -17,6 +18,7 @@
             case FilterMode::LowPass: filterModeIdx = 1; break;
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
+            case FilterMode::LadderLowPass: filterModeIdx = 4; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -27,6 +29,7 @@
                 case 1: nz->filterMode = FilterMode::LowPass; break;
                 case 2: nz->filterMode = FilterMode::HighPass; break;
                 case 3: nz->filterMode = FilterMode::BandPass; break;
+                case 4: nz->filterMode = FilterMode::LadderLowPass; break;
                 default: nz->filterMode = FilterMode::Bypass; break;
                 }
                 changed = true;
@@ -43,6 +46,9 @@
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", nz->filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Drive", nz->filterDrive, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Drive を調整します。", "ladderLowpass の入力段で太さと潰れが増えます。", nullptr);
         }
         else if (auto* fm = std::get_if<FmConfig>(&chCfg.source))
         {
@@ -130,7 +136,7 @@
                 }
             }
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
             int filterModeIdx = 0;
             switch (fm->filterMode)
             {
@@ -138,6 +144,7 @@
             case FilterMode::LowPass: filterModeIdx = 1; break;
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
+            case FilterMode::LadderLowPass: filterModeIdx = 4; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -148,6 +155,7 @@
                 case 1: fm->filterMode = FilterMode::LowPass; break;
                 case 2: fm->filterMode = FilterMode::HighPass; break;
                 case 3: fm->filterMode = FilterMode::BandPass; break;
+                case 4: fm->filterMode = FilterMode::LadderLowPass; break;
                 default: fm->filterMode = FilterMode::Bypass; break;
                 }
                 changed = true;
@@ -164,6 +172,9 @@
             ImGui::SetNextItemWidth(220.0f);
             changed |= sliderWaveParam("Filter Resonance (Q)", fm->filterResonance, 0.1f, 18.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Resonance を調整します。", "カットオフ付近の強調量が変わります。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            changed |= sliderWaveParam("Filter Drive", fm->filterDrive, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Drive を調整します。", "ladderLowpass の入力段で太さと潰れが増えます。", nullptr);
 
             changed |= drawModulationEditor("fm_modulation", fm->modulation, false, true, false);
         }

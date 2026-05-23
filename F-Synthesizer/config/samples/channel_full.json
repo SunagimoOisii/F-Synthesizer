@@ -99,8 +99,15 @@
               "curve": 0.0
             }
           }
-        ]
-      }
+        ],
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     },
     "1": {
       "amp": 0.35,
@@ -110,8 +117,15 @@
       "releaseSec": 0.2,
       "source": {
         "type": "waveform",
-        "wave": "triangle"
-      }
+        "wave": "triangle",
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     },
     "9": {
       "amp": 8.0,
@@ -397,8 +411,15 @@
             "humanizePitchCents": 2.5,
             "humanizeDecayPct": 0.12
           }
+        },
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
         }
-      }
+      },
+      "layers": {}
     }
   }
 }

@@ -141,6 +141,7 @@ void RenderFmSource(
     frame.shaperResonanceMul = mod.resonanceMul;
     frame.shaperDrive = src.drive;
     frame.shaperDriveNorm = fs.driveNorm;
+    frame.shaperFilterDrive = src.filterDrive;
 
     for (int k = 0; k < 4; k++)
     {

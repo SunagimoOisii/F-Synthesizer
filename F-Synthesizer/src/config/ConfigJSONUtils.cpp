@@ -227,6 +227,11 @@ bool TryParseFilterMode(const std::string& name, FilterMode& outMode)
         outMode = FilterMode::BandPass;
         return true;
     }
+    if (name == "ladderLowpass")
+    {
+        outMode = FilterMode::LadderLowPass;
+        return true;
+    }
     return false;
 }
 
@@ -439,6 +444,7 @@ std::string FilterModeToString(FilterMode mode)
     case FilterMode::LowPass: return "lowpass";
     case FilterMode::HighPass: return "highpass";
     case FilterMode::BandPass: return "bandpass";
+    case FilterMode::LadderLowPass: return "ladderLowpass";
     }
     return "bypass";
 }
@@ -754,10 +760,7 @@ void WriteWaveformLikeCommonFields(std::ostream& out, const T& v, int indent)
     WriteIndent(out, indent); out << "\"ringModEnabled\": " << (v.ringModEnabled ? "true" : "false") << ",\n";
     WriteIndent(out, indent); out << "\"ringModRatio\": " << v.ringModRatio << ",\n";
     WriteIndent(out, indent); out << "\"ringModMix\": " << v.ringModMix << ",\n";
-    WriteIndent(out, indent); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
-    WriteIndent(out, indent); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-    WriteIndent(out, indent); out << "\"filterResonance\": " << v.filterResonance << ",\n";
-    WriteIndent(out, indent); out << "\"filterKeytrack\": " << v.filterKeytrack << ",\n";
+    WriteIndent(out, indent); out << "\"filter\": { \"mode\": \"" << FilterModeToString(v.filterMode) << "\", \"cutoffHz\": " << v.filterCutoffHz << ", \"resonance\": " << v.filterResonance << ", \"keytrack\": " << v.filterKeytrack << ", \"drive\": " << v.filterDrive << " },\n";
     WriteIndent(out, indent); out << "\"drive\": " << v.drive << ",\n";
 }
 
@@ -792,9 +795,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Noise) << "\",\n";
             WriteIndent(out, indent + 2); out << "\"noise\": \"" << NoiseTypeToString(v.noise) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << "\n";
+            WriteIndent(out, indent + 2); out << "\"filter\": { \"mode\": \"" << FilterModeToString(v.filterMode) << "\", \"cutoffHz\": " << v.filterCutoffHz << ", \"resonance\": " << v.filterResonance << ", \"drive\": " << v.filterDrive << " }\n";
         }
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
@@ -817,9 +818,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
                 out << "\n";
             }
             WriteIndent(out, indent + 2); out << "],\n";
-            WriteIndent(out, indent + 2); out << "\"filterMode\": \"" << FilterModeToString(v.filterMode) << "\",\n";
-            WriteIndent(out, indent + 2); out << "\"filterCutoffHz\": " << v.filterCutoffHz << ",\n";
-            WriteIndent(out, indent + 2); out << "\"filterResonance\": " << v.filterResonance << ",\n";
+            WriteIndent(out, indent + 2); out << "\"filter\": { \"mode\": \"" << FilterModeToString(v.filterMode) << "\", \"cutoffHz\": " << v.filterCutoffHz << ", \"resonance\": " << v.filterResonance << ", \"drive\": " << v.filterDrive << " },\n";
             WriteIndent(out, indent + 2); out << "\"drive\": " << v.drive << ",\n";
             WriteModulationConfig(out, v.modulation, indent + 2);
             out << "\n";
@@ -862,108 +861,28 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     WriteIndent(out, 6); out << "\"sustainLevel\": " << cfg.sustainLevel << ",\n";
     WriteIndent(out, 6); out << "\"releaseSec\": " << cfg.releaseSec << ",\n";
     WriteIndent(out, 6); out << "\"portamentoTimeSec\": " << cfg.portamentoTimeSec << ",\n";
-    if (cfg.attackLayer.enabled)
-    {
-        const auto& layer = cfg.attackLayer;
-        WriteIndent(out, 6); out << "\"attackLayer\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
-        WriteIndent(out, 8); out << "\"type\": \"" << AttackLayerTypeToString(layer.type) << "\",\n";
-        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
-        WriteIndent(out, 8); out << "\"decaySec\": " << layer.decaySec << ",\n";
-        WriteIndent(out, 8); out << "\"brightness\": " << layer.brightness << ",\n";
-        WriteIndent(out, 8); out << "\"bodyMix\": " << layer.bodyMix << ",\n";
-        WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
-        WriteIndent(out, 6); out << "},\n";
-    }
-    if (cfg.bassLayer.enabled)
-    {
-        const auto& layer = cfg.bassLayer;
-        WriteIndent(out, 6); out << "\"bassLayer\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
-        WriteIndent(out, 8); out << "\"type\": \"" << BassLayerTypeToString(layer.type) << "\",\n";
-        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
-        WriteIndent(out, 8); out << "\"subLevel\": " << layer.subLevel << ",\n";
-        WriteIndent(out, 8); out << "\"bodyLevel\": " << layer.bodyLevel << ",\n";
-        WriteIndent(out, 8); out << "\"gritLevel\": " << layer.gritLevel << ",\n";
-        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << ",\n";
-        WriteIndent(out, 8); out << "\"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-        WriteIndent(out, 8); out << "\"velocityToDrive\": " << layer.velocityToDrive << ",\n";
-        WriteIndent(out, 8); out << "\"focusHz\": " << layer.focusHz << ",\n";
-        WriteIndent(out, 8); out << "\"focusLevel\": " << layer.focusLevel << ",\n";
-        WriteIndent(out, 8); out << "\"bodySaturation\": " << layer.bodySaturation << ",\n";
-        WriteIndent(out, 8); out << "\"gritTone\": " << layer.gritTone << ",\n";
-        WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
-        WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << "\n";
-        WriteIndent(out, 6); out << "},\n";
-    }
-    if (cfg.leadLayer.enabled)
-    {
-        const auto& layer = cfg.leadLayer;
-        WriteIndent(out, 6); out << "\"leadLayer\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
-        WriteIndent(out, 8); out << "\"type\": \"" << LeadLayerTypeToString(layer.type) << "\",\n";
-        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
-        WriteIndent(out, 8); out << "\"edgeLevel\": " << layer.edgeLevel << ",\n";
-        WriteIndent(out, 8); out << "\"bodyLevel\": " << layer.bodyLevel << ",\n";
-        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
-        WriteIndent(out, 8); out << "\"pitchBendSemis\": " << layer.pitchBendSemis << ",\n";
-        WriteIndent(out, 8); out << "\"bendDecaySec\": " << layer.bendDecaySec << ",\n";
-        WriteIndent(out, 8); out << "\"attackBoost\": " << layer.attackBoost << ",\n";
-        WriteIndent(out, 8); out << "\"attackDecaySec\": " << layer.attackDecaySec << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << ",\n";
-        WriteIndent(out, 8); out << "\"characterLevel\": " << layer.characterLevel << ",\n";
-        WriteIndent(out, 8); out << "\"characterTone\": " << layer.characterTone << ",\n";
-        WriteIndent(out, 8); out << "\"biteLevel\": " << layer.biteLevel << ",\n";
-        WriteIndent(out, 8); out << "\"biteDecaySec\": " << layer.biteDecaySec << ",\n";
-        WriteIndent(out, 8); out << "\"wobbleDepthCents\": " << layer.wobbleDepthCents << ",\n";
-        WriteIndent(out, 8); out << "\"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
-        WriteIndent(out, 6); out << "},\n";
-    }
-    if (cfg.chordLayer.enabled)
-    {
-        const auto& layer = cfg.chordLayer;
-        WriteIndent(out, 6); out << "\"chordLayer\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
-        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
-        WriteIndent(out, 8); out << "\"intervalsSemis\": [";
-        for (size_t v = 0; v < layer.intervalsSemis.size(); v++)
-        {
-            if (v > 0) out << ", ";
-            out << layer.intervalsSemis[v];
-        }
-        out << "],\n";
-        WriteIndent(out, 8); out << "\"voiceLevels\": [";
-        for (size_t v = 0; v < layer.voiceLevels.size(); v++)
-        {
-            if (v > 0) out << ", ";
-            out << layer.voiceLevels[v];
-        }
-        out << "],\n";
-        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
-        WriteIndent(out, 8); out << "\"spread\": " << layer.spread << ",\n";
-        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
-        WriteIndent(out, 6); out << "},\n";
-    }
-    if (cfg.padLayer.enabled)
-    {
-        const auto& layer = cfg.padLayer;
-        WriteIndent(out, 6); out << "\"padLayer\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
-        WriteIndent(out, 8); out << "\"level\": " << layer.level << ",\n";
-        WriteIndent(out, 8); out << "\"octaveLevel\": " << layer.octaveLevel << ",\n";
-        WriteIndent(out, 8); out << "\"detuneCents\": " << layer.detuneCents << ",\n";
-        WriteIndent(out, 8); out << "\"spread\": " << layer.spread << ",\n";
-        WriteIndent(out, 8); out << "\"fadeInSec\": " << layer.fadeInSec << ",\n";
-        WriteIndent(out, 8); out << "\"brightness\": " << layer.brightness << ",\n";
-        WriteIndent(out, 8); out << "\"motionDepth\": " << layer.motionDepth << ",\n";
-        WriteIndent(out, 8); out << "\"motionRateHz\": " << layer.motionRateHz << ",\n";
-        WriteIndent(out, 8); out << "\"cutoffHz\": " << layer.cutoffHz << ",\n";
-        WriteIndent(out, 8); out << "\"drive\": " << layer.drive << "\n";
-        WriteIndent(out, 6); out << "},\n";
-    }
+    WriteIndent(out, 6); out << "\"layers\": {\n";
+    const auto& attack = cfg.attackLayer;
+    WriteIndent(out, 8); out << "\"attack\": { \"enabled\": " << (attack.enabled ? "true" : "false") << ", \"type\": \"" << AttackLayerTypeToString(attack.type) << "\", \"level\": " << attack.level << ", \"decaySec\": " << attack.decaySec << ", \"brightness\": " << attack.brightness << ", \"bodyMix\": " << attack.bodyMix << ", \"pitchOffsetSemis\": " << attack.pitchOffsetSemis << ", \"drive\": " << attack.drive << " },\n";
+    const auto& bass = cfg.bassLayer;
+    WriteIndent(out, 8); out << "\"bass\": { \"enabled\": " << (bass.enabled ? "true" : "false") << ", \"type\": \"" << BassLayerTypeToString(bass.type) << "\", \"level\": " << bass.level << ", \"subLevel\": " << bass.subLevel << ", \"bodyLevel\": " << bass.bodyLevel << ", \"gritLevel\": " << bass.gritLevel << ", \"cutoffHz\": " << bass.cutoffHz << ", \"drive\": " << bass.drive << ", \"pitchOffsetSemis\": " << bass.pitchOffsetSemis << ", \"velocityToDrive\": " << bass.velocityToDrive << ", \"focusHz\": " << bass.focusHz << ", \"focusLevel\": " << bass.focusLevel << ", \"bodySaturation\": " << bass.bodySaturation << ", \"gritTone\": " << bass.gritTone << ", \"attackBoost\": " << bass.attackBoost << ", \"attackDecaySec\": " << bass.attackDecaySec << " },\n";
+    const auto& lead = cfg.leadLayer;
+    WriteIndent(out, 8); out << "\"lead\": { \"enabled\": " << (lead.enabled ? "true" : "false") << ", \"type\": \"" << LeadLayerTypeToString(lead.type) << "\", \"level\": " << lead.level << ", \"edgeLevel\": " << lead.edgeLevel << ", \"bodyLevel\": " << lead.bodyLevel << ", \"detuneCents\": " << lead.detuneCents << ", \"pitchBendSemis\": " << lead.pitchBendSemis << ", \"bendDecaySec\": " << lead.bendDecaySec << ", \"attackBoost\": " << lead.attackBoost << ", \"attackDecaySec\": " << lead.attackDecaySec << ", \"drive\": " << lead.drive << ", \"characterLevel\": " << lead.characterLevel << ", \"characterTone\": " << lead.characterTone << ", \"biteLevel\": " << lead.biteLevel << ", \"biteDecaySec\": " << lead.biteDecaySec << ", \"wobbleDepthCents\": " << lead.wobbleDepthCents << ", \"wobbleRateHz\": " << lead.wobbleRateHz << " },\n";
+    const auto& chord = cfg.chordLayer;
+    WriteIndent(out, 8); out << "\"chord\": { \"enabled\": " << (chord.enabled ? "true" : "false") << ", \"level\": " << chord.level << ", \"intervalsSemis\": [";
+    for (size_t v = 0; v < chord.intervalsSemis.size(); v++) { if (v > 0) out << ", "; out << chord.intervalsSemis[v]; }
+    out << "], \"voiceLevels\": [";
+    for (size_t v = 0; v < chord.voiceLevels.size(); v++) { if (v > 0) out << ", "; out << chord.voiceLevels[v]; }
+    out << "], \"detuneCents\": " << chord.detuneCents << ", \"spread\": " << chord.spread << ", \"cutoffHz\": " << chord.cutoffHz << ", \"drive\": " << chord.drive << " },\n";
+    const auto& pad = cfg.padLayer;
+    WriteIndent(out, 8); out << "\"pad\": { \"enabled\": " << (pad.enabled ? "true" : "false") << ", \"level\": " << pad.level << ", \"octaveLevel\": " << pad.octaveLevel << ", \"detuneCents\": " << pad.detuneCents << ", \"spread\": " << pad.spread << ", \"fadeInSec\": " << pad.fadeInSec << ", \"brightness\": " << pad.brightness << ", \"motionDepth\": " << pad.motionDepth << ", \"motionRateHz\": " << pad.motionRateHz << ", \"cutoffHz\": " << pad.cutoffHz << ", \"drive\": " << pad.drive << " },\n";
+    const auto& pluck = cfg.pluckLayer;
+    WriteIndent(out, 8); out << "\"pluck\": { \"enabled\": " << (pluck.enabled ? "true" : "false") << ", \"level\": " << pluck.level << ", \"decaySec\": " << pluck.decaySec << ", \"brightness\": " << pluck.brightness << ", \"noiseMix\": " << pluck.noiseMix << ", \"pitchOffsetSemis\": " << pluck.pitchOffsetSemis << ", \"bodySend\": " << pluck.bodySend << ", \"drive\": " << pluck.drive << " },\n";
+    const auto& stringLayer = cfg.stringLayer;
+    WriteIndent(out, 8); out << "\"string\": { \"enabled\": " << (stringLayer.enabled ? "true" : "false") << ", \"level\": " << stringLayer.level << ", \"bowLevel\": " << stringLayer.bowLevel << ", \"detuneCents\": " << stringLayer.detuneCents << ", \"spread\": " << stringLayer.spread << ", \"fadeInSec\": " << stringLayer.fadeInSec << ", \"brightness\": " << stringLayer.brightness << ", \"motionDepth\": " << stringLayer.motionDepth << ", \"motionRateHz\": " << stringLayer.motionRateHz << ", \"bodySend\": " << stringLayer.bodySend << ", \"drive\": " << stringLayer.drive << " },\n";
+    const auto& body = cfg.bodyLayer;
+    WriteIndent(out, 8); out << "\"body\": { \"enabled\": " << (body.enabled ? "true" : "false") << ", \"mix\": " << body.mix << ", \"size\": " << body.size << ", \"tone\": " << body.tone << ", \"damping\": " << body.damping << ", \"stereo\": " << body.stereo << ", \"drive\": " << body.drive << " }\n";
+    WriteIndent(out, 6); out << "},\n";
     if (cfg.expressionMap.enabled)
     {
         const auto& map = cfg.expressionMap;
@@ -978,11 +897,17 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
         WriteIndent(out, 8); out << "\"velocityToLead\": " << map.velocityToLead << ",\n";
         WriteIndent(out, 8); out << "\"velocityToChord\": " << map.velocityToChord << ",\n";
         WriteIndent(out, 8); out << "\"velocityToPad\": " << map.velocityToPad << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToPluck\": " << map.velocityToPluck << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToString\": " << map.velocityToString << ",\n";
+        WriteIndent(out, 8); out << "\"velocityToBody\": " << map.velocityToBody << ",\n";
         WriteIndent(out, 8); out << "\"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
         WriteIndent(out, 8); out << "\"modWheelToPad\": " << map.modWheelToPad << ",\n";
+        WriteIndent(out, 8); out << "\"modWheelToString\": " << map.modWheelToString << ",\n";
         WriteIndent(out, 8); out << "\"pressureToDrive\": " << map.pressureToDrive << ",\n";
+        WriteIndent(out, 8); out << "\"pressureToFilterDrive\": " << map.pressureToFilterDrive << ",\n";
         WriteIndent(out, 8); out << "\"cc74ToBrightness\": " << map.cc74ToBrightness << ",\n";
-        WriteIndent(out, 8); out << "\"cc74ToPadBrightness\": " << map.cc74ToPadBrightness << "\n";
+        WriteIndent(out, 8); out << "\"cc74ToPadBrightness\": " << map.cc74ToPadBrightness << ",\n";
+        WriteIndent(out, 8); out << "\"cc74ToStringBrightness\": " << map.cc74ToStringBrightness << "\n";
         WriteIndent(out, 6); out << "},\n";
     }
     WriteSourceConfig(out, cfg.source, 6);

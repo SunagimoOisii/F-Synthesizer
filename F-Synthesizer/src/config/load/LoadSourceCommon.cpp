@@ -139,6 +139,7 @@ bool WaveformLikeSchemaValue(const T& cfg, const SourceParameterSchemaEntry& e, 
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = cfg.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = cfg.filterResonance; return true; }
     if (std::string_view(e.id) == "filterKeytrack") { outValue = cfg.filterKeytrack; return true; }
+    if (std::string_view(e.id) == "filterDrive") { outValue = cfg.filterDrive; return true; }
     return false;
 }
 
@@ -177,6 +178,7 @@ bool FmSchemaValue(const FmConfig& fm, const SourceParameterSchemaEntry& e, doub
     if (std::string_view(e.id) == "op4Index") { outValue = fm.ops[3].index; return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = fm.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = fm.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterDrive") { outValue = fm.filterDrive; return true; }
     return false;
 }
 
@@ -213,6 +215,7 @@ bool NoiseSchemaValue(const NoiseConfig& noise, const SourceParameterSchemaEntry
     if (std::string_view(e.id) == "noise") { outValue = static_cast<double>(noise.noise); return true; }
     if (std::string_view(e.id) == "filterCutoffHz") { outValue = noise.filterCutoffHz; return true; }
     if (std::string_view(e.id) == "filterResonance") { outValue = noise.filterResonance; return true; }
+    if (std::string_view(e.id) == "filterDrive") { outValue = noise.filterDrive; return true; }
     return false;
 }
 
@@ -282,15 +285,20 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
     if (auto v = ReadJSONBool(text, "ringModEnabled")) { cfg.ringModEnabled = *v; }
     if (auto v = ReadJSONDouble(text, "ringModRatio")) { cfg.ringModRatio = std::clamp(*v, 0.125, 16.0); }
     if (auto v = ReadJSONDouble(text, "ringModMix")) { cfg.ringModMix = std::clamp(*v, 0.0, 1.0); }
-    if (auto v = ReadJSONString(text, "filterMode"))
+    std::string filterObj;
+    bool foundFilter = false;
+    if (!ExtractObjectForKey(text, "filter", filterObj, foundFilter, err)) { return false; }
+    const std::string& filterText = foundFilter ? filterObj : text;
+    if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
         if (!TryParseFilterMode(*v, mode)) { err = "invalid filterMode: " + *v; return false; }
         cfg.filterMode = mode;
     }
-    if (auto v = ReadJSONDouble(text, "filterCutoffHz")) { cfg.filterCutoffHz = *v; }
-    if (auto v = ReadJSONDouble(text, "filterResonance")) { cfg.filterResonance = *v; }
-    if (auto v = ReadJSONDouble(text, "filterKeytrack")) { cfg.filterKeytrack = *v; }
+    if (auto v = ReadJSONDouble(filterText, "cutoffHz")) { cfg.filterCutoffHz = *v; }
+    if (auto v = ReadJSONDouble(filterText, "resonance")) { cfg.filterResonance = *v; }
+    if (auto v = ReadJSONDouble(filterText, "keytrack")) { cfg.filterKeytrack = *v; }
+    if (auto v = ReadJSONDouble(filterText, "drive")) { cfg.filterDrive = std::clamp(*v, 0.0, 1.0); }
     if (auto v = ReadJSONDouble(text, "drive")) { cfg.drive = std::clamp(*v, 0.0, 1.0); }
 
     std::string arpeggioObj;

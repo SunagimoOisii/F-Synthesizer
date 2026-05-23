@@ -10,8 +10,15 @@
       "releaseSec": 0.3,
       "source": {
         "type": "waveform",
-        "wave": "sine"
-      }
+        "wave": "sine",
+        "filter": {
+          "mode": "bypass",
+          "cutoffHz": 8000.0,
+          "resonance": 0.707,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

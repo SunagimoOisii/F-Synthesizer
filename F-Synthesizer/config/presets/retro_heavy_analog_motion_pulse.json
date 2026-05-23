@@ -21,10 +21,6 @@
         "unisonSpread": 0.25,
         "subOscLevel": 0.12,
         "pulseWidth": 0.44,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 3400,
-        "filterResonance": 0.78,
-        "filterKeytrack": 0.22,
         "drive": 0.12,
         "driftDepthCents": 3,
         "driftRateHz": 0.16,
@@ -52,8 +48,16 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 3400,
+          "resonance": 0.78,
+          "keytrack": 0.22,
+          "drive": 0.0
         }
-      }
+      },
+      "layers": {}
     }
   }
 }

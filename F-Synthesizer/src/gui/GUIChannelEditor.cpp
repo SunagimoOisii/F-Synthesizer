@@ -56,6 +56,7 @@ void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
     fm.filterMode = FilterMode::Bypass;
     fm.filterCutoffHz = 8000.0;
     fm.filterResonance = 0.707;
+    fm.filterDrive = 0.0;
     fm.feedback = 0.0;
 
     for (auto& op : fm.ops)
@@ -92,6 +93,7 @@ void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
         fm.filterMode = FilterMode::LowPass;
         fm.filterCutoffHz = 3600.0;
         fm.filterResonance = 0.85;
+        fm.filterDrive = 0.12;
         fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 3.2;
         fm.ops[1].ratio = 1.0; fm.ops[1].level = 1.0; fm.ops[1].index = 1.8;
         fm.ops[2].ratio = 1.0; fm.ops[2].level = 0.9; fm.ops[2].index = 0.9;
@@ -598,6 +600,62 @@ bool DrawChannelEditor(
         layer.drive = std::clamp(layer.drive, 0.0, 1.0);
     }
 
+    if (ImGui::CollapsingHeader("Pluck / String / Body"))
+    {
+        auto& pluck = chCfg.pluckLayer;
+        changed |= ImGui::Checkbox("Enabled##pluckLayer", &pluck.enabled);
+        changed |= ImGui::InputDouble("Level##pluckLayer", &pluck.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Decay##pluckLayer", &pluck.decaySec, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Brightness##pluckLayer", &pluck.brightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Noise Mix##pluckLayer", &pluck.noiseMix, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Body Send##pluckLayer", &pluck.bodySend, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##pluckLayer", &pluck.drive, 0.01, 0.05, "%.3f");
+        pluck.level = std::clamp(pluck.level, 0.0, 1.0);
+        pluck.decaySec = std::clamp(pluck.decaySec, 0.02, 2.0);
+        pluck.brightness = std::clamp(pluck.brightness, 0.0, 1.0);
+        pluck.noiseMix = std::clamp(pluck.noiseMix, 0.0, 1.0);
+        pluck.bodySend = std::clamp(pluck.bodySend, 0.0, 1.0);
+        pluck.drive = std::clamp(pluck.drive, 0.0, 1.0);
+
+        ImGui::Separator();
+        auto& stringLayer = chCfg.stringLayer;
+        changed |= ImGui::Checkbox("Enabled##stringLayer", &stringLayer.enabled);
+        changed |= ImGui::InputDouble("Level##stringLayer", &stringLayer.level, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Bow Level##stringLayer", &stringLayer.bowLevel, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Detune Cents##stringLayer", &stringLayer.detuneCents, 0.5, 2.0, "%.2f");
+        changed |= ImGui::InputDouble("Spread##stringLayer", &stringLayer.spread, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Fade In##stringLayer", &stringLayer.fadeInSec, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Brightness##stringLayer", &stringLayer.brightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Motion Depth##stringLayer", &stringLayer.motionDepth, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Body Send##stringLayer", &stringLayer.bodySend, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##stringLayer", &stringLayer.drive, 0.01, 0.05, "%.3f");
+        stringLayer.level = std::clamp(stringLayer.level, 0.0, 1.0);
+        stringLayer.bowLevel = std::clamp(stringLayer.bowLevel, 0.0, 1.0);
+        stringLayer.detuneCents = std::clamp(stringLayer.detuneCents, 0.0, 80.0);
+        stringLayer.spread = std::clamp(stringLayer.spread, 0.0, 1.0);
+        stringLayer.fadeInSec = std::clamp(stringLayer.fadeInSec, 0.005, 3.0);
+        stringLayer.brightness = std::clamp(stringLayer.brightness, 0.0, 1.0);
+        stringLayer.motionDepth = std::clamp(stringLayer.motionDepth, 0.0, 1.0);
+        stringLayer.bodySend = std::clamp(stringLayer.bodySend, 0.0, 1.0);
+        stringLayer.drive = std::clamp(stringLayer.drive, 0.0, 1.0);
+
+        ImGui::Separator();
+        auto& body = chCfg.bodyLayer;
+        changed |= ImGui::Checkbox("Enabled##bodyLayer", &body.enabled);
+        changed |= ImGui::InputDouble("Mix##bodyLayer", &body.mix, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Size##bodyLayer", &body.size, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Tone##bodyLayer", &body.tone, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Damping##bodyLayer", &body.damping, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Stereo##bodyLayer", &body.stereo, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##bodyLayer", &body.drive, 0.01, 0.05, "%.3f");
+        body.mix = std::clamp(body.mix, 0.0, 1.0);
+        body.size = std::clamp(body.size, 0.0, 1.0);
+        body.tone = std::clamp(body.tone, 0.0, 1.0);
+        body.damping = std::clamp(body.damping, 0.0, 1.0);
+        body.stereo = std::clamp(body.stereo, 0.0, 1.0);
+        body.drive = std::clamp(body.drive, 0.0, 1.0);
+    }
+
     if (ImGui::CollapsingHeader("Expression Map"))
     {
         auto& map = chCfg.expressionMap;
@@ -617,6 +675,10 @@ bool DrawChannelEditor(
         changed |= ImGui::InputDouble("Velocity To Attack##expressionMap", &map.velocityToAttack, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Velocity To Bass##expressionMap", &map.velocityToBass, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Velocity To Lead##expressionMap", &map.velocityToLead, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Pluck##expressionMap", &map.velocityToPluck, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To String##expressionMap", &map.velocityToString, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Velocity To Body##expressionMap", &map.velocityToBody, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Pressure To Filter Drive##expressionMap", &map.pressureToFilterDrive, 0.01, 0.05, "%.3f");
 
         map.velocityCurve = std::clamp(map.velocityCurve, 0.2, 3.0);
         map.velocityToAmp = std::clamp(map.velocityToAmp, 0.0, 1.0);
@@ -625,11 +687,15 @@ bool DrawChannelEditor(
         map.velocityToAttack = std::clamp(map.velocityToAttack, 0.0, 1.0);
         map.velocityToBass = std::clamp(map.velocityToBass, 0.0, 1.0);
         map.velocityToLead = std::clamp(map.velocityToLead, 0.0, 1.0);
+        map.velocityToPluck = std::clamp(map.velocityToPluck, 0.0, 1.0);
+        map.velocityToString = std::clamp(map.velocityToString, 0.0, 1.0);
+        map.velocityToBody = std::clamp(map.velocityToBody, 0.0, 1.0);
         map.velocityToChord = std::clamp(map.velocityToChord, 0.0, 1.0);
         map.velocityToPad = std::clamp(map.velocityToPad, 0.0, 1.0);
         map.modWheelToBrightness = std::clamp(map.modWheelToBrightness, -1.0, 1.0);
         map.modWheelToPad = std::clamp(map.modWheelToPad, 0.0, 1.0);
         map.pressureToDrive = std::clamp(map.pressureToDrive, 0.0, 1.0);
+        map.pressureToFilterDrive = std::clamp(map.pressureToFilterDrive, 0.0, 1.0);
         map.cc74ToBrightness = std::clamp(map.cc74ToBrightness, -1.0, 1.0);
         map.cc74ToPadBrightness = std::clamp(map.cc74ToPadBrightness, -1.0, 1.0);
     }

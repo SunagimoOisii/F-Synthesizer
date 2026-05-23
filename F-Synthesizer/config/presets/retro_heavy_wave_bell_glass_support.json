@@ -21,10 +21,6 @@
         "unisonSpread": 0,
         "subOscLevel": 0,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 5200,
-        "filterResonance": 0.58,
-        "filterKeytrack": 0.1,
         "smoothing": {
           "enabled": true,
           "pitchEnabled": true,
@@ -34,8 +30,16 @@
         },
         "ringModEnabled": true,
         "ringModRatio": 1.5,
-        "ringModMix": 0.18
-      }
+        "ringModMix": 0.18,
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 5200,
+          "resonance": 0.58,
+          "keytrack": 0.1,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

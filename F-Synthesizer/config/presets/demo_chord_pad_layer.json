@@ -14,39 +14,6 @@
       "decaySec": 0.32,
       "sustainLevel": 0.84,
       "releaseSec": 0.42,
-      "chordLayer": {
-        "enabled": true,
-        "level": 0.15,
-        "intervalsSemis": [
-          0,
-          7,
-          12,
-          16
-        ],
-        "voiceLevels": [
-          1.0,
-          0.62,
-          0.4,
-          0.22
-        ],
-        "detuneCents": 4.5,
-        "spread": 0.38,
-        "cutoffHz": 2400.0,
-        "drive": 0.04
-      },
-      "padLayer": {
-        "enabled": true,
-        "level": 0.16,
-        "octaveLevel": 0.18,
-        "detuneCents": 6.0,
-        "spread": 0.44,
-        "fadeInSec": 0.18,
-        "brightness": 0.28,
-        "motionDepth": 0.08,
-        "motionRateHz": 0.18,
-        "cutoffHz": 1600.0,
-        "drive": 0.025
-      },
       "expressionMap": {
         "enabled": true,
         "velocityCurve": 0.85,
@@ -72,10 +39,6 @@
         "unisonSpread": 0.3,
         "subOscLevel": 0.08,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 2600.0,
-        "filterResonance": 0.78,
-        "filterKeytrack": 0.18,
         "drive": 0.1,
         "driftDepthCents": 3.0,
         "driftRateHz": 0.16,
@@ -103,6 +66,48 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 2600.0,
+          "resonance": 0.78,
+          "keytrack": 0.18,
+          "drive": 0.0
+        }
+      },
+      "layers": {
+        "pad": {
+          "enabled": true,
+          "level": 0.16,
+          "octaveLevel": 0.18,
+          "detuneCents": 6.0,
+          "spread": 0.44,
+          "fadeInSec": 0.18,
+          "brightness": 0.28,
+          "motionDepth": 0.08,
+          "motionRateHz": 0.18,
+          "cutoffHz": 1600.0,
+          "drive": 0.025
+        },
+        "chord": {
+          "enabled": true,
+          "level": 0.15,
+          "intervalsSemis": [
+            0,
+            7,
+            12,
+            16
+          ],
+          "voiceLevels": [
+            1.0,
+            0.62,
+            0.4,
+            0.22
+          ],
+          "detuneCents": 4.5,
+          "spread": 0.38,
+          "cutoffHz": 2400.0,
+          "drive": 0.04
         }
       }
     }

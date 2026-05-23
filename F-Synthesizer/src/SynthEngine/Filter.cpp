@@ -36,6 +36,7 @@ FilterParams ClampFilterParams(const FilterParams& params, int sampleRate)
     FilterParams clamped = params;
     clamped.cutoffHz = ClampCutoffHz(params.cutoffHz, sampleRate);
     clamped.resonance = std::clamp(params.resonance, kMinQ, kMaxQ);
+    clamped.drive = std::clamp(params.drive, 0.0, 1.0);
     return clamped;
 }
 
@@ -83,9 +84,23 @@ void SetFilterResonance(FilterInstance& filter, double resonance)
     filter.dirty = true;
 }
 
+void SetFilterDrive(FilterInstance& filter, double drive)
+{
+    const double clamped = std::clamp(drive, 0.0, 1.0);
+    if (std::fabs(filter.params.drive - clamped) < 1e-12)
+    {
+        return;
+    }
+    filter.params.drive = clamped;
+}
+
 void ResetFilterState(FilterInstance& filter)
 {
     filter.state = BiquadState{};
+    for (double& stage : filter.ladderStage)
+    {
+        stage = 0.0;
+    }
 }
 
 void UpdateFilterCoefficients(FilterInstance& filter)
@@ -98,7 +113,7 @@ void UpdateFilterCoefficients(FilterInstance& filter)
     const FilterParams p = ClampFilterParams(filter.params, filter.sampleRate);
     filter.params = p;
 
-    if (p.mode == FilterMode::Bypass)
+    if (p.mode == FilterMode::Bypass || p.mode == FilterMode::LadderLowPass)
     {
         filter.coeffs = BiquadCoefficients{};
         filter.dirty = false;
@@ -120,6 +135,11 @@ void UpdateFilterCoefficients(FilterInstance& filter)
     switch (p.mode)
     {
     case FilterMode::LowPass:
+        b0 = (1.0 - cosW0) * 0.5;
+        b1 = 1.0 - cosW0;
+        b2 = (1.0 - cosW0) * 0.5;
+        break;
+    case FilterMode::LadderLowPass:
         b0 = (1.0 - cosW0) * 0.5;
         b1 = 1.0 - cosW0;
         b2 = (1.0 - cosW0) * 0.5;
@@ -154,6 +174,24 @@ double ProcessFilterSample(FilterInstance& filter, double input)
     if (filter.params.mode == FilterMode::Bypass)
     {
         return input;
+    }
+    if (filter.params.mode == FilterMode::LadderLowPass)
+    {
+        const FilterParams p = ClampFilterParams(filter.params, filter.sampleRate);
+        const double drive = 1.0 + p.drive * 18.0;
+        const double feedback = std::clamp((p.resonance - 0.5) / 7.5, 0.0, 1.0) * 3.75;
+        const double cutoff = ClampCutoffHz(p.cutoffHz, filter.sampleRate);
+        const double g = std::clamp(
+            1.0 - std::exp(-2.0 * kPi * cutoff / static_cast<double>(filter.sampleRate)),
+            0.0,
+            0.98);
+        double x = std::tanh((input - filter.ladderStage[3] * feedback) * drive);
+        for (double& stage : filter.ladderStage)
+        {
+            stage += g * (x - stage);
+            x = std::tanh(stage);
+        }
+        return filter.ladderStage[3] * (1.0 + p.drive * 0.35);
     }
 
     // Transposed Direct Form II:

@@ -99,9 +99,6 @@
             }
           }
         ],
-        "filterMode": "lowpass",
-        "filterCutoffHz": 6800,
-        "filterResonance": 0.8,
         "drive": 0,
         "modulation": {
           "routes": {
@@ -118,8 +115,15 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 6800,
+          "resonance": 0.8,
+          "drive": 0.0
         }
-      }
+      },
+      "layers": {}
     }
   }
 }

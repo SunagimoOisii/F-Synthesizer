@@ -22,8 +22,13 @@ struct ExpressionRuntime
     double leadMul = 1.0;
     double chordMul = 1.0;
     double padMul = 1.0;
+    double pluckMul = 1.0;
+    double stringMul = 1.0;
+    double bodyMul = 1.0;
     double padBrightnessAdd = 0.0;
+    double stringBrightnessAdd = 0.0;
     double driveAdd = 0.0;
+    double filterDriveAdd = 0.0;
 };
 
 double Clamp01(double v)
@@ -68,8 +73,13 @@ ExpressionRuntime EvaluateExpressionMap(
     out.leadMul = AmountMul(out.expressionVelocity, map.velocityToLead);
     out.chordMul = AmountMul(out.expressionVelocity, map.velocityToChord);
     out.padMul = AmountMul(out.expressionVelocity, map.velocityToPad) + Clamp01(modwheel) * Clamp01(map.modWheelToPad);
+    out.pluckMul = AmountMul(out.expressionVelocity, map.velocityToPluck);
+    out.stringMul = AmountMul(out.expressionVelocity, map.velocityToString) + Clamp01(modwheel) * Clamp01(map.modWheelToString);
+    out.bodyMul = AmountMul(out.expressionVelocity, map.velocityToBody);
     out.padBrightnessAdd = (Clamp01(cc74Brightness) - 0.5) * std::clamp(map.cc74ToPadBrightness, -1.0, 1.0);
+    out.stringBrightnessAdd = (Clamp01(cc74Brightness) - 0.5) * std::clamp(map.cc74ToStringBrightness, -1.0, 1.0);
     out.driveAdd = Clamp01(pressure) * Clamp01(map.pressureToDrive);
+    out.filterDriveAdd = Clamp01(pressure) * Clamp01(map.pressureToFilterDrive);
     return out;
 }
 
@@ -151,8 +161,13 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.expressionLeadMul = expr.leadMul;
         in.expressionChordMul = expr.chordMul;
         in.expressionPadMul = expr.padMul;
+        in.expressionPluckMul = expr.pluckMul;
+        in.expressionStringMul = expr.stringMul;
+        in.expressionBodyMul = expr.bodyMul;
         in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
+        in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
         in.expressionDriveAdd = expr.driveAdd;
+        in.expressionFilterDriveAdd = expr.filterDriveAdd;
         in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
         in.resonance = state.channelResonance[ch];
 
@@ -180,12 +195,15 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         frame.sample += RenderAttackLayer(voices, i, in);
         frame.sample += RenderBassLayer(voices, i, in);
         frame.sample += RenderLeadLayer(voices, i, in);
+        const StereoFrame pluck = RenderPluckLayer(voices, i, in);
+        const StereoFrame stringLayer = RenderStringLayer(voices, i, in);
         const StereoFrame chord = RenderChordLayer(voices, i, in);
         const StereoFrame pad = RenderPadLayer(voices, i, in);
-        frame.sample += (chord.left + chord.right + pad.left + pad.right) * 0.5;
-        frame.stereoOffsetL += (chord.left - chord.right + pad.left - pad.right) * 0.5;
-        frame.stereoOffsetR += (chord.right - chord.left + pad.right - pad.left) * 0.5;
+        frame.sample += (pluck.left + pluck.right + stringLayer.left + stringLayer.right + chord.left + chord.right + pad.left + pad.right) * 0.5;
+        frame.stereoOffsetL += (pluck.left - pluck.right + stringLayer.left - stringLayer.right + chord.left - chord.right + pad.left - pad.right) * 0.5;
+        frame.stereoOffsetR += (pluck.right - pluck.left + stringLayer.right - stringLayer.left + chord.right - chord.left + pad.right - pad.left) * 0.5;
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
+        ApplyBodyLayer(voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
 
         const double gain =

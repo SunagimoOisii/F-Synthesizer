@@ -21,10 +21,6 @@
         "unisonSpread": 0,
         "subOscLevel": 0.05,
         "pulseWidth": 0.5,
-        "filterMode": "lowpass",
-        "filterCutoffHz": 6200,
-        "filterResonance": 1.1,
-        "filterKeytrack": 0.35,
         "drive": 0.12,
         "driftDepthCents": 2,
         "driftRateHz": 0.2,
@@ -36,8 +32,16 @@
           "filterCutoffTimeMs": 14.0
         },
         "hardSyncEnabled": true,
-        "hardSyncRatio": 3.0
-      }
+        "hardSyncRatio": 3.0,
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 6200,
+          "resonance": 1.1,
+          "keytrack": 0.35,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

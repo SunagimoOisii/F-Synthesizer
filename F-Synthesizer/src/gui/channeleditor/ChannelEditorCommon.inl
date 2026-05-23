@@ -30,6 +30,7 @@
             src.filterCutoffHz = std::clamp(src.filterCutoffHz, 10.0, 20000.0);
             src.filterResonance = std::clamp(src.filterResonance, 0.1, 18.0);
             src.filterKeytrack = std::clamp(src.filterKeytrack, 0.0, 1.0);
+            src.filterDrive = std::clamp(src.filterDrive, 0.0, 1.0);
 
             int unisonVoices = src.unisonVoices;
             ImGui::SetNextItemWidth(220.0f);
@@ -98,7 +99,7 @@
                 if (updateHoverHelp) updateHoverHelp("Arpeggio Note を調整します。", "基音からの半音オフセットが変わります。0=ユニゾン、12=1オクターブ上。", nullptr);
             }
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
             int filterModeIdx = 0;
             switch (src.filterMode)
             {
@@ -106,6 +107,7 @@
             case FilterMode::LowPass: filterModeIdx = 1; break;
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
+            case FilterMode::LadderLowPass: filterModeIdx = 4; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("フィルタモード", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -116,6 +118,7 @@
                 case 1: src.filterMode = FilterMode::LowPass; break;
                 case 2: src.filterMode = FilterMode::HighPass; break;
                 case 3: src.filterMode = FilterMode::BandPass; break;
+                case 4: src.filterMode = FilterMode::LadderLowPass; break;
                 default: src.filterMode = FilterMode::Bypass; break;
                 }
                 localChanged = true;
@@ -141,6 +144,9 @@
             ImGui::SetNextItemWidth(220.0f);
             localChanged |= sliderWaveParam("フィルタキー追従", src.filterKeytrack, 0.0f, 1.0f, "%.2f");
             if (updateHoverHelp) updateHoverHelp("Filter Keytrack を調整します。", "ノート音程に連動してカットオフが動く量が変わります。基準は C4(60)。", nullptr);
+            ImGui::SetNextItemWidth(220.0f);
+            localChanged |= sliderWaveParam("フィルタ入力ドライブ", src.filterDrive, 0.0f, 1.0f, "%.2f");
+            if (updateHoverHelp) updateHoverHelp("Filter Drive を調整します。", "ladderLowpass の入力段で太さと潰れが増えます。", nullptr);
             return localChanged;
         };
 

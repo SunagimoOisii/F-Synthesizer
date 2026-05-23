@@ -69,7 +69,7 @@ constexpr std::array<SourceKindInfo, kSourceKindCount> kSourceKinds{ {
     },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 13> kWaveformParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 14> kWaveformParameterSchema{ {
     { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
     { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
     { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
@@ -83,9 +83,10 @@ constexpr std::array<SourceParameterSchemaEntry, 13> kWaveformParameterSchema{ {
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
     { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "filterDrive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 15> kAnalogParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 16> kAnalogParameterSchema{ {
     { "unisonVoices", SourceParameterType::Int, 1.0, 8.0, 1.0 },
     { "unisonDetuneCents", SourceParameterType::Float, 0.0, 120.0, 0.0 },
     { "unisonSpread", SourceParameterType::Float, 0.0, 1.0, 0.0 },
@@ -99,17 +100,19 @@ constexpr std::array<SourceParameterSchemaEntry, 15> kAnalogParameterSchema{ {
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
     { "filterKeytrack", SourceParameterType::Float, 0.0, 1.0, 0.0 },
+    { "filterDrive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "driftDepthCents", SourceParameterType::Float, 0.0, 20.0, 0.0 },
     { "driftRateHz", SourceParameterType::Float, 0.01, 2.0, 0.3 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 3> kNoiseParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 4> kNoiseParameterSchema{ {
     { "noise", SourceParameterType::Int, 0.0, 3.0, 0.0 },
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
+    { "filterDrive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
-constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
+constexpr std::array<SourceParameterSchemaEntry, 21> kFmParameterSchema{ {
     { "algorithm", SourceParameterType::Int, 0.0, 7.0, 0.0 },
     { "feedback", SourceParameterType::Float, 0.0, 1.0, 0.0 },
     { "op1Wave", SourceParameterType::Int, 0.0, 3.0, 0.0 },
@@ -130,6 +133,7 @@ constexpr std::array<SourceParameterSchemaEntry, 20> kFmParameterSchema{ {
     { "op4Index", SourceParameterType::Float, 0.0, 32.0, 0.0 },
     { "filterCutoffHz", SourceParameterType::Float, 10.0, 20000.0, 8000.0 },
     { "filterResonance", SourceParameterType::Float, 0.1, 18.0, 0.707 },
+    { "filterDrive", SourceParameterType::Float, 0.0, 1.0, 0.0 },
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 23> kDrumParameterSchema{ {

@@ -99,9 +99,6 @@
             }
           }
         ],
-        "filterMode": "lowpass",
-        "filterCutoffHz": 7000,
-        "filterResonance": 0.9,
         "drive": 0.0,
         "modulation": {
           "env2": {
@@ -119,8 +116,15 @@
               "enabled": true
             }
           }
+        },
+        "filter": {
+          "mode": "lowpass",
+          "cutoffHz": 7000,
+          "resonance": 0.9,
+          "drive": 0.0
         }
-      }
+      },
+      "layers": {}
     }
   }
 }

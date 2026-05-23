@@ -14,8 +14,13 @@ struct VoiceRenderInput
     double expressionLeadMul = 1.0;
     double expressionChordMul = 1.0;
     double expressionPadMul = 1.0;
+    double expressionPluckMul = 1.0;
+    double expressionStringMul = 1.0;
+    double expressionBodyMul = 1.0;
     double expressionPadBrightnessAdd = 0.0;
+    double expressionStringBrightnessAdd = 0.0;
     double expressionDriveAdd = 0.0;
+    double expressionFilterDriveAdd = 0.0;
     double envGain = 1.0;
     double modwheel = 0.0;
     double channelPressure = 0.0;
@@ -400,4 +405,118 @@ StereoFrame RenderPadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         monoLp + (left - sample) * 0.55,
         monoLp + (right - sample) * 0.55
     };
+}
+
+StereoFrame RenderPluckLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const PluckLayerConfig& layer = voices.pluckLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return {};
+    }
+    const double decay = std::clamp(layer.decaySec, 0.02, 2.0);
+    const double age = voices.ageSec[i];
+    const double env = std::exp(-age / decay);
+    if (env < 0.0002)
+    {
+        return {};
+    }
+    const double bright = std::clamp(layer.brightness + in.brightness * 0.2, 0.0, 1.0);
+    const double pitchMul = std::exp2(std::clamp(layer.pitchOffsetSemis, -24.0, 24.0) / 12.0);
+    const double inc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
+    voices.pluckPhase[i] = WrapPhase(voices.pluckPhase[i] + inc);
+    const double p = voices.pluckPhase[i];
+    const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
+    const double saw = 2.0 * p - 1.0;
+    const double pulse = (p < (0.38 + bright * 0.18)) ? 1.0 : -1.0;
+    const double noise = NextAttackNoise(voices.attackNoiseState[i]);
+    const double clickEnv = std::exp(-age / (0.006 + bright * 0.018));
+    double sample =
+        tri * (0.45 - bright * 0.18) +
+        saw * (0.25 + bright * 0.18) +
+        pulse * (0.12 + bright * 0.12) +
+        noise * std::clamp(layer.noiseMix, 0.0, 1.0) * clickEnv;
+    sample *= env * std::clamp(layer.level, 0.0, 1.0) * in.expressionPluckMul;
+    sample = AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.35, 0.0, 1.0));
+
+    const double cutoff = std::clamp(700.0 + bright * 7200.0, 80.0, 12000.0);
+    const double rc = 1.0 / (2.0 * kPi * cutoff);
+    const double alpha = in.dt / (rc + in.dt);
+    voices.pluckLpState[i] += alpha * (sample - voices.pluckLpState[i]);
+    const double bodySend = std::clamp(layer.bodySend, 0.0, 1.0);
+    return StereoFrame{
+        voices.pluckLpState[i] * (1.0 + bodySend * 0.05),
+        voices.pluckLpState[i] * (1.0 - bodySend * 0.05)
+    };
+}
+
+StereoFrame RenderStringLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const StringLayerConfig& layer = voices.stringLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return {};
+    }
+    voices.stringMotionPhase[i] = WrapPhase(voices.stringMotionPhase[i] + std::clamp(layer.motionRateHz, 0.0, 12.0) * in.dt);
+    const double motion = std::sin(2.0 * kPi * voices.stringMotionPhase[i]);
+    const double bright = std::clamp(layer.brightness + in.expressionStringBrightnessAdd, 0.0, 1.0);
+    const double fade = 1.0 - std::exp(-voices.ageSec[i] / std::clamp(layer.fadeInSec, 0.005, 3.0));
+    const double detune = std::clamp(layer.detuneCents, 0.0, 80.0) *
+        (1.0 + std::clamp(layer.motionDepth, 0.0, 1.0) * 0.25 * motion);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor;
+    voices.stringPhaseA[i] = WrapPhase(voices.stringPhaseA[i] + baseInc * std::exp2(-detune / 1200.0));
+    voices.stringPhaseB[i] = WrapPhase(voices.stringPhaseB[i] + baseInc * std::exp2(detune / 1200.0));
+    const double a = voices.stringPhaseA[i];
+    const double b = voices.stringPhaseB[i];
+    const double sawA = 2.0 * a - 1.0;
+    const double sawB = 2.0 * b - 1.0;
+    const double triA = 4.0 * std::abs(a - 0.5) - 1.0;
+    const double triB = 4.0 * std::abs(b - 0.5) - 1.0;
+    const double bowNoise = NextAttackNoise(voices.attackNoiseState[i]) * std::clamp(layer.bowLevel, 0.0, 1.0) * (0.15 + bright * 0.20);
+    const double leftTone = sawA * (0.30 + bright * 0.20) + triB * (0.42 - bright * 0.10) + bowNoise;
+    const double rightTone = sawB * (0.30 + bright * 0.20) + triA * (0.42 - bright * 0.10) - bowNoise * 0.45;
+    const double spread = std::clamp(layer.spread, 0.0, 1.0);
+    const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionStringMul * fade;
+    const double drive = std::clamp(layer.drive + in.expressionDriveAdd * 0.25, 0.0, 1.0);
+    const double mono = (leftTone + rightTone) * 0.5;
+    return StereoFrame{
+        AttackSoftClip((mono * (1.0 - spread) + leftTone * spread) * level, drive),
+        AttackSoftClip((mono * (1.0 - spread) + rightTone * spread) * level, drive)
+    };
+}
+
+void ApplyBodyLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceRenderFrame& frame)
+{
+    const BodyLayerConfig& layer = voices.bodyLayer[i];
+    if (!layer.enabled || layer.mix <= 0.0)
+    {
+        return;
+    }
+    const double mix = std::clamp(layer.mix, 0.0, 1.0) * in.expressionBodyMul;
+    const double size = std::clamp(layer.size, 0.0, 1.0);
+    const double tone = std::clamp(layer.tone, 0.0, 1.0);
+    const double damping = std::clamp(layer.damping, 0.0, 1.0);
+    const double stereo = std::clamp(layer.stereo, 0.0, 1.0);
+    const std::array<double, 5> ratios{ 1.00, 1.48, 2.02, 2.71, 3.36 };
+    const std::array<double, 5> weights{ 0.42, 0.28, 0.18, 0.09, 0.05 };
+    const double baseHz = std::clamp(95.0 + size * 330.0 + tone * 140.0, 70.0, 780.0);
+    double bodyL = 0.0;
+    double bodyR = 0.0;
+    for (size_t r = 0; r < ratios.size(); r++)
+    {
+        const double freqL = std::clamp(baseHz * ratios[r] * (1.0 - stereo * 0.006 * static_cast<double>(r + 1)), 40.0, 6000.0);
+        const double freqR = std::clamp(baseHz * ratios[r] * (1.0 + stereo * 0.007 * static_cast<double>(r + 1)), 40.0, 6000.0);
+        voices.bodyPhase[i][r] = WrapPhase(voices.bodyPhase[i][r] + freqL * in.dt);
+        const double band = std::sin(2.0 * kPi * voices.bodyPhase[i][r]);
+        const double decay = std::exp(-in.dt * (2.0 + damping * 28.0 + static_cast<double>(r) * 4.0));
+        voices.bodyStateL[i][r] = voices.bodyStateL[i][r] * decay + frame.sample * weights[r] * (0.08 + tone * 0.09);
+        voices.bodyStateR[i][r] = voices.bodyStateR[i][r] * decay + frame.sample * weights[r] * (0.08 + tone * 0.09);
+        bodyL += voices.bodyStateL[i][r] * band;
+        bodyR += voices.bodyStateR[i][r] * std::sin(2.0 * kPi * WrapPhase(voices.bodyPhase[i][r] * freqR / freqL));
+    }
+    bodyL = AttackSoftClip(bodyL, layer.drive);
+    bodyR = AttackSoftClip(bodyR, layer.drive);
+    frame.stereoOffsetL += bodyL * mix;
+    frame.stereoOffsetR += bodyR * mix;
+    frame.sample = frame.sample * (1.0 - mix * 0.10) + (bodyL + bodyR) * 0.5 * mix * 0.55;
 }

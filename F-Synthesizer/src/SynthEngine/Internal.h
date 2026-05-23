@@ -136,6 +136,9 @@ struct Voice
     std::vector<LeadLayerConfig> leadLayer;
     std::vector<ChordLayerConfig> chordLayer;
     std::vector<PadLayerConfig> padLayer;
+    std::vector<PluckLayerConfig> pluckLayer;
+    std::vector<StringLayerConfig> stringLayer;
+    std::vector<BodyLayerConfig> bodyLayer;
     std::vector<ExpressionMapConfig> expressionMap;
     std::vector<ADSRState> env;
 
@@ -155,6 +158,14 @@ struct Voice
     std::vector<double> padDetunePhase;
     std::vector<double> padMotionPhase;
     std::vector<double> padLpState;
+    std::vector<double> pluckPhase;
+    std::vector<double> pluckLpState;
+    std::vector<double> stringPhaseA;
+    std::vector<double> stringPhaseB;
+    std::vector<double> stringMotionPhase;
+    std::vector<std::array<double, 5>> bodyStateL;
+    std::vector<std::array<double, 5>> bodyStateR;
+    std::vector<std::array<double, 5>> bodyPhase;
     std::vector<double> portamentoPitchHz;  // 現在のスライド中ピッチ（Hz）
     std::vector<double> portamentoTargetHz; // ターゲットピッチ（Hz）
     std::vector<double> portamentoTimeSec;  // チャンネル設定からコピーした時定数
@@ -189,6 +200,7 @@ struct SourceRenderFrame
     double shaperResonanceMul = 1.0;
     double shaperDrive = 0.0;
     double shaperDriveNorm = 1.0;
+    double shaperFilterDrive = 0.0;
     CommonShaperKind shaperKind = CommonShaperKind::None;
 };
 

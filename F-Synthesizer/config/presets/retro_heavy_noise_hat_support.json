@@ -16,10 +16,14 @@
       "source": {
         "type": "noise",
         "noise": "pink",
-        "filterMode": "highpass",
-        "filterCutoffHz": 4700,
-        "filterResonance": 0.65
-      }
+        "filter": {
+          "mode": "highpass",
+          "cutoffHz": 4700,
+          "resonance": 0.65,
+          "drive": 0.0
+        }
+      },
+      "layers": {}
     }
   }
 }

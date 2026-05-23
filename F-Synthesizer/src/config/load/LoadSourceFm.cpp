@@ -136,7 +136,14 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
         return false;
     }
 
-    if (auto v = ReadJSONString(sourceObjText, "filterMode"))
+    std::string filterObj;
+    bool foundFilter = false;
+    if (!ExtractObjectForKey(sourceObjText, "filter", filterObj, foundFilter, err))
+    {
+        return false;
+    }
+    const std::string& filterText = foundFilter ? filterObj : sourceObjText;
+    if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
         if (!TryParseFilterMode(*v, mode))
@@ -146,13 +153,17 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
         }
         fm.filterMode = mode;
     }
-    if (auto v = ReadJSONDouble(sourceObjText, "filterCutoffHz"))
+    if (auto v = ReadJSONDouble(filterText, "cutoffHz"))
     {
         fm.filterCutoffHz = *v;
     }
-    if (auto v = ReadJSONDouble(sourceObjText, "filterResonance"))
+    if (auto v = ReadJSONDouble(filterText, "resonance"))
     {
         fm.filterResonance = *v;
+    }
+    if (auto v = ReadJSONDouble(filterText, "drive"))
+    {
+        fm.filterDrive = std::clamp(*v, 0.0, 1.0);
     }
     if (auto v = ReadJSONDouble(sourceObjText, "drive"))
     {
