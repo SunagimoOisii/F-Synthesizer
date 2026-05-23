@@ -1,106 +1,109 @@
 {
-  "channels": {
-    "0": {
-      "amp": 0.18,
-      "attackSec": 0.003,
-      "decaySec": 0.16,
-      "sustainLevel": 0.74,
-      "releaseSec": 0.12,
-      "source": {
-        "type": "fm",
-        "algorithm": 7,
-        "feedback": 0.05,
-        "ops": [
-          {
-            "wave": "sine",
-            "ratio": 1,
-            "level": 0.68,
-            "index": 1.0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.1,
-              "sustainLevel": 0.83,
-              "releaseSec": 0.08,
-              "curve": 0.3
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.18,
+        "attackSec": 0.003,
+        "decaySec": 0.16,
+        "sustainLevel": 0.74,
+        "releaseSec": 0.12,
+        "source": {
+          "type": "fm",
+          "algorithm": 7,
+          "feedback": 0.05,
+          "ops": [
+            {
+              "wave": "sine",
+              "ratio": 1,
+              "level": 0.68,
+              "index": 1.0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.1,
+                "sustainLevel": 0.83,
+                "releaseSec": 0.08,
+                "curve": 0.3
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.09,
+                "sustainLevel": 0.5,
+                "releaseSec": 0.05,
+                "curve": 0.65
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.09,
-              "sustainLevel": 0.5,
-              "releaseSec": 0.05,
-              "curve": 0.65
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 2,
-            "level": 0.55,
-            "index": 0.7,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.1,
-              "sustainLevel": 0.83,
-              "releaseSec": 0.08,
-              "curve": 0.3
+            {
+              "wave": "sine",
+              "ratio": 2,
+              "level": 0.55,
+              "index": 0.7,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.1,
+                "sustainLevel": 0.83,
+                "releaseSec": 0.08,
+                "curve": 0.3
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.09,
+                "sustainLevel": 0.5,
+                "releaseSec": 0.05,
+                "curve": 0.65
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.09,
-              "sustainLevel": 0.5,
-              "releaseSec": 0.05,
-              "curve": 0.65
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 3,
-            "level": 0.44,
-            "index": 0.3,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.1,
-              "sustainLevel": 0.83,
-              "releaseSec": 0.08,
-              "curve": 0.3
+            {
+              "wave": "sine",
+              "ratio": 3,
+              "level": 0.44,
+              "index": 0.3,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.1,
+                "sustainLevel": 0.83,
+                "releaseSec": 0.08,
+                "curve": 0.3
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.09,
+                "sustainLevel": 0.5,
+                "releaseSec": 0.05,
+                "curve": 0.65
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.09,
-              "sustainLevel": 0.5,
-              "releaseSec": 0.05,
-              "curve": 0.65
+            {
+              "wave": "sine",
+              "ratio": 4,
+              "level": 0.34,
+              "index": 0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.1,
+                "sustainLevel": 0.75,
+                "releaseSec": 0.08,
+                "curve": 0.3
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.02,
+                "sustainLevel": 1.0,
+                "releaseSec": 0.05,
+                "curve": 0.0
+              }
             }
-          },
-          {
-            "wave": "sine",
-            "ratio": 4,
-            "level": 0.34,
-            "index": 0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.1,
-              "sustainLevel": 0.75,
-              "releaseSec": 0.08,
-              "curve": 0.3
-            },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
-              "releaseSec": 0.05,
-              "curve": 0.0
-            }
+          ],
+          "drive": 0.0,
+          "filter": {
+            "mode": "lowpass",
+            "cutoffHz": 9000,
+            "resonance": 0.75,
+            "drive": 0.0
           }
-        ],
-        "drive": 0.0,
-        "filter": {
-          "mode": "lowpass",
-          "cutoffHz": 9000,
-          "resonance": 0.75,
-          "drive": 0.0
-        }
-      },
-      "layers": {}
+        },
+        "layers": {}
+      }
     }
   },
   "tags": [

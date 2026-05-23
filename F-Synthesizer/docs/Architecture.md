@@ -70,7 +70,8 @@ GUI 状態に依存しません。
 
 - プリセットは `config/presets/*.json` に置き、`config/base.json` の上に適用する。
 - `config/default.json` は通常のローカル開始点。
-- `channels` は MIDI チャンネルごとの音色設定を表す。
+- config / preset の保存形式は `format: "projectModel.v1"` と `project` object を持つ。
+- `project.channels` は MIDI チャンネルごとの音色設定を表す。
 - `source.type` は音源契約を選ぶ。
   - `waveform`: 基本 oscillator、unison、sub oscillator、filter、smoothing、PWM、ring modulation、hard sync、arpeggio。
   - `analog`: waveform 系の減算的音源。drive と drift を持つ。

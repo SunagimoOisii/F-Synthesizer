@@ -160,14 +160,31 @@ function Write-ShortPresetConfig {
         [int]$SampleRate
     )
 
-    $PresetConfig | Add-Member -NotePropertyName midiPath -NotePropertyValue $MidiPath -Force
-    $PresetConfig | Add-Member -NotePropertyName wavPath -NotePropertyValue $WavPath -Force
-    $PresetConfig | Add-Member -NotePropertyName targetChannel -NotePropertyValue -1 -Force
-    $PresetConfig | Add-Member -NotePropertyName defaultWave -NotePropertyValue "saw" -Force
-    $PresetConfig | Add-Member -NotePropertyName initialSeconds -NotePropertyValue $InitialSeconds -Force
-    $PresetConfig | Add-Member -NotePropertyName bits -NotePropertyValue 16 -Force
-    $PresetConfig | Add-Member -NotePropertyName sampleRate -NotePropertyValue $SampleRate -Force
-    $PresetConfig | Add-Member -NotePropertyName extraReleaseSec -NotePropertyValue 0.02 -Force
+    if ($null -eq $PresetConfig.project) {
+        $project = [PSCustomObject]@{}
+        if ($PresetConfig.PSObject.Properties.Name -contains "channels") {
+            $project | Add-Member -NotePropertyName channels -NotePropertyValue $PresetConfig.channels -Force
+            $PresetConfig.PSObject.Properties.Remove("channels")
+        }
+        if ($PresetConfig.PSObject.Properties.Name -contains "channelMix") {
+            $project | Add-Member -NotePropertyName channelMix -NotePropertyValue $PresetConfig.channelMix -Force
+            $PresetConfig.PSObject.Properties.Remove("channelMix")
+        }
+        if ($PresetConfig.PSObject.Properties.Name -contains "effects") {
+            $project | Add-Member -NotePropertyName effects -NotePropertyValue $PresetConfig.effects -Force
+            $PresetConfig.PSObject.Properties.Remove("effects")
+        }
+        $PresetConfig | Add-Member -NotePropertyName format -NotePropertyValue "projectModel.v1" -Force
+        $PresetConfig | Add-Member -NotePropertyName project -NotePropertyValue $project -Force
+    }
+
+    $PresetConfig.project | Add-Member -NotePropertyName midiPath -NotePropertyValue $MidiPath -Force
+    $PresetConfig.project | Add-Member -NotePropertyName wavPath -NotePropertyValue $WavPath -Force
+    $PresetConfig.project | Add-Member -NotePropertyName targetChannel -NotePropertyValue -1 -Force
+    $PresetConfig.project | Add-Member -NotePropertyName initialSeconds -NotePropertyValue $InitialSeconds -Force
+    $PresetConfig.project | Add-Member -NotePropertyName bits -NotePropertyValue 16 -Force
+    $PresetConfig.project | Add-Member -NotePropertyName sampleRate -NotePropertyValue $SampleRate -Force
+    $PresetConfig.project | Add-Member -NotePropertyName extraReleaseSec -NotePropertyValue 0.02 -Force
     $PresetConfig | ConvertTo-Json -Depth 80 | Set-Content -Path $ConfigPath -Encoding UTF8
 }
 

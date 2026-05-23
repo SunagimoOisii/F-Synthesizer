@@ -1,63 +1,66 @@
 {
-  "channels": {
-    "0": {
-      "amp": 0.18,
-      "attackSec": 0.004,
-      "decaySec": 0.18,
-      "sustainLevel": 0.72,
-      "releaseSec": 0.16,
-      "source": {
-        "type": "analog",
-        "wave": "saw",
-        "unisonVoices": 1,
-        "unisonDetuneCents": 0,
-        "unisonSpread": 0,
-        "subOscLevel": 0.04,
-        "pulseWidth": 0.5,
-        "drive": 0.08,
-        "driftDepthCents": 2,
-        "driftRateHz": 0.2,
-        "smoothing": {
-          "enabled": true,
-          "pitchEnabled": true,
-          "ampTimeMs": 4.0,
-          "pitchTimeMs": 7.0,
-          "filterCutoffTimeMs": 14.0
-        },
-        "modulation": {
-          "lfo1": {
-            "wave": "sine",
-            "rateHz": 0.8,
-            "depth": 0.7,
-            "bipolar": true,
-            "keySync": true,
-            "delayMs": 0.0,
-            "fadeMs": 0.0
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.18,
+        "attackSec": 0.004,
+        "decaySec": 0.18,
+        "sustainLevel": 0.72,
+        "releaseSec": 0.16,
+        "source": {
+          "type": "analog",
+          "wave": "saw",
+          "unisonVoices": 1,
+          "unisonDetuneCents": 0,
+          "unisonSpread": 0,
+          "subOscLevel": 0.04,
+          "pulseWidth": 0.5,
+          "drive": 0.08,
+          "driftDepthCents": 2,
+          "driftRateHz": 0.2,
+          "smoothing": {
+            "enabled": true,
+            "pitchEnabled": true,
+            "ampTimeMs": 4.0,
+            "pitchTimeMs": 7.0,
+            "filterCutoffTimeMs": 14.0
           },
-          "routes": {
-            "0": {
-              "source": "lfo1",
-              "destination": "filterCutoffHz",
-              "amount": 0.45,
-              "enabled": true
+          "modulation": {
+            "lfo1": {
+              "wave": "sine",
+              "rateHz": 0.8,
+              "depth": 0.7,
+              "bipolar": true,
+              "keySync": true,
+              "delayMs": 0.0,
+              "fadeMs": 0.0
             },
-            "1": {
-              "source": "lfo1",
-              "destination": "filterResonance",
-              "amount": 0.35,
-              "enabled": true
+            "routes": {
+              "0": {
+                "source": "lfo1",
+                "destination": "filterCutoffHz",
+                "amount": 0.45,
+                "enabled": true
+              },
+              "1": {
+                "source": "lfo1",
+                "destination": "filterResonance",
+                "amount": 0.35,
+                "enabled": true
+              }
             }
+          },
+          "filter": {
+            "mode": "ladderLowpass",
+            "cutoffHz": 1700,
+            "resonance": 4.0,
+            "keytrack": 0.35,
+            "drive": 0.18
           }
         },
-        "filter": {
-          "mode": "ladderLowpass",
-          "cutoffHz": 1700,
-          "resonance": 4.0,
-          "keytrack": 0.35,
-          "drive": 0.18
-        }
-      },
-      "layers": {}
+        "layers": {}
+      }
     }
   },
   "tags": [

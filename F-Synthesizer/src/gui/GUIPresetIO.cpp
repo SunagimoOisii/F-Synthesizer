@@ -249,9 +249,15 @@ PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
         }
     }
 
-    if (root.contains("channels") && root["channels"].is_object())
+    const Json* projectRoot = &root;
+    if (root.contains("project") && root["project"].is_object())
     {
-        for (auto it = root["channels"].begin(); it != root["channels"].end(); ++it)
+        projectRoot = &root["project"];
+    }
+
+    if (projectRoot->contains("channels") && (*projectRoot)["channels"].is_object())
+    {
+        for (auto it = (*projectRoot)["channels"].begin(); it != (*projectRoot)["channels"].end(); ++it)
         {
             if (!it.value().is_object())
             {

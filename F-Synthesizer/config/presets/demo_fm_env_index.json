@@ -1,123 +1,126 @@
 {
-  "channels": {
-    "0": {
-      "amp": 0.2,
-      "attackSec": 0.002,
-      "decaySec": 0.16,
-      "sustainLevel": 0.68,
-      "releaseSec": 0.1,
-      "source": {
-        "type": "fm",
-        "algorithm": 3,
-        "feedback": 0.1,
-        "ops": [
-          {
-            "wave": "sine",
-            "ratio": 1,
-            "level": 1,
-            "index": 1.2,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.18,
-              "sustainLevel": 0.7799999999999999,
-              "releaseSec": 0.08,
-              "curve": 0.4
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.2,
+        "attackSec": 0.002,
+        "decaySec": 0.16,
+        "sustainLevel": 0.68,
+        "releaseSec": 0.1,
+        "source": {
+          "type": "fm",
+          "algorithm": 3,
+          "feedback": 0.1,
+          "ops": [
+            {
+              "wave": "sine",
+              "ratio": 1,
+              "level": 1,
+              "index": 1.2,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.18,
+                "sustainLevel": 0.7799999999999999,
+                "releaseSec": 0.08,
+                "curve": 0.4
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.15,
+                "releaseSec": 0.04,
+                "curve": 0.9
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.15,
+            {
+              "wave": "sine",
+              "ratio": 2,
+              "level": 0.8,
+              "index": 0.4,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.18,
+                "sustainLevel": 0.7799999999999999,
+                "releaseSec": 0.08,
+                "curve": 0.4
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.15,
+                "releaseSec": 0.04,
+                "curve": 0.9
+              }
+            },
+            {
+              "wave": "sine",
+              "ratio": 3,
+              "level": 0.4,
+              "index": 0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.18,
+                "sustainLevel": 0.7,
+                "releaseSec": 0.08,
+                "curve": 0.4
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.02,
+                "sustainLevel": 1.0,
+                "releaseSec": 0.05,
+                "curve": 0.0
+              }
+            },
+            {
+              "wave": "sine",
+              "ratio": 1,
+              "level": 0.2,
+              "index": 0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.18,
+                "sustainLevel": 0.7,
+                "releaseSec": 0.08,
+                "curve": 0.4
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.02,
+                "sustainLevel": 1.0,
+                "releaseSec": 0.05,
+                "curve": 0.0
+              }
+            }
+          ],
+          "drive": 0,
+          "modulation": {
+            "env2": {
+              "attackSec": 0,
+              "decaySec": 0.1,
+              "sustainLevel": 0,
               "releaseSec": 0.04,
-              "curve": 0.9
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 2,
-            "level": 0.8,
-            "index": 0.4,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.18,
-              "sustainLevel": 0.7799999999999999,
-              "releaseSec": 0.08,
-              "curve": 0.4
+              "curve": 0.85
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.12,
-              "sustainLevel": 0.15,
-              "releaseSec": 0.04,
-              "curve": 0.9
+            "routes": {
+              "0": {
+                "source": "env2",
+                "destination": "fm.index",
+                "amount": 0.85,
+                "enabled": true
+              }
             }
           },
-          {
-            "wave": "sine",
-            "ratio": 3,
-            "level": 0.4,
-            "index": 0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.18,
-              "sustainLevel": 0.7,
-              "releaseSec": 0.08,
-              "curve": 0.4
-            },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
-              "releaseSec": 0.05,
-              "curve": 0.0
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 1,
-            "level": 0.2,
-            "index": 0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.18,
-              "sustainLevel": 0.7,
-              "releaseSec": 0.08,
-              "curve": 0.4
-            },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
-              "releaseSec": 0.05,
-              "curve": 0.0
-            }
-          }
-        ],
-        "drive": 0,
-        "modulation": {
-          "env2": {
-            "attackSec": 0,
-            "decaySec": 0.1,
-            "sustainLevel": 0,
-            "releaseSec": 0.04,
-            "curve": 0.85
-          },
-          "routes": {
-            "0": {
-              "source": "env2",
-              "destination": "fm.index",
-              "amount": 0.85,
-              "enabled": true
-            }
+          "filter": {
+            "mode": "lowpass",
+            "cutoffHz": 7200,
+            "resonance": 0.8,
+            "drive": 0.0
           }
         },
-        "filter": {
-          "mode": "lowpass",
-          "cutoffHz": 7200,
-          "resonance": 0.8,
-          "drive": 0.0
-        }
-      },
-      "layers": {}
+        "layers": {}
+      }
     }
   },
   "tags": [

@@ -1,144 +1,147 @@
 {
-  "channels": {
-    "0": {
-      "amp": 0.18,
-      "attackSec": 0.006,
-      "decaySec": 0.16,
-      "sustainLevel": 0.72,
-      "releaseSec": 0.2,
-      "source": {
-        "type": "fm",
-        "algorithm": 4,
-        "feedback": 0.1,
-        "ops": [
-          {
-            "wave": "sine",
-            "ratio": 1,
-            "level": 0.72,
-            "index": 0.9,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.04,
-              "sustainLevel": 0.98,
-              "releaseSec": 0.08,
-              "curve": 0.15
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.18,
+        "attackSec": 0.006,
+        "decaySec": 0.16,
+        "sustainLevel": 0.72,
+        "releaseSec": 0.2,
+        "source": {
+          "type": "fm",
+          "algorithm": 4,
+          "feedback": 0.1,
+          "ops": [
+            {
+              "wave": "sine",
+              "ratio": 1,
+              "level": 0.72,
+              "index": 0.9,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.04,
+                "sustainLevel": 0.98,
+                "releaseSec": 0.08,
+                "curve": 0.15
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.08,
+                "sustainLevel": 0.65,
+                "releaseSec": 0.06,
+                "curve": 0.45
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.08,
-              "sustainLevel": 0.65,
-              "releaseSec": 0.06,
-              "curve": 0.45
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 2,
-            "level": 0.55,
-            "index": 0.3,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.04,
-              "sustainLevel": 0.98,
-              "releaseSec": 0.08,
-              "curve": 0.15
+            {
+              "wave": "sine",
+              "ratio": 2,
+              "level": 0.55,
+              "index": 0.3,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.04,
+                "sustainLevel": 0.98,
+                "releaseSec": 0.08,
+                "curve": 0.15
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.08,
+                "sustainLevel": 0.65,
+                "releaseSec": 0.06,
+                "curve": 0.45
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.08,
-              "sustainLevel": 0.65,
-              "releaseSec": 0.06,
-              "curve": 0.45
-            }
-          },
-          {
-            "wave": "sine",
-            "ratio": 0.5,
-            "level": 0.42,
-            "index": 0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.04,
-              "sustainLevel": 0.9,
-              "releaseSec": 0.08,
-              "curve": 0.15
+            {
+              "wave": "sine",
+              "ratio": 0.5,
+              "level": 0.42,
+              "index": 0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.04,
+                "sustainLevel": 0.9,
+                "releaseSec": 0.08,
+                "curve": 0.15
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.02,
+                "sustainLevel": 1.0,
+                "releaseSec": 0.05,
+                "curve": 0.0
+              }
             },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
-              "releaseSec": 0.05,
-              "curve": 0.0
+            {
+              "wave": "sine",
+              "ratio": 3,
+              "level": 0.3,
+              "index": 0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.04,
+                "sustainLevel": 0.9,
+                "releaseSec": 0.08,
+                "curve": 0.15
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.02,
+                "sustainLevel": 1.0,
+                "releaseSec": 0.05,
+                "curve": 0.0
+              }
             }
-          },
-          {
-            "wave": "sine",
-            "ratio": 3,
-            "level": 0.3,
-            "index": 0,
-            "levelEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.04,
-              "sustainLevel": 0.9,
-              "releaseSec": 0.08,
-              "curve": 0.15
-            },
-            "indexEnv": {
-              "attackSec": 0.0,
-              "decaySec": 0.02,
-              "sustainLevel": 1.0,
-              "releaseSec": 0.05,
-              "curve": 0.0
-            }
+          ],
+          "drive": 0.0,
+          "filter": {
+            "mode": "lowpass",
+            "cutoffHz": 7000,
+            "resonance": 0.8,
+            "drive": 0.0
           }
-        ],
-        "drive": 0.0,
-        "filter": {
-          "mode": "lowpass",
-          "cutoffHz": 7000,
-          "resonance": 0.8,
-          "drive": 0.0
-        }
+        },
+        "layers": {}
+      }
+    },
+    "effects": {
+      "sampleRateReducer": {
+        "ratio": 0.22
       },
-      "layers": {}
-    }
-  },
-  "effects": {
-    "sampleRateReducer": {
-      "ratio": 0.22
-    },
-    "bitCrusher": {
-      "bits": 9
-    },
-    "chorus": {
-      "enabled": true,
-      "mix": 0.28,
-      "baseDelayMs": 16.0,
-      "depthMs": 5.0,
-      "rateHz": 0.45,
-      "feedback": 0.12
-    },
-    "flanger": {
-      "enabled": true,
-      "mix": 0.14,
-      "baseDelayMs": 1.2,
-      "depthMs": 1.6,
-      "rateHz": 0.28,
-      "feedback": 0.35
-    },
-    "delay": {
-      "enabled": true,
-      "mix": 0.18,
-      "timeSec": 0.22,
-      "feedback": 0.32,
-      "tempoSync": true,
-      "syncBeats": 0.5
-    },
-    "reverb": {
-      "enabled": true,
-      "mix": 0.18,
-      "roomSize": 0.62,
-      "damping": 0.45
+      "bitCrusher": {
+        "bits": 9
+      },
+      "chorus": {
+        "enabled": true,
+        "mix": 0.28,
+        "baseDelayMs": 16.0,
+        "depthMs": 5.0,
+        "rateHz": 0.45,
+        "feedback": 0.12
+      },
+      "flanger": {
+        "enabled": true,
+        "mix": 0.14,
+        "baseDelayMs": 1.2,
+        "depthMs": 1.6,
+        "rateHz": 0.28,
+        "feedback": 0.35
+      },
+      "delay": {
+        "enabled": true,
+        "mix": 0.18,
+        "timeSec": 0.22,
+        "feedback": 0.32,
+        "tempoSync": true,
+        "syncBeats": 0.5
+      },
+      "reverb": {
+        "enabled": true,
+        "mix": 0.18,
+        "roomSize": 0.62,
+        "damping": 0.45
+      }
     }
   },
   "tags": [

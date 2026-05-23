@@ -1,10 +1,12 @@
 {
-  "midiPath": "../assets/midi/solstice_intro.mid",
-  "wavPath": "../output/test.wav",
-  "targetChannel": -1,
-  "defaultWave": "saw",
-  "initialSeconds": 6,
-  "bits": 16,
-  "sampleRate": 44100,
-  "extraReleaseSec": 0.3
+  "format": "projectModel.v1",
+  "project": {
+    "midiPath": "../assets/midi/solstice_intro.mid",
+    "wavPath": "../output/test.wav",
+    "targetChannel": -1,
+    "initialSeconds": 6,
+    "bits": 16,
+    "sampleRate": 44100,
+    "extraReleaseSec": 0.3
+  }
 }

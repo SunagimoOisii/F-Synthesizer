@@ -114,31 +114,39 @@ bool LoadConfigFromText(
     AppConfig& cfg,
     std::string& err)
 {
-    if (auto v = ReadJSONString(text, "midiPath"))
+    std::string projectObj;
+    bool foundProject = false;
+    if (!ExtractObjectForKey(text, "project", projectObj, foundProject, err))
+    {
+        return false;
+    }
+    const std::string& configRoot = foundProject ? projectObj : text;
+
+    if (auto v = ReadJSONString(configRoot, "midiPath"))
     {
         cfg.midiPath = ResolvePathFromBase(baseDir, *v);
     }
-    if (auto v = ReadJSONString(text, "wavPath"))
+    if (auto v = ReadJSONString(configRoot, "wavPath"))
     {
         cfg.wavPath = ResolvePathFromBase(baseDir, *v);
     }
-    if (auto v = ReadJSONInt(text, "targetChannel"))
+    if (auto v = ReadJSONInt(configRoot, "targetChannel"))
     {
         cfg.targetChannel = *v;
     }
-    if (auto v = ReadJSONInt(text, "initialSeconds"))
+    if (auto v = ReadJSONInt(configRoot, "initialSeconds"))
     {
         cfg.initialSeconds = *v;
     }
-    if (auto v = ReadJSONInt(text, "bits"))
+    if (auto v = ReadJSONInt(configRoot, "bits"))
     {
         cfg.bits = *v;
     }
-    if (auto v = ReadJSONInt(text, "sampleRate"))
+    if (auto v = ReadJSONInt(configRoot, "sampleRate"))
     {
         cfg.sampleRate = *v;
     }
-    if (auto v = ReadJSONDouble(text, "extraReleaseSec"))
+    if (auto v = ReadJSONDouble(configRoot, "extraReleaseSec"))
     {
         cfg.extraReleaseSec = *v;
     }
@@ -163,15 +171,15 @@ bool LoadConfigFromText(
         err = "bits must be 16";
         return false;
     }
-    if (!LoadChannelsDiff(text, cfg, err))
+    if (!LoadChannelsDiff(configRoot, cfg, err))
     {
         return false;
     }
-    if (!LoadChannelMixDiff(text, cfg, err))
+    if (!LoadChannelMixDiff(configRoot, cfg, err))
     {
         return false;
     }
-    if (!ParseEffectsObject(text, cfg, err))
+    if (!ParseEffectsObject(configRoot, cfg, err))
     {
         return false;
     }
