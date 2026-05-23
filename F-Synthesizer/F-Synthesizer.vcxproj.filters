@@ -203,6 +203,9 @@
     <ClInclude Include="src\\app\\RunInternal.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\core\\RenderConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\core\\RenderGateway.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

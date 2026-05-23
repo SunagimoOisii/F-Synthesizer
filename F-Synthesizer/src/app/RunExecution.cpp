@@ -114,6 +114,16 @@ int RunMain(
         LogLine(observer, oss.str());
     }
 
+    const RenderConfig renderConfig{
+        events,
+        midiOut.tempoEvents,
+        midiOut.ticksPerQuarter,
+        options.startSec,
+        *channelConfigs,
+        *channelMixStates,
+        config.masterEffects
+    };
+
     bool canceled = false;
     // レンダループ内の分岐を減らすため、キャンセル有無で経路を先に分ける。
     const bool canCancel = options.allowCancel && observer != nullptr;
@@ -122,13 +132,7 @@ int RunMain(
         auto shouldCancelObserver = [&]() -> bool { return observer->ShouldCancel(); };
         RenderWithEngine(
             sound,
-            events,
-            midiOut.tempoEvents,
-            midiOut.ticksPerQuarter,
-            options.startSec,
-            *channelConfigs,
-            *channelMixStates,
-            config.masterEffects,
+            renderConfig,
             shouldCancelObserver,
             &canceled);
     }
@@ -137,13 +141,7 @@ int RunMain(
         auto neverCancel = []() -> bool { return false; };
         RenderWithEngine(
             sound,
-            events,
-            midiOut.tempoEvents,
-            midiOut.ticksPerQuarter,
-            options.startSec,
-            *channelConfigs,
-            *channelMixStates,
-            config.masterEffects,
+            renderConfig,
             neverCancel,
             &canceled);
     }
