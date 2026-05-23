@@ -602,8 +602,7 @@ if (state.UIModeTab == 0)
         [&](const char* what, const char* impact, const char* caution)
         {
             updateHoverHelp(what, impact, caution);
-        },
-        requestAutoTonePreview);
+        });
 }
 else if (state.UIModeTab == 1)
 {

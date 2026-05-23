@@ -42,7 +42,6 @@ struct GUIStateStorageData
     float fxReverbRoomSize = 0.45f;
     float fxReverbDamping = 0.30f;
     int UIScaleIndex = 1;
-    int UIModeTab = 0;
     int UIThemeIndex = 0;
     float logPanelHeight = 240.0f;
     int presetIndex = 0;

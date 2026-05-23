@@ -33,41 +33,16 @@ static std::string PresetDescription(const GUIState& state, int index)
     return {};
 }
 
-template <typename HelpFn>
-static void DrawRenderDetails(
-    GUIState& state,
-    HelpFn&& updateHoverHelp)
-{
-    if (!ImGui::CollapsingHeader("詳細設定"))
-    {
-        return;
-    }
-    ImGui::BeginDisabled(state.running);
-    state.presetDirty |= ImGui::InputInt("サンプルレート", &state.sampleRate);
-    updateHoverHelp("出力サンプルレートを設定します。", "音質・負荷・サイズが変わります。", nullptr);
-    state.presetDirty |= ImGui::InputInt("最小秒数", &state.initialSeconds);
-    updateHoverHelp("最低レンダ秒数を設定します。", "出力の最小長さを確保します。", nullptr);
-    state.presetDirty |= ImGui::InputInt("ビット深度", &state.bits);
-    updateHoverHelp("出力ビット深度を設定します。", "WAV形式が変わります。", "現行実装は16bitのみ有効です。");
-    state.presetDirty |= ImGui::InputFloat("追加リリース (秒)", &state.extraReleaseSec, 0.01f, 0.1f, "%.2f");
-    updateHoverHelp("ノート終端後の余韻を設定します。", "尻切れを抑えます。", nullptr);
-    state.presetDirty |= ImGui::Checkbox("連番保存", &state.serialSave);
-    updateHoverHelp("連番保存を切り替えます。", "同名出力の上書きを避けます。", nullptr);
-    ImGui::EndDisabled();
-}
-
-template <typename ApplyPresetFn, typename HelpFn, typename PreviewFn>
+template <typename ApplyPresetFn, typename HelpFn>
 static void DrawPlayView(
     GUIState& state,
     int& pendingPresetIndex,
     int& pendingPresetOriginalIndex,
     bool& openUnsavedPopupNextFrame,
     ApplyPresetFn&& applyPresetByIndex,
-    HelpFn&& updateHoverHelp,
-    PreviewFn&& requestAutoTonePreview)
+    HelpFn&& updateHoverHelp)
 {
     (void)pendingPresetOriginalIndex;
-    (void)requestAutoTonePreview;
     state.playCategoryIndex = std::clamp(state.playCategoryIndex, 0, static_cast<int>(IM_ARRAYSIZE(kPlayCategories)) - 1);
     gui::EnsureChannelConfigs(state);
 

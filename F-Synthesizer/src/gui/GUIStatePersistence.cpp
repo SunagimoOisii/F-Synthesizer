@@ -50,7 +50,6 @@ GUIStateStorageData BuildStateStorageData(const GUIState& state)
     data.fxReverbRoomSize = static_cast<float>(state.masterEffects.reverb.roomSize);
     data.fxReverbDamping = static_cast<float>(state.masterEffects.reverb.damping);
     data.UIScaleIndex = state.UIScaleIndex;
-    data.UIModeTab = state.UIModeTab;
     data.UIThemeIndex = state.UIThemeIndex;
     data.logPanelHeight = state.logPanelHeight;
     data.presetIndex = state.presetIndex;
@@ -141,7 +140,6 @@ void ApplyStateStorageData(GUIState& state, const GUIStateStorageData& data)
     state.masterEffects.reverb.roomSize = data.fxReverbRoomSize;
     state.masterEffects.reverb.damping = data.fxReverbDamping;
     state.UIScaleIndex = data.UIScaleIndex;
-    state.UIModeTab = data.UIModeTab;
     state.UIThemeIndex = data.UIThemeIndex;
     state.logPanelHeight = data.logPanelHeight;
     state.presetIndex = data.presetIndex;
