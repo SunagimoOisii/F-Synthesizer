@@ -33,33 +33,9 @@ struct GUIStepSeqState
     }
 };
 
-// GUI画面の編集値・実行状態・ログ状態を集約した永続/実行モデル。
-// 1フレーム内で参照するUI状態と、非同期Run連携状態を同居させる。
-struct GUIState
+// GUI状態のうち、保存対象またはProjectModelへ反映される値。
+struct GUIPersistentState
 {
-    struct GUIRunObserver : IRunObserver
-    {
-        std::mutex* logMutex = nullptr;
-        std::vector<std::string>* logs = nullptr;
-        std::atomic<bool>* cancelRequested = nullptr;
-
-        void OnLogLine(const std::string& line) override
-        {
-            if (logMutex == nullptr || logs == nullptr)
-            {
-                return;
-            }
-            std::lock_guard<std::mutex> lock(*logMutex);
-            logs->push_back(line);
-        }
-
-        bool ShouldCancel() override
-        {
-            return cancelRequested != nullptr && cancelRequested->load(std::memory_order_relaxed);
-        }
-    };
-
-
     char midiPath[1024]{};
     char wavPath[1024]{};
     int targetChannel = -1;
@@ -73,10 +49,6 @@ struct GUIState
     int UIThemeIndex = 0; // 0=Blueprint Beat Light, 1=Blueprint Beat Dark
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
-    int lastRunExitCode = 0;
-    bool hasRun = false;
-    bool running = false;
-    std::atomic<bool> stopRequested{ false };
     bool serialSave = false;
     int selectedSoundSlot = 0;
     int selectedDrumNote = 36;
@@ -94,6 +66,23 @@ struct GUIState
     std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
     std::array<int, 16> channelAssignments{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     bool drumChannelSpecialHandling = true;
+    bool previewLoop = false;
+    bool autoTonePreviewEnabled = false;
+    // Layer2 マクロスライダーの状態（チャンネル数分）
+    std::array<MacroSliderState, 16> macroSliders{};
+    // Layer1 タグフィルターの選択状態（タグ数分）
+    std::array<bool, kMacroTagCount> macroTagFilters{};
+    // Randomize 強度: 0=Subtle, 1=Medium, 2=Wild
+    int macroRandomizeStrength = 1;
+    bool layer1Expanded = true;
+    bool layer2Expanded = true;
+    gui::PianoRollState pianoRoll{};
+    GUIStepSeqState stepSeq{};
+};
+
+// 画面表示中だけ意味を持つ一時状態。
+struct GUITransientState
+{
     bool hasUIError = false;
     bool showErrorDialog = false;
     int UIErrorAction = 0; // 0=None, 1=BrowseMIDI, 2=BrowseOutput, 3=GoSound, 4=GoMusic
@@ -104,19 +93,59 @@ struct GUIState
     bool restorePreviewOnRunComplete = false;
     int soloPreviewChannel = 0;
     std::array<ChannelMixState, 16> soloPreviewBackup{};
-    bool previewLoop = false;
-    bool autoTonePreviewEnabled = false;
     bool autoTonePreviewPending = false;
     double autoTonePreviewLastEditSec = 0.0;
+    int previewRequestedStartTick = 0;
+    double previewRequestedDurationSec = 0.0;
+    // Randomize: 直前の MacroSliderState スナップショット（元に戻す用）
+    std::array<MacroSliderState, 16> macroRandomizeSnapshot{};
+    std::array<bool, 16> macroRandomizeHasSnapshot{};
+    // Sound タブ Undo/Redo スタック（セッション中のみ保持）
+    std::deque<SoundUndoEntry> soundUndoStack;
+    std::deque<SoundUndoEntry> soundRedoStack;
+};
+
+// 非同期Run/Preview再生に関係する状態。
+struct GUIAsyncRunState
+{
+    int lastRunExitCode = 0;
+    bool hasRun = false;
+    bool running = false;
+    std::atomic<bool> stopRequested{ false };
     bool previewAudioReady = false;
     bool runIsPreview = false;
     bool autoPlayPreviewOnRunComplete = false;
-    int previewRequestedStartTick = 0;
-    double previewRequestedDurationSec = 0.0;
     std::shared_ptr<SoundData> previewRenderedSound{};
     std::shared_ptr<SoundData> runOutputBuffer{};
     PreviewPlaybackState playback{};
     std::future<int> runFuture{};
+};
+
+struct GUIRunObserver : IRunObserver
+{
+    std::mutex* logMutex = nullptr;
+    std::vector<std::string>* logs = nullptr;
+    std::atomic<bool>* cancelRequested = nullptr;
+
+    void OnLogLine(const std::string& line) override
+    {
+        if (logMutex == nullptr || logs == nullptr)
+        {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(*logMutex);
+        logs->push_back(line);
+    }
+
+    bool ShouldCancel() override
+    {
+        return cancelRequested != nullptr && cancelRequested->load(std::memory_order_relaxed);
+    }
+};
+
+// ログとRun観測用の状態。
+struct GUILogState
+{
     std::mutex logMutex{};
     std::vector<std::string> soundLogs{};
     std::vector<std::string> musicLogs{};
@@ -124,20 +153,14 @@ struct GUIState
     std::vector<std::string> recentWavPaths{}; // Export 成功時に最大 5 件記録
     int runLogTab = 0;
     GUIRunObserver observer{};
-    // Layer2 マクロスライダーの状態（チャンネル数分）
-    std::array<MacroSliderState, 16> macroSliders{};
-    // Layer1 タグフィルターの選択状態（タグ数分）
-    std::array<bool, kMacroTagCount> macroTagFilters{};
-    // Randomize: 直前の MacroSliderState スナップショット（元に戻す用）
-    std::array<MacroSliderState, 16> macroRandomizeSnapshot{};
-    std::array<bool, 16> macroRandomizeHasSnapshot{};
-    // Randomize 強度: 0=Subtle, 1=Medium, 2=Wild
-    int macroRandomizeStrength = 1;
-    bool layer1Expanded = true;
-    bool layer2Expanded = true;
-    // Sound タブ Undo/Redo スタック（セッション中のみ保持）
-    std::deque<SoundUndoEntry> soundUndoStack;
-    std::deque<SoundUndoEntry> soundRedoStack;
-    gui::PianoRollState pianoRoll{};
-    GUIStepSeqState stepSeq{};
+};
+
+// GUIState は互換用の集約型として残す。
+// フィールド名は既存画面コード向けに維持しつつ、寿命別baseへ責務を分ける。
+struct GUIState :
+    GUIPersistentState,
+    GUITransientState,
+    GUIAsyncRunState,
+    GUILogState
+{
 };

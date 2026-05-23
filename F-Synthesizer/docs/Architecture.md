@@ -49,6 +49,7 @@ GUI 状態に依存しません。
 - `RenderConfig`: SynthEngine へ渡す実行用モデル。GUI や保存形式に依存しない render 入力にする。
 - `AppConfig`: 当面の CLI/GUI 実行境界。移行中は `ProjectModel` から生成し、既存実行経路との互換を保つ。
 - GUI Facade: 既存画面コードから `ProjectModel` / `EditorModel` へアクセスするための中間層。`GUIState` の全面置換を避け、画面ごとに移行する。
+- `GUIState` は互換用の集約型として残し、内部は永続状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
 
 ## 肥大化リスク
 
