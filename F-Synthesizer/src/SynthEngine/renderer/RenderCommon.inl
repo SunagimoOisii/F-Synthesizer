@@ -90,18 +90,33 @@ double NextAttackNoise(uint32_t& state)
     return unit - 1.0;
 }
 
+double StepLayerPhase(double& phase, double phaseInc)
+{
+    phase = WrapPhase(phase + phaseInc);
+    return phase;
+}
+
+double LayerWave(WaveType type, double phase, double phaseInc, double pulseWidth = 0.5)
+{
+    return SampleWavePhase(type, phase, phaseInc, pulseWidth);
+}
+
+double OnePoleAlphaFromCutoff(double cutoffHz, double dt)
+{
+    const double rc = 1.0 / (2.0 * kPi * std::max(cutoffHz, 20.0));
+    return dt / (rc + dt);
+}
+
 double RenderAttackLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
 {
     const AttackLayerConfig& layer = voices.attackLayer[i];
     if (!layer.enabled || layer.level <= 0.0)
     {
-        voices.ageSec[i] += in.dt;
         return 0.0;
     }
 
     const double decay = std::clamp(layer.decaySec, 0.001, 0.25);
     const double age = voices.ageSec[i];
-    voices.ageSec[i] += in.dt;
     if (age > decay * 6.0)
     {
         return 0.0;
@@ -120,31 +135,36 @@ double RenderAttackLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     case AttackLayerType::Brass:
     {
         const double bend = 1.0 + (0.08 + 0.18 * bright) * std::exp(-age / (decay * 0.55));
-        voices.attackPhase[i] = WrapPhase(voices.attackPhase[i] + baseInc * bend * 1.5);
-        const double tone = std::sin(2.0 * kPi * voices.attackPhase[i]);
-        const double breath = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.12 + 0.22 * bright);
+        const double inc = baseInc * bend * 1.5;
+        const double phase = StepLayerPhase(voices.attackPhase[i], inc);
+        const double tone =
+            LayerWave(WaveType::Sine, phase, inc) * 0.78 +
+            LayerWave(WaveType::Triangle, phase, inc) * 0.22;
+        const double breath = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.035 + 0.075 * bright);
         sample = (tone * envBody * bodyMix) + breath;
         break;
     }
     case AttackLayerType::Metal:
     {
-        voices.attackPhase[i] = WrapPhase(voices.attackPhase[i] + baseInc * (2.0 + 3.5 * bright));
-        const double p = voices.attackPhase[i];
+        const double inc = baseInc * (1.6 + 2.2 * bright);
+        const double p = StepLayerPhase(voices.attackPhase[i], inc);
         const double partials =
             std::sin(2.0 * kPi * p * 1.00) * 0.48 +
-            std::sin(2.0 * kPi * p * 1.73) * 0.32 +
-            std::sin(2.0 * kPi * p * 2.41) * 0.20;
-        const double grain = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.05 + 0.15 * bright);
+            std::sin(2.0 * kPi * p * 1.50) * 0.27 +
+            std::sin(2.0 * kPi * p * 2.00) * 0.16;
+        const double grain = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.025 + 0.065 * bright);
         sample = (partials * envBody * (0.35 + bodyMix * 0.65)) + grain;
         break;
     }
     case AttackLayerType::Pick:
     default:
     {
-        voices.attackPhase[i] = WrapPhase(voices.attackPhase[i] + baseInc * (1.0 + bright * 2.0));
-        const double tri = 4.0 * std::abs(voices.attackPhase[i] - 0.5) - 1.0;
-        const double click = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.25 + 0.35 * bright);
-        sample = (tri * envBody * bodyMix) + click;
+        const double inc = baseInc * (1.0 + bright * 1.6);
+        const double phase = StepLayerPhase(voices.attackPhase[i], inc);
+        const double tri = LayerWave(WaveType::Triangle, phase, inc);
+        const double click = LayerWave(WaveType::Square, phase, inc, 0.42) * envFast * (0.06 + 0.10 * bright);
+        const double texture = NextAttackNoise(voices.attackNoiseState[i]) * envFast * (0.025 + 0.045 * bright);
+        sample = (tri * envBody * bodyMix) + click + texture;
         break;
     }
     }
@@ -164,16 +184,16 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double level = std::clamp(layer.level, 0.0, 1.0) * in.expressionBassMul;
     const double pitchMul = std::exp2(std::clamp(layer.pitchOffsetSemis, -24.0, 24.0) / 12.0);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
-    voices.bassPhase[i] = WrapPhase(voices.bassPhase[i] + baseInc);
-
-    const double p = voices.bassPhase[i];
-    const double sine = std::sin(2.0 * kPi * p);
-    const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
-    const double square = (p < 0.5) ? 1.0 : -1.0;
+    const double p = StepLayerPhase(voices.bassPhase[i], baseInc);
+    const double sine = LayerWave(WaveType::Sine, p, baseInc);
+    const double tri = LayerWave(WaveType::Triangle, p, baseInc);
+    const double square = LayerWave(WaveType::Square, p, baseInc, 0.50);
     const double gritTone = std::clamp(layer.gritTone, 0.0, 1.0);
+    const double foldedPhase = WrapPhase(p * (1.0 + gritTone * 1.5));
+    const double foldedInc = baseInc * (1.0 + gritTone * 1.5);
     const double folded =
-        std::sin(2.0 * kPi * p * (1.5 + gritTone * 2.5)) * (0.70 - gritTone * 0.25) +
-        square * (0.30 + gritTone * 0.25);
+        LayerWave(WaveType::Triangle, foldedPhase, foldedInc) * (0.52 - gritTone * 0.18) +
+        square * (0.22 + gritTone * 0.18);
 
     double subMul = std::clamp(layer.subLevel, 0.0, 1.0);
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
@@ -214,8 +234,7 @@ double RenderBassLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     sample = AttackSoftClip(sample * level, drive);
 
     const double cutoff = std::clamp(layer.cutoffHz, 40.0, 8000.0);
-    const double rc = 1.0 / (2.0 * kPi * cutoff);
-    const double alpha = in.dt / (rc + in.dt);
+    const double alpha = OnePoleAlphaFromCutoff(cutoff, in.dt);
     voices.bassLpState[i] += alpha * (sample - voices.bassLpState[i]);
     return voices.bassLpState[i];
 }
@@ -237,23 +256,20 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double bendMul = std::exp2(bendSemis / 12.0);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor * bendMul;
     const double detuneMul = std::exp2(std::clamp(layer.detuneCents, -50.0, 50.0) / 1200.0);
-    voices.leadPhase[i] = WrapPhase(voices.leadPhase[i] + baseInc);
-    voices.leadDetunePhase[i] = WrapPhase(voices.leadDetunePhase[i] + baseInc * detuneMul);
-
-    const double p = voices.leadPhase[i];
-    const double pd = voices.leadDetunePhase[i];
+    const double p = StepLayerPhase(voices.leadPhase[i], baseInc);
+    const double pd = StepLayerPhase(voices.leadDetunePhase[i], baseInc * detuneMul);
     const double body =
-        std::sin(2.0 * kPi * p) * 0.62 +
-        std::sin(2.0 * kPi * pd) * 0.38;
+        LayerWave(WaveType::Sine, p, baseInc) * 0.62 +
+        LayerWave(WaveType::Sine, pd, baseInc * detuneMul) * 0.38;
     double edge =
-        std::sin(2.0 * kPi * p * 2.01) * 0.42 +
-        std::sin(2.0 * kPi * p * 3.73) * 0.34 +
-        ((p < 0.5) ? 1.0 : -1.0) * 0.24;
+        LayerWave(WaveType::Triangle, WrapPhase(p * 2.0), baseInc * 2.0) * 0.36 +
+        LayerWave(WaveType::Saw, WrapPhase(p * 3.0), baseInc * 3.0) * 0.18 +
+        LayerWave(WaveType::Square, p, baseInc, 0.48) * 0.16;
     const double characterTone = std::clamp(layer.characterTone, 0.0, 1.0);
     const double character =
-        std::sin(2.0 * kPi * p * (2.71 + characterTone * 0.19)) * (0.58 - characterTone * 0.16) +
-        std::sin(2.0 * kPi * p * (4.13 + characterTone * 0.37)) * (0.24 + characterTone * 0.18) +
-        std::sin(2.0 * kPi * p * (5.89 + characterTone * 0.53)) * (0.10 + characterTone * 0.16);
+        LayerWave(WaveType::Sine, WrapPhase(p * 2.0), baseInc * 2.0) * (0.50 - characterTone * 0.10) +
+        LayerWave(WaveType::Triangle, WrapPhase(p * 3.0), baseInc * 3.0) * (0.20 + characterTone * 0.12) +
+        LayerWave(WaveType::Sine, WrapPhase(p * 5.0), baseInc * 5.0) * (0.08 + characterTone * 0.08);
 
     double bodyMul = std::clamp(layer.bodyLevel, 0.0, 1.0);
     double edgeMul = std::clamp(layer.edgeLevel, 0.0, 1.0);
@@ -281,7 +297,8 @@ double RenderLeadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double biteDecay = std::clamp(layer.biteDecaySec, 0.005, 0.25);
     const double biteEnv = std::exp(-voices.ageSec[i] / biteDecay);
     const double bite =
-        (std::sin(2.0 * kPi * p * 6.27) * 0.5 + ((p < 0.5) ? 0.5 : -0.5)) *
+        (LayerWave(WaveType::Sine, WrapPhase(p * 6.0), baseInc * 6.0) * 0.45 +
+            LayerWave(WaveType::Square, p, baseInc, 0.47) * 0.28) *
         std::clamp(layer.biteLevel, 0.0, 1.0) * biteEnv;
     const double sample = (body * bodyMul + edge * edgeMul + character * characterMul + bite) * attack * level;
     return AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.45, 0.0, 1.0));
@@ -315,11 +332,10 @@ StereoFrame RenderChordLayer(Voice& voices, size_t i, const VoiceRenderInput& in
             static_cast<double>(std::clamp(layer.intervalsSemis[v], -24, 24)) +
             centered * detuneCents * spread / 100.0;
         const double inc = voices.phaseInc[i] * in.pitchFactor * std::exp2(semis / 12.0);
-        voices.chordPhase[i][v] = WrapPhase(voices.chordPhase[i][v] + inc);
-        const double p = voices.chordPhase[i][v];
-        const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
-        const double saw = (2.0 * p) - 1.0;
-        const double tone = std::sin(2.0 * kPi * p) * 0.55 + tri * 0.30 + saw * 0.15;
+        const double p = StepLayerPhase(voices.chordPhase[i][v], inc);
+        const double tri = LayerWave(WaveType::Triangle, p, inc);
+        const double saw = LayerWave(WaveType::Saw, p, inc);
+        const double tone = LayerWave(WaveType::Sine, p, inc) * 0.58 + tri * 0.30 + saw * 0.08;
         const double pan = centered * spread * 0.45;
         sample += tone * voiceLevel;
         left += tone * voiceLevel * (1.0 - pan);
@@ -339,8 +355,7 @@ StereoFrame RenderChordLayer(Voice& voices, size_t i, const VoiceRenderInput& in
     right = AttackSoftClip(right * level, std::clamp(layer.drive + in.expressionDriveAdd * 0.25, 0.0, 1.0));
 
     const double cutoff = std::clamp(layer.cutoffHz, 80.0, 10000.0);
-    const double rc = 1.0 / (2.0 * kPi * cutoff);
-    const double alpha = in.dt / (rc + in.dt);
+    const double alpha = OnePoleAlphaFromCutoff(cutoff, in.dt);
     voices.chordLpState[i] += alpha * (sample - voices.chordLpState[i]);
     const double monoLp = voices.chordLpState[i];
     return StereoFrame{
@@ -368,15 +383,14 @@ StereoFrame RenderPadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     const double spread = std::clamp(layer.spread, 0.0, 1.0);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor;
     const double detuneMul = std::exp2(detuneCents / 1200.0);
-    voices.padPhase[i] = WrapPhase(voices.padPhase[i] + baseInc / detuneMul);
-    voices.padDetunePhase[i] = WrapPhase(voices.padDetunePhase[i] + baseInc * detuneMul);
-
-    const double p0 = voices.padPhase[i];
-    const double p1 = voices.padDetunePhase[i];
-    const double saw0 = (2.0 * p0) - 1.0;
-    const double saw1 = (2.0 * p1) - 1.0;
-    const double tri0 = 4.0 * std::abs(p0 - 0.5) - 1.0;
-    const double tri1 = 4.0 * std::abs(p1 - 0.5) - 1.0;
+    const double inc0 = baseInc / detuneMul;
+    const double inc1 = baseInc * detuneMul;
+    const double p0 = StepLayerPhase(voices.padPhase[i], inc0);
+    const double p1 = StepLayerPhase(voices.padDetunePhase[i], inc1);
+    const double saw0 = LayerWave(WaveType::Saw, p0, inc0);
+    const double saw1 = LayerWave(WaveType::Saw, p1, inc1);
+    const double tri0 = LayerWave(WaveType::Triangle, p0, inc0);
+    const double tri1 = LayerWave(WaveType::Triangle, p1, inc1);
     const double baseTone =
         ((saw0 * (0.25 + brightness * 0.25)) + (tri0 * (0.50 - brightness * 0.15))) * (1.0 - spread * 0.35) +
         ((saw1 * (0.25 + brightness * 0.25)) + (tri1 * (0.50 - brightness * 0.15))) * (0.45 + spread * 0.35);
@@ -388,7 +402,7 @@ StereoFrame RenderPadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
         ((saw1 * (0.25 + brightness * 0.25)) + (tri1 * (0.50 - brightness * 0.15))) * (0.90 + spread * 0.25);
 
     const double octaveLevel = std::clamp(layer.octaveLevel, 0.0, 1.0);
-    const double octaveTone = std::sin(4.0 * kPi * p0) * octaveLevel * (0.18 + brightness * 0.22);
+    const double octaveTone = LayerWave(WaveType::Sine, WrapPhase(p0 * 2.0), inc0 * 2.0) * octaveLevel * (0.18 + brightness * 0.22);
     double sample = (baseTone + octaveTone) * fade * std::clamp(layer.level, 0.0, 1.0) * in.expressionPadMul;
     double left = (leftTone + octaveTone) * fade * std::clamp(layer.level, 0.0, 1.0) * in.expressionPadMul;
     double right = (rightTone + octaveTone) * fade * std::clamp(layer.level, 0.0, 1.0) * in.expressionPadMul;
@@ -397,8 +411,7 @@ StereoFrame RenderPadLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
     right = AttackSoftClip(right, std::clamp(layer.drive + in.expressionDriveAdd * 0.20, 0.0, 1.0));
 
     const double cutoff = std::clamp(layer.cutoffHz * (0.75 + brightness * 0.75), 80.0, 10000.0);
-    const double rc = 1.0 / (2.0 * kPi * cutoff);
-    const double alpha = in.dt / (rc + in.dt);
+    const double alpha = OnePoleAlphaFromCutoff(cutoff, in.dt);
     voices.padLpState[i] += alpha * (sample - voices.padLpState[i]);
     const double monoLp = voices.padLpState[i];
     return StereoFrame{
@@ -424,24 +437,22 @@ StereoFrame RenderPluckLayer(Voice& voices, size_t i, const VoiceRenderInput& in
     const double bright = std::clamp(layer.brightness + in.brightness * 0.2, 0.0, 1.0);
     const double pitchMul = std::exp2(std::clamp(layer.pitchOffsetSemis, -24.0, 24.0) / 12.0);
     const double inc = voices.phaseInc[i] * in.pitchFactor * pitchMul;
-    voices.pluckPhase[i] = WrapPhase(voices.pluckPhase[i] + inc);
-    const double p = voices.pluckPhase[i];
-    const double tri = 4.0 * std::abs(p - 0.5) - 1.0;
-    const double saw = 2.0 * p - 1.0;
-    const double pulse = (p < (0.38 + bright * 0.18)) ? 1.0 : -1.0;
+    const double p = StepLayerPhase(voices.pluckPhase[i], inc);
+    const double tri = LayerWave(WaveType::Triangle, p, inc);
+    const double saw = LayerWave(WaveType::Saw, p, inc);
+    const double pulse = LayerWave(WaveType::Square, p, inc, 0.38 + bright * 0.18);
     const double noise = NextAttackNoise(voices.attackNoiseState[i]);
     const double clickEnv = std::exp(-age / (0.006 + bright * 0.018));
     double sample =
         tri * (0.45 - bright * 0.18) +
         saw * (0.25 + bright * 0.18) +
-        pulse * (0.12 + bright * 0.12) +
-        noise * std::clamp(layer.noiseMix, 0.0, 1.0) * clickEnv;
+        pulse * (0.08 + bright * 0.08) +
+        noise * std::clamp(layer.noiseMix, 0.0, 1.0) * clickEnv * 0.55;
     sample *= env * std::clamp(layer.level, 0.0, 1.0) * in.expressionPluckMul;
     sample = AttackSoftClip(sample, std::clamp(layer.drive + in.expressionDriveAdd * 0.35, 0.0, 1.0));
 
     const double cutoff = std::clamp(700.0 + bright * 7200.0, 80.0, 12000.0);
-    const double rc = 1.0 / (2.0 * kPi * cutoff);
-    const double alpha = in.dt / (rc + in.dt);
+    const double alpha = OnePoleAlphaFromCutoff(cutoff, in.dt);
     voices.pluckLpState[i] += alpha * (sample - voices.pluckLpState[i]);
     const double bodySend = std::clamp(layer.bodySend, 0.0, 1.0);
     return StereoFrame{
@@ -464,15 +475,15 @@ StereoFrame RenderStringLayer(Voice& voices, size_t i, const VoiceRenderInput& i
     const double detune = std::clamp(layer.detuneCents, 0.0, 80.0) *
         (1.0 + std::clamp(layer.motionDepth, 0.0, 1.0) * 0.25 * motion);
     const double baseInc = voices.phaseInc[i] * in.pitchFactor;
-    voices.stringPhaseA[i] = WrapPhase(voices.stringPhaseA[i] + baseInc * std::exp2(-detune / 1200.0));
-    voices.stringPhaseB[i] = WrapPhase(voices.stringPhaseB[i] + baseInc * std::exp2(detune / 1200.0));
-    const double a = voices.stringPhaseA[i];
-    const double b = voices.stringPhaseB[i];
-    const double sawA = 2.0 * a - 1.0;
-    const double sawB = 2.0 * b - 1.0;
-    const double triA = 4.0 * std::abs(a - 0.5) - 1.0;
-    const double triB = 4.0 * std::abs(b - 0.5) - 1.0;
-    const double bowNoise = NextAttackNoise(voices.attackNoiseState[i]) * std::clamp(layer.bowLevel, 0.0, 1.0) * (0.15 + bright * 0.20);
+    const double incA = baseInc * std::exp2(-detune / 1200.0);
+    const double incB = baseInc * std::exp2(detune / 1200.0);
+    const double a = StepLayerPhase(voices.stringPhaseA[i], incA);
+    const double b = StepLayerPhase(voices.stringPhaseB[i], incB);
+    const double sawA = LayerWave(WaveType::Saw, a, incA);
+    const double sawB = LayerWave(WaveType::Saw, b, incB);
+    const double triA = LayerWave(WaveType::Triangle, a, incA);
+    const double triB = LayerWave(WaveType::Triangle, b, incB);
+    const double bowNoise = NextAttackNoise(voices.attackNoiseState[i]) * std::clamp(layer.bowLevel, 0.0, 1.0) * (0.045 + bright * 0.085);
     const double leftTone = sawA * (0.30 + bright * 0.20) + triB * (0.42 - bright * 0.10) + bowNoise;
     const double rightTone = sawB * (0.30 + bright * 0.20) + triA * (0.42 - bright * 0.10) - bowNoise * 0.45;
     const double spread = std::clamp(layer.spread, 0.0, 1.0);
@@ -497,8 +508,22 @@ void ApplyBodyLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceR
     const double tone = std::clamp(layer.tone, 0.0, 1.0);
     const double damping = std::clamp(layer.damping, 0.0, 1.0);
     const double stereo = std::clamp(layer.stereo, 0.0, 1.0);
-    const std::array<double, 5> ratios{ 1.00, 1.48, 2.02, 2.71, 3.36 };
-    const std::array<double, 5> weights{ 0.42, 0.28, 0.18, 0.09, 0.05 };
+    std::array<double, 5> ratios{ 1.00, 2.00, 3.00, 4.00, 5.00 };
+    std::array<double, 5> weights{ 0.46, 0.26, 0.14, 0.08, 0.04 };
+    switch (layer.mode)
+    {
+    case BodyLayerConfig::Mode::Metal:
+        ratios = { 1.00, 1.41, 2.11, 2.86, 3.93 };
+        weights = { 0.36, 0.27, 0.18, 0.11, 0.06 };
+        break;
+    case BodyLayerConfig::Mode::Box:
+        ratios = { 1.00, 1.50, 2.00, 2.67, 3.33 };
+        weights = { 0.42, 0.25, 0.16, 0.08, 0.04 };
+        break;
+    case BodyLayerConfig::Mode::Harmonic:
+    default:
+        break;
+    }
     const double baseHz = std::clamp(95.0 + size * 330.0 + tone * 140.0, 70.0, 780.0);
     double bodyL = 0.0;
     double bodyR = 0.0;
@@ -507,12 +532,12 @@ void ApplyBodyLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceR
         const double freqL = std::clamp(baseHz * ratios[r] * (1.0 - stereo * 0.006 * static_cast<double>(r + 1)), 40.0, 6000.0);
         const double freqR = std::clamp(baseHz * ratios[r] * (1.0 + stereo * 0.007 * static_cast<double>(r + 1)), 40.0, 6000.0);
         voices.bodyPhase[i][r] = WrapPhase(voices.bodyPhase[i][r] + freqL * in.dt);
-        const double band = std::sin(2.0 * kPi * voices.bodyPhase[i][r]);
+        const double band = LayerWave(WaveType::Sine, voices.bodyPhase[i][r], freqL * in.dt);
         const double decay = std::exp(-in.dt * (2.0 + damping * 28.0 + static_cast<double>(r) * 4.0));
-        voices.bodyStateL[i][r] = voices.bodyStateL[i][r] * decay + frame.sample * weights[r] * (0.08 + tone * 0.09);
-        voices.bodyStateR[i][r] = voices.bodyStateR[i][r] * decay + frame.sample * weights[r] * (0.08 + tone * 0.09);
+        voices.bodyStateL[i][r] = voices.bodyStateL[i][r] * decay + frame.sample * weights[r] * (0.06 + tone * 0.075);
+        voices.bodyStateR[i][r] = voices.bodyStateR[i][r] * decay + frame.sample * weights[r] * (0.06 + tone * 0.075);
         bodyL += voices.bodyStateL[i][r] * band;
-        bodyR += voices.bodyStateR[i][r] * std::sin(2.0 * kPi * WrapPhase(voices.bodyPhase[i][r] * freqR / freqL));
+        bodyR += voices.bodyStateR[i][r] * LayerWave(WaveType::Sine, WrapPhase(voices.bodyPhase[i][r] * freqR / freqL), freqR * in.dt);
     }
     bodyL = AttackSoftClip(bodyL, layer.drive);
     bodyR = AttackSoftClip(bodyR, layer.drive);

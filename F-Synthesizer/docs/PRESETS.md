@@ -14,6 +14,10 @@
 - 実戦 Sound Card は重厚なレトロ感を残しつつ、不要な hiss、耳につく aliasing、過剰な drive、用途不明な noise を避けます。
 - drive / FM feedback / hard sync / ring mod は主役にせず、質感付けに留めます。
 - noise は Drums / SFX / Support など用途が明確な preset で使い、Lead / Bass / Pad / Keys の主成分にはしません。
+- `layers.chord` は押した音以外の音程を内部で足すため、実戦 preset では Pad の背景厚み用途に限定します。Lead / Bass / Keys では、別音程が混ざる違和感を避けるため原則使いません。
+- `layers.pad`、`layers.string`、`layers.body` は音色の再現対象と合う場合だけ使います。Keys Organ では弦や胴鳴りの混入を避け、FM source だけで厚みを作ります。
+- layer 内部の saw / triangle / pulse / square は、実戦音源では anti-alias 処理された生成経路を使うことを前提にします。レイヤー追加でメイン音源の低ノイズ方針を迂回しないようにします。
+- `layers.body` は `mode` を必ず明示します。Pad では `harmonic` を基本にし、Pluck の箱鳴りでは `box`、金属的な検証音では `metal` を使います。
 
 ## 実戦 Sound Card
 
@@ -49,7 +53,7 @@
 | Preset | 表示名 | 用途メモ |
 |---|---|---|
 | `sound_keys_electric` | Keys Electric | 丸いエレクトリックキー。コードや短いリフ向け。 |
-| `sound_keys_organ` | Keys Organ | 常時ざらつかない、整えたオルガン系キー。 |
+| `sound_keys_organ` | Keys Organ | 弦や胴鳴りを混ぜず、押した音だけで支えるオルガン系キー。 |
 | `sound_keys_bell` | Keys Bell | 金属感を控えめにしたベルキー。高域アクセント向け。 |
 | `sound_keys_pluck` | Keys Pluck | 耳に残るざらつきを抑えた短いプラック音。 |
 

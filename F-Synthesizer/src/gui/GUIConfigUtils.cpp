@@ -197,6 +197,7 @@ bool StringLayerConfigEquals(const StringLayerConfig& a, const StringLayerConfig
 bool BodyLayerConfigEquals(const BodyLayerConfig& a, const BodyLayerConfig& b)
 {
     return a.enabled == b.enabled &&
+        a.mode == b.mode &&
         NearlyEq(a.mix, b.mix) &&
         NearlyEq(a.size, b.size) &&
         NearlyEq(a.tone, b.tone) &&

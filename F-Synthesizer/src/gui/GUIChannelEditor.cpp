@@ -616,6 +616,21 @@ bool DrawChannelEditor(
         ImGui::Separator();
         auto& body = chCfg.bodyLayer;
         changed |= ImGui::Checkbox("Enabled##bodyLayer", &body.enabled);
+        const char* bodyModes[] = { "Harmonic", "Box", "Metal" };
+        int bodyMode = 1;
+        switch (body.mode)
+        {
+        case BodyLayerConfig::Mode::Harmonic: bodyMode = 0; break;
+        case BodyLayerConfig::Mode::Box: bodyMode = 1; break;
+        case BodyLayerConfig::Mode::Metal: bodyMode = 2; break;
+        }
+        if (ImGui::Combo("Mode##bodyLayer", &bodyMode, bodyModes, IM_ARRAYSIZE(bodyModes)))
+        {
+            body.mode = bodyMode == 0
+                ? BodyLayerConfig::Mode::Harmonic
+                : (bodyMode == 2 ? BodyLayerConfig::Mode::Metal : BodyLayerConfig::Mode::Box);
+            changed = true;
+        }
         changed |= ImGui::InputDouble("Mix##bodyLayer", &body.mix, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Size##bodyLayer", &body.size, 0.01, 0.05, "%.3f");
         changed |= ImGui::InputDouble("Tone##bodyLayer", &body.tone, 0.01, 0.05, "%.3f");

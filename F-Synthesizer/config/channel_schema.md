@@ -135,7 +135,13 @@
 
 `padLayer` は省略可能。暗い持続音、遅いfade、軽いdetune、薄い揺れを重ねる背景用レイヤー。`brightness` と `cutoffHz` は控えめを基本にし、主旋律を邪魔しない厚みとして使う。上げすぎると全体が曇る。
 
-`expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`modWheelToPad` はPad量、`cc74ToPadBrightness` はPadの明るさへ追加で効く。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
+`pluckLayer` は省略可能。短い撥弦感、軽い明るさ、薄いクリックを足す。`noiseMix` は主成分ではなく、立ち上がりの質感付けに限定する。
+
+`stringLayer` は省略可能。弦のような持続、揺れ、広がりを足す。`bowLevel` は弓ノイズの量なので、Pad以外の実戦 preset では原則使わない。
+
+`bodyLayer` は省略可能。入力音に共鳴を足す後段レイヤー。`mode` は `harmonic|box|metal`。`harmonic` は倍音寄りでPad向け、`box` は箱鳴りでPluck向け、`metal` は検証や効果音向け。Organ / clean Keys / Lead に入れると意図しない音程や濁りになりやすい。
+
+`expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad/pluck/string/body layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`modWheelToPad` はPad量、`cc74ToPadBrightness` はPadの明るさへ追加で効く。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
 
 ## source.type ごとの定義
 
@@ -261,9 +267,18 @@
 - `padLayer.fadeInSec`: `0.005..5.0`
 - `padLayer.motionRateHz`: `0.0..8.0`
 - `padLayer.cutoffHz`: `80.0..10000.0`
+- `pluckLayer.level/brightness/noiseMix/bodySend/drive`: `0.0..1.0`
+- `pluckLayer.decaySec`: `0.02..2.0`
+- `pluckLayer.pitchOffsetSemis`: `-24.0..24.0`
+- `stringLayer.level/bowLevel/spread/brightness/motionDepth/bodySend/drive`: `0.0..1.0`
+- `stringLayer.detuneCents`: `0.0..80.0`
+- `stringLayer.fadeInSec`: `0.005..3.0`
+- `stringLayer.motionRateHz`: `0.0..12.0`
+- `bodyLayer.mode`: `harmonic|box|metal`
+- `bodyLayer.mix/size/tone/damping/stereo/drive`: `0.0..1.0`
 - `expressionMap.velocityCurve`: `0.2..3.0`
-- `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/velocityToChord/velocityToPad/modWheelToPad/pressureToDrive`: `0.0..1.0`
-- `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness`: `-1.0..1.0`
+- `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/velocityToChord/velocityToPad/velocityToPluck/velocityToString/velocityToBody/modWheelToPad/modWheelToString/pressureToDrive/pressureToFilterDrive`: `0.0..1.0`
+- `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness/cc74ToStringBrightness`: `-1.0..1.0`
 - ratio / index / level: `>= 0.0`
 - drum map key: `0..127`
 - `drumBus.level`: `0.0..2.0`

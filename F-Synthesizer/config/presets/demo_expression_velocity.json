@@ -1,4 +1,4 @@
-﻿{
+{
   "displayName": "Expression velocity",
   "category": "Lead",
   "internal": true,
@@ -114,7 +114,7 @@
             "brightness": 0.46,
             "bodyMix": 0.7,
             "pitchOffsetSemis": -12,
-            "drive": 0.08
+            "drive": 0.064
           }
         }
       },
@@ -152,7 +152,7 @@
             "brightness": 0.42,
             "bodyMix": 0.62,
             "pitchOffsetSemis": -2,
-            "drive": 0.06
+            "drive": 0.048
           }
         }
       },
@@ -265,7 +265,7 @@
             "brightness": 0.78,
             "bodyMix": 0.45,
             "pitchOffsetSemis": 12,
-            "drive": 0.05
+            "drive": 0.04
           }
         }
       }

@@ -431,6 +431,17 @@ std::string LeadLayerTypeToString(LeadLayerType type)
     return "blade";
 }
 
+std::string BodyLayerModeToString(BodyLayerConfig::Mode mode)
+{
+    switch (mode)
+    {
+    case BodyLayerConfig::Mode::Harmonic: return "harmonic";
+    case BodyLayerConfig::Mode::Box: return "box";
+    case BodyLayerConfig::Mode::Metal: return "metal";
+    }
+    return "box";
+}
+
 std::string FilterModeToString(FilterMode mode)
 {
     switch (mode)
@@ -914,7 +925,7 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     const auto& stringLayer = cfg.stringLayer;
     WriteIndent(out, 8); out << "\"string\": { \"enabled\": " << (stringLayer.enabled ? "true" : "false") << ", \"level\": " << stringLayer.level << ", \"bowLevel\": " << stringLayer.bowLevel << ", \"detuneCents\": " << stringLayer.detuneCents << ", \"spread\": " << stringLayer.spread << ", \"fadeInSec\": " << stringLayer.fadeInSec << ", \"brightness\": " << stringLayer.brightness << ", \"motionDepth\": " << stringLayer.motionDepth << ", \"motionRateHz\": " << stringLayer.motionRateHz << ", \"bodySend\": " << stringLayer.bodySend << ", \"drive\": " << stringLayer.drive << " },\n";
     const auto& body = cfg.bodyLayer;
-    WriteIndent(out, 8); out << "\"body\": { \"enabled\": " << (body.enabled ? "true" : "false") << ", \"mix\": " << body.mix << ", \"size\": " << body.size << ", \"tone\": " << body.tone << ", \"damping\": " << body.damping << ", \"stereo\": " << body.stereo << ", \"drive\": " << body.drive << " }\n";
+    WriteIndent(out, 8); out << "\"body\": { \"enabled\": " << (body.enabled ? "true" : "false") << ", \"mode\": \"" << BodyLayerModeToString(body.mode) << "\", \"mix\": " << body.mix << ", \"size\": " << body.size << ", \"tone\": " << body.tone << ", \"damping\": " << body.damping << ", \"stereo\": " << body.stereo << ", \"drive\": " << body.drive << " }\n";
     WriteIndent(out, 6); out << "},\n";
     if (cfg.expressionMap.enabled)
     {

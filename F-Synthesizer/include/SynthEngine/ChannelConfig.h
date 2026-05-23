@@ -134,7 +134,15 @@ struct StringLayerConfig
 
 struct BodyLayerConfig
 {
+    enum class Mode
+    {
+        Harmonic,
+        Box,
+        Metal
+    };
+
     bool enabled = false;
+    Mode mode = Mode::Box;
     double mix = 0.0;
     double size = 0.5;
     double tone = 0.45;

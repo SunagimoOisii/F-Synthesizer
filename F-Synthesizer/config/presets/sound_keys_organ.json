@@ -114,75 +114,18 @@
           "velocityToAttack": 0.0,
           "velocityToBass": 0.0,
           "velocityToLead": 0.0,
-          "velocityToChord": 0.06,
-          "velocityToPad": 0.18,
+          "velocityToChord": 0.0,
+          "velocityToPad": 0.0,
           "modWheelToBrightness": 0.06,
-          "modWheelToPad": 0.18,
+          "modWheelToPad": 0.0,
           "pressureToDrive": 0.008,
           "cc74ToBrightness": 0.084,
-          "cc74ToPadBrightness": 0.22,
-          "velocityToString": 0.22,
-          "velocityToBody": 0.16,
-          "modWheelToString": 0.16,
-          "cc74ToStringBrightness": 0.22,
+          "cc74ToPadBrightness": 0.0,
+          "velocityToString": 0.0,
+          "velocityToBody": 0.0,
+          "modWheelToString": 0.0,
+          "cc74ToStringBrightness": 0.0,
           "pressureToFilterDrive": 0.04
-        },
-        "layers": {
-          "pad": {
-            "enabled": true,
-            "level": 0.16,
-            "octaveLevel": 0.2,
-            "detuneCents": 5.5,
-            "spread": 0.4,
-            "fadeInSec": 0.22,
-            "brightness": 0.24,
-            "motionDepth": 0.08,
-            "motionRateHz": 0.16,
-            "cutoffHz": 1500.0,
-            "drive": 0.0095
-          },
-          "chord": {
-            "enabled": true,
-            "level": 0.065,
-            "intervalsSemis": [
-              0,
-              12,
-              19,
-              24
-            ],
-            "voiceLevels": [
-              0.75,
-              0.42,
-              0.22,
-              0.1
-            ],
-            "detuneCents": 3.0,
-            "spread": 0.28,
-            "cutoffHz": 1900.0,
-            "drive": 0.0076
-          },
-          "string": {
-            "enabled": true,
-            "level": 0.16,
-            "bowLevel": 0.28,
-            "detuneCents": 9.0,
-            "spread": 0.58,
-            "fadeInSec": 0.1,
-            "brightness": 0.46,
-            "motionDepth": 0.16,
-            "motionRateHz": 0.42,
-            "bodySend": 0.48,
-            "drive": 0.0228
-          },
-          "body": {
-            "enabled": true,
-            "mix": 0.22,
-            "size": 0.62,
-            "tone": 0.43,
-            "damping": 0.36,
-            "stereo": 0.38,
-            "drive": 0.019
-          }
         }
       }
     }
@@ -191,7 +134,7 @@
     "keys",
     "organ",
     "dark",
-    "body"
+    "sustain"
   ],
-  "description": "太さを抑えて整えたオルガン。和音を支えつつ、常時ざらつかない音にしたい時に使う。"
+  "description": "太さを抑えて整えたオルガン。弦や胴鳴りの補助レイヤーを混ぜず、押した音だけで中域を支える。"
 }

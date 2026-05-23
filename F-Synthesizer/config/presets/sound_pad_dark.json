@@ -111,7 +111,7 @@
           "string": {
             "enabled": true,
             "level": 0.14,
-            "bowLevel": 0.28,
+            "bowLevel": 0.16,
             "detuneCents": 9.0,
             "spread": 0.58,
             "fadeInSec": 0.1,
@@ -119,16 +119,17 @@
             "motionDepth": 0.16,
             "motionRateHz": 0.42,
             "bodySend": 0.48,
-            "drive": 0.024
+            "drive": 0.018
           },
           "body": {
             "enabled": true,
-            "mix": 0.22,
+            "mix": 0.1716,
             "size": 0.62,
             "tone": 0.43,
             "damping": 0.36,
             "stereo": 0.38,
-            "drive": 0.02
+            "drive": 0.014,
+            "mode": "harmonic"
           }
         }
       }

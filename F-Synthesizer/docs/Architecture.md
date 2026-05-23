@@ -97,11 +97,12 @@ GUI 状態に依存しません。
 ## 音とレンダリング契約
 
 - 音質判断は `docs/PRODUCT_POLICY.md` に従い、継続開発性を落とさない範囲で「気持ちよい音」と短い feedback を優先する。
-- 実戦向けの周期波形は、波形生成段階で不要な aliasing や段差ノイズを増やさない。PSG noise、DrumKit の noise、SFX noise は意図的な音源として扱い、この基準の対象外にする。
+- 実戦向けの周期波形は、source と補助 layer の両方で不要な aliasing や段差ノイズを増やさない。PSG noise、DrumKit の noise、SFX noise は意図的な音源として扱い、この基準の対象外にする。
+- Attack / Bass / Lead / Chord / Pad / Pluck / String / Body layer は source 本体を置き換えるものではなく、用途が明確な補助音として扱う。Chord はPad背景、Stringは弦/Pad、BodyはPad/Pluckの共鳴に限定して使う。
 - source 非依存の modulation と shared shaping は common engine path に置く。
 - source 固有の挙動は、その音源方式に本当に必要な場合だけ該当 renderer に置く。
 - Master effects は固定順で処理する: sample-rate reducer、bit crusher、chorus、flanger、delay、reverb。
-- 既存 preset の音は、ユーザーが明示的に破壊的変更を受け入れない限り安定させる。
+- 既存 preset の音は原則安定させる。ただし音質改善のための明示的な破壊的変更では、全実戦 preset を再調整して検証する。
 
 ## ドキュメント方針
 

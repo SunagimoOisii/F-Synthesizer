@@ -64,7 +64,7 @@
             "bendDecaySec": 0.045,
             "attackBoost": 0.105,
             "attackDecaySec": 0.04,
-            "drive": 0.036,
+            "drive": 0.0295,
             "characterLevel": 0.0576,
             "characterTone": 0.52,
             "biteLevel": 0.052,
@@ -80,7 +80,7 @@
             "brightness": 0.52,
             "bodyMix": 0.5,
             "pitchOffsetSemis": 0,
-            "drive": 0.027
+            "drive": 0.0216
           }
         }
       }

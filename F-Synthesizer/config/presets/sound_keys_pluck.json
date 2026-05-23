@@ -131,7 +131,7 @@
             "brightness": 0.58,
             "bodyMix": 0.46,
             "pitchOffsetSemis": 0,
-            "drive": 0.0245
+            "drive": 0.0196
           },
           "pluck": {
             "enabled": true,
@@ -141,7 +141,7 @@
             "noiseMix": 0.1,
             "pitchOffsetSemis": 0,
             "bodySend": 0.52,
-            "drive": 0.04
+            "drive": 0.032
           },
           "body": {
             "enabled": true,
@@ -150,7 +150,8 @@
             "tone": 0.58,
             "damping": 0.28,
             "stereo": 0.22,
-            "drive": 0.028
+            "drive": 0.028,
+            "mode": "box"
           }
         },
         "expressionMap": {

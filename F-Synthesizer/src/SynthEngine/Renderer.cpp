@@ -304,6 +304,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         ApplyBodyLayer(voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
+        voices.ageSec[i] += in.dt;
 
         const double gain =
             frame.sourceGain *

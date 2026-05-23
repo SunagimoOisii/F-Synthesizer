@@ -114,7 +114,7 @@
             "brightness": 0.7,
             "bodyMix": 0.42,
             "pitchOffsetSemis": 12,
-            "drive": 0.024
+            "drive": 0.0192
           }
         }
       }

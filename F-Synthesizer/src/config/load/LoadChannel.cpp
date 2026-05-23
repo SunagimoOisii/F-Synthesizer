@@ -68,6 +68,26 @@ bool TryParseLeadLayerType(const std::string& name, LeadLayerType& outType)
     return false;
 }
 
+bool TryParseBodyLayerMode(const std::string& name, BodyLayerConfig::Mode& outMode)
+{
+    if (name == "harmonic")
+    {
+        outMode = BodyLayerConfig::Mode::Harmonic;
+        return true;
+    }
+    if (name == "box")
+    {
+        outMode = BodyLayerConfig::Mode::Box;
+        return true;
+    }
+    if (name == "metal")
+    {
+        outMode = BodyLayerConfig::Mode::Metal;
+        return true;
+    }
+    return false;
+}
+
 bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -236,8 +256,17 @@ bool ParseStringLayerObject(const std::string& layerObjText, StringLayerConfig& 
 
 bool ParseBodyLayerObject(const std::string& layerObjText, BodyLayerConfig& layer, std::string& err)
 {
-    (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONString(layerObjText, "mode"))
+    {
+        BodyLayerConfig::Mode parsed{};
+        if (!TryParseBodyLayerMode(*v, parsed))
+        {
+            err = "invalid bodyLayer.mode: " + *v;
+            return false;
+        }
+        layer.mode = parsed;
+    }
     if (auto v = ReadJSONDouble(layerObjText, "mix")) layer.mix = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(layerObjText, "size")) layer.size = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(layerObjText, "tone")) layer.tone = std::clamp(*v, 0.0, 1.0);

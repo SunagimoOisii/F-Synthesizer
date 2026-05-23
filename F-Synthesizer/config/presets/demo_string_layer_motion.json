@@ -1,4 +1,4 @@
-﻿{
+{
   "displayName": "String layer motion",
   "category": "Pad",
   "internal": true,
@@ -181,7 +181,7 @@
           "string": {
             "enabled": true,
             "level": 0.12,
-            "bowLevel": 0.28,
+            "bowLevel": 0.16,
             "detuneCents": 9.0,
             "spread": 0.58,
             "fadeInSec": 0.1,
@@ -189,16 +189,17 @@
             "motionDepth": 0.16,
             "motionRateHz": 0.42,
             "bodySend": 0.48,
-            "drive": 0.06
+            "drive": 0.045
           },
           "body": {
             "enabled": true,
-            "mix": 0.18,
+            "mix": 0.1404,
             "size": 0.62,
             "tone": 0.43,
             "damping": 0.36,
             "stereo": 0.38,
-            "drive": 0.05
+            "drive": 0.035,
+            "mode": "harmonic"
           }
         }
       }

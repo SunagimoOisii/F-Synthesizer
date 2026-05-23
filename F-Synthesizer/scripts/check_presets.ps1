@@ -191,6 +191,87 @@ function Read-ProjectModelJson {
     }
 }
 
+function Test-JsonProperty {
+    param(
+        [object]$Object,
+        [string]$Name
+    )
+
+    if ($null -eq $Object) {
+        return $false
+    }
+    foreach ($prop in $Object.PSObject.Properties) {
+        if ($prop.Name -eq $Name) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Test-LayerEnabled {
+    param(
+        [object]$Layers,
+        [string]$Name
+    )
+
+    if (-not (Test-JsonProperty -Object $Layers -Name $Name)) {
+        return $false
+    }
+    $layer = $Layers.$Name
+    return (Test-JsonProperty -Object $layer -Name "enabled") -and [bool]$layer.enabled
+}
+
+function Assert-PracticalPresetLayerPolicy {
+    param(
+        [object]$PresetConfig,
+        [string]$Name
+    )
+
+    if (-not $Name.StartsWith("sound_")) {
+        return
+    }
+    if ((Test-JsonProperty -Object $PresetConfig -Name "internal") -and [bool]$PresetConfig.internal) {
+        return
+    }
+
+    $category = ""
+    if (Test-JsonProperty -Object $PresetConfig -Name "category") {
+        $category = [string]$PresetConfig.category
+    }
+    $displayName = ""
+    if (Test-JsonProperty -Object $PresetConfig -Name "displayName") {
+        $displayName = [string]$PresetConfig.displayName
+    }
+
+    if (-not (Test-JsonProperty -Object $PresetConfig.project -Name "channels")) {
+        return
+    }
+
+    foreach ($channelProp in $PresetConfig.project.channels.PSObject.Properties) {
+        $channel = $channelProp.Value
+        if (-not (Test-JsonProperty -Object $channel -Name "layers")) {
+            continue
+        }
+        $layers = $channel.layers
+        if ((Test-LayerEnabled -Layers $layers -Name "chord") -and $category -ne "Pad") {
+            throw "${Name}: chord layer is only allowed for practical Pad presets."
+        }
+        if ((Test-LayerEnabled -Layers $layers -Name "string") -and $category -ne "Pad") {
+            throw "${Name}: string layer is only allowed for practical Pad presets."
+        }
+        if (Test-LayerEnabled -Layers $layers -Name "body") {
+            $isAllowedBody = $category -eq "Pad" -or ($category -eq "Keys" -and $displayName -like "*Pluck*")
+            if (-not $isAllowedBody) {
+                throw "${Name}: body layer is only allowed for practical Pad presets or pluck keys."
+            }
+            $body = $layers.body
+            if (-not (Test-JsonProperty -Object $body -Name "mode")) {
+                throw "${Name}: enabled body layer must declare mode."
+            }
+        }
+    }
+}
+
 function Write-ShortPresetConfig {
     param(
         [object]$PresetConfig,
@@ -336,6 +417,7 @@ try {
         $presetConfig = $null
         try {
             $presetConfig = Read-ProjectModelJson -Path $preset.FullName
+            Assert-PracticalPresetLayerPolicy -PresetConfig $presetConfig -Name $name
         }
         catch {
             $failures.Add("${name}: $($_.Exception.Message)")
