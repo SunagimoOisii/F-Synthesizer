@@ -254,8 +254,11 @@
     <ClInclude Include="include\\synth\\Oscillator.h" />
     <ClInclude Include="include\\midi\\Sequencer.h" />
     <ClInclude Include="include\\midi\\MIDIPipeline.h" />
+    <ClInclude Include="include\\SynthEngine\\ChannelConfig.h" />
+    <ClInclude Include="include\\SynthEngine\\EffectsConfig.h" />
     <ClInclude Include="include\\SynthEngine\\Filter.h" />
     <ClInclude Include="include\\SynthEngine\\Modulation.h" />
+    <ClInclude Include="include\\SynthEngine\\SourceConfig.h" />
     <ClInclude Include="include\\SynthEngine\\Smoothing.h" />
     <ClInclude Include="include\\SynthEngine\\SynthEngine.h" />
     <ClInclude Include="include\\io\\Writer.h" />

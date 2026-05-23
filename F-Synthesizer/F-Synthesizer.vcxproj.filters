@@ -332,10 +332,19 @@
     <ClInclude Include="include\\midi\\MIDIPipeline.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\SynthEngine\\ChannelConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\SynthEngine\\EffectsConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\SynthEngine\\Filter.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\SynthEngine\\Modulation.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\SynthEngine\\SourceConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\SynthEngine\\Smoothing.h">
