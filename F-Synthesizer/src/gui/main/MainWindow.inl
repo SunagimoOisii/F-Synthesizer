@@ -603,31 +603,8 @@ if (state.UIModeTab == 0)
     gui::EnsureChannelConfigs(state);
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
     ChannelConfig& selectedSlotCfg = (*state.channelConfigs)[state.selectedSoundSlot];
-    auto buildGuiSourceKinds = [](std::array<config::SourceKind, config::kSourceKindCount>& kinds, size_t& count)
-    {
-        kinds = {};
-        count = 0;
-        for (int i = 0; i < config::kSourceKindCount; i++)
-        {
-            const config::SourceKind kind = config::SourceKindFromIndex(i);
-            if (kind == config::SourceKind::Count)
-            {
-                continue;
-            }
-            const config::SourceCapability capability = config::SourceCapabilityOf(kind);
-            if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
-            {
-                kinds[count++] = kind;
-            }
-        }
-        if (count == 0)
-        {
-            kinds[count++] = config::SourceKind::Waveform;
-        }
-    };
-    std::array<config::SourceKind, config::kSourceKindCount> guiKinds{};
     size_t guiKindCount = 0;
-    buildGuiSourceKinds(guiKinds, guiKindCount);
+    const auto guiKinds = config::GuiSelectableSourceKinds(guiKindCount);
     const config::SourceKind currentKind = config::SourceConfigKind(selectedSlotCfg.source);
     int sourceKindUiIndex = 0;
     for (size_t i = 0; i < guiKindCount; i++)
@@ -678,7 +655,7 @@ if (state.UIModeTab == 0)
                         if (ImGui::Selectable(config::SourceKindToDisplayName(candidate), selected))
                         {
                             sourceKindUiIndex = static_cast<int>(i);
-                            selectedSlotCfg.source = gui::DefaultSourceByType(config::SourceKindToIndex(candidate));
+                            selectedSlotCfg.source = config::DefaultSourceConfig(candidate);
                             state.presetDirty = true;
                             requestAutoTonePreview();
                             RefreshPresetItems(state, state.presetName);
@@ -800,7 +777,7 @@ if (state.UIModeTab == 0)
         if (state.channelConfigs)
         {
             const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-            isDrumSlot = std::holds_alternative<DrumKitConfig>((*state.channelConfigs)[slot].source);
+            isDrumSlot = config::UsesDrumKitNoteSelection((*state.channelConfigs)[slot].source);
         }
         if (!isDrumSlot)
         {
@@ -1404,7 +1381,7 @@ else if (state.UIModeTab == 1)
         const bool isDrumSource = config::SourceCapabilityOf(drumCh.source).isPercussion;
         if (!isDrumSource)
         {
-            drumCh.source = gui::DefaultSourceByType(config::SourceKindToIndex(config::SourceKind::DrumKit));
+            drumCh.source = config::DefaultSourceConfig(config::SourceKind::DrumKit);
         }
         state.presetDirty = true;
     };

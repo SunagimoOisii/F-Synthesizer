@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <string_view>
 
@@ -104,4 +105,10 @@ bool TryGetParameterSchema(
     size_t& outCount);
 // 種別ごとの既定値を返す。DrumKit は 36(Kick) 以外を None 初期化する。
 SourceConfig DefaultSourceConfig(SourceKind kind);
+// GUI の source selector に表示する種別かどうかを返す。
+bool IsGuiSelectableSourceKind(SourceKind kind);
+// GUI の source selector に表示する種別一覧を返す。
+std::array<SourceKind, kSourceKindCount> GuiSelectableSourceKinds(size_t& outCount);
+// GUI で DrumKit note 単位の編集/試聴対象にする source かどうかを返す。
+bool UsesDrumKitNoteSelection(const SourceConfig& src);
 } // namespace config

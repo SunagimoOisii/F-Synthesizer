@@ -377,4 +377,40 @@ SourceConfig DefaultSourceConfig(SourceKind kind)
     }
     return WaveformConfig{ WaveType::Saw };
 }
+
+bool IsGuiSelectableSourceKind(SourceKind kind)
+{
+    if (kind == SourceKind::Count)
+    {
+        return false;
+    }
+
+    const SourceCapability capability = SourceCapabilityOf(kind);
+    // Soundタブでは one-shot 単発の Drum 直編集を避け、DrumKit を正規導線として残す。
+    return !capability.isPercussion || kind == SourceKind::DrumKit;
+}
+
+std::array<SourceKind, kSourceKindCount> GuiSelectableSourceKinds(size_t& outCount)
+{
+    std::array<SourceKind, kSourceKindCount> kinds{};
+    outCount = 0;
+    for (int i = 0; i < kSourceKindCount; i++)
+    {
+        const SourceKind kind = SourceKindFromIndex(i);
+        if (IsGuiSelectableSourceKind(kind))
+        {
+            kinds[outCount++] = kind;
+        }
+    }
+    if (outCount == 0)
+    {
+        kinds[outCount++] = SourceKind::Waveform;
+    }
+    return kinds;
+}
+
+bool UsesDrumKitNoteSelection(const SourceConfig& src)
+{
+    return SourceConfigKind(src) == SourceKind::DrumKit;
+}
 } // namespace config

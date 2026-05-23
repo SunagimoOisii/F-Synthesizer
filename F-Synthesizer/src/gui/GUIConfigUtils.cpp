@@ -447,11 +447,6 @@ int SourceTypeIndex(const SourceConfig& src)
     return config::SourceKindToIndex(config::SourceConfigKind(src));
 }
 
-SourceConfig DefaultSourceByType(int idx)
-{
-    return config::DefaultSourceConfig(config::SourceKindFromIndex(idx));
-}
-
 bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
 {
     return NearlyEq(a.amp, b.amp) &&

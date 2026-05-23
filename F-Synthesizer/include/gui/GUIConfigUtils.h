@@ -12,7 +12,6 @@ int WaveToIndex(WaveType w);
 NoiseType NoiseFromIndex(int idx);
 int NoiseToIndex(NoiseType n);
 int SourceTypeIndex(const SourceConfig& src);
-SourceConfig DefaultSourceByType(int idx);
 bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b);
 bool ChannelMixStateEquals(const ChannelMixState& a, const ChannelMixState& b);
 void WriteJSONEscaped(std::ostream& out, const std::string& s);

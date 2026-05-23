@@ -192,29 +192,10 @@ std::string ToLower(std::string src)
 config::SourceKind SourceKindFromTypeString(const std::string& type)
 {
     const std::string lower = ToLower(type);
-    if (lower == "waveform")
+    config::SourceKind kind = config::SourceKind::Count;
+    if (config::TryParseSourceKind(lower, kind))
     {
-        return config::SourceKind::Waveform;
-    }
-    if (lower == "analog")
-    {
-        return config::SourceKind::Analog;
-    }
-    if (lower == "fm")
-    {
-        return config::SourceKind::Fm;
-    }
-    if (lower == "psg")
-    {
-        return config::SourceKind::Psg;
-    }
-    if (lower == "drumkit")
-    {
-        return config::SourceKind::DrumKit;
-    }
-    if (lower == "noise")
-    {
-        return config::SourceKind::Noise;
+        return kind;
     }
     return config::SourceKind::Count;
 }

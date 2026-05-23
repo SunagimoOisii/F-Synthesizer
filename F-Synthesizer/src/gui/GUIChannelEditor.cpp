@@ -15,32 +15,6 @@ namespace
 {
 using HoverHelpFn = std::function<void(const char* what, const char* impact, const char* caution)>;
 
-std::array<config::SourceKind, config::kSourceKindCount> BuildGuiSourceKindList(size_t& outCount)
-{
-    std::array<config::SourceKind, config::kSourceKindCount> kinds{};
-    outCount = 0;
-    for (int i = 0; i < config::kSourceKindCount; i++)
-    {
-        const config::SourceKind kind = config::SourceKindFromIndex(i);
-        if (kind == config::SourceKind::Count)
-        {
-            continue;
-        }
-
-        const config::SourceCapability capability = config::SourceCapabilityOf(kind);
-        // Soundタブでは one-shot 単発の Drum 直編集を避け、DrumKit を正規導線として残す。
-        if (!capability.isPercussion || kind == config::SourceKind::DrumKit)
-        {
-            kinds[outCount++] = kind;
-        }
-    }
-    if (outCount == 0)
-    {
-        kinds[outCount++] = config::SourceKind::Waveform;
-    }
-    return kinds;
-}
-
 void SetFmOperatorEnv(ModEnvelopeConfig& env, double attack, double decay, double sustain, double release, double curve)
 {
     env.attackSec = attack;
@@ -708,7 +682,7 @@ bool DrawChannelEditor(
         {
             const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
             size_t guiSourceKindCount = 0;
-            const auto guiSourceKinds = BuildGuiSourceKindList(guiSourceKindCount);
+            const auto guiSourceKinds = config::GuiSelectableSourceKinds(guiSourceKindCount);
             int srcType = 0;
             for (size_t i = 0; i < guiSourceKindCount; i++)
             {
@@ -728,7 +702,7 @@ bool DrawChannelEditor(
                     {
                         srcType = static_cast<int>(i);
                         changed = true;
-                        chCfg.source = DefaultSourceByType(config::SourceKindToIndex(candidate));
+                        chCfg.source = config::DefaultSourceConfig(candidate);
                     }
                     if (selected)
                     {

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "AppCore.h"
+#include "config/SourceRegistry.h"
 #include "gui/GUIActionsInternal.h"
 #include "gui/GUIStateModel.h"
 #include "gui/PreviewAudio.h"
@@ -139,7 +140,7 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
 
     slot = std::clamp(slot, 0, 15);
     const SourceConfig& src = (*state.channelConfigs)[slot].source;
-    if (!std::holds_alternative<DrumKitConfig>(src))
+    if (!config::UsesDrumKitNoteSelection(src))
     {
         return std::clamp(state.tonePreviewNoteNumber, 0, 127);
     }

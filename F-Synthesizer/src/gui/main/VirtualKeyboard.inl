@@ -11,7 +11,7 @@ static void DrawVirtualKeyboard(GUIState& state)
     if (state.channelConfigs)
     {
         const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-        if (std::holds_alternative<DrumKitConfig>((*state.channelConfigs)[slot].source))
+        if (config::UsesDrumKitNoteSelection((*state.channelConfigs)[slot].source))
         {
             return;
         }
