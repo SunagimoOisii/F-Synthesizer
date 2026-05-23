@@ -18,6 +18,7 @@
 - `layers.pad`、`layers.string`、`layers.body` は音色の再現対象と合う場合だけ使います。Keys Organ では弦や胴鳴りの混入を避け、FM source だけで厚みを作ります。
 - layer 内部の saw / triangle / pulse / square は、実戦音源では anti-alias 処理された生成経路を使うことを前提にします。レイヤー追加でメイン音源の低ノイズ方針を迂回しないようにします。
 - `layers.body` は `mode` を必ず明示します。Pad では `harmonic` を基本にし、Pluck の箱鳴りでは `box`、金属的な検証音では `metal` を使います。
+- `layers.harmonic` は押した音の整数倍音だけを足す安全な補助レイヤーです。Keys Organ では Chord / String / Body を使わず、HarmonicLayer で中域の厚みを作ります。
 
 ## 実戦 Sound Card
 
@@ -53,7 +54,7 @@
 | Preset | 表示名 | 用途メモ |
 |---|---|---|
 | `sound_keys_electric` | Keys Electric | 丸いエレクトリックキー。コードや短いリフ向け。 |
-| `sound_keys_organ` | Keys Organ | 弦や胴鳴りを混ぜず、押した音だけで支えるオルガン系キー。 |
+| `sound_keys_organ` | Keys Organ | HarmonicLayerで倍音を足し、弦や胴鳴りを混ぜずに支えるオルガン系キー。 |
 | `sound_keys_bell` | Keys Bell | 金属感を控えめにしたベルキー。高域アクセント向け。 |
 | `sound_keys_pluck` | Keys Pluck | 耳に残るざらつきを抑えた短いプラック音。 |
 

@@ -151,6 +151,19 @@ struct BodyLayerConfig
     double drive = 0.0;
 };
 
+struct HarmonicLayerConfig
+{
+    bool enabled = false;
+    double level = 0.0;
+    std::array<double, 8> harmonicLevels{ 1.0, 0.55, 0.28, 0.18, 0.10, 0.06, 0.035, 0.02 };
+    double brightness = 0.45;
+    double keyClick = 0.0;
+    double attackSec = 0.008;
+    double releaseDamp = 0.35;
+    double drive = 0.0;
+    double stereo = 0.12;
+};
+
 struct ExpressionMapConfig
 {
     bool enabled = false;
@@ -205,6 +218,7 @@ struct ChannelConfig
     PluckLayerConfig pluckLayer{};
     StringLayerConfig stringLayer{};
     BodyLayerConfig bodyLayer{};
+    HarmonicLayerConfig harmonicLayer{};
     DrumBusConfig drumBus{};
     // MIDI velocity/CC/pressure を音量以外の音色変化へ写像する共通表情マップ。
     ExpressionMapConfig expressionMap{};

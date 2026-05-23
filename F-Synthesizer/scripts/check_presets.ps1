@@ -259,6 +259,13 @@ function Assert-PracticalPresetLayerPolicy {
         if ((Test-LayerEnabled -Layers $layers -Name "string") -and $category -ne "Pad") {
             throw "${Name}: string layer is only allowed for practical Pad presets."
         }
+        if ($category -eq "Keys" -and $displayName -like "*Organ*") {
+            foreach ($forbidden in @("chord", "string", "body")) {
+                if (Test-LayerEnabled -Layers $layers -Name $forbidden) {
+                    throw "${Name}: Keys Organ must use harmonic/source tone instead of ${forbidden} layer."
+                }
+            }
+        }
         if (Test-LayerEnabled -Layers $layers -Name "body") {
             $isAllowedBody = $category -eq "Pad" -or ($category -eq "Keys" -and $displayName -like "*Pluck*")
             if (-not $isAllowedBody) {

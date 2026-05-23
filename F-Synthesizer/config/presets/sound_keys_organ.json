@@ -126,6 +126,28 @@
           "modWheelToString": 0.0,
           "cc74ToStringBrightness": 0.0,
           "pressureToFilterDrive": 0.04
+        },
+        "layers": {
+          "harmonic": {
+            "enabled": true,
+            "level": 0.18,
+            "harmonicLevels": [
+              1.0,
+              0.72,
+              0.48,
+              0.28,
+              0.18,
+              0.1,
+              0.06,
+              0.035
+            ],
+            "brightness": 0.42,
+            "keyClick": 0.08,
+            "attackSec": 0.006,
+            "releaseDamp": 0.32,
+            "drive": 0.0,
+            "stereo": 0.08
+          }
         }
       }
     }

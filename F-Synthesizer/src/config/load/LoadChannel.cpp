@@ -276,6 +276,31 @@ bool ParseBodyLayerObject(const std::string& layerObjText, BodyLayerConfig& laye
     return true;
 }
 
+bool ParseHarmonicLayerObject(const std::string& layerObjText, HarmonicLayerConfig& layer, std::string& err)
+{
+    if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
+    if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "brightness")) layer.brightness = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "keyClick")) layer.keyClick = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "attackSec")) layer.attackSec = std::clamp(*v, 0.001, 0.25);
+    if (auto v = ReadJSONDouble(layerObjText, "releaseDamp")) layer.releaseDamp = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
+    if (auto v = ReadJSONDouble(layerObjText, "stereo")) layer.stereo = std::clamp(*v, 0.0, 1.0);
+
+    std::string levelsArray;
+    bool foundLevels = false;
+    if (!ExtractArrayForKey(layerObjText, "harmonicLevels", levelsArray, foundLevels, err)) { return false; }
+    if (foundLevels)
+    {
+        if (!ParseTopLevelDoubleArrayElements(levelsArray, [&](size_t index, double value) {
+            if (index >= layer.harmonicLevels.size()) { return true; }
+            layer.harmonicLevels[index] = std::clamp(value, 0.0, 1.0);
+            return true;
+        }, err)) { return false; }
+    }
+    return true;
+}
+
 bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
 {
     (void)err;
@@ -406,6 +431,17 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
         return false;
     }
     if (foundBodyLayer && !ParseBodyLayerObject(bodyLayerObj, cfg.bodyLayer, err))
+    {
+        return false;
+    }
+
+    std::string harmonicLayerObj;
+    bool foundHarmonicLayer = false;
+    if (!ExtractObjectForKey(layerRoot, "harmonic", harmonicLayerObj, foundHarmonicLayer, err))
+    {
+        return false;
+    }
+    if (foundHarmonicLayer && !ParseHarmonicLayerObject(harmonicLayerObj, cfg.harmonicLayer, err))
     {
         return false;
     }

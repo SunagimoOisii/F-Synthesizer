@@ -645,6 +645,41 @@ bool DrawChannelEditor(
         body.drive = std::clamp(body.drive, 0.0, 1.0);
     }
 
+    if (ImGui::CollapsingHeader("Harmonic Layer"))
+    {
+        auto& harmonic = chCfg.harmonicLayer;
+        changed |= ImGui::Checkbox("Enabled##harmonicLayer", &harmonic.enabled);
+        if (updateHoverHelp)
+        {
+            updateHoverHelp(
+                "押した音だけを基準に整数倍音を足します。",
+                "オルガンや鍵盤の厚みを、和音やノイズを混ぜずに作ります。",
+                "高次倍音やdriveを上げすぎると硬くなります。");
+        }
+
+        changed |= ImGui::InputDouble("Level##harmonicLayer", &harmonic.level, 0.01, 0.05, "%.3f");
+        const char* harmonicLabels[] = { "1x", "2x", "3x", "4x", "5x", "6x", "8x", "10x" };
+        for (size_t h = 0; h < harmonic.harmonicLevels.size(); h++)
+        {
+            std::string label = std::string("Harmonic ") + harmonicLabels[h] + "##harmonicLayer";
+            changed |= ImGui::InputDouble(label.c_str(), &harmonic.harmonicLevels[h], 0.01, 0.05, "%.3f");
+            harmonic.harmonicLevels[h] = std::clamp(harmonic.harmonicLevels[h], 0.0, 1.0);
+        }
+        changed |= ImGui::InputDouble("Brightness##harmonicLayer", &harmonic.brightness, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Key Click##harmonicLayer", &harmonic.keyClick, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Attack Sec##harmonicLayer", &harmonic.attackSec, 0.001, 0.01, "%.3f");
+        changed |= ImGui::InputDouble("Release Damp##harmonicLayer", &harmonic.releaseDamp, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Drive##harmonicLayer", &harmonic.drive, 0.01, 0.05, "%.3f");
+        changed |= ImGui::InputDouble("Stereo##harmonicLayer", &harmonic.stereo, 0.01, 0.05, "%.3f");
+        harmonic.level = std::clamp(harmonic.level, 0.0, 1.0);
+        harmonic.brightness = std::clamp(harmonic.brightness, 0.0, 1.0);
+        harmonic.keyClick = std::clamp(harmonic.keyClick, 0.0, 1.0);
+        harmonic.attackSec = std::clamp(harmonic.attackSec, 0.001, 0.25);
+        harmonic.releaseDamp = std::clamp(harmonic.releaseDamp, 0.0, 1.0);
+        harmonic.drive = std::clamp(harmonic.drive, 0.0, 1.0);
+        harmonic.stereo = std::clamp(harmonic.stereo, 0.0, 1.0);
+    }
+
     if (ImGui::CollapsingHeader("Expression Map"))
     {
         auto& map = chCfg.expressionMap;

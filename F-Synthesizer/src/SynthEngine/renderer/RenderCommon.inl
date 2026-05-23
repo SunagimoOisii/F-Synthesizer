@@ -496,6 +496,76 @@ StereoFrame RenderStringLayer(Voice& voices, size_t i, const VoiceRenderInput& i
     };
 }
 
+StereoFrame RenderHarmonicLayer(Voice& voices, size_t i, const VoiceRenderInput& in)
+{
+    const HarmonicLayerConfig& layer = voices.harmonicLayer[i];
+    if (!layer.enabled || layer.level <= 0.0)
+    {
+        return {};
+    }
+
+    constexpr std::array<double, 8> ratios{ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0 };
+    const double level = std::clamp(layer.level, 0.0, 1.0);
+    const double brightness = std::clamp(layer.brightness, 0.0, 1.0);
+    const double attackSec = std::clamp(layer.attackSec, 0.001, 0.25);
+    const double attack = 1.0 - std::exp(-voices.ageSec[i] / attackSec);
+    const double releaseDamp = voices.env[i].stage == ADSRStage::Release
+        ? (1.0 - std::clamp(layer.releaseDamp, 0.0, 1.0) * 0.65)
+        : 1.0;
+    const double stereo = std::clamp(layer.stereo, 0.0, 1.0);
+    const double baseInc = voices.phaseInc[i] * in.pitchFactor;
+    double left = 0.0;
+    double right = 0.0;
+    double weight = 0.0;
+
+    for (size_t h = 0; h < ratios.size(); h++)
+    {
+        const double rawLevel = std::clamp(layer.harmonicLevels[h], 0.0, 1.0);
+        if (rawLevel <= 0.0)
+        {
+            continue;
+        }
+
+        const double harmonicIndex = static_cast<double>(h) / static_cast<double>(ratios.size() - 1);
+        const double brightScale = 0.55 + brightness * (0.55 + harmonicIndex * 0.70);
+        const double harmonicLevel = rawLevel * brightScale;
+        const double inc = baseInc * ratios[h];
+        const double phaseL = StepLayerPhase(voices.harmonicPhase[i][h], inc);
+        const double phaseR = StepLayerPhase(voices.harmonicPhaseR[i][h], inc * (1.0 + stereo * 0.0008 * static_cast<double>(h + 1)));
+        left += LayerWave(WaveType::Sine, phaseL, inc) * harmonicLevel;
+        right += LayerWave(WaveType::Sine, phaseR, inc) * harmonicLevel;
+        weight += harmonicLevel;
+    }
+
+    if (weight <= 0.0)
+    {
+        return {};
+    }
+
+    left /= weight;
+    right /= weight;
+
+    const double keyClick = std::clamp(layer.keyClick, 0.0, 1.0);
+    if (keyClick > 0.0)
+    {
+        const double clickEnv = std::exp(-voices.ageSec[i] / 0.010);
+        const double clickPhase = voices.harmonicPhase[i][2];
+        const double click = (
+            LayerWave(WaveType::Sine, clickPhase, baseInc * 3.0) * 0.65 +
+            LayerWave(WaveType::Triangle, clickPhase, baseInc * 3.0) * 0.35) *
+            keyClick * clickEnv;
+        left += click;
+        right += click * (1.0 - stereo * 0.12);
+    }
+
+    const double gain = level * attack * releaseDamp;
+    const double drive = std::clamp(layer.drive + in.expressionDriveAdd * 0.25, 0.0, 1.0);
+    return StereoFrame{
+        AttackSoftClip(left * gain, drive),
+        AttackSoftClip(right * gain, drive)
+    };
+}
+
 void ApplyBodyLayer(Voice& voices, size_t i, const VoiceRenderInput& in, SourceRenderFrame& frame)
 {
     const BodyLayerConfig& layer = voices.bodyLayer[i];

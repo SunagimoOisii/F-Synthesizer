@@ -206,6 +206,21 @@ bool BodyLayerConfigEquals(const BodyLayerConfig& a, const BodyLayerConfig& b)
         NearlyEq(a.drive, b.drive);
 }
 
+bool HarmonicLayerConfigEquals(const HarmonicLayerConfig& a, const HarmonicLayerConfig& b)
+{
+    return a.enabled == b.enabled &&
+        NearlyEq(a.level, b.level) &&
+        std::equal(a.harmonicLevels.begin(), a.harmonicLevels.end(), b.harmonicLevels.begin(), [](double av, double bv) {
+            return NearlyEq(av, bv);
+        }) &&
+        NearlyEq(a.brightness, b.brightness) &&
+        NearlyEq(a.keyClick, b.keyClick) &&
+        NearlyEq(a.attackSec, b.attackSec) &&
+        NearlyEq(a.releaseDamp, b.releaseDamp) &&
+        NearlyEq(a.drive, b.drive) &&
+        NearlyEq(a.stereo, b.stereo);
+}
+
 bool ExpressionMapConfigEquals(const ExpressionMapConfig& a, const ExpressionMapConfig& b)
 {
     return a.enabled == b.enabled &&
@@ -464,6 +479,7 @@ bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
         PluckLayerConfigEquals(a.pluckLayer, b.pluckLayer) &&
         StringLayerConfigEquals(a.stringLayer, b.stringLayer) &&
         BodyLayerConfigEquals(a.bodyLayer, b.bodyLayer) &&
+        HarmonicLayerConfigEquals(a.harmonicLayer, b.harmonicLayer) &&
         ExpressionMapConfigEquals(a.expressionMap, b.expressionMap) &&
         SourceConfigEquals(a.source, b.source);
 }

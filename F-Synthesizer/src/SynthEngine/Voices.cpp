@@ -205,6 +205,7 @@ void InitializeVoiceAtIndex(
     voices.pluckLayer[i] = cfg.pluckLayer;
     voices.stringLayer[i] = cfg.stringLayer;
     voices.bodyLayer[i] = cfg.bodyLayer;
+    voices.harmonicLayer[i] = cfg.harmonicLayer;
     voices.drumBus[i] = cfg.drumBus;
     voices.expressionMap[i] = cfg.expressionMap;
     ADSRState envState{};
@@ -517,6 +518,7 @@ void Voice::reserve(size_t n)
     pluckLayer.reserve(n);
     stringLayer.reserve(n);
     bodyLayer.reserve(n);
+    harmonicLayer.reserve(n);
     drumBus.reserve(n);
     expressionMap.reserve(n);
     env.reserve(n);
@@ -544,6 +546,8 @@ void Voice::reserve(size_t n)
     bodyStateL.reserve(n);
     bodyStateR.reserve(n);
     bodyPhase.reserve(n);
+    harmonicPhase.reserve(n);
+    harmonicPhaseR.reserve(n);
     portamentoPitchHz.reserve(n);
     portamentoTargetHz.reserve(n);
     portamentoTimeSec.reserve(n);
@@ -574,6 +578,7 @@ void Voice::clear()
     pluckLayer.clear();
     stringLayer.clear();
     bodyLayer.clear();
+    harmonicLayer.clear();
     drumBus.clear();
     expressionMap.clear();
     env.clear();
@@ -601,6 +606,8 @@ void Voice::clear()
     bodyStateL.clear();
     bodyStateR.clear();
     bodyPhase.clear();
+    harmonicPhase.clear();
+    harmonicPhaseR.clear();
     portamentoPitchHz.clear();
     portamentoTargetHz.clear();
     portamentoTimeSec.clear();
@@ -642,6 +649,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     pluckLayer.emplace_back();
     stringLayer.emplace_back();
     bodyLayer.emplace_back();
+    harmonicLayer.emplace_back();
     drumBus.emplace_back();
     expressionMap.emplace_back();
     env.emplace_back();
@@ -670,6 +678,8 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     bodyStateL.emplace_back();
     bodyStateR.emplace_back();
     bodyPhase.emplace_back();
+    harmonicPhase.emplace_back();
+    harmonicPhaseR.emplace_back();
     portamentoPitchHz.push_back(0.0);
     portamentoTargetHz.push_back(0.0);
     portamentoTimeSec.push_back(0.0);
@@ -801,6 +811,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(pluckLayer, keepScratch);
     CompactVectorByKeep(stringLayer, keepScratch);
     CompactVectorByKeep(bodyLayer, keepScratch);
+    CompactVectorByKeep(harmonicLayer, keepScratch);
     CompactVectorByKeep(drumBus, keepScratch);
     CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(env, keepScratch);
@@ -828,6 +839,8 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(bodyStateL, keepScratch);
     CompactVectorByKeep(bodyStateR, keepScratch);
     CompactVectorByKeep(bodyPhase, keepScratch);
+    CompactVectorByKeep(harmonicPhase, keepScratch);
+    CompactVectorByKeep(harmonicPhaseR, keepScratch);
     CompactVectorByKeep(portamentoPitchHz, keepScratch);
     CompactVectorByKeep(portamentoTargetHz, keepScratch);
     CompactVectorByKeep(portamentoTimeSec, keepScratch);

@@ -925,7 +925,11 @@ void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, boo
     const auto& stringLayer = cfg.stringLayer;
     WriteIndent(out, 8); out << "\"string\": { \"enabled\": " << (stringLayer.enabled ? "true" : "false") << ", \"level\": " << stringLayer.level << ", \"bowLevel\": " << stringLayer.bowLevel << ", \"detuneCents\": " << stringLayer.detuneCents << ", \"spread\": " << stringLayer.spread << ", \"fadeInSec\": " << stringLayer.fadeInSec << ", \"brightness\": " << stringLayer.brightness << ", \"motionDepth\": " << stringLayer.motionDepth << ", \"motionRateHz\": " << stringLayer.motionRateHz << ", \"bodySend\": " << stringLayer.bodySend << ", \"drive\": " << stringLayer.drive << " },\n";
     const auto& body = cfg.bodyLayer;
-    WriteIndent(out, 8); out << "\"body\": { \"enabled\": " << (body.enabled ? "true" : "false") << ", \"mode\": \"" << BodyLayerModeToString(body.mode) << "\", \"mix\": " << body.mix << ", \"size\": " << body.size << ", \"tone\": " << body.tone << ", \"damping\": " << body.damping << ", \"stereo\": " << body.stereo << ", \"drive\": " << body.drive << " }\n";
+    WriteIndent(out, 8); out << "\"body\": { \"enabled\": " << (body.enabled ? "true" : "false") << ", \"mode\": \"" << BodyLayerModeToString(body.mode) << "\", \"mix\": " << body.mix << ", \"size\": " << body.size << ", \"tone\": " << body.tone << ", \"damping\": " << body.damping << ", \"stereo\": " << body.stereo << ", \"drive\": " << body.drive << " },\n";
+    const auto& harmonic = cfg.harmonicLayer;
+    WriteIndent(out, 8); out << "\"harmonic\": { \"enabled\": " << (harmonic.enabled ? "true" : "false") << ", \"level\": " << harmonic.level << ", \"harmonicLevels\": [";
+    for (size_t h = 0; h < harmonic.harmonicLevels.size(); h++) { if (h > 0) out << ", "; out << harmonic.harmonicLevels[h]; }
+    out << "], \"brightness\": " << harmonic.brightness << ", \"keyClick\": " << harmonic.keyClick << ", \"attackSec\": " << harmonic.attackSec << ", \"releaseDamp\": " << harmonic.releaseDamp << ", \"drive\": " << harmonic.drive << ", \"stereo\": " << harmonic.stereo << " }\n";
     WriteIndent(out, 6); out << "},\n";
     if (cfg.expressionMap.enabled)
     {

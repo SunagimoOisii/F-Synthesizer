@@ -141,6 +141,8 @@
 
 `bodyLayer` は省略可能。入力音に共鳴を足す後段レイヤー。`mode` は `harmonic|box|metal`。`harmonic` は倍音寄りでPad向け、`box` は箱鳴りでPluck向け、`metal` は検証や効果音向け。Organ / clean Keys / Lead に入れると意図しない音程や濁りになりやすい。
 
+`harmonicLayer` は省略可能。入力ノートの整数倍音だけを sine 加算で足す補助レイヤー。`harmonicLevels` は 1, 2, 3, 4, 5, 6, 8, 10 倍音の相対量で、ChordLayer のように別音程は足さない。Organ / clean Keys で、String や Body を混ぜずに中域の厚みを作る用途で使う。
+
 `expressionMap` は省略可能。MIDI velocity を音量だけでなく、明るさ、FM index、attack/bass/lead/chord/pad/pluck/string/body layer量、driveへ薄く割り当てる。`velocityCurve` は 1.0 が標準で、1.0未満は弱音を持ち上げ、1.0超は強弱差を広げる。`modWheelToPad` はPad量、`cc74ToPadBrightness` はPadの明るさへ追加で効く。使いすぎると強velocityだけ音色が暴れ、ピーク過多や不自然な打ち込み感につながる。
 
 ## source.type ごとの定義
@@ -276,6 +278,9 @@
 - `stringLayer.motionRateHz`: `0.0..12.0`
 - `bodyLayer.mode`: `harmonic|box|metal`
 - `bodyLayer.mix/size/tone/damping/stereo/drive`: `0.0..1.0`
+- `harmonicLayer.level/brightness/keyClick/releaseDamp/drive/stereo`: `0.0..1.0`
+- `harmonicLayer.harmonicLevels`: 各要素 `0.0..1.0`、8要素、対象倍音は `1,2,3,4,5,6,8,10`
+- `harmonicLayer.attackSec`: `0.001..0.25`
 - `expressionMap.velocityCurve`: `0.2..3.0`
 - `expressionMap.velocityToAmp/velocityToFmIndex/velocityToAttack/velocityToBass/velocityToLead/velocityToChord/velocityToPad/velocityToPluck/velocityToString/velocityToBody/modWheelToPad/modWheelToString/pressureToDrive/pressureToFilterDrive`: `0.0..1.0`
 - `expressionMap.velocityToBrightness/modWheelToBrightness/cc74ToBrightness/cc74ToPadBrightness/cc74ToStringBrightness`: `-1.0..1.0`
