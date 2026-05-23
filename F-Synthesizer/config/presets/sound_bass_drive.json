@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Bass synth drive",
+{
+  "displayName": "Bass Drive",
   "category": "Bass",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.29,
+        "amp": 0.225,
         "attackSec": 0.002,
         "decaySec": 0.14,
         "sustainLevel": 0.82,
@@ -19,7 +19,7 @@
           "unisonSpread": 0,
           "subOscLevel": 0.42,
           "pulseWidth": 0.5,
-          "drive": 0.34,
+          "drive": 0.13,
           "driftDepthCents": 2,
           "driftRateHz": 0.18,
           "smoothing": {
@@ -31,8 +31,8 @@
           },
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 2100,
-            "resonance": 0.82,
+            "cutoffHz": 1850.0,
+            "resonance": 0.7,
             "keytrack": 0.35,
             "drive": 0.0
           }
@@ -41,14 +41,14 @@
           "enabled": true,
           "velocityCurve": 0.85,
           "velocityToAmp": 0.88,
-          "velocityToBrightness": 0.07,
+          "velocityToBrightness": 0.049,
           "velocityToFmIndex": 0.0,
           "velocityToAttack": 0.08,
           "velocityToBass": 0.18,
           "velocityToLead": 0.0,
           "modWheelToBrightness": 0.04,
-          "pressureToDrive": 0.08,
-          "cc74ToBrightness": 0.15
+          "pressureToDrive": 0.025,
+          "cc74ToBrightness": 0.105
         },
         "layers": {
           "bass": {
@@ -57,16 +57,16 @@
             "level": 0.24,
             "subLevel": 0.32,
             "bodyLevel": 0.5,
-            "gritLevel": 0.42,
+            "gritLevel": 0.273,
             "cutoffHz": 1250,
-            "drive": 0.36,
+            "drive": 0.1368,
             "pitchOffsetSemis": -12,
             "velocityToDrive": 0.2,
             "focusHz": 210,
             "focusLevel": 0.22,
             "bodySaturation": 0.24,
             "gritTone": 0.58,
-            "attackBoost": 0.14,
+            "attackBoost": 0.105,
             "attackDecaySec": 0.045
           },
           "attack": {
@@ -77,17 +77,17 @@
             "brightness": 0.34,
             "bodyMix": 0.78,
             "pitchOffsetSemis": -12,
-            "drive": 0.09
+            "drive": 0.0342
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Bass",
-    "低域",
+    "bass",
+    "heavy",
+    "drive",
     "analog"
   ],
-  "description": "太いシンセベース。主低域向けで、キックとぶつかる場合はchannelMixを少し下げる。"
+  "description": "歪みを整理した主ベース。キックの下で低域を支えつつ、濁りを増やしすぎたくない時に使う。"
 }

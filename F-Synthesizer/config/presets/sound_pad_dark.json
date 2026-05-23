@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Strings dark pad",
+{
+  "displayName": "Pad Dark",
   "category": "Pad",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.13,
+        "amp": 0.105,
         "attackSec": 0.03,
         "decaySec": 0.4,
         "sustainLevel": 0.86,
@@ -46,18 +46,18 @@
           },
           "filter": {
             "mode": "ladderLowpass",
-            "cutoffHz": 3000,
-            "resonance": 0.82,
+            "cutoffHz": 2100.0,
+            "resonance": 0.58,
             "keytrack": 0.22,
-            "drive": 0.12
+            "drive": 0.024
           }
         },
         "expressionMap": {
           "enabled": true,
           "velocityCurve": 0.82,
           "velocityToAmp": 0.82,
-          "velocityToBrightness": 0.06,
-          "velocityToFmIndex": 0.04,
+          "velocityToBrightness": 0.042,
+          "velocityToFmIndex": 0.022,
           "velocityToAttack": 0.0,
           "velocityToBass": 0.0,
           "velocityToLead": 0.0,
@@ -65,14 +65,14 @@
           "velocityToPad": 0.18,
           "modWheelToBrightness": 0.06,
           "modWheelToPad": 0.18,
-          "pressureToDrive": 0.02,
-          "cc74ToBrightness": 0.12,
+          "pressureToDrive": 0.008,
+          "cc74ToBrightness": 0.084,
           "cc74ToPadBrightness": 0.22,
           "velocityToString": 0.22,
           "velocityToBody": 0.16,
           "modWheelToString": 0.16,
           "cc74ToStringBrightness": 0.22,
-          "pressureToFilterDrive": 0.12
+          "pressureToFilterDrive": 0.04
         },
         "layers": {
           "pad": {
@@ -86,7 +86,7 @@
             "motionDepth": 0.09,
             "motionRateHz": 0.17,
             "cutoffHz": 1550.0,
-            "drive": 0.02
+            "drive": 0.008
           },
           "chord": {
             "enabled": true,
@@ -106,7 +106,7 @@
             "detuneCents": 3.0,
             "spread": 0.3,
             "cutoffHz": 1750.0,
-            "drive": 0.015
+            "drive": 0.006
           },
           "string": {
             "enabled": true,
@@ -119,7 +119,7 @@
             "motionDepth": 0.16,
             "motionRateHz": 0.42,
             "bodySend": 0.48,
-            "drive": 0.06
+            "drive": 0.024
           },
           "body": {
             "enabled": true,
@@ -128,17 +128,17 @@
             "tone": 0.43,
             "damping": 0.36,
             "stereo": 0.38,
-            "drive": 0.05
+            "drive": 0.02
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Strings",
-    "dark pad",
-    "waveform"
+    "pad",
+    "dark",
+    "sweep",
+    "slow"
   ],
-  "description": "暗いストリングスパッド。背景で伸ばす用途、速い刻みには向かない。"
+  "description": "暗めの背景パッド。高域のざらつきを避けながら、曲の奥行きを作る。"
 }

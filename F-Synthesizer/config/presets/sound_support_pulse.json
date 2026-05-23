@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Keys chip pulse",
-  "category": "Keys",
+{
+  "displayName": "Support Pulse",
+  "category": "Support",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.1,
+        "amp": 0.065,
         "attackSec": 0.004,
         "decaySec": 0.14,
         "sustainLevel": 0.62,
@@ -45,10 +45,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Keys",
-    "chiptune",
-    "PSG"
+    "support",
+    "pulse",
+    "psg",
+    "edge"
   ],
-  "description": "チップ系キー補助。FMやanalogの輪郭に薄く足す用途。"
+  "description": "控えめなパルス補助。メロディやベースに、レトロな細い線を重ねたい時に使う。"
 }

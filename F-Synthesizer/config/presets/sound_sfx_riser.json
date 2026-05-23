@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Sfx noise riser",
+{
+  "displayName": "SFX Riser",
   "category": "SFX",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.14,
+        "amp": 0.095,
         "attackSec": 0.001,
         "decaySec": 0.24,
         "sustainLevel": 0.0,
@@ -16,8 +16,8 @@
           "noise": "pink",
           "filter": {
             "mode": "bandpass",
-            "cutoffHz": 900,
-            "resonance": 2.4,
+            "cutoffHz": 720,
+            "resonance": 0.5,
             "drive": 0.0
           }
         },
@@ -26,10 +26,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "SFX",
+    "sfx",
     "riser",
-    "noise"
+    "noise",
+    "transition"
   ],
-  "description": "ノイズスイープのライザー。場面転換用で、通常フレーズには使わない。"
+  "description": "控えめなノイズ上昇音。場面転換や盛り上げに、目立ちすぎない動きを足す。"
 }

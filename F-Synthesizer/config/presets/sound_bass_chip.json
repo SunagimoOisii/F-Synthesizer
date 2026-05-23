@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Bass chip triangle",
+{
+  "displayName": "Bass Chip",
   "category": "Bass",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.11,
+        "amp": 0.085,
         "attackSec": 0.006,
         "decaySec": 0.18,
         "sustainLevel": 0.74,
@@ -15,8 +15,8 @@
           "type": "psg",
           "wave": "triangle",
           "duty": 3,
-          "volumeSteps": 8,
-          "maxVoices": 1,
+          "volumeSteps": 11,
+          "maxVoices": 2,
           "filter": {
             "mode": "bypass",
             "cutoffHz": 8000.0,
@@ -45,10 +45,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Bass",
-    "PSG",
-    "support"
+    "bass",
+    "chip",
+    "triangle",
+    "psg"
   ],
-  "description": "PSG triangleの薄い低域補助。主ベースの下に少量足してチップ感を出す。"
+  "description": "チップ音らしい短いベース。階段感を抑えたレトロな低音を足したい時に使う。"
 }

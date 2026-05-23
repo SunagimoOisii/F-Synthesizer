@@ -15,7 +15,7 @@ git status --short --branch
 
 ## 現在の状態
 
-- GUI: 遊ぶ / 作る / 書き出す導線、Sound Preview、Waveform / Spectrum / VU 表示、ピアノロール編集、ドラムステップシーケンサー。
+- GUI: Play / Compose / Export / Advanced 導線、Sound Preview、Waveform / Spectrum / VU 表示、ピアノロール編集、ドラムステップシーケンサー。
 - レンダリング: waveform、analog 風 waveform、FM、noise、drum、drumkit、stereo pan、pitch bend、pressure、modulation、master effects。
 - 設定: `config/base.json`、`config/default.json`、`config/presets/*.json`、GUI ワークスペース状態。
 - 方針: 短い編集→試聴サイクル、気持ちよいレトロゲーム風サウンド、初心者が触りやすい操作。
@@ -23,7 +23,7 @@ git status --short --branch
 ## 次にやること
 
 1. この整理後の検証導線を実行する。
-2. GUI を起動し、遊ぶ / 作る / 書き出すの主要導線が開けることを確認する。
+2. GUI を起動し、Play / Compose / Export / Advanced の主要導線が開けることを確認する。
 3. 機能作業は、音の気持ちよさまたは試聴速度の改善に効くものから再開する。
 
 ## ビルドと実行
@@ -43,7 +43,7 @@ git status --short --branch
 
 # CLI 実行
 .\build\x64\Debug\F-Synthesizer.exe --cli
-.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_brass_ensemble
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset sound_lead_blade
 .\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
 ```
 

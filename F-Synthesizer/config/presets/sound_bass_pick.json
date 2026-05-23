@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Bass pick fm",
+{
+  "displayName": "Bass Pick",
   "category": "Bass",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.27,
+        "amp": 0.22,
         "attackSec": 0.002,
         "decaySec": 0.12,
         "sustainLevel": 0.76,
@@ -14,13 +14,13 @@
         "source": {
           "type": "fm",
           "algorithm": 3,
-          "feedback": 0.16,
+          "feedback": 0.05,
           "ops": [
             {
               "wave": "sine",
               "ratio": 0.5,
-              "level": 1.0,
-              "index": 2.0,
+              "level": 0.86,
+              "index": 1.1,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.09,
@@ -39,8 +39,8 @@
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.78,
-              "index": 0.9,
+              "level": 0.6708,
+              "index": 0.495,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.09,
@@ -59,8 +59,8 @@
             {
               "wave": "sine",
               "ratio": 2,
-              "level": 0.34,
-              "index": 0.35,
+              "level": 0.2924,
+              "index": 0.1925,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.09,
@@ -79,8 +79,8 @@
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.24,
-              "index": 0,
+              "level": 0.2064,
+              "index": 0.0,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.09,
@@ -97,7 +97,7 @@
               }
             }
           ],
-          "drive": 0.05,
+          "drive": 0.015,
           "modulation": {
             "env2": {
               "attackSec": 0.0,
@@ -126,14 +126,14 @@
           "enabled": true,
           "velocityCurve": 0.9,
           "velocityToAmp": 0.9,
-          "velocityToBrightness": 0.08,
-          "velocityToFmIndex": 0.1,
+          "velocityToBrightness": 0.056,
+          "velocityToFmIndex": 0.055,
           "velocityToAttack": 0.14,
           "velocityToBass": 0.2,
           "velocityToLead": 0.0,
           "modWheelToBrightness": 0.04,
-          "pressureToDrive": 0.06,
-          "cc74ToBrightness": 0.15
+          "pressureToDrive": 0.024,
+          "cc74ToBrightness": 0.105
         },
         "layers": {
           "bass": {
@@ -142,16 +142,16 @@
             "level": 0.28,
             "subLevel": 0.42,
             "bodyLevel": 0.5,
-            "gritLevel": 0.34,
+            "gritLevel": 0.221,
             "cutoffHz": 1050,
-            "drive": 0.32,
+            "drive": 0.1,
             "pitchOffsetSemis": -12,
             "velocityToDrive": 0.18,
             "focusHz": 185,
             "focusLevel": 0.24,
             "bodySaturation": 0.22,
             "gritTone": 0.46,
-            "attackBoost": 0.18,
+            "attackBoost": 0.13,
             "attackDecaySec": 0.04
           },
           "attack": {
@@ -162,17 +162,17 @@
             "brightness": 0.4,
             "bodyMix": 0.72,
             "pitchOffsetSemis": -12,
-            "drive": 0.08
+            "drive": 0.0304
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Bass",
+    "bass",
+    "attack",
     "pick",
-    "FM"
+    "fm"
   ],
-  "description": "ピック感のあるFMベース。速い刻みや小さい再生環境で輪郭を残したい低域向け。"
+  "description": "アタックが見えるFMベース。ピック感を残しながら、ざらつきを抑えてリズムを支える。"
 }

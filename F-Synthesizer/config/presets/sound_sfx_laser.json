@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Sfx laser fm",
+{
+  "displayName": "SFX Laser",
   "category": "SFX",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.16,
+        "amp": 0.12,
         "attackSec": 0.001,
         "decaySec": 0.2,
         "sustainLevel": 0.0,
@@ -14,13 +14,13 @@
         "source": {
           "type": "fm",
           "algorithm": 0,
-          "feedback": 0.3,
+          "feedback": 0.08,
           "ops": [
             {
               "wave": "sine",
               "ratio": 2,
-              "level": 0.82,
-              "index": 2.2,
+              "level": 0.6724,
+              "index": 1.056,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.24,
@@ -39,8 +39,8 @@
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.38,
-              "index": 0.8,
+              "level": 0.3116,
+              "index": 0.384,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.24,
@@ -59,8 +59,8 @@
             {
               "wave": "sine",
               "ratio": 4,
-              "level": 0.26,
-              "index": 0.35,
+              "level": 0.2132,
+              "index": 0.168,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.24,
@@ -79,8 +79,8 @@
             {
               "wave": "sine",
               "ratio": 0.5,
-              "level": 0.15,
-              "index": 0,
+              "level": 0.123,
+              "index": 0.0,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.24,
@@ -117,8 +117,8 @@
           },
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 7000,
-            "resonance": 0.9,
+            "cutoffHz": 5600,
+            "resonance": 0.78,
             "drive": 0.0
           }
         },
@@ -127,10 +127,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "SFX",
+    "sfx",
     "laser",
-    "FM"
+    "fm",
+    "accent"
   ],
-  "description": "短いFMレーザー効果音。曲の主役ではなく場面転換やアクセント用。"
+  "description": "短いレーザー効果音。耳に刺さる高域を抑えた、アクセント向けのレトロSFX。"
 }

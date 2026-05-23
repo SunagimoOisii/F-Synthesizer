@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Keys electric piano",
+{
+  "displayName": "Keys Electric",
   "category": "Keys",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.15,
+        "amp": 0.125,
         "attackSec": 0.004,
         "decaySec": 0.36,
         "sustainLevel": 0.0,
@@ -14,13 +14,13 @@
         "source": {
           "type": "fm",
           "algorithm": 2,
-          "feedback": 0.05,
+          "feedback": 0.015,
           "ops": [
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.66,
-              "index": 0.8,
+              "level": 0.5544,
+              "index": 0.36,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.42,
@@ -39,8 +39,8 @@
             {
               "wave": "sine",
               "ratio": 2.01,
-              "level": 0.38,
-              "index": 0.35,
+              "level": 0.3192,
+              "index": 0.1575,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.42,
@@ -59,8 +59,8 @@
             {
               "wave": "sine",
               "ratio": 3.02,
-              "level": 0.22,
-              "index": 0.18,
+              "level": 0.1848,
+              "index": 0.081,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.42,
@@ -79,8 +79,8 @@
             {
               "wave": "sine",
               "ratio": 0.5,
-              "level": 0.16,
-              "index": 0,
+              "level": 0.1344,
+              "index": 0.0,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.42,
@@ -100,7 +100,7 @@
           "drive": 0.0,
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 6200,
+            "cutoffHz": 5600,
             "resonance": 0.55,
             "drive": 0.0
           }
@@ -114,17 +114,17 @@
             "brightness": 0.7,
             "bodyMix": 0.42,
             "pitchOffsetSemis": 12,
-            "drive": 0.06
+            "drive": 0.024
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Keys",
-    "electric piano",
-    "FM"
+    "keys",
+    "electric",
+    "chord",
+    "fm"
   ],
-  "description": "エレピ代役のFMキー。ベル感は控えめで、コード伴奏と短いリフ向け。"
+  "description": "丸いエレクトリックキー。コードや短いフレーズを濁らせずに置きたい時に使う。"
 }

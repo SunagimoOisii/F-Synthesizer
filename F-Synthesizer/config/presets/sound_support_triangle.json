@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Support psg triangle",
+{
+  "displayName": "Support Triangle",
   "category": "Support",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.09,
+        "amp": 0.07,
         "attackSec": 0.006,
         "decaySec": 0.18,
         "sustainLevel": 0.74,
@@ -15,8 +15,8 @@
           "type": "psg",
           "wave": "triangle",
           "duty": 3,
-          "volumeSteps": 8,
-          "maxVoices": 1,
+          "volumeSteps": 12,
+          "maxVoices": 2,
           "filter": {
             "mode": "bypass",
             "cutoffHz": 8000.0,
@@ -45,10 +45,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Support",
-    "PSG triangle",
-    "chip"
+    "support",
+    "triangle",
+    "psg",
+    "low"
   ],
-  "description": "低域の下支えに薄く足すPSG triangle補助。主ベースの代替ではない。"
+  "description": "やわらかい三角波補助。低域やシンプルなフレーズに、目立ちすぎない芯を足す。"
 }

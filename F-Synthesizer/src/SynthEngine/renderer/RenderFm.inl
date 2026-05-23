@@ -3,10 +3,11 @@
 double SampleOp(
     WaveType wave,
     double phase,
+    double phaseInc,
     double modSample,
     double index)
 {
-    return SampleWavePhase(wave, phase + modSample * index);
+    return SampleWavePhase(wave, phase + modSample * index, phaseInc);
 }
 
 double ShapeFmEnv(double value, double curve)
@@ -49,79 +50,81 @@ void RenderFmSource(
     const double indexScale = mod.fmIndexMul * in.expressionFmIndexMul;
     const double feedbackSample = fs.op0FeedbackSample * src.feedback;
     const double ampScale = mod.ampMul;
+    double opPhaseInc[4]{};
     double opLevel[4]{};
     double opIndex[4]{};
     for (int op = 0; op < 4; op++)
     {
+        opPhaseInc[op] = voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.ops[op].ratio;
         opLevel[op] = src.ops[op].level * StepFmOperatorEnv(fs.opLevelEnv[op], src.ops[op].levelEnv, in.dt);
         opIndex[op] = src.ops[op].index * indexScale * StepFmOperatorEnv(fs.opIndexEnv[op], src.ops[op].indexEnv, in.dt);
     }
-    const double op0 = SampleOp(src.ops[0].wave, fs.opPhase[0], feedbackSample, opIndex[0]);
+    const double op0 = SampleOp(src.ops[0].wave, fs.opPhase[0], opPhaseInc[0], feedbackSample, opIndex[0]);
 
     switch (src.algorithm)
     {
     case 1:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out0 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, opIndex[2]) * opLevel[2];
-        const double out2 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, opIndex[3]) * opLevel[3];
+        const double out0 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], 0.0, opIndex[2]) * opLevel[2];
+        const double out2 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], mod2, opIndex[3]) * opLevel[3];
         frame.sample = (out0 + out2) * 0.5 * ampScale;
         break;
     }
     case 2:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod0, opIndex[2]) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod0, opIndex[3]) * opLevel[3];
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], mod0, opIndex[2]) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], mod0, opIndex[3]) * opLevel[3];
         frame.sample = (out1 + out2 + out3) / 3.0 * ampScale;
         break;
     }
     case 3:
     {
         const double mod0 = op0 * opLevel[0];
-        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], mod1, opIndex[2]) * opLevel[2];
-        const double out = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, opIndex[3]) * opLevel[3];
+        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], mod1, opIndex[2]) * opLevel[2];
+        const double out = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], mod2, opIndex[3]) * opLevel[3];
         frame.sample = out * ampScale;
         break;
     }
     case 4:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
         const double cross = (mod0 + feedbackSample) * 0.35;
-        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], cross, opIndex[2] * 1.15) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], mod2, opIndex[3] * 1.10) * opLevel[3];
+        const double mod2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], cross, opIndex[2] * 1.15) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], mod2, opIndex[3] * 1.10) * opLevel[3];
         frame.sample = (out1 * 0.48 + out3 * 0.52) * ampScale;
         break;
     }
     case 5:
     {
         const double mod0 = op0 * opLevel[0];
-        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1] * 1.20) * opLevel[1];
+        const double mod1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1] * 1.20) * opLevel[1];
         const double shared = (mod0 * 0.70) + (mod1 * 0.30);
-        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], shared, opIndex[2] * 1.10) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], shared - mod1 * 0.20, opIndex[3] * 0.95) * opLevel[3];
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], shared, opIndex[2] * 1.10) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], shared - mod1 * 0.20, opIndex[3] * 0.95) * opLevel[3];
         frame.sample = (mod1 * 0.25 + out2 * 0.38 + out3 * 0.37) * ampScale;
         break;
     }
     case 6:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
-        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, opIndex[2]) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], 0.0, opIndex[3]) * opLevel[3];
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], 0.0, opIndex[2]) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], 0.0, opIndex[3]) * opLevel[3];
         frame.sample = (out1 + out2 + out3) / 3.0 * ampScale;
         break;
     }
     case 7:
     {
         const double out0 = op0 * opLevel[0];
-        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], 0.0, opIndex[1]) * opLevel[1];
-        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], 0.0, opIndex[2]) * opLevel[2];
-        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], 0.0, opIndex[3]) * opLevel[3];
+        const double out1 = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], 0.0, opIndex[1]) * opLevel[1];
+        const double out2 = SampleOp(src.ops[2].wave, fs.opPhase[2], opPhaseInc[2], 0.0, opIndex[2]) * opLevel[2];
+        const double out3 = SampleOp(src.ops[3].wave, fs.opPhase[3], opPhaseInc[3], 0.0, opIndex[3]) * opLevel[3];
         frame.sample = (out0 + out1 + out2 + out3) * 0.25 * ampScale;
         break;
     }
@@ -129,7 +132,7 @@ void RenderFmSource(
     default:
     {
         const double mod0 = op0 * opLevel[0];
-        const double out = SampleOp(src.ops[1].wave, fs.opPhase[1], mod0, opIndex[1]) * opLevel[1];
+        const double out = SampleOp(src.ops[1].wave, fs.opPhase[1], opPhaseInc[1], mod0, opIndex[1]) * opLevel[1];
         frame.sample = out * ampScale;
         break;
     }
@@ -145,7 +148,7 @@ void RenderFmSource(
 
     for (int k = 0; k < 4; k++)
     {
-        fs.opPhase[k] += voices.phaseInc[i] * in.pitchFactor * mod.pitchMul * src.ops[k].ratio;
+        fs.opPhase[k] += opPhaseInc[k];
         if (fs.opPhase[k] >= 1.0)
         {
             fs.opPhase[k] -= 1.0;

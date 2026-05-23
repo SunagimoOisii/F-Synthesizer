@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Guitar glass harmonics",
+{
+  "displayName": "Keys Bell",
   "category": "Keys",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.11,
+        "amp": 0.085,
         "attackSec": 0.008,
         "decaySec": 0.34,
         "sustainLevel": 0.0,
@@ -28,10 +28,10 @@
           },
           "ringModEnabled": true,
           "ringModRatio": 1.5,
-          "ringModMix": 0.18,
+          "ringModMix": 0.055,
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 5200,
+            "cutoffHz": 3900.0,
             "resonance": 0.58,
             "keytrack": 0.1,
             "drive": 0.0
@@ -42,10 +42,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Guitar",
-    "harmonics",
-    "waveform"
+    "keys",
+    "bell",
+    "glass",
+    "accent"
   ],
-  "description": "ギターハーモニクス風の薄い上物。アクセント用で常時主役にはしない。"
+  "description": "澄んだベル系キー。金属感を控えめにして、短い装飾音や高いフレーズに使う。"
 }

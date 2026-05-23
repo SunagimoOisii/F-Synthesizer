@@ -38,7 +38,7 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 # CLI
 .\build\x64\Debug\F-Synthesizer.exe --cli
 .\build\x64\Debug\F-Synthesizer.exe --cli --config .\config\default.json
-.\build\x64\Debug\F-Synthesizer.exe --cli --preset retro_heavy_fm_brass_ensemble
+.\build\x64\Debug\F-Synthesizer.exe --cli --preset sound_lead_blade
 .\build\x64\Debug\F-Synthesizer.exe --help
 ```
 

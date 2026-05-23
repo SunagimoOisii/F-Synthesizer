@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Lead motion pulse",
+{
+  "displayName": "Lead Sync",
   "category": "Lead",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.11,
+        "amp": 0.115,
         "attackSec": 0.006,
         "decaySec": 0.18,
         "sustainLevel": 0.64,
@@ -19,7 +19,7 @@
           "unisonSpread": 0.25,
           "subOscLevel": 0.12,
           "pulseWidth": 0.44,
-          "drive": 0.12,
+          "drive": 0.045,
           "driftDepthCents": 3,
           "driftRateHz": 0.16,
           "smoothing": {
@@ -49,8 +49,8 @@
           },
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 3400,
-            "resonance": 0.78,
+            "cutoffHz": 3300.0,
+            "resonance": 0.7,
             "keytrack": 0.22,
             "drive": 0.0
           }
@@ -60,10 +60,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Lead",
+    "lead",
+    "motion",
     "pulse",
-    "motion"
+    "sync"
   ],
-  "description": "緩い動きのあるpulseリード。主旋律よりも反復フレーズやオブリ向け。"
+  "description": "同期感のあるレトロリード。荒さを抑えつつ、短いメロディに硬い輪郭を足したい時に使う。"
 }

@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Lead metal fm",
+{
+  "displayName": "Lead Metal",
   "category": "Lead",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.18,
+        "amp": 0.145,
         "attackSec": 0.004,
         "decaySec": 0.15,
         "sustainLevel": 0.72,
@@ -14,13 +14,13 @@
         "source": {
           "type": "fm",
           "algorithm": 7,
-          "feedback": 0.24,
+          "feedback": 0.08,
           "ops": [
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.86,
-              "index": 1.8,
+              "level": 0.7568,
+              "index": 1.044,
               "levelEnv": {
                 "attackSec": 0.002,
                 "decaySec": 0.12,
@@ -39,8 +39,8 @@
             {
               "wave": "sine",
               "ratio": 1.5,
-              "level": 0.55,
-              "index": 0.7,
+              "level": 0.484,
+              "index": 0.406,
               "levelEnv": {
                 "attackSec": 0.002,
                 "decaySec": 0.12,
@@ -59,8 +59,8 @@
             {
               "wave": "sine",
               "ratio": 2,
-              "level": 0.46,
-              "index": 0.35,
+              "level": 0.4048,
+              "index": 0.203,
               "levelEnv": {
                 "attackSec": 0.002,
                 "decaySec": 0.12,
@@ -79,8 +79,8 @@
             {
               "wave": "sine",
               "ratio": 0.5,
-              "level": 0.36,
-              "index": 0,
+              "level": 0.3168,
+              "index": 0.0,
               "levelEnv": {
                 "attackSec": 0.002,
                 "decaySec": 0.12,
@@ -97,7 +97,7 @@
               }
             }
           ],
-          "drive": 0.08,
+          "drive": 0.02,
           "modulation": {
             "env2": {
               "attackSec": 0.0,
@@ -117,8 +117,8 @@
           },
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 6400,
-            "resonance": 0.82,
+            "cutoffHz": 5600,
+            "resonance": 0.78,
             "drive": 0.0
           }
         },
@@ -126,31 +126,31 @@
           "enabled": true,
           "velocityCurve": 0.9,
           "velocityToAmp": 0.9,
-          "velocityToBrightness": 0.2,
-          "velocityToFmIndex": 0.18,
+          "velocityToBrightness": 0.14,
+          "velocityToFmIndex": 0.099,
           "velocityToAttack": 0.16,
           "velocityToBass": 0.0,
           "velocityToLead": 0.2,
           "modWheelToBrightness": 0.14,
-          "pressureToDrive": 0.06,
-          "cc74ToBrightness": 0.25
+          "pressureToDrive": 0.024,
+          "cc74ToBrightness": 0.175
         },
         "layers": {
           "lead": {
             "enabled": true,
             "type": "blade",
             "level": 0.13,
-            "edgeLevel": 0.42,
+            "edgeLevel": 0.3,
             "bodyLevel": 0.26,
             "detuneCents": 4.5,
             "pitchBendSemis": 0.55,
             "bendDecaySec": 0.04,
-            "attackBoost": 0.2,
+            "attackBoost": 0.13,
             "attackDecaySec": 0.035,
-            "drive": 0.1,
-            "characterLevel": 0.18,
+            "drive": 0.045,
+            "characterLevel": 0.12,
             "characterTone": 0.68,
-            "biteLevel": 0.16,
+            "biteLevel": 0.104,
             "biteDecaySec": 0.022,
             "wobbleDepthCents": 4.5,
             "wobbleRateHz": 5.1
@@ -163,17 +163,17 @@
             "brightness": 0.62,
             "bodyMix": 0.48,
             "pitchOffsetSemis": 7,
-            "drive": 0.1
+            "drive": 0.045
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Lead",
-    "metal",
-    "FM"
+    "lead",
+    "metallic",
+    "bright",
+    "fm"
   ],
-  "description": "金属的な倍音を持つFMリード。明るすぎないが前に出したい主旋律向け。"
+  "description": "金属的な倍音を控えめに整えた強いリード。ソロや決めフレーズを前に出したい時に使う。"
 }

@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Guitar acoustic pluck",
+{
+  "displayName": "Keys Pluck",
   "category": "Keys",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.16,
+        "amp": 0.13,
         "attackSec": 0.004,
         "decaySec": 0.16,
         "sustainLevel": 0.34,
@@ -14,13 +14,13 @@
         "source": {
           "type": "fm",
           "algorithm": 0,
-          "feedback": 0.1,
+          "feedback": 0.025,
           "ops": [
             {
               "wave": "sine",
               "ratio": 1,
-              "level": 0.78,
-              "index": 1.25,
+              "level": 0.6552,
+              "index": 0.575,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.11,
@@ -39,8 +39,8 @@
             {
               "wave": "sine",
               "ratio": 2,
-              "level": 0.42,
-              "index": 0.45,
+              "level": 0.3528,
+              "index": 0.207,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.11,
@@ -59,8 +59,8 @@
             {
               "wave": "sine",
               "ratio": 0.5,
-              "level": 0.26,
-              "index": 0.15,
+              "level": 0.2184,
+              "index": 0.069,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.11,
@@ -79,8 +79,8 @@
             {
               "wave": "sine",
               "ratio": 3,
-              "level": 0.14,
-              "index": 0,
+              "level": 0.1176,
+              "index": 0.0,
               "levelEnv": {
                 "attackSec": 0.0,
                 "decaySec": 0.11,
@@ -97,7 +97,7 @@
               }
             }
           ],
-          "drive": 0.03,
+          "drive": 0.005,
           "modulation": {
             "env2": {
               "attackSec": 0.0,
@@ -119,7 +119,7 @@
             "mode": "ladderLowpass",
             "cutoffHz": 4800,
             "resonance": 0.72,
-            "drive": 0.18
+            "drive": 0.04
           }
         },
         "layers": {
@@ -131,17 +131,17 @@
             "brightness": 0.58,
             "bodyMix": 0.46,
             "pitchOffsetSemis": 0,
-            "drive": 0.07
+            "drive": 0.0245
           },
           "pluck": {
             "enabled": true,
             "level": 0.22,
             "decaySec": 0.22,
             "brightness": 0.66,
-            "noiseMix": 0.32,
+            "noiseMix": 0.1,
             "pitchOffsetSemis": 0,
             "bodySend": 0.52,
-            "drive": 0.12
+            "drive": 0.04
           },
           "body": {
             "enabled": true,
@@ -150,7 +150,7 @@
             "tone": 0.58,
             "damping": 0.28,
             "stereo": 0.22,
-            "drive": 0.08
+            "drive": 0.028
           }
         },
         "expressionMap": {
@@ -159,16 +159,16 @@
           "velocityToAmp": 0.9,
           "velocityToPluck": 0.35,
           "velocityToBody": 0.22,
-          "pressureToFilterDrive": 0.18
+          "pressureToFilterDrive": 0.04
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Guitar",
-    "acoustic pluck",
-    "FM"
+    "keys",
+    "pluck",
+    "attack",
+    "rhythm"
   ],
-  "description": "レトロなアコギ代役。ピックの頭と箱鳴りを使い、コード刻みや単音アルペジオ向け。"
+  "description": "短く切れるプラック。アタックを残しながら、耳に残るざらつきを抑えた伴奏向けの音。"
 }

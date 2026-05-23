@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Lead wide pwm",
+{
+  "displayName": "Lead Wide",
   "category": "Lead",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "0": {
-        "amp": 0.16,
+        "amp": 0.135,
         "attackSec": 0.008,
         "decaySec": 0.18,
         "sustainLevel": 0.74,
@@ -15,11 +15,11 @@
           "type": "analog",
           "wave": "square",
           "unisonVoices": 3,
-          "unisonDetuneCents": 5,
+          "unisonDetuneCents": 4.5,
           "unisonSpread": 0.4,
           "subOscLevel": 0.14,
           "pulseWidth": 0.46,
-          "drive": 0.18,
+          "drive": 0.055,
           "driftDepthCents": 3,
           "driftRateHz": 0.18,
           "smoothing": {
@@ -49,8 +49,8 @@
           },
           "filter": {
             "mode": "lowpass",
-            "cutoffHz": 4000,
-            "resonance": 0.9,
+            "cutoffHz": 3500.0,
+            "resonance": 0.68,
             "keytrack": 0.25,
             "drive": 0.0
           }
@@ -59,31 +59,31 @@
           "enabled": true,
           "velocityCurve": 0.8,
           "velocityToAmp": 0.85,
-          "velocityToBrightness": 0.14,
+          "velocityToBrightness": 0.098,
           "velocityToFmIndex": 0.0,
           "velocityToAttack": 0.08,
           "velocityToBass": 0.0,
           "velocityToLead": 0.1,
           "modWheelToBrightness": 0.12,
-          "pressureToDrive": 0.04,
-          "cc74ToBrightness": 0.25
+          "pressureToDrive": 0.016,
+          "cc74ToBrightness": 0.175
         },
         "layers": {
           "lead": {
             "enabled": true,
             "type": "brass",
             "level": 0.08,
-            "edgeLevel": 0.22,
+            "edgeLevel": 0.1584,
             "bodyLevel": 0.32,
             "detuneCents": 4.0,
             "pitchBendSemis": 0.25,
             "bendDecaySec": 0.055,
-            "attackBoost": 0.1,
+            "attackBoost": 0.075,
             "attackDecaySec": 0.05,
-            "drive": 0.06,
-            "characterLevel": 0.06,
+            "drive": 0.027,
+            "characterLevel": 0.0432,
             "characterTone": 0.42,
-            "biteLevel": 0.06,
+            "biteLevel": 0.039,
             "biteDecaySec": 0.032,
             "wobbleDepthCents": 2.5,
             "wobbleRateHz": 3.4
@@ -96,17 +96,17 @@
             "brightness": 0.42,
             "bodyMix": 0.62,
             "pitchOffsetSemis": -2,
-            "drive": 0.05
+            "drive": 0.0225
           }
         }
       }
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Lead",
-    "PWM",
-    "wide"
+    "lead",
+    "wide",
+    "pwm",
+    "bright"
   ],
-  "description": "PWMの揺れと広がりを持つワイドリード。対旋律や上物向け。"
+  "description": "広がりのある主旋律リード。厚みを出しながら、ノイズ感を抑えて前に出したい時に使う。"
 }

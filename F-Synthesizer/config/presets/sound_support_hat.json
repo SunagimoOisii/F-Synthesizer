@@ -1,12 +1,12 @@
-﻿{
-  "displayName": "Support noise hat",
+{
+  "displayName": "Support Hat",
   "category": "Support",
   "internal": false,
   "format": "projectModel.v1",
   "project": {
     "channels": {
       "9": {
-        "amp": 0.08,
+        "amp": 0.055,
         "attackSec": 0.001,
         "decaySec": 0.07,
         "sustainLevel": 0.0,
@@ -16,8 +16,8 @@
           "noise": "pink",
           "filter": {
             "mode": "highpass",
-            "cutoffHz": 4700,
-            "resonance": 0.65,
+            "cutoffHz": 5200,
+            "resonance": 0.48,
             "drive": 0.0
           }
         },
@@ -26,10 +26,10 @@
     }
   },
   "tags": [
-    "重厚レトロ",
-    "Support",
+    "support",
     "hat",
-    "noise"
+    "noise",
+    "thin"
   ],
-  "description": "ドラムに薄く重ねるノイズハット補助。単体主役にはしない。"
+  "description": "薄いハット補助。ドラムやリズムに、耳につきにくい高域の刻みを足す。"
 }
