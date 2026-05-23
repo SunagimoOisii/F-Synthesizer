@@ -51,6 +51,15 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 - UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
 - 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 
+## 実装前確認
+
+大きめの変更では、コード編集前に次を確認します。
+
+- 主な責務が `GUI / App / Core / SynthEngine / Config / MIDI / IO` のどこに属するか。
+- 公開型、保存形式、preset、schema、GUI 状態へ影響するか。
+- 必要な検証が標準 check、runtime smoke、preset check、手動 GUI/音声確認のどれか。
+- `SynthEngine.h`、`GUIState`、config load/save/schema、GUI `.inl` 群へ変更が集中していないか。
+
 ## 実行時出力
 
 - ビルド出力: `build/`
@@ -64,5 +73,6 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 - `README.md` を再開入口として正確に保つ。
 - モジュール境界、実行フロー、設定契約、GUI 契約、レンダリング契約が変わった場合は `docs/Architecture.md` を更新する。
+- 開発方針や設計基準が変わった場合は `docs/ArchitectureAssessment.md` を更新する。
 - コマンド、依存関係、検証方針が変わった場合はこのファイルを更新する。
 - 履歴ログはリポジトリに増やさない。古い文脈が必要な場合は Git 履歴を使う。

@@ -8,7 +8,8 @@
 2. `README.md` を読む。
 3. 構造、設定、GUI 契約、レンダリング挙動に触れる変更では `docs/Architecture.md` を参照する。
 4. 機能や UX の優先順位を判断する場合は `docs/PRODUCT_POLICY.md` を参照する。
-5. ビルド、依存関係、実行、検証コマンドは `docs/OPERATIONS.md` を参照する。
+5. 設計判断や大きな変更では `docs/ArchitectureAssessment.md` を参照する。
+6. ビルド、依存関係、実行、検証コマンドは `docs/OPERATIONS.md` を参照する。
 
 ## 作業ルール
 
@@ -16,9 +17,22 @@
 - 無関係なコードやドキュメントを書き換えない。
 - ユーザーが明示しない限り、破壊的な Git 操作をしない。
 - 新しい抽象化より、既存のプロジェクトパターンを優先する。
+- ただし、既存パターンを理由に `SynthEngine.h`、`GUIState`、config load/save/schema、GUI `.inl` 群へ直足しし続けない。
 - `src/` と `include/` では、非自明な挙動や制約を補う場合だけコメントを追加する。
 - 初心者が触りやすい GUI と、短い編集→試聴サイクルを維持する。
 - ユーザーが明示しない限り、高度な DAW 機能、プラグイン、共同編集、プロ専用の深い操作を先行実装しない。
+
+## 設計レビュー
+
+継続開発性を最優先します。機能追加や整理では、実装前に次を短く確認します。
+
+- 変更の主な責務が `GUI / App / Core / SynthEngine / Config / MIDI / IO` のどこに属するか。
+- 公開型、保存形式、preset、schema、GUI 状態へ影響するか。
+- `SynthEngine.h` や `GUIState` へ新しい状態を足す前に、分割や helper で扱う方がよいか。
+- GUI に音生成ロジックを置いていないか。renderer に UI 都合や保存形式都合を持ち込んでいないか。
+- 必要な検証が標準 check、runtime smoke、preset check、手動 GUI/音声確認のどれか。
+
+大きめの変更では、コード編集前に短い設計メモ相当の方針確認を行います。対象は、複数レイヤーをまたぐ変更、公開 config を変える変更、既存 preset の音を変える変更、または巨大ファイルへ追記する変更です。
 
 ## ドキュメント方針
 
@@ -26,6 +40,7 @@
 
 - `README.md`: 現在の再開手順、次作業、よく使うコマンド。
 - `docs/Architecture.md`: アーキテクチャ、データフロー、設定、GUI、レンダリング、音源契約。
+- `docs/ArchitectureAssessment.md`: 開発方針と設計基準。
 - `docs/PRODUCT_POLICY.md`: プロダクト方針と機能判断ルール。
 - `docs/OPERATIONS.md`: コマンド、依存関係、検証、保守。
 - `docs/PRESETS.md`: プリセット一覧。

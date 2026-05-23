@@ -51,6 +51,7 @@ git status --short --branch
 
 - `AGENTS.md`: AI エージェント向けルールと更新方針。
 - `docs/Architecture.md`: アーキテクチャ、データフロー、設定、GUI、音源契約。
+- `docs/ArchitectureAssessment.md`: 開発方針と設計基準。
 - `docs/PRODUCT_POLICY.md`: プロダクト価値と機能判断ルール。
 - `docs/OPERATIONS.md`: ビルド、依存関係、実行、検証の詳細。
 - `docs/PRESETS.md`: プリセット一覧。

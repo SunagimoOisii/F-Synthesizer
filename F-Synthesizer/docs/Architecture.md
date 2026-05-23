@@ -1,6 +1,7 @@
 # アーキテクチャ
 
 このファイルを F-Synthesizer のコンパクトなアーキテクチャ正本にします。
+開発方針と設計基準は `docs/ArchitectureAssessment.md` に置きます。
 
 ## レイヤー構成
 
@@ -29,6 +30,32 @@ flowchart LR
 
 依存方向は `gui -> app -> core -> SynthEngine` を基本にします。Core のレンダリングコードは
 GUI 状態に依存しません。
+
+## 守る境界
+
+- GUI は編集、表示、プレビュー操作を担当し、音生成アルゴリズムを直接実装しない。
+- App は CLI/GUI からの実行条件を `AppConfig` と `RenderOptions` にそろえる。
+- Core は app から SynthEngine への薄い実行境界に保つ。
+- SynthEngine は音生成、voice、modulation、filter、mix/effects の実行時処理に集中する。
+- Config は JSON load/save、preset merge、schema validation を担当し、GUI と renderer に同じ契約を重複させない。
+- Source capability と schema の共通判断は `SourceRegistry` に集約する。
+
+## 移行後のモデル境界
+
+アーキテクチャ改善中は、既存の `AppConfig` と `GUIState` を急に廃止せず、次のモデルへ段階移行します。
+
+- `ProjectModel`: 保存、preset、config の正本。JSON load/save は最終的にこのモデルを入出力する。
+- `EditorModel`: GUI 編集用の状態。GUI 操作感を維持しながら `GUIState` から段階的に移す。
+- `RenderConfig`: SynthEngine へ渡す実行用モデル。GUI や保存形式に依存しない render 入力にする。
+- `AppConfig`: 当面の CLI/GUI 実行境界。移行中は `ProjectModel` から生成し、既存実行経路との互換を保つ。
+- GUI Facade: 既存画面コードから `ProjectModel` / `EditorModel` へアクセスするための中間層。`GUIState` の全面置換を避け、画面ごとに移行する。
+
+## 肥大化リスク
+
+- `include/SynthEngine/SynthEngine.h`: source config、channel config、effect config が集まりやすい公開境界。新規設定を足す前に分割候補を確認する。
+- `include/gui/GUIState.h`: 永続状態、画面一時状態、非同期実行状態が集まりやすい。新しい状態を足す前に寿命と保存要否を確認する。
+- config load/save/schema: 音源契約の変更が重複しやすい。GUI editor、preset、renderer と同時変更になる場合は設計レビュー対象にする。
+- GUI `.inl` 群: 画面単位の追記で巨大化しやすい。音作りロジックや config 契約を含めない。
 
 ## 実行フロー
 
@@ -66,7 +93,7 @@ GUI 状態に依存しません。
 
 ## 音とレンダリング契約
 
-- 音質判断は `docs/PRODUCT_POLICY.md` に従い、DAW 的な深さより「気持ちよい音」と短い feedback を優先する。
+- 音質判断は `docs/PRODUCT_POLICY.md` に従い、継続開発性を落とさない範囲で「気持ちよい音」と短い feedback を優先する。
 - source 非依存の modulation と shared shaping は common engine path に置く。
 - source 固有の挙動は、その音源方式に本当に必要な場合だけ該当 renderer に置く。
 - Master effects は固定順で処理する: sample-rate reducer、bit crusher、chorus、flanger、delay、reverb。
