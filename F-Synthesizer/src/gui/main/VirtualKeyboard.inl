@@ -5,6 +5,94 @@
 //
 // 前提: GUIMain.cpp の using gui::StartGUISoundTonePreview; が参照可能であること。
 
+static const char* DrumPadLabel(DrumType type)
+{
+    switch (type)
+    {
+    case DrumType::Kick: return "Kick";
+    case DrumType::Snare: return "Snare";
+    case DrumType::Hat: return "Hat";
+    case DrumType::Tom: return "Tom";
+    case DrumType::Rim: return "Rim";
+    case DrumType::Clap: return "Clap";
+    case DrumType::Crash: return "Crash";
+    case DrumType::Ride: return "Ride";
+    default: return "Drum";
+    }
+}
+
+static void DrawDrumPadPreview(GUIState& state)
+{
+    if (!state.channelConfigs)
+    {
+        return;
+    }
+
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const auto* kit = std::get_if<DrumKitConfig>(&(*state.channelConfigs)[slot].source);
+    if (kit == nullptr)
+    {
+        return;
+    }
+
+    ImGui::Separator();
+    ImGui::TextUnformatted("Drum Pads");
+    ImGui::TextDisabled("鳴らしたい音を選んで試聴します。");
+
+    const float padW = 112.0f;
+    const float padH = 48.0f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float startX = ImGui::GetCursorPosX();
+    const float availW = ImGui::GetContentRegionAvail().x;
+    int visibleCount = 0;
+
+    for (int note = 0; note < 128; ++note)
+    {
+        const DrumConfig& drum = kit->map[note];
+        if (drum.type == DrumType::None)
+        {
+            continue;
+        }
+
+        if (visibleCount > 0)
+        {
+            const float nextX = ImGui::GetCursorPosX() + padW + spacing;
+            if (nextX - startX <= availW)
+            {
+                ImGui::SameLine();
+            }
+        }
+
+        ImGui::PushID(note);
+        const bool selected = std::clamp(state.selectedDrumNote, 0, 127) == note;
+        if (selected)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+        }
+        const std::string label = std::string(DrumPadLabel(drum.type)) + "\nnote " + std::to_string(note);
+        if (ImGui::Button(label.c_str(), ImVec2(padW, padH)))
+        {
+            state.selectedDrumNote = note;
+            StartGUISoundTonePreview(state);
+        }
+        if (selected)
+        {
+            ImGui::PopStyleColor();
+        }
+        ImGui::PopID();
+        ++visibleCount;
+    }
+
+    if (visibleCount == 0)
+    {
+        ImGui::TextDisabled("鳴らせるドラム音がありません。");
+        if (ImGui::Button("Advancedで編集"))
+        {
+            state.UIModeTab = 3;
+        }
+    }
+}
+
 static void DrawVirtualKeyboard(GUIState& state)
 {
     // DrumKit の場合は非表示（既存 Preview Note スライダーと同じ条件）

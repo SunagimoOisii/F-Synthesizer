@@ -138,7 +138,15 @@ static void DrawPlayView(
         updateHoverHelp("Sound Cardを選びます。", "選択した音色を現在のスロットへ読み込みます。", nullptr);
 
         DrawLayer2Macros(state);
-        DrawVirtualKeyboard(state);
+        const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+        if (config::UsesDrumKitNoteSelection((*state.channelConfigs)[slot].source))
+        {
+            DrawDrumPadPreview(state);
+        }
+        else
+        {
+            DrawVirtualKeyboard(state);
+        }
 
         if (showInspector)
         {
