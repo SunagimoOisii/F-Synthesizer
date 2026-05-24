@@ -150,6 +150,12 @@ enum VoiceLayerMask : uint32_t
     kVoiceLayerAmpCab = 1u << 11
 };
 
+enum VoiceFastPathMask : uint8_t
+{
+    kVoiceFastPathExpressionDisabled = 1u << 0,
+    kVoiceFastPathPortamentoDisabled = 1u << 1
+};
+
 struct Voice
 {
     // SoA 構造:
@@ -188,6 +194,7 @@ struct Voice
     std::vector<double> expressionDefaultVelocityNorm;
     std::vector<double> expressionDefaultAmpVelocity;
     std::vector<uint32_t> layerMask;
+    std::vector<uint8_t> fastPathMask;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;

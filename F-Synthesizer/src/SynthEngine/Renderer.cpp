@@ -241,20 +241,22 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         {
             continue;
         }
+        const uint8_t fastPathMask = voices.fastPathMask[i];
         in.mixGainL = state.channelMixGainL[ch];
         in.mixGainR = state.channelMixGainR[ch];
         in.pitchFactor = state.channelPitch[ch];
         in.ccGain = state.channelCcGain[ch];
         in.modwheel = state.channelModwheel[ch];
-        in.channelPressure = state.channelPressure[ch];
+        if (state.channelPressure[ch] > 0.0)
+        {
+            in.channelPressure = state.channelPressure[ch];
+        }
         if (state.channelHasPolyPressure[ch])
         {
             const int note = std::clamp(voices.noteNumber[i], 0, 127);
             in.polyPressure = state.channelPolyPressure[ch][note];
         }
-        const double pressure =
-            (in.channelPressure > in.polyPressure) ? in.channelPressure : in.polyPressure;
-        if (!voices.expressionMap[i].enabled)
+        if ((fastPathMask & kVoiceFastPathExpressionDisabled) != 0)
         {
             in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
             in.expressionVelocity = in.velocityNorm;
@@ -264,6 +266,8 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         }
         else
         {
+            const double pressure =
+                (in.channelPressure > in.polyPressure) ? in.channelPressure : in.polyPressure;
             const ExpressionRuntime expr = EvaluateExpressionMap(
                 voices.expressionMap[i],
                 voices.velocity[i],
@@ -296,7 +300,9 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         if (state.channelPortamentoOn[ch])
         {
             const double effectivePortamentoTimeSec =
-                (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
+                ((fastPathMask & kVoiceFastPathPortamentoDisabled) != 0)
+                    ? state.channelPortamentoTimeSec[ch]
+                    : (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
             if (effectivePortamentoTimeSec > 0.0)
             {
                 if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)

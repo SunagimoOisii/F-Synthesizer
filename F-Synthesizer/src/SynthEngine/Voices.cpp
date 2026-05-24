@@ -228,6 +228,10 @@ void InitializeVoiceAtIndex(
     if (cfg.chugLayer.enabled && cfg.chugLayer.level > 0.0) layerMask |= kVoiceLayerChug;
     if (cfg.ampCabLayer.enabled) layerMask |= kVoiceLayerAmpCab;
     voices.layerMask[i] = layerMask;
+    uint8_t fastPathMask = 0;
+    if (!cfg.expressionMap.enabled) fastPathMask |= kVoiceFastPathExpressionDisabled;
+    if (cfg.portamentoTimeSec <= 0.0) fastPathMask |= kVoiceFastPathPortamentoDisabled;
+    voices.fastPathMask[i] = fastPathMask;
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -556,6 +560,7 @@ void Voice::reserve(size_t n)
     expressionDefaultVelocityNorm.reserve(n);
     expressionDefaultAmpVelocity.reserve(n);
     layerMask.reserve(n);
+    fastPathMask.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -631,6 +636,7 @@ void Voice::clear()
     expressionDefaultVelocityNorm.clear();
     expressionDefaultAmpVelocity.clear();
     layerMask.clear();
+    fastPathMask.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -717,6 +723,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     expressionDefaultVelocityNorm.push_back(1.0);
     expressionDefaultAmpVelocity.push_back(1.0);
     layerMask.push_back(0);
+    fastPathMask.push_back(0);
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -894,6 +901,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(expressionDefaultVelocityNorm, keepScratch);
     CompactVectorByKeep(expressionDefaultAmpVelocity, keepScratch);
     CompactVectorByKeep(layerMask, keepScratch);
+    CompactVectorByKeep(fastPathMask, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);
