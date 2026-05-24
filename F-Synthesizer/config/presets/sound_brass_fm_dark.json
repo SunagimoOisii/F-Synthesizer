@@ -1,0 +1,170 @@
+{
+  "displayName": "Brass FM Dark",
+  "category": "Brass",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.12,
+        "attackSec": 0.012,
+        "decaySec": 0.26,
+        "sustainLevel": 0.72,
+        "releaseSec": 0.22,
+        "source": {
+          "type": "fm",
+          "algorithm": 4,
+          "feedback": 0.06,
+          "ops": [
+            {
+              "wave": "sine",
+              "ratio": 1.0,
+              "level": 0.58,
+              "index": 0.42,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.2,
+                "sustainLevel": 0.68,
+                "releaseSec": 0.12,
+                "curve": 0.55
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.22,
+                "releaseSec": 0.05,
+                "curve": 0.72
+              }
+            },
+            {
+              "wave": "sine",
+              "ratio": 2.0,
+              "level": 0.38,
+              "index": 0.22,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.2,
+                "sustainLevel": 0.68,
+                "releaseSec": 0.12,
+                "curve": 0.55
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.22,
+                "releaseSec": 0.05,
+                "curve": 0.72
+              }
+            },
+            {
+              "wave": "sine",
+              "ratio": 0.5,
+              "level": 0.28,
+              "index": 0.12,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.2,
+                "sustainLevel": 0.68,
+                "releaseSec": 0.12,
+                "curve": 0.55
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.22,
+                "releaseSec": 0.05,
+                "curve": 0.72
+              }
+            },
+            {
+              "wave": "sine",
+              "ratio": 3.0,
+              "level": 0.16,
+              "index": 0.0,
+              "levelEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.2,
+                "sustainLevel": 0.68,
+                "releaseSec": 0.12,
+                "curve": 0.55
+              },
+              "indexEnv": {
+                "attackSec": 0.0,
+                "decaySec": 0.12,
+                "sustainLevel": 0.22,
+                "releaseSec": 0.05,
+                "curve": 0.72
+              }
+            }
+          ],
+          "drive": 0.015,
+          "filter": {
+            "mode": "ladderLowpass",
+            "cutoffHz": 2600.0,
+            "resonance": 0.76,
+            "drive": 0.05
+          }
+        },
+        "layers": {
+          "lead": {
+            "enabled": true,
+            "type": "brass",
+            "level": 0.08,
+            "edgeLevel": 0.14,
+            "bodyLevel": 0.34,
+            "detuneCents": 3.5,
+            "pitchBendSemis": 0.18,
+            "bendDecaySec": 0.045,
+            "attackBoost": 0.07,
+            "attackDecaySec": 0.035,
+            "drive": 0.035,
+            "characterLevel": 0.08,
+            "characterTone": 0.36,
+            "biteLevel": 0.035,
+            "biteDecaySec": 0.026,
+            "wobbleDepthCents": 1.8,
+            "wobbleRateHz": 3.2
+          }
+        },
+        "expressionMap": {
+          "enabled": true,
+          "velocityCurve": 0.86,
+          "velocityToAmp": 0.86,
+          "velocityToBrightness": 0.08,
+          "velocityToFmIndex": 0.08,
+          "velocityToLead": 0.12,
+          "velocityToString": 0.0,
+          "modWheelToBrightness": 0.08,
+          "modWheelToString": 0.12,
+          "pressureToDrive": 0.014,
+          "cc74ToBrightness": 0.14,
+          "cc74ToStringBrightness": 0.18,
+          "pressureToFilterDrive": 0.04
+        }
+      }
+    },
+    "effects": {
+      "chorus": {
+        "enabled": true,
+        "mix": 0.08,
+        "baseDelayMs": 13.0,
+        "depthMs": 3.0,
+        "rateHz": 0.28,
+        "feedback": 0.03
+      },
+      "reverb": {
+        "enabled": true,
+        "mix": 0.06,
+        "roomSize": 0.34,
+        "damping": 0.58
+      }
+    }
+  },
+  "tags": [
+    "brass",
+    "fm",
+    "dark",
+    "retro"
+  ],
+  "description": "暗めのFMブラス。低めのコードや裏メロを厚く支える。"
+}

@@ -259,11 +259,11 @@ function Assert-PracticalPresetLayerPolicy {
             continue
         }
         $layers = $channel.layers
-        if ((Test-LayerEnabled -Layers $layers -Name "chord") -and $category -ne "Pad") {
-            throw "${Name}: chord layer is only allowed for practical Pad presets."
+        if ((Test-LayerEnabled -Layers $layers -Name "chord") -and ($category -ne "Pad" -and $category -ne "Strings")) {
+            throw "${Name}: chord layer is only allowed for practical Pad/Strings presets."
         }
-        if ((Test-LayerEnabled -Layers $layers -Name "string") -and $category -ne "Pad") {
-            throw "${Name}: string layer is only allowed for practical Pad presets."
+        if ((Test-LayerEnabled -Layers $layers -Name "string") -and ($category -ne "Pad" -and $category -ne "Strings")) {
+            throw "${Name}: string layer is only allowed for practical Pad/Strings presets."
         }
         foreach ($guitarLayer in @("powerChord", "chug")) {
             if ((Test-LayerEnabled -Layers $layers -Name $guitarLayer) -and $category -ne "Guitar") {
@@ -278,9 +278,9 @@ function Assert-PracticalPresetLayerPolicy {
             }
         }
         if (Test-LayerEnabled -Layers $layers -Name "body") {
-            $isAllowedBody = $category -eq "Pad" -or ($category -eq "Piano/Keys" -and $displayName -like "*Pluck*")
+            $isAllowedBody = $category -eq "Pad" -or $category -eq "Strings" -or ($category -eq "Piano/Keys" -and $displayName -like "*Pluck*")
             if (-not $isAllowedBody) {
-                throw "${Name}: body layer is only allowed for practical Pad presets or pluck keys."
+                throw "${Name}: body layer is only allowed for practical Pad/Strings presets or pluck keys."
             }
             $body = $layers.body
             if (-not (Test-JsonProperty -Object $body -Name "mode")) {

@@ -1,0 +1,99 @@
+{
+  "displayName": "Reed Chip Sax",
+  "category": "Reed",
+  "internal": false,
+  "format": "projectModel.v1",
+  "project": {
+    "channels": {
+      "0": {
+        "amp": 0.12,
+        "attackSec": 0.008,
+        "decaySec": 0.2,
+        "sustainLevel": 0.64,
+        "releaseSec": 0.16,
+        "source": {
+          "type": "psg",
+          "wave": "pulse",
+          "duty": 1,
+          "volumeSteps": 11,
+          "maxVoices": 3,
+          "filter": {
+            "mode": "lowpass",
+            "cutoffHz": 3600.0,
+            "resonance": 0.62,
+            "drive": 0.0
+          }
+        },
+        "layers": {
+          "attack": {
+            "enabled": true,
+            "type": "brass",
+            "level": 0.06,
+            "decaySec": 0.026,
+            "brightness": 0.46,
+            "bodyMix": 0.46,
+            "pitchOffsetSemis": 0,
+            "drive": 0.015
+          },
+          "lead": {
+            "enabled": true,
+            "type": "edge",
+            "level": 0.09,
+            "edgeLevel": 0.26,
+            "bodyLevel": 0.24,
+            "detuneCents": 3.5,
+            "pitchBendSemis": 0.18,
+            "bendDecaySec": 0.045,
+            "attackBoost": 0.07,
+            "attackDecaySec": 0.035,
+            "drive": 0.035,
+            "characterLevel": 0.08,
+            "characterTone": 0.62,
+            "biteLevel": 0.035,
+            "biteDecaySec": 0.026,
+            "wobbleDepthCents": 1.8,
+            "wobbleRateHz": 3.2
+          }
+        },
+        "expressionMap": {
+          "enabled": true,
+          "velocityCurve": 0.86,
+          "velocityToAmp": 0.86,
+          "velocityToBrightness": 0.1,
+          "velocityToFmIndex": 0.0,
+          "velocityToLead": 0.14,
+          "velocityToString": 0.0,
+          "modWheelToBrightness": 0.08,
+          "modWheelToString": 0.12,
+          "pressureToDrive": 0.014,
+          "cc74ToBrightness": 0.14,
+          "cc74ToStringBrightness": 0.18,
+          "pressureToFilterDrive": 0.04
+        }
+      }
+    },
+    "effects": {
+      "chorus": {
+        "enabled": true,
+        "mix": 0.08,
+        "baseDelayMs": 13.0,
+        "depthMs": 3.0,
+        "rateHz": 0.28,
+        "feedback": 0.03
+      },
+      "reverb": {
+        "enabled": true,
+        "mix": 0.06,
+        "roomSize": 0.34,
+        "damping": 0.58
+      }
+    }
+  },
+  "tags": [
+    "reed",
+    "sax",
+    "chip",
+    "retro"
+  ],
+  "description": "矩形波寄りのサックス風リード。ソロをレトロに立たせる。"
+}
