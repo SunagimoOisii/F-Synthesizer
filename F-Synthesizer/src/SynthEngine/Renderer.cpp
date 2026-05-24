@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <future>
+#include <thread>
 #include <type_traits>
 
 #include "synth/Oscillator.h"
@@ -252,6 +254,209 @@ void RenderSourceFrameByKind(
 
     RenderSourceFrame(src, voices, i, in, sampleRate, frame);
 }
+
+bool RenderVoiceSampleToChannel(
+    RenderState& state,
+    const SoundData& sound,
+    size_t i,
+    StereoFrame& channelSum,
+    DrumBusConfig& channelDrumBus,
+    bool& channelHasDrumBus)
+{
+    auto& voices = state.voices;
+    if (voices.pendingRemove[i] != 0 || voices.env[i].stage == ADSRStage::Off)
+    {
+        return false;
+    }
+
+    const double dt = 1.0 / sound.fs;
+    const int ch = voices.channelIndex[i];
+    const double envGain = StepADSR(
+        voices.env[i],
+        dt,
+        voices.attackSec[i] * state.channelAttackScale[ch],
+        voices.decaySec[i] * state.channelDecayScale[ch],
+        std::clamp(voices.sustainLevel[i] + state.channelSustainAdd[ch], 0.0, 1.0),
+        voices.releaseSec[i] * state.channelReleaseScale[ch]);
+    if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
+    {
+        voices.pendingRemove[i] = 1;
+        return true;
+    }
+
+    VoiceRenderInput in{};
+    in.dt = dt;
+    in.envGain = envGain;
+    if (!state.channelRenderable[ch])
+    {
+        return false;
+    }
+
+    const uint8_t fastPathMask = voices.fastPathMask[i];
+    in.mixGainL = state.channelMixGainL[ch];
+    in.mixGainR = state.channelMixGainR[ch];
+    in.pitchFactor = state.channelPitch[ch];
+    in.ccGain = state.channelCcGain[ch];
+    in.modwheel = state.channelModwheel[ch];
+    if (state.channelPressure[ch] > 0.0)
+    {
+        in.channelPressure = state.channelPressure[ch];
+    }
+    if (state.channelHasPolyPressure[ch])
+    {
+        const int note = std::clamp(voices.noteNumber[i], 0, 127);
+        in.polyPressure = state.channelPolyPressure[ch][note];
+    }
+    if ((fastPathMask & kVoiceFastPathExpressionDisabled) != 0)
+    {
+        in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
+        in.expressionVelocity = in.velocityNorm;
+        in.velGain = voices.runtimeDefaultAmpVelocity[i];
+        in.brightness = state.channelBrightness[ch];
+        in.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
+    }
+    else
+    {
+        const double pressure =
+            (in.channelPressure > in.polyPressure) ? in.channelPressure : in.polyPressure;
+        const ExpressionRuntime expr = EvaluateExpressionMap(
+            voices.expressionMap[i],
+            voices.velocity[i],
+            in.modwheel,
+            pressure,
+            state.channelBrightness[ch]);
+        in.velocityNorm = expr.velocityNorm;
+        in.expressionVelocity = expr.expressionVelocity;
+        in.velGain = expr.ampVelocity;
+        in.expressionFmIndexMul = expr.fmIndexMul;
+        in.expressionAttackMul = expr.attackMul;
+        in.expressionBassMul = expr.bassMul;
+        in.expressionLeadMul = expr.leadMul;
+        in.expressionChordMul = expr.chordMul;
+        in.expressionPadMul = expr.padMul;
+        in.expressionPluckMul = expr.pluckMul;
+        in.expressionStringMul = expr.stringMul;
+        in.expressionBodyMul = expr.bodyMul;
+        in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
+        in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
+        in.expressionDriveAdd = expr.driveAdd;
+        in.expressionFilterDriveAdd = expr.filterDriveAdd;
+        in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
+        in.brightnessCutoffScale = RenderCutoffScaleFromBrightness(in.brightness);
+    }
+    in.resonance = state.channelResonance[ch];
+    in.resonanceScale = state.channelResonanceScale[ch];
+
+    if (state.channelPortamentoOn[ch])
+    {
+        const double effectivePortamentoTimeSec =
+            ((fastPathMask & kVoiceFastPathPortamentoDisabled) != 0)
+                ? state.channelPortamentoTimeSec[ch]
+                : (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
+        if (effectivePortamentoTimeSec > 0.0)
+        {
+            if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
+            {
+                voices.portamentoPitchHz[i] +=
+                    (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
+                    (1.0 - std::exp(-in.dt / effectivePortamentoTimeSec));
+            }
+            if (voices.portamentoTargetHz[i] > 0.0)
+            {
+                in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
+            }
+        }
+    }
+
+    SourceRenderFrame frame{};
+    const config::SourceKind sourceKind = config::SourceKindFromIndex(voices.runtimeSourceKind[i]);
+    RenderSourceFrameByKind(sourceKind, voices.source[i], voices, i, in, sound.fs, frame);
+    const uint32_t layerMask = voices.layerMask[i];
+    if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
+    if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);
+    if ((layerMask & kVoiceLayerLead) != 0) frame.sample += RenderLeadLayer(voices, i, in);
+    StereoFrame layerSum{};
+    if ((layerMask & kVoiceLayerPluck) != 0)
+    {
+        AddStereoLayer(layerSum, RenderPluckLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerString) != 0)
+    {
+        AddStereoLayer(layerSum, RenderStringLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerChord) != 0)
+    {
+        AddStereoLayer(layerSum, RenderChordLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerPad) != 0)
+    {
+        AddStereoLayer(layerSum, RenderPadLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerHarmonic) != 0)
+    {
+        AddStereoLayer(layerSum, RenderHarmonicLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerPowerChord) != 0)
+    {
+        AddStereoLayer(layerSum, RenderPowerChordLayer(voices, i, in));
+    }
+    if ((layerMask & kVoiceLayerChug) != 0)
+    {
+        AddStereoLayer(layerSum, RenderChugLayer(voices, i, in));
+    }
+    frame.sample += (layerSum.left + layerSum.right) * 0.5;
+    frame.stereoOffsetL += (layerSum.left - layerSum.right) * 0.5;
+    frame.stereoOffsetR += (layerSum.right - layerSum.left) * 0.5;
+    ApplyCommonShaper(voices.source[i], voices, i, in, frame);
+    if ((layerMask & kVoiceLayerAmpCab) != 0) ApplyAmpCabLayer(voices, i, in, frame);
+    if ((layerMask & kVoiceLayerBody) != 0) ApplyBodyLayer(voices, i, in, frame);
+    ApplyModulationLayer(voices.source[i], voices, i, frame);
+    voices.ageSec[i] += in.dt;
+
+    const double gain =
+        frame.sourceGain *
+        voices.runtimeAmp[i] *
+        in.ccGain *
+        in.velGain *
+        in.envGain *
+        frame.ampMul;
+    const double stereoL = gain * (frame.sample + frame.stereoOffsetL);
+    const double stereoR = gain * (frame.sample + frame.stereoOffsetR);
+    channelSum.left += stereoL;
+    channelSum.right += stereoR;
+    if (voices.runtimeHasDrumBus[i] != 0)
+    {
+        channelDrumBus = voices.drumBus[i];
+        channelHasDrumBus = true;
+    }
+    return false;
+}
+
+size_t RenderChannelBlock(RenderState& state, const SoundData& sound, int ch, int frameCount)
+{
+    size_t removedCount = 0;
+    auto& out = state.renderChannelBlockFrames[ch];
+    const auto& indices = state.activeVoiceIndicesByChannel[ch];
+    for (int offset = 0; offset < frameCount; offset++)
+    {
+        StereoFrame channelSum{};
+        DrumBusConfig channelDrumBus{};
+        bool channelHasDrumBus = false;
+        for (const size_t i : indices)
+        {
+            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
+            {
+                removedCount++;
+            }
+        }
+        if (channelHasDrumBus)
+        {
+            channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
+        }
+        out[offset] = channelSum;
+    }
+    return removedCount;
+}
 } // namespace
 
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
@@ -266,186 +471,16 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
     auto& channelHasDrumBus = state.renderChannelHasDrumBus;
     channelSums.fill(StereoFrame{});
     channelHasDrumBus.fill(false);
-    auto& voices = state.voices;
-    const double dt = 1.0 / sound.fs;
 
     // SoA 配列を先頭から順に処理するホットパス。
     // 目的: キャッシュ局所性を高め、Voice 数増加時の劣化を抑える。
     for (const size_t i : state.activeVoiceIndices)
     {
-        if (voices.pendingRemove[i] != 0 || voices.env[i].stage == ADSRStage::Off)
+        const int ch = state.voices.channelIndex[i];
+        if (RenderVoiceSampleToChannel(state, sound, i, channelSums[ch], channelDrumBus[ch], channelHasDrumBus[ch]))
         {
-            continue;
-        }
-
-        const int ch = voices.channelIndex[i];
-        const double envGain = StepADSR(
-            voices.env[i],
-            dt,
-            voices.attackSec[i] * state.channelAttackScale[ch],
-            voices.decaySec[i] * state.channelDecayScale[ch],
-            std::clamp(voices.sustainLevel[i] + state.channelSustainAdd[ch], 0.0, 1.0),
-            voices.releaseSec[i] * state.channelReleaseScale[ch]);
-        if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
-        {
-            // 即時 erase は O(n) 連鎖になるため、削除フラグだけ立てて後段でまとめて圧縮する。
-            voices.pendingRemove[i] = 1;
             state.pendingRemoveCount++;
             MarkActiveVoiceIndicesDirty(state);
-            continue;
-        }
-
-        VoiceRenderInput in{};
-        in.dt = dt;
-        in.envGain = envGain;
-        // mute/solo/mixGain 判定は事前計算済みフラグを参照する。
-        // 目的: ホットループの分岐段数を減らし、分岐予測ミスを抑える。
-        // 前提: channel mix 状態は RenderMIDIEvents 実行中に変化しない。
-        // トレードオフ: 判定ロジックが初期化側へ移動し、追跡箇所が分かれる。
-        if (!state.channelRenderable[ch])
-        {
-            continue;
-        }
-        const uint8_t fastPathMask = voices.fastPathMask[i];
-        in.mixGainL = state.channelMixGainL[ch];
-        in.mixGainR = state.channelMixGainR[ch];
-        in.pitchFactor = state.channelPitch[ch];
-        in.ccGain = state.channelCcGain[ch];
-        in.modwheel = state.channelModwheel[ch];
-        if (state.channelPressure[ch] > 0.0)
-        {
-            in.channelPressure = state.channelPressure[ch];
-        }
-        if (state.channelHasPolyPressure[ch])
-        {
-            const int note = std::clamp(voices.noteNumber[i], 0, 127);
-            in.polyPressure = state.channelPolyPressure[ch][note];
-        }
-        if ((fastPathMask & kVoiceFastPathExpressionDisabled) != 0)
-        {
-            in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
-            in.expressionVelocity = in.velocityNorm;
-            in.velGain = voices.runtimeDefaultAmpVelocity[i];
-            in.brightness = state.channelBrightness[ch];
-            in.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
-        }
-        else
-        {
-            const double pressure =
-                (in.channelPressure > in.polyPressure) ? in.channelPressure : in.polyPressure;
-            const ExpressionRuntime expr = EvaluateExpressionMap(
-                voices.expressionMap[i],
-                voices.velocity[i],
-                in.modwheel,
-                pressure,
-                state.channelBrightness[ch]);
-            in.velocityNorm = expr.velocityNorm;
-            in.expressionVelocity = expr.expressionVelocity;
-            in.velGain = expr.ampVelocity;
-            in.expressionFmIndexMul = expr.fmIndexMul;
-            in.expressionAttackMul = expr.attackMul;
-            in.expressionBassMul = expr.bassMul;
-            in.expressionLeadMul = expr.leadMul;
-            in.expressionChordMul = expr.chordMul;
-            in.expressionPadMul = expr.padMul;
-            in.expressionPluckMul = expr.pluckMul;
-            in.expressionStringMul = expr.stringMul;
-            in.expressionBodyMul = expr.bodyMul;
-            in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
-            in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
-            in.expressionDriveAdd = expr.driveAdd;
-            in.expressionFilterDriveAdd = expr.filterDriveAdd;
-            in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
-            in.brightnessCutoffScale = RenderCutoffScaleFromBrightness(in.brightness);
-        }
-        in.resonance = state.channelResonance[ch];
-        in.resonanceScale = state.channelResonanceScale[ch];
-
-        // ポルタメント: 現在ピッチをターゲットへ指数平滑しつつ pitchFactor へ反映する。
-        if (state.channelPortamentoOn[ch])
-        {
-            const double effectivePortamentoTimeSec =
-                ((fastPathMask & kVoiceFastPathPortamentoDisabled) != 0)
-                    ? state.channelPortamentoTimeSec[ch]
-                    : (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
-            if (effectivePortamentoTimeSec > 0.0)
-            {
-                if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
-                {
-                    voices.portamentoPitchHz[i] +=
-                        (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
-                        (1.0 - std::exp(-in.dt / effectivePortamentoTimeSec));
-                }
-                // portamentoPitchHz を phaseInc に対する倍率として pitchFactor へ乗算する。
-                // (phaseInc = targetHz / sampleRate なので比率で戻す)
-                if (voices.portamentoTargetHz[i] > 0.0)
-                {
-                    in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
-                }
-            }
-        }
-
-        SourceRenderFrame frame{};
-        const config::SourceKind sourceKind = config::SourceKindFromIndex(voices.runtimeSourceKind[i]);
-        RenderSourceFrameByKind(sourceKind, voices.source[i], voices, i, in, sound.fs, frame);
-        const uint32_t layerMask = voices.layerMask[i];
-        if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
-        if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);
-        if ((layerMask & kVoiceLayerLead) != 0) frame.sample += RenderLeadLayer(voices, i, in);
-        StereoFrame layerSum{};
-        if ((layerMask & kVoiceLayerPluck) != 0)
-        {
-            AddStereoLayer(layerSum, RenderPluckLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerString) != 0)
-        {
-            AddStereoLayer(layerSum, RenderStringLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerChord) != 0)
-        {
-            AddStereoLayer(layerSum, RenderChordLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerPad) != 0)
-        {
-            AddStereoLayer(layerSum, RenderPadLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerHarmonic) != 0)
-        {
-            AddStereoLayer(layerSum, RenderHarmonicLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerPowerChord) != 0)
-        {
-            AddStereoLayer(layerSum, RenderPowerChordLayer(voices, i, in));
-        }
-        if ((layerMask & kVoiceLayerChug) != 0)
-        {
-            AddStereoLayer(layerSum, RenderChugLayer(voices, i, in));
-        }
-        frame.sample += (layerSum.left + layerSum.right) * 0.5;
-        frame.stereoOffsetL += (layerSum.left - layerSum.right) * 0.5;
-        frame.stereoOffsetR += (layerSum.right - layerSum.left) * 0.5;
-        ApplyCommonShaper(voices.source[i], voices, i, in, frame);
-        if ((layerMask & kVoiceLayerAmpCab) != 0) ApplyAmpCabLayer(voices, i, in, frame);
-        if ((layerMask & kVoiceLayerBody) != 0) ApplyBodyLayer(voices, i, in, frame);
-        ApplyModulationLayer(voices.source[i], voices, i, frame);
-        voices.ageSec[i] += in.dt;
-
-        const double gain =
-            frame.sourceGain *
-            voices.runtimeAmp[i] *
-            in.ccGain *
-            in.velGain *
-            in.envGain *
-            frame.ampMul;
-        const double mono = gain * frame.sample;
-        const double stereoL = gain * (frame.sample + frame.stereoOffsetL);
-        const double stereoR = gain * (frame.sample + frame.stereoOffsetR);
-        channelSums[ch].left += stereoL;
-        channelSums[ch].right += stereoR;
-        if (voices.runtimeHasDrumBus[i] != 0)
-        {
-            channelDrumBus[ch] = voices.drumBus[i];
-            channelHasDrumBus[ch] = true;
         }
     }
 
@@ -461,4 +496,83 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         sum.right += frame.right * state.channelMixGainR[ch];
     }
     return sum;
+}
+
+void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCount, std::vector<StereoFrame>& outFrames)
+{
+    if (frameCount <= 0)
+    {
+        outFrames.clear();
+        return;
+    }
+    if (state.activeVoiceIndicesDirty)
+    {
+        RebuildActiveVoiceIndices(state);
+    }
+
+    outFrames.assign(static_cast<size_t>(frameCount), StereoFrame{});
+    std::vector<int> activeChannels;
+    activeChannels.reserve(16);
+    for (int ch = 0; ch < 16; ch++)
+    {
+        if (!state.activeVoiceIndicesByChannel[ch].empty())
+        {
+            state.renderChannelBlockFrames[ch].assign(static_cast<size_t>(frameCount), StereoFrame{});
+            activeChannels.push_back(ch);
+        }
+    }
+
+    if (activeChannels.empty())
+    {
+        return;
+    }
+
+    size_t removedCount = 0;
+    const unsigned hardwareThreads = std::thread::hardware_concurrency();
+    const bool useParallel =
+        hardwareThreads > 1 &&
+        frameCount >= 32 &&
+        activeChannels.size() > 1;
+
+    if (useParallel)
+    {
+        std::vector<std::future<size_t>> futures;
+        futures.reserve(activeChannels.size());
+        for (const int ch : activeChannels)
+        {
+            futures.push_back(std::async(std::launch::async, [&state, &sound, ch, frameCount]()
+            {
+                return RenderChannelBlock(state, sound, ch, frameCount);
+            }));
+        }
+        for (auto& future : futures)
+        {
+            removedCount += future.get();
+        }
+    }
+    else
+    {
+        for (const int ch : activeChannels)
+        {
+            removedCount += RenderChannelBlock(state, sound, ch, frameCount);
+        }
+    }
+
+    if (removedCount > 0)
+    {
+        state.pendingRemoveCount += removedCount;
+        MarkActiveVoiceIndicesDirty(state);
+    }
+
+    for (int offset = 0; offset < frameCount; offset++)
+    {
+        StereoFrame sum{};
+        for (const int ch : activeChannels)
+        {
+            const StereoFrame frame = state.renderChannelBlockFrames[ch][offset];
+            sum.left += frame.left * state.channelMixGainL[ch];
+            sum.right += frame.right * state.channelMixGainR[ch];
+        }
+        outFrames[offset] = sum;
+    }
 }

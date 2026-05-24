@@ -528,10 +528,42 @@ void RenderMIDIEvents(
     int cleanupCountdown = 0;
     for (int i = 0; i < sound.length;)
     {
+        // キャンセル確認と voice compact は chunk 境界で行う。
+        if (cleanupCountdown <= 0)
+        {
+            if (shouldCancel && shouldCancel())
+            {
+                if (canceled != nullptr)
+                {
+                    *canceled = true;
+                }
+                break;
+            }
+            CleanupVoices(state);
+            cleanupCountdown = cleanupInterval;
+        }
+
+        ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
+        AdvanceTempoChanges(state, i);
+
         const int blockEnd = std::min(i + renderBlockSize, sound.length);
-        if (cleanupCountdown > (blockEnd - i) &&
-            !masterEffectsSkipUnsafe &&
-            (state.eventIndex >= events.size() || events[state.eventIndex].sample >= blockEnd))
+        int chunkEnd = std::min(blockEnd, i + cleanupCountdown);
+        if (state.eventIndex < events.size() && events[state.eventIndex].sample > i)
+        {
+            chunkEnd = std::min(chunkEnd, events[state.eventIndex].sample);
+        }
+        if (state.tempoChangeIndex < state.tempoChangeSamples.size() &&
+            state.tempoChangeSamples[state.tempoChangeIndex] > i)
+        {
+            chunkEnd = std::min(chunkEnd, state.tempoChangeSamples[state.tempoChangeIndex]);
+        }
+        if (chunkEnd <= i)
+        {
+            chunkEnd = i + 1;
+        }
+
+        if (!masterEffectsSkipUnsafe &&
+            (state.eventIndex >= events.size() || events[state.eventIndex].sample >= chunkEnd))
         {
             if (state.activeVoiceIndicesDirty)
             {
@@ -539,62 +571,33 @@ void RenderMIDIEvents(
             }
             if (state.activeVoiceIndices.empty())
             {
-                AdvanceTempoChanges(state, blockEnd - 1);
-                cleanupCountdown -= (blockEnd - i);
-                i = blockEnd;
+                cleanupCountdown -= (chunkEnd - i);
+                i = chunkEnd;
                 continue;
             }
         }
-        for (; i < blockEnd; i++)
+
+        const int frameCount = chunkEnd - i;
+        RenderVoicesBlock(state, sound, frameCount, state.renderBlockFrames);
+        for (int offset = 0; offset < frameCount; offset++)
         {
-            // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
-            if (cleanupCountdown <= 0)
-            {
-                if (shouldCancel && shouldCancel())
-                {
-                    if (canceled != nullptr)
-                    {
-                        *canceled = true;
-                    }
-                    i = sound.length;
-                    break;
-                }
-                CleanupVoices(state);
-                cleanupCountdown = cleanupInterval;
-            }
-
-            if (!masterEffectsActive &&
-                state.voices.empty() &&
-                state.eventIndex < events.size() &&
-                events[state.eventIndex].sample > i)
-            {
-                const int nextSample = std::min(events[state.eventIndex].sample, sound.length);
-                if (nextSample > i)
-                {
-                    cleanupCountdown -= (nextSample - i);
-                    i = nextSample - 1;
-                    continue;
-                }
-            }
-
-            ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
-            AdvanceTempoChanges(state, i);
-            StereoFrame frame = RenderVoices(state, sound);
+            const int sampleIndex = i + offset;
+            StereoFrame frame = state.renderBlockFrames[static_cast<size_t>(offset)];
             if (masterEffectsActive)
             {
                 frame = ApplyMasterEffects(state, sound.fs, frame);
             }
             if (sound.channels >= 2)
             {
-                sound.dataL[i] = frame.left;
-                sound.dataR[i] = frame.right;
+                sound.dataL[sampleIndex] = frame.left;
+                sound.dataR[sampleIndex] = frame.right;
             }
             else
             {
-                sound.data[i] = (frame.left + frame.right) * 0.5;
+                sound.data[sampleIndex] = (frame.left + frame.right) * 0.5;
             }
-
-            cleanupCountdown--;
         }
+        cleanupCountdown -= frameCount;
+        i = chunkEnd;
     }
 }
