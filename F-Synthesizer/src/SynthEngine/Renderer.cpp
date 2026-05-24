@@ -6,6 +6,158 @@
 
 #include "synth/Oscillator.h"
 
+RenderWorkerPool::RenderWorkerPool(size_t workerCount)
+{
+    workers_.reserve(workerCount);
+    for (size_t i = 0; i < workerCount; i++)
+    {
+        workers_.emplace_back([this]() { WorkerLoop(); });
+    }
+}
+
+RenderWorkerPool::~RenderWorkerPool()
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        stopping_ = true;
+        generation_++;
+    }
+    workCv_.notify_all();
+    for (auto& worker : workers_)
+    {
+        if (worker.joinable())
+        {
+            worker.join();
+        }
+    }
+}
+
+bool RenderWorkerPool::Run(size_t jobCount, const std::function<void(size_t)>& job)
+{
+    return RunWithCaller(jobCount, job, {});
+}
+
+bool RenderWorkerPool::RunWithCaller(
+    size_t jobCount,
+    const std::function<void(size_t)>& job,
+    const std::function<void()>& callerJob)
+{
+    if (jobCount == 0)
+    {
+        if (callerJob)
+        {
+            try
+            {
+                callerJob();
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        job_ = job;
+        jobCount_ = jobCount;
+        nextJob_ = 0;
+        completedJobs_ = 0;
+        exception_ = nullptr;
+        generation_++;
+    }
+    workCv_.notify_all();
+
+    if (callerJob)
+    {
+        try
+        {
+            callerJob();
+        }
+        catch (...)
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (exception_ == nullptr)
+            {
+                exception_ = std::current_exception();
+            }
+        }
+    }
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    doneCv_.wait(lock, [this]() { return completedJobs_ >= jobCount_; });
+    const bool ok = (exception_ == nullptr);
+    job_ = nullptr;
+    return ok;
+}
+
+void RenderWorkerPool::WorkerLoop()
+{
+    size_t seenGeneration = 0;
+    for (;;)
+    {
+        size_t jobIndex = 0;
+        std::function<void(size_t)> job;
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            workCv_.wait(lock, [this, &seenGeneration]() {
+                return stopping_ || generation_ != seenGeneration;
+            });
+            if (stopping_)
+            {
+                return;
+            }
+            seenGeneration = generation_;
+            for (;;)
+            {
+                if (stopping_)
+                {
+                    return;
+                }
+                if (nextJob_ >= jobCount_)
+                {
+                    break;
+                }
+                jobIndex = nextJob_++;
+                job = job_;
+                break;
+            }
+        }
+
+        while (job)
+        {
+            try
+            {
+                job(jobIndex);
+            }
+            catch (...)
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                if (exception_ == nullptr)
+                {
+                    exception_ = std::current_exception();
+                }
+            }
+
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                completedJobs_++;
+                if (completedJobs_ >= jobCount_)
+                {
+                    doneCv_.notify_all();
+                }
+                if (nextJob_ >= jobCount_)
+                {
+                    break;
+                }
+                jobIndex = nextJob_++;
+                job = job_;
+            }
+        }
+    }
+}
+
 namespace
 {
 constexpr double kPi = 3.14159265358979323846;
@@ -474,6 +626,168 @@ size_t MixChannelBlockToOutput(
     return removedCount;
 }
 
+size_t RenderChannelBlockToBuffer(
+    RenderState& state,
+    const SoundData& sound,
+    int ch,
+    int frameCount,
+    std::vector<StereoFrame>& channelFrames)
+{
+    size_t removedCount = 0;
+    channelFrames.resize(static_cast<size_t>(frameCount));
+    const auto& indices = state.activeVoiceIndicesByChannel[ch];
+    const double mixGainL = state.channelMixGainL[ch];
+    const double mixGainR = state.channelMixGainR[ch];
+    for (int offset = 0; offset < frameCount; offset++)
+    {
+        StereoFrame channelSum{};
+        DrumBusConfig channelDrumBus{};
+        bool channelHasDrumBus = false;
+        for (const size_t i : indices)
+        {
+            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
+            {
+                removedCount++;
+            }
+        }
+        if (channelHasDrumBus)
+        {
+            channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
+        }
+        channelFrames[static_cast<size_t>(offset)] = StereoFrame{
+            channelSum.left * mixGainL,
+            channelSum.right * mixGainR
+        };
+    }
+    return removedCount;
+}
+
+size_t ResolveRenderWorkerCount(size_t workerJobCount)
+{
+    const unsigned int hardwareThreads = std::thread::hardware_concurrency();
+    if (hardwareThreads <= 1 || workerJobCount == 0)
+    {
+        return 0;
+    }
+    const size_t availableWorkers = static_cast<size_t>(hardwareThreads - 1);
+    return std::min<size_t>({ availableWorkers, workerJobCount, 4 });
+}
+
+bool EnsureRenderWorkerPool(RenderState& state, size_t workerJobCount)
+{
+    if (state.renderParallelDisabled)
+    {
+        return false;
+    }
+    const size_t workerCount = ResolveRenderWorkerCount(workerJobCount);
+    if (workerCount == 0)
+    {
+        return false;
+    }
+    if (state.renderWorkerPool && state.renderWorkerPool->WorkerCount() >= workerCount)
+    {
+        return true;
+    }
+    try
+    {
+        state.renderWorkerPool = std::make_unique<RenderWorkerPool>(workerCount);
+    }
+    catch (...)
+    {
+        state.renderWorkerPool.reset();
+        state.renderParallelDisabled = true;
+        return false;
+    }
+    return state.renderWorkerPool != nullptr && state.renderWorkerPool->WorkerCount() > 0;
+}
+
+bool HasActiveDrumBusVoice(const RenderState& state, const std::vector<int>& activeChannels)
+{
+    for (const int ch : activeChannels)
+    {
+        for (const size_t i : state.activeVoiceIndicesByChannel[ch])
+        {
+            if (state.voices.runtimeHasDrumBus[i] != 0)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool RenderVoicesBlockParallel(
+    RenderState& state,
+    const SoundData& sound,
+    int frameCount,
+    std::vector<StereoFrame>& outFrames,
+    const std::vector<int>& activeChannels,
+    size_t& removedCount)
+{
+    const size_t workerJobCount = activeChannels.size() - 1;
+    if (frameCount < 32 ||
+        activeChannels.size() < 2 ||
+        HasActiveDrumBusVoice(state, activeChannels) ||
+        !EnsureRenderWorkerPool(state, workerJobCount))
+    {
+        return false;
+    }
+
+    for (const int ch : activeChannels)
+    {
+        state.renderChannelBlockFrames[ch].resize(static_cast<size_t>(frameCount));
+    }
+
+    std::array<size_t, 16> removedByChannel{};
+    const bool ok = state.renderWorkerPool->RunWithCaller(activeChannels.size() - 1, [&](size_t jobIndex) {
+        const int ch = activeChannels[jobIndex + 1];
+        removedByChannel[ch] = RenderChannelBlockToBuffer(
+            state,
+            sound,
+            ch,
+            frameCount,
+            state.renderChannelBlockFrames[ch]);
+    }, [&]() {
+        const int ch = activeChannels.front();
+        removedByChannel[ch] = RenderChannelBlockToBuffer(
+            state,
+            sound,
+            ch,
+            frameCount,
+            state.renderChannelBlockFrames[ch]);
+    });
+    if (!ok)
+    {
+        state.renderParallelDisabled = true;
+        return false;
+    }
+
+    removedCount = 0;
+    std::fill(outFrames.begin(), outFrames.end(), StereoFrame{});
+    bool replaceOutput = true;
+    for (const int ch : activeChannels)
+    {
+        removedCount += removedByChannel[ch];
+        const auto& channelFrames = state.renderChannelBlockFrames[ch];
+        for (int offset = 0; offset < frameCount; offset++)
+        {
+            StereoFrame& out = outFrames[static_cast<size_t>(offset)];
+            const StereoFrame frame = channelFrames[static_cast<size_t>(offset)];
+            if (replaceOutput)
+            {
+                out = frame;
+            }
+            else
+            {
+                out.left += frame.left;
+                out.right += frame.right;
+            }
+        }
+        replaceOutput = false;
+    }
+    return true;
+}
+
 } // namespace
 
 void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCount, std::vector<StereoFrame>& outFrames)
@@ -507,11 +821,14 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
     }
 
     size_t removedCount = 0;
-    bool replaceOutput = true;
-    for (const int ch : activeChannels)
+    if (!RenderVoicesBlockParallel(state, sound, frameCount, outFrames, activeChannels, removedCount))
     {
-        removedCount += MixChannelBlockToOutput(state, sound, ch, frameCount, outFrames, replaceOutput);
-        replaceOutput = false;
+        bool replaceOutput = true;
+        for (const int ch : activeChannels)
+        {
+            removedCount += MixChannelBlockToOutput(state, sound, ch, frameCount, outFrames, replaceOutput);
+            replaceOutput = false;
+        }
     }
 
     if (removedCount > 0)

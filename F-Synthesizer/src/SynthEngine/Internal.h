@@ -5,6 +5,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <cmath>
+#include <condition_variable>
+#include <exception>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -283,6 +289,38 @@ struct StereoFrame
     double right = 0.0;
 };
 
+class RenderWorkerPool
+{
+public:
+    explicit RenderWorkerPool(size_t workerCount);
+    ~RenderWorkerPool();
+
+    RenderWorkerPool(const RenderWorkerPool&) = delete;
+    RenderWorkerPool& operator=(const RenderWorkerPool&) = delete;
+
+    size_t WorkerCount() const noexcept { return workers_.size(); }
+    bool Run(size_t jobCount, const std::function<void(size_t)>& job);
+    bool RunWithCaller(
+        size_t jobCount,
+        const std::function<void(size_t)>& job,
+        const std::function<void()>& callerJob);
+
+private:
+    void WorkerLoop();
+
+    std::vector<std::thread> workers_{};
+    std::mutex mutex_{};
+    std::condition_variable workCv_{};
+    std::condition_variable doneCv_{};
+    std::function<void(size_t)> job_{};
+    size_t jobCount_ = 0;
+    size_t nextJob_ = 0;
+    size_t completedJobs_ = 0;
+    size_t generation_ = 0;
+    bool stopping_ = false;
+    std::exception_ptr exception_{};
+};
+
 struct RenderState
 {
     // RenderMIDIEvents の 1 実行スコープで共有される可変状態。
@@ -318,6 +356,9 @@ struct RenderState
     std::array<std::vector<size_t>, 16> activeVoiceIndicesByChannel{};
     std::vector<StereoFrame> renderBlockFrames{};
     std::vector<int> renderActiveChannels{};
+    std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
+    std::unique_ptr<RenderWorkerPool> renderWorkerPool{};
+    bool renderParallelDisabled = false;
     std::array<double, 16> channelPitchBendNorm{};
     std::array<double, 16> channelPitchBendRangeSemis{};
     std::array<int, 16> channelRpnMsb{};
