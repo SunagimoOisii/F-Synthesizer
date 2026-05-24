@@ -411,6 +411,11 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
 
     std::error_code ec;
     std::filesystem::create_directories(presetPath.parent_path(), ec);
+    if (ec)
+    {
+        err = "failed to create preset directory: " + ec.message();
+        return false;
+    }
     std::ofstream out(presetPath, std::ios::binary | std::ios::trunc);
     if (!out)
     {
@@ -479,10 +484,13 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     std::error_code ec;
     if (std::filesystem::exists(dir, ec))
     {
-        for (const auto& ent : std::filesystem::directory_iterator(dir, ec))
+        std::filesystem::directory_iterator it(dir, ec);
+        const std::filesystem::directory_iterator end;
+        for (; it != end && !ec; it.increment(ec))
         {
-            if (ec) break;
-            if (!ent.is_regular_file()) continue;
+            std::error_code fileEc;
+            if (!it->is_regular_file(fileEc) || fileEc) continue;
+            const auto& ent = *it;
             if (ent.path().extension() != ".json") continue;
             names.push_back(ent.path().stem().string());
         }
@@ -507,13 +515,19 @@ bool LoadPresetConfig(
     const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (presetName + ".json");
 
     cfg = DefaultConfig();
-    if (std::filesystem::exists(basePath))
+    std::error_code existsEc;
+    if (std::filesystem::exists(basePath, existsEc))
     {
         if (!LoadConfigFile(basePath, cfg, err))
         {
             err = "failed to load base config: " + err;
             return false;
         }
+    }
+    else if (existsEc)
+    {
+        err = "failed to inspect base config: " + existsEc.message();
+        return false;
     }
     if (!LoadConfigFile(presetPath, cfg, err))
     {

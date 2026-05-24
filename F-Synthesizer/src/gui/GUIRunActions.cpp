@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <chrono>
+#include <exception>
 #include <future>
 #include <mutex>
+#include <system_error>
 #include <vector>
 
 #include "AppCore.h"
@@ -226,6 +228,55 @@ void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int prev
     (*previewConfigs)[previewChannel] = (*state.channelConfigs)[slot];
     cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(previewConfigs);
 }
+
+std::string FormatRunException(const std::exception& ex)
+{
+    if (const auto* systemError = dynamic_cast<const std::system_error*>(&ex))
+    {
+        return std::string(systemError->what()) +
+            " code=" + std::to_string(systemError->code().value()) +
+            " category=" + systemError->code().category().name();
+    }
+    return ex.what();
+}
+
+int RunSafely(
+    AppConfig cfg,
+    RenderOptions options,
+    GUIState& state,
+    std::shared_ptr<SoundData> outBuffer)
+{
+    try
+    {
+        return Run(cfg, options, &state.observer, outBuffer.get());
+    }
+    catch (const std::exception& ex)
+    {
+        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: " + FormatRunException(ex));
+        return 1;
+    }
+    catch (...)
+    {
+        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: unknown exception");
+        return 1;
+    }
+}
+
+void MarkRunStartFailed(GUIState& state, const std::string& detail)
+{
+    state.running = false;
+    state.hasRun = true;
+    state.lastRunExitCode = 1;
+    state.runOutputBuffer.reset();
+    state.runIsPreview = false;
+    state.autoPlayPreviewOnRunComplete = false;
+    gui::AppendGUILog(state, "[GUI] Run start failed: " + detail);
+    gui::RaiseGUIError(
+        state,
+        BuildUserErrorMessage("Export/Preview を開始できません。実行環境を確認してください。", detail),
+        0,
+        true);
+}
 } // namespace
 
 namespace gui
@@ -347,9 +398,20 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.running = true;
-    state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
-        return Run(cfg, options, &state.observer, outBuffer.get());
-        });
+    try
+    {
+        state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
+            return RunSafely(cfg, options, state, outBuffer);
+            });
+    }
+    catch (const std::exception& ex)
+    {
+        MarkRunStartFailed(state, FormatRunException(ex));
+    }
+    catch (...)
+    {
+        MarkRunStartFailed(state, "unknown exception");
+    }
 }
 
 bool TryFinalizeCompletedRun(GUIState& state)
@@ -361,7 +423,30 @@ bool TryFinalizeCompletedRun(GUIState& state)
         return false;
     }
 
-    state.lastRunExitCode = state.runFuture.get();
+    try
+    {
+        state.lastRunExitCode = state.runFuture.get();
+    }
+    catch (const std::exception& ex)
+    {
+        state.lastRunExitCode = 1;
+        detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run future exception: " + FormatRunException(ex));
+        RaiseGUIError(
+            state,
+            BuildUserErrorMessage("Export/Preview 実行中に例外が発生しました。ログを確認してください。", FormatRunException(ex)),
+            0,
+            true);
+    }
+    catch (...)
+    {
+        state.lastRunExitCode = 1;
+        detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run future exception: unknown exception");
+        RaiseGUIError(
+            state,
+            "Export/Preview 実行中に不明な例外が発生しました。ログを確認してください。",
+            0,
+            true);
+    }
     state.hasRun = true;
     state.running = false;
     detail::AppendGUILogToTab(state, state.runLogTab, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));

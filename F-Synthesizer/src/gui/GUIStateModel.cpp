@@ -110,13 +110,25 @@ void RepairGUIStatePaths(
 
     // 保存状態の破損/旧形式を想定し、実行可能な範囲に丸めて復旧する。
     bool repaired = false;
-    if (!std::filesystem::exists(midi))
+    std::error_code midiEc;
+    const bool midiExists = std::filesystem::exists(midi, midiEc);
+    if (!midiExists || midiEc)
     {
+        if (midiEc && appendLog)
+        {
+            appendLog("[GUI] Failed to inspect restored MIDI path: " + midiEc.message());
+        }
         CopyPath(state.midiPath, sizeof(state.midiPath), def.midiPath);
         repaired = true;
     }
-    if (wav.extension().empty() || std::filesystem::is_directory(wav))
+    std::error_code wavDirEc;
+    const bool wavIsDirectory = std::filesystem::is_directory(wav, wavDirEc);
+    if (wav.extension().empty() || wavIsDirectory || wavDirEc)
     {
+        if (wavDirEc && appendLog)
+        {
+            appendLog("[GUI] Failed to inspect restored WAV path: " + wavDirEc.message());
+        }
         CopyPath(state.wavPath, sizeof(state.wavPath), def.wavPath);
         repaired = true;
     }

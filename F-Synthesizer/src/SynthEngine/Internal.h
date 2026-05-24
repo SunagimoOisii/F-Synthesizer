@@ -318,7 +318,6 @@ struct RenderState
     std::array<StereoFrame, 16> renderChannelSums{};
     std::array<DrumBusConfig, 16> renderChannelDrumBus{};
     std::array<bool, 16> renderChannelHasDrumBus{};
-    std::array<std::vector<size_t>, config::kSourceKindCount> activeVoiceIndicesBySource{};
     std::array<std::vector<size_t>, 16> activeVoiceIndicesByChannel{};
     std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
     std::vector<StereoFrame> renderBlockFrames{};
@@ -367,10 +366,6 @@ inline void RebuildActiveVoiceIndices(RenderState& state)
 {
     state.activeVoiceIndices.clear();
     state.activeVoiceIndices.reserve(state.voices.size());
-    for (auto& bucket : state.activeVoiceIndicesBySource)
-    {
-        bucket.clear();
-    }
     for (auto& bucket : state.activeVoiceIndicesByChannel)
     {
         bucket.clear();
@@ -380,9 +375,6 @@ inline void RebuildActiveVoiceIndices(RenderState& state)
         if (state.voices.pendingRemove[i] == 0 && state.voices.env[i].stage != ADSRStage::Off)
         {
             state.activeVoiceIndices.push_back(i);
-            const int sourceKind = config::SourceKindToIndex(
-                config::SourceKindFromIndex(state.voices.runtimeSourceKind[i]));
-            state.activeVoiceIndicesBySource[sourceKind].push_back(i);
             const int channel = state.voices.channelIndex[i];
             state.activeVoiceIndicesByChannel[(channel >= 0 && channel < 16) ? channel : 0].push_back(i);
         }
@@ -439,5 +431,4 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleRate,
     RenderState& state);
 
-StereoFrame RenderVoices(RenderState& state, const SoundData& sound);
 void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCount, std::vector<StereoFrame>& outFrames);

@@ -216,8 +216,14 @@ bool StartsWith(const std::string& s, const std::string& prefix)
 
 bool LoadGUIStateStorageFile(const std::filesystem::path& path, GUIStateStorageData& data, std::string& err)
 {
-    if (!std::filesystem::exists(path))
+    std::error_code existsEc;
+    if (!std::filesystem::exists(path, existsEc))
     {
+        if (existsEc)
+        {
+            err = "failed to inspect " + path.string() + ": " + existsEc.message();
+            return false;
+        }
         // 初回起動はファイル未存在を正常系として扱う。
         return true;
     }
@@ -347,6 +353,11 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
 {
     std::error_code ec;
     std::filesystem::create_directories(path.parent_path(), ec);
+    if (ec)
+    {
+        err = "failed to create directory for " + path.string() + ": " + ec.message();
+        return false;
+    }
 
     std::ofstream fout(path, std::ios::binary | std::ios::trunc);
     if (!fout)
@@ -441,8 +452,14 @@ bool SaveGUIStateStorageFile(const std::filesystem::path& path, const GUIStateSt
 
 bool LoadPianoRollProjectStorageFile(const std::filesystem::path& path, PianoRollProjectStorageData& data, std::string& err)
 {
-    if (!std::filesystem::exists(path))
+    std::error_code existsEc;
+    if (!std::filesystem::exists(path, existsEc))
     {
+        if (existsEc)
+        {
+            err = "failed to inspect " + path.string() + ": " + existsEc.message();
+            return false;
+        }
         return true;
     }
 
@@ -589,6 +606,11 @@ bool SavePianoRollProjectStorageFile(const std::filesystem::path& path, const Pi
 {
     std::error_code ec;
     std::filesystem::create_directories(path.parent_path(), ec);
+    if (ec)
+    {
+        err = "failed to create directory for " + path.string() + ": " + ec.message();
+        return false;
+    }
 
     std::ofstream fout(path, std::ios::binary | std::ios::trunc);
     if (!fout)

@@ -493,45 +493,6 @@ size_t RenderSingleChannelBlockToOutput(
 
 } // namespace
 
-StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
-{
-    // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
-    if (state.activeVoiceIndicesDirty)
-    {
-        RebuildActiveVoiceIndices(state);
-    }
-    auto& channelSums = state.renderChannelSums;
-    auto& channelDrumBus = state.renderChannelDrumBus;
-    auto& channelHasDrumBus = state.renderChannelHasDrumBus;
-    channelSums.fill(StereoFrame{});
-    channelHasDrumBus.fill(false);
-
-    // SoA 配列を先頭から順に処理するホットパス。
-    // 目的: キャッシュ局所性を高め、Voice 数増加時の劣化を抑える。
-    for (const size_t i : state.activeVoiceIndices)
-    {
-        const int ch = state.voices.channelIndex[i];
-        if (RenderVoiceSampleToChannel(state, sound, i, channelSums[ch], channelDrumBus[ch], channelHasDrumBus[ch]))
-        {
-            state.pendingRemoveCount++;
-            MarkActiveVoiceIndicesDirty(state);
-        }
-    }
-
-    StereoFrame sum{};
-    for (int ch = 0; ch < 16; ch++)
-    {
-        StereoFrame frame = channelSums[ch];
-        if (channelHasDrumBus[ch])
-        {
-            frame = ApplyDrumBus(state.drumBusState[ch], channelDrumBus[ch], frame, sound.fs);
-        }
-        sum.left += frame.left * state.channelMixGainL[ch];
-        sum.right += frame.right * state.channelMixGainR[ch];
-    }
-    return sum;
-}
-
 void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCount, std::vector<StereoFrame>& outFrames)
 {
     if (frameCount <= 0)

@@ -25,7 +25,16 @@ int RunMain(
         }
     }
 
-    LogLine(observer, "Working Directory: " + PathToUtf8(std::filesystem::current_path()));
+    std::error_code cwdEc;
+    const std::filesystem::path cwd = std::filesystem::current_path(cwdEc);
+    if (cwdEc)
+    {
+        LogLine(observer, "[IO] op=current working directory cause=\"" + cwdEc.message() + "\"");
+    }
+    else
+    {
+        LogLine(observer, "Working Directory: " + PathToUtf8(cwd));
+    }
     LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
     LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
     LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));

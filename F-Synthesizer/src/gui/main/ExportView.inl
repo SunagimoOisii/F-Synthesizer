@@ -176,14 +176,26 @@ static void DrawExportView(
         for (const std::string& path : state.recentWavPaths)
         {
             std::string label = CompactPathForUI(path);
-            std::error_code ec;
-            const auto sz = std::filesystem::file_size(path, ec);
-            if (!ec && sz > 0)
+            try
             {
-                const double mb = static_cast<double>(sz) / (1024.0 * 1024.0);
-                char sizeBuf[32];
-                snprintf(sizeBuf, sizeof(sizeBuf), " (%.1f MB)", mb);
-                label += sizeBuf;
+                const std::filesystem::path wavPath = Utf8ToPath(path);
+                std::error_code ec;
+                const auto sz = std::filesystem::file_size(wavPath, ec);
+                if (!ec && sz > 0)
+                {
+                    const double mb = static_cast<double>(sz) / (1024.0 * 1024.0);
+                    char sizeBuf[32];
+                    snprintf(sizeBuf, sizeof(sizeBuf), " (%.1f MB)", mb);
+                    label += sizeBuf;
+                }
+            }
+            catch (const std::exception& ex)
+            {
+                AppendGUILog(state, std::string("[GUI] Recent WAV inspect failed: ") + ex.what());
+            }
+            catch (...)
+            {
+                AppendGUILog(state, "[GUI] Recent WAV inspect failed: unknown exception");
             }
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered())

@@ -202,7 +202,20 @@ int RunGUIApp()
     if (state.running && state.runFuture.valid())
     {
         state.stopRequested.store(true, std::memory_order_relaxed);
-        state.lastRunExitCode = state.runFuture.get();
+        try
+        {
+            state.lastRunExitCode = state.runFuture.get();
+        }
+        catch (const std::exception& ex)
+        {
+            state.lastRunExitCode = 1;
+            AppendGUILog(state, std::string("[GUI] Run shutdown exception: ") + ex.what());
+        }
+        catch (...)
+        {
+            state.lastRunExitCode = 1;
+            AppendGUILog(state, "[GUI] Run shutdown exception: unknown exception");
+        }
         state.hasRun = true;
         state.running = false;
     }

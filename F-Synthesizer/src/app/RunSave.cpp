@@ -20,7 +20,8 @@ int SaveRunOutput(
         return 0;
     }
 
-    if (std::filesystem::exists(config.wavPath))
+    std::error_code existsEc;
+    if (std::filesystem::exists(config.wavPath, existsEc))
     {
         std::error_code rmEc;
         std::filesystem::remove(config.wavPath, rmEc);
@@ -28,6 +29,10 @@ int SaveRunOutput(
         {
             LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
         }
+    }
+    else if (existsEc)
+    {
+        LogLine(observer, "[SavePrep] failed to inspect old file: " + existsEc.message());
     }
 
     WAVWriteError err{};

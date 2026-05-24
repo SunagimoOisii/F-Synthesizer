@@ -32,9 +32,15 @@ bool ValidateRunSettings(
     const std::filesystem::path wavPath = Utf8ToPath(wavPathUtf8);
     if (wavPath.has_filename() && !wavPath.extension().empty())
     {
-        if (std::filesystem::is_directory(wavPath))
+        std::error_code isDirEc;
+        if (std::filesystem::is_directory(wavPath, isDirEc))
         {
             err = "Output Path points to a directory, not a .wav file.";
+            return false;
+        }
+        if (isDirEc)
+        {
+            err = "Output Path cannot be inspected: " + isDirEc.message();
             return false;
         }
     }
@@ -44,8 +50,14 @@ bool ValidateRunSettings(
         return false;
     }
 
-    if (!std::filesystem::exists(Utf8ToPath(midiPathUtf8)))
+    std::error_code existsEc;
+    if (!std::filesystem::exists(Utf8ToPath(midiPathUtf8), existsEc))
     {
+        if (existsEc)
+        {
+            err = "MIDI file cannot be inspected: " + existsEc.message();
+            return false;
+        }
         err = "MIDI file not found: " + midiPathUtf8;
         return false;
     }
@@ -89,8 +101,13 @@ std::filesystem::path BuildSerialWAVPath(const std::filesystem::path& basePath)
     const std::string stem = basePath.stem().string();
     const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();
     std::filesystem::path candidate = basePath.parent_path() / (stem + "_" + stamp + ext);
-    for (int i = 1; i <= 99 && std::filesystem::exists(candidate); i++)
+    for (int i = 1; i <= 99; i++)
     {
+        std::error_code existsEc;
+        if (!std::filesystem::exists(candidate, existsEc) || existsEc)
+        {
+            break;
+        }
         candidate = basePath.parent_path() / (stem + "_" + stamp + "_" + std::to_string(i) + ext);
     }
     return candidate;

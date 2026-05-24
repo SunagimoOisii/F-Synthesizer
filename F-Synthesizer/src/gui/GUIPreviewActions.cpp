@@ -2,8 +2,11 @@
 
 #include <algorithm>
 #include <array>
+#include <exception>
+#include <future>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "AppCore.h"
@@ -198,6 +201,56 @@ void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int prev
     (*previewConfigs)[previewChannel] = (*state.channelConfigs)[slot];
     cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(previewConfigs);
 }
+
+std::string FormatPreviewException(const std::exception& ex)
+{
+    if (const auto* systemError = dynamic_cast<const std::system_error*>(&ex))
+    {
+        return std::string(systemError->what()) +
+            " code=" + std::to_string(systemError->code().value()) +
+            " category=" + systemError->code().category().name();
+    }
+    return ex.what();
+}
+
+int RunPreviewSafely(
+    AppConfig cfg,
+    RenderOptions options,
+    GUIState& state,
+    std::shared_ptr<SoundData> outBuffer)
+{
+    try
+    {
+        return Run(cfg, options, &state.observer, outBuffer.get());
+    }
+    catch (const std::exception& ex)
+    {
+        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: " + FormatPreviewException(ex));
+        return 1;
+    }
+    catch (...)
+    {
+        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: unknown exception");
+        return 1;
+    }
+}
+
+void MarkPreviewStartFailed(GUIState& state, const std::string& detail)
+{
+    state.running = false;
+    state.hasRun = true;
+    state.lastRunExitCode = 1;
+    state.previewAudioReady = false;
+    state.runOutputBuffer.reset();
+    state.runIsPreview = false;
+    state.autoPlayPreviewOnRunComplete = false;
+    gui::AppendGUILog(state, "[GUI] Preview start failed: " + detail);
+    gui::RaiseGUIError(
+        state,
+        BuildUserErrorMessage("Tone Preview を開始できません。実行環境を確認してください。", detail),
+        0,
+        true);
+}
 } // namespace
 
 namespace gui
@@ -319,9 +372,20 @@ void StartGUISoundTonePreview(GUIState& state)
     state.hasRun = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.running = true;
-    state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
-        return Run(cfg, options, &state.observer, outBuffer.get());
-        });
+    try
+    {
+        state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
+            return RunPreviewSafely(cfg, options, state, outBuffer);
+            });
+    }
+    catch (const std::exception& ex)
+    {
+        MarkPreviewStartFailed(state, FormatPreviewException(ex));
+    }
+    catch (...)
+    {
+        MarkPreviewStartFailed(state, "unknown exception");
+    }
 }
 
 void StopGUIRunAndPreview(GUIState& state)
