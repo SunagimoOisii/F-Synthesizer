@@ -304,22 +304,30 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 
         SourceRenderFrame frame{};
         RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
-        frame.sample += RenderAttackLayer(voices, i, in);
-        frame.sample += RenderBassLayer(voices, i, in);
-        frame.sample += RenderLeadLayer(voices, i, in);
-        const StereoFrame pluck = RenderPluckLayer(voices, i, in);
-        const StereoFrame stringLayer = RenderStringLayer(voices, i, in);
-        const StereoFrame chord = RenderChordLayer(voices, i, in);
-        const StereoFrame pad = RenderPadLayer(voices, i, in);
-        const StereoFrame harmonic = RenderHarmonicLayer(voices, i, in);
-        const StereoFrame powerChord = RenderPowerChordLayer(voices, i, in);
-        const StereoFrame chug = RenderChugLayer(voices, i, in);
+        const uint32_t layerMask = voices.layerMask[i];
+        if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
+        if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);
+        if ((layerMask & kVoiceLayerLead) != 0) frame.sample += RenderLeadLayer(voices, i, in);
+        const StereoFrame pluck =
+            ((layerMask & kVoiceLayerPluck) != 0) ? RenderPluckLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame stringLayer =
+            ((layerMask & kVoiceLayerString) != 0) ? RenderStringLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame chord =
+            ((layerMask & kVoiceLayerChord) != 0) ? RenderChordLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame pad =
+            ((layerMask & kVoiceLayerPad) != 0) ? RenderPadLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame harmonic =
+            ((layerMask & kVoiceLayerHarmonic) != 0) ? RenderHarmonicLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame powerChord =
+            ((layerMask & kVoiceLayerPowerChord) != 0) ? RenderPowerChordLayer(voices, i, in) : StereoFrame{};
+        const StereoFrame chug =
+            ((layerMask & kVoiceLayerChug) != 0) ? RenderChugLayer(voices, i, in) : StereoFrame{};
         frame.sample += (pluck.left + pluck.right + stringLayer.left + stringLayer.right + chord.left + chord.right + pad.left + pad.right + harmonic.left + harmonic.right + powerChord.left + powerChord.right + chug.left + chug.right) * 0.5;
         frame.stereoOffsetL += (pluck.left - pluck.right + stringLayer.left - stringLayer.right + chord.left - chord.right + pad.left - pad.right + harmonic.left - harmonic.right + powerChord.left - powerChord.right + chug.left - chug.right) * 0.5;
         frame.stereoOffsetR += (pluck.right - pluck.left + stringLayer.right - stringLayer.left + chord.right - chord.left + pad.right - pad.left + harmonic.right - harmonic.left + powerChord.right - powerChord.left + chug.right - chug.left) * 0.5;
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
-        ApplyAmpCabLayer(voices, i, in, frame);
-        ApplyBodyLayer(voices, i, in, frame);
+        if ((layerMask & kVoiceLayerAmpCab) != 0) ApplyAmpCabLayer(voices, i, in, frame);
+        if ((layerMask & kVoiceLayerBody) != 0) ApplyBodyLayer(voices, i, in, frame);
         ApplyModulationLayer(voices.source[i], voices, i, frame);
         voices.ageSec[i] += in.dt;
 

@@ -214,6 +214,20 @@ void InitializeVoiceAtIndex(
     voices.expressionDefaultVelocityNorm[i] =
         std::clamp(static_cast<double>(std::clamp(e.velocity, 0, 127)) / 127.0, 0.0, 1.0);
     voices.expressionDefaultAmpVelocity[i] = VelocityToGain(e.velocity);
+    uint32_t layerMask = 0;
+    if (cfg.attackLayer.enabled && cfg.attackLayer.level > 0.0) layerMask |= kVoiceLayerAttack;
+    if (cfg.bassLayer.enabled && cfg.bassLayer.level > 0.0) layerMask |= kVoiceLayerBass;
+    if (cfg.leadLayer.enabled && cfg.leadLayer.level > 0.0) layerMask |= kVoiceLayerLead;
+    if (cfg.chordLayer.enabled && cfg.chordLayer.level > 0.0) layerMask |= kVoiceLayerChord;
+    if (cfg.padLayer.enabled && cfg.padLayer.level > 0.0) layerMask |= kVoiceLayerPad;
+    if (cfg.pluckLayer.enabled && cfg.pluckLayer.level > 0.0) layerMask |= kVoiceLayerPluck;
+    if (cfg.stringLayer.enabled && cfg.stringLayer.level > 0.0) layerMask |= kVoiceLayerString;
+    if (cfg.bodyLayer.enabled && cfg.bodyLayer.mix > 0.0) layerMask |= kVoiceLayerBody;
+    if (cfg.harmonicLayer.enabled && cfg.harmonicLayer.level > 0.0) layerMask |= kVoiceLayerHarmonic;
+    if (cfg.powerChordLayer.enabled && cfg.powerChordLayer.level > 0.0) layerMask |= kVoiceLayerPowerChord;
+    if (cfg.chugLayer.enabled && cfg.chugLayer.level > 0.0) layerMask |= kVoiceLayerChug;
+    if (cfg.ampCabLayer.enabled) layerMask |= kVoiceLayerAmpCab;
+    voices.layerMask[i] = layerMask;
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -541,6 +555,7 @@ void Voice::reserve(size_t n)
     expressionMap.reserve(n);
     expressionDefaultVelocityNorm.reserve(n);
     expressionDefaultAmpVelocity.reserve(n);
+    layerMask.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -615,6 +630,7 @@ void Voice::clear()
     expressionMap.clear();
     expressionDefaultVelocityNorm.clear();
     expressionDefaultAmpVelocity.clear();
+    layerMask.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -700,6 +716,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     expressionMap.emplace_back();
     expressionDefaultVelocityNorm.push_back(1.0);
     expressionDefaultAmpVelocity.push_back(1.0);
+    layerMask.push_back(0);
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -876,6 +893,7 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(expressionMap, keepScratch);
     CompactVectorByKeep(expressionDefaultVelocityNorm, keepScratch);
     CompactVectorByKeep(expressionDefaultAmpVelocity, keepScratch);
+    CompactVectorByKeep(layerMask, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);

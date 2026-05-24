@@ -134,6 +134,22 @@ struct DrumBusRuntimeState
     double roomDiffR = 0.0;
 };
 
+enum VoiceLayerMask : uint32_t
+{
+    kVoiceLayerAttack = 1u << 0,
+    kVoiceLayerBass = 1u << 1,
+    kVoiceLayerLead = 1u << 2,
+    kVoiceLayerChord = 1u << 3,
+    kVoiceLayerPad = 1u << 4,
+    kVoiceLayerPluck = 1u << 5,
+    kVoiceLayerString = 1u << 6,
+    kVoiceLayerBody = 1u << 7,
+    kVoiceLayerHarmonic = 1u << 8,
+    kVoiceLayerPowerChord = 1u << 9,
+    kVoiceLayerChug = 1u << 10,
+    kVoiceLayerAmpCab = 1u << 11
+};
+
 struct Voice
 {
     // SoA 構造:
@@ -171,6 +187,7 @@ struct Voice
     std::vector<ExpressionMapConfig> expressionMap;
     std::vector<double> expressionDefaultVelocityNorm;
     std::vector<double> expressionDefaultAmpVelocity;
+    std::vector<uint32_t> layerMask;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;
