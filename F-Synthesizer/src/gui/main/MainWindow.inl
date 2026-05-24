@@ -109,12 +109,64 @@ auto saveAll = [&]() -> bool
     AppendGUILog(state, "[GUI] Save All completed.");
     return true;
 };
+auto preparePlayPresetTarget = [&]()
+{
+    const int targetCh = state.playEditingChannel;
+    if (targetCh < 0 || targetCh > 15)
+    {
+        return;
+    }
+    gui::EnsureChannelConfigs(state);
+    const int currentSound = std::clamp(state.channelAssignments[targetCh], 0, 15);
+    int users = 0;
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        if (std::clamp(state.channelAssignments[ch], 0, 15) == currentSound)
+        {
+            ++users;
+        }
+    }
+    if (users <= 1)
+    {
+        state.selectedSoundSlot = currentSound;
+        return;
+    }
+
+    bool used[16]{};
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        used[std::clamp(state.channelAssignments[ch], 0, 15)] = true;
+    }
+    int freeSound = -1;
+    for (int i = 0; i < 16; ++i)
+    {
+        if (!used[i])
+        {
+            freeSound = i;
+            break;
+        }
+    }
+    if (freeSound < 0)
+    {
+        state.selectedSoundSlot = currentSound;
+        AppendGUILog(state, "[GUI] Shared sound could not be isolated for " + ChannelLabel(targetCh) + ".");
+        return;
+    }
+
+    (*state.channelConfigs)[freeSound] = (*state.channelConfigs)[currentSound];
+    state.macroSliders[freeSound] = state.macroSliders[currentSound];
+    state.channelAssignments[targetCh] = freeSound;
+    state.selectedSoundSlot = freeSound;
+    state.presetDirty = true;
+    AppendGUILog(state, "[GUI] " + ChannelLabel(targetCh) + " sound isolated before preset apply.");
+};
 auto applyPresetByIndex = [&](int idx)
 {
     if (idx < 0 || idx >= static_cast<int>(state.presetItems.size()))
     {
         return;
     }
+    preparePlayPresetTarget();
     state.presetIndex = idx;
     std::string err;
     if (ApplySelectedPresetPaths(state, err))
@@ -122,7 +174,7 @@ auto applyPresetByIndex = [&](int idx)
         state.presetDirty = false;
         requestAutoTonePreview();
         AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[idx] +
-            " -> slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
+            " -> sound " + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15) + 1));
     }
     else
     {
@@ -150,14 +202,6 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             (needSync && state.UIModeTab == 2) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         ImGuiTabItemFlags advancedFlags =
             (needSync && state.UIModeTab == 3) ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-        if (ImGui::BeginTabItem("Play", nullptr, playFlags))
-        {
-            state.UIModeTab = 0;
-            ImGui::EndTabItem();
-        }
-        updateHoverHelp(
-            "Playへ切り替えます。",
-            "Sound Card選択と短い試聴を表示します。");
         if (ImGui::BeginTabItem("Compose", nullptr, composeFlags))
         {
             state.UIModeTab = 1;
@@ -166,6 +210,24 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
         updateHoverHelp(
             "Composeへ切り替えます。",
             "MIDI、ピアノロール、ドラム入力を表示します。");
+        if (ImGui::BeginTabItem("Play", nullptr, playFlags))
+        {
+            if (state.UIModeTab == 1)
+            {
+                const int ch = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+                state.playEditingChannel = ch;
+                state.selectedSoundSlot = std::clamp(state.channelAssignments[ch], 0, 15);
+            }
+            else if (state.UIModeTab != 0)
+            {
+                state.playEditingChannel = -1;
+            }
+            state.UIModeTab = 0;
+            ImGui::EndTabItem();
+        }
+        updateHoverHelp(
+            "Playへ切り替えます。",
+            "Sound Card選択と短い試聴を表示します。");
         if (ImGui::BeginTabItem("Export", nullptr, exportFlags))
         {
             state.UIModeTab = 2;
@@ -228,7 +290,14 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             "Light/Dark の表示モードが切り替わります。");
         ImGui::TableSetColumnIndex(3);
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("スロット s%d", selectedSlotChip);
+        if (state.UIModeTab == 0 && state.playEditingChannel >= 0 && state.playEditingChannel < 16)
+        {
+            ImGui::Text("対象 %s", ChannelLabel(state.playEditingChannel).c_str());
+        }
+        else
+        {
+            ImGui::Text("音色 %d", selectedSlotChip + 1);
+        }
         ImGui::TableSetColumnIndex(4);
         ImGui::AlignTextToFramePadding();
         ImGui::Text("音源 %s", sourceChip);
@@ -412,7 +481,7 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
         }
         updateHoverHelp(
             "試聴を実行します。",
-            "表示chを選択中Slotで再生成して再生します。",
+            "表示中の音色で再生成して再生します。",
             "WAVファイルは出力しません。");
     }
     else if (state.UIModeTab == 1)
@@ -590,7 +659,10 @@ const float reserveForLog = logPanelExpanded
     ? (splitterThickness + logHeaderReserve + state.logPanelHeight + 8.0f)
     : (logHeaderReserve + 6.0f);
 const float bodyHeight = (std::max)(180.0f, availY - reserveForLog);
-ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true);
+const ImGuiWindowFlags bodyPanelFlags = (state.UIModeTab == 1)
+    ? (ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
+    : ImGuiWindowFlags_None;
+ImGui::BeginChild("body_panel", ImVec2(0, bodyHeight), true, bodyPanelFlags);
 if (state.UIModeTab == 0)
 {
     DrawPlayView(

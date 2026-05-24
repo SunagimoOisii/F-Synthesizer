@@ -49,7 +49,7 @@ void InitializeGUIState(
     StopPreviewAudio(state.playback);
     ApplyProjectModelToGUI(state, DefaultProjectModel());
     state.UIScaleIndex = 1;
-    state.UIModeTab = 0;
+    state.UIModeTab = 1;
     state.UIThemeIndex = 0;
     state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
@@ -87,6 +87,7 @@ void InitializeGUIState(
     state.runOutputBuffer.reset();
     state.pianoRoll = gui::PianoRollState{};
     state.stepSeq = GUIStepSeqState{};
+    state.playEditingChannel = -1;
     state.observer.logMutex = &state.logMutex;
     state.observer.logs = &state.soundLogs;
     state.observer.cancelRequested = &state.stopRequested;
@@ -274,10 +275,9 @@ void RepairGUIStatePaths(
         state.UIScaleIndex = 1;
         repaired = true;
     }
-    if (state.UIModeTab != 0)
+    if (state.UIModeTab < 0 || state.UIModeTab > 3)
     {
-        // GUI刷新後は旧タブ状態を引き継がず、初回成功体験の Play から開始する。
-        state.UIModeTab = 0;
+        state.UIModeTab = 1;
         repaired = true;
     }
     if (state.UIThemeIndex < 0 || state.UIThemeIndex > 1)

@@ -90,34 +90,42 @@ static std::string ChannelLabel(int channel)
     return label;
 }
 
-static std::string SlotSourceLabel(const GUIState& state, int slot)
+static std::string SoundSourceLabel(const GUIState& state, int soundIndex)
 {
-    slot = std::clamp(slot, 0, 15);
+    soundIndex = std::clamp(soundIndex, 0, 15);
     if (!state.channelConfigs)
     {
-        return "slot s" + std::to_string(slot);
+        return "-";
     }
 
-    const config::SourceKind sourceKind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
-    return "slot s" + std::to_string(slot) + " / " + config::SourceKindToDisplayName(sourceKind);
+    const config::SourceKind sourceKind = config::SourceConfigKind((*state.channelConfigs)[soundIndex].source);
+    return config::SourceKindToDisplayName(sourceKind);
+}
+
+static std::string ChannelSoundLabel(const GUIState& state, int channel)
+{
+    channel = std::clamp(channel, 0, 15);
+    const int soundIndex = std::clamp(state.channelAssignments[channel], 0, 15);
+    return SoundSourceLabel(state, soundIndex);
 }
 
 template <typename HelpFn>
 static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
 {
-    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const int soundIndex = std::clamp(state.selectedSoundSlot, 0, 15);
     if (ImGui::Button("曲で使う"))
     {
         ImGui::OpenPopup("use_sound_slot_in_compose");
     }
     updateHoverHelp(
-        "選択中のSound Slotを曲で使います。",
-        "MIDIチャンネルへ割り当ててComposeへ移動します。",
+        "選択中の音色を曲で使います。",
+        "使うMIDIチャンネルを選んでComposeへ移動します。",
         nullptr);
 
     if (ImGui::BeginPopup("use_sound_slot_in_compose"))
     {
-        ImGui::Text("使う音: %s", SlotSourceLabel(state, slot).c_str());
+        ImGui::Text("使う音色: %s", SoundSourceLabel(state, soundIndex).c_str());
+        ImGui::TextDisabled("使うチャンネルを選択");
         ImGui::Separator();
         if (ImGui::BeginTable("use_sound_slot_channels", 4, ImGuiTableFlags_SizingStretchSame))
         {
@@ -127,8 +135,9 @@ static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
                 const std::string label = ChannelLabel(ch);
                 if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 0.0f)))
                 {
-                    state.channelAssignments[ch] = slot;
+                    state.channelAssignments[ch] = soundIndex;
                     state.pianoRoll.displayChannel = ch;
+                    state.playEditingChannel = -1;
                     state.UIModeTab = 1;
                     state.presetDirty = true;
                     ImGui::CloseCurrentPopup();
@@ -158,7 +167,15 @@ static void DrawPlayView(
     gui::EnsureChannelConfigs(state);
 
     ImGui::TextUnformatted("Sound Cards");
-    ImGui::TextDisabled("選んで、鳴らして、少しだけ動かす。");
+    const int editingChannel = std::clamp(state.playEditingChannel, -1, 15);
+    if (editingChannel >= 0)
+    {
+        ImGui::TextDisabled("%s の音色を選択中", ChannelLabel(editingChannel).c_str());
+    }
+    else
+    {
+        ImGui::TextDisabled("選んで、鳴らして、曲で使うチャンネルを決める。");
+    }
     ImGui::Spacing();
 
     for (int i = 0; i < static_cast<int>(IM_ARRAYSIZE(kPlayCategories)); ++i)
@@ -250,7 +267,7 @@ static void DrawPlayView(
             ImGui::TextDisabled("このカテゴリのSound Cardはありません。");
         }
         ImGui::EndChild();
-        updateHoverHelp("Sound Cardを選びます。", "選択した音色を現在のスロットへ読み込みます。", nullptr);
+        updateHoverHelp("Sound Cardを選びます。", "選択した音色を現在の編集対象へ読み込みます。", nullptr);
 
         DrawLayer2Macros(state);
         const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
@@ -328,6 +345,52 @@ static void DrawComposeView(
     ImGui::TextDisabled("MIDIとノートを確認して、曲として鳴らします。");
     ImGui::Separator();
 
+    const bool isShowingDrumCh =
+        (state.pianoRoll.displayChannel == drumMidiChannel) && state.drumChannelSpecialHandling;
+    const float composeAvailY = ImGui::GetContentRegionAvail().y;
+    const float spacingY = ImGui::GetStyle().ItemSpacing.y;
+    const float settingsMinHeight = 160.0f;
+    const float editorMaxHeight = (std::max)(220.0f, composeAvailY - settingsMinHeight - spacingY);
+    const float editorHeight = std::clamp(composeAvailY * 0.60f, 220.0f, editorMaxHeight);
+
+    ImGui::BeginChild(
+        "compose_editor_panel",
+        ImVec2(0.0f, editorHeight),
+        true,
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    if (isShowingDrumCh)
+    {
+        if (ImGui::Button(state.stepSeq.viewActive ? "ピアノロール" : "ステップシーケンサー"))
+        {
+            if (state.stepSeq.viewActive)
+            {
+                state.stepSeq.viewActive = false;
+            }
+            else
+            {
+                LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll);
+                state.stepSeq.viewActive = true;
+            }
+        }
+        updateHoverHelp("ドラム編集ビューを切り替えます。", "ピアノロールと16ステップを切り替えます。", nullptr);
+    }
+    if (isShowingDrumCh && state.stepSeq.viewActive)
+    {
+        DrawStepSeqPanel(state);
+    }
+    else
+    {
+        DrawPianoRollPanel(
+            state.pianoRoll,
+            state.midiPath,
+            &state.playback,
+            [&](const std::string& line) { AppendGUILog(state, line); },
+            [&]() { StartGUIRun(state, true); },
+            [&]() { StopGUIRunAndPreview(state); });
+    }
+    ImGui::EndChild();
+
+    ImGui::BeginChild("compose_settings_panel", ImVec2(0.0f, 0.0f), true);
     ImGui::BeginDisabled(state.running);
     state.presetDirty |= ImGui::InputText("MIDI", state.midiPath, IM_ARRAYSIZE(state.midiPath));
     updateHoverHelp("MIDIファイルを指定します。", "Compose/Exportの入力になります。", nullptr);
@@ -351,55 +414,53 @@ static void DrawComposeView(
     ImGui::Separator();
     if (ImGui::CollapsingHeader("Instrument Map", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        if (ImGui::BeginTable("compose_instrument_map", 6,
-            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit))
+        if (ImGui::BeginTable("compose_instrument_map", 2,
+            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
         {
-            ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 74.0f);
-            ImGui::TableSetupColumn("notes", ImGuiTableColumnFlags_WidthFixed, 58.0f);
-            ImGui::TableSetupColumn("program", ImGuiTableColumnFlags_WidthStretch, 0.34f);
-            ImGui::TableSetupColumn("GM category", ImGuiTableColumnFlags_WidthFixed, 110.0f);
-            ImGui::TableSetupColumn("current slot/source", ImGuiTableColumnFlags_WidthStretch, 0.33f);
-            ImGui::TableSetupColumn("action", ImGuiTableColumnFlags_WidthFixed, 96.0f);
-            ImGui::TableHeadersRow();
-            for (int ch = 0; ch < 16; ch++)
+            ImGui::TableSetupColumn("ch1-8", ImGuiTableColumnFlags_WidthStretch, 0.5f);
+            ImGui::TableSetupColumn("ch9-16", ImGuiTableColumnFlags_WidthStretch, 0.5f);
+            for (int row = 0; row < 8; row++)
             {
-                ImGui::PushID(ch);
                 ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::TextUnformatted(ChannelLabel(ch).c_str());
-                ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%d", state.pianoRoll.noteCountByChannel[ch]);
-                ImGui::TableSetColumnIndex(2);
-                if (state.pianoRoll.hasProgramByChannel[ch])
+                for (int col = 0; col < 2; col++)
                 {
-                    ImGui::TextUnformatted(GMProgramDisplayLabel(state.pianoRoll.programByChannel[ch]).c_str());
+                    const int ch = row + col * 8;
+                    ImGui::TableSetColumnIndex(col);
+                    ImGui::PushID(ch);
+                    const char* category = ComposeGMCategoryLabel(state, ch);
+                    ImGui::TextUnformatted(ChannelLabel(ch).c_str());
+                    ImGui::SameLine();
+                    ImGui::TextDisabled("notes %d", state.pianoRoll.noteCountByChannel[ch]);
+                    ImGui::SameLine();
+                    if (state.pianoRoll.hasProgramByChannel[ch])
+                    {
+                        ImGui::Text("MIDI: %s", GMProgramDisplayLabel(state.pianoRoll.programByChannel[ch]).c_str());
+                    }
+                    else
+                    {
+                        ImGui::TextUnformatted("MIDI: -");
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("推奨: %s", category);
+                    ImGui::SameLine();
+                    ImGui::Text("音色: %s", ChannelSoundLabel(state, ch).c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("探す"))
+                    {
+                        state.pianoRoll.displayChannel = ch;
+                        state.selectedSoundSlot = std::clamp(state.channelAssignments[ch], 0, 15);
+                        state.playEditingChannel = ch;
+                        state.playCategoryIndex = PlayCategoryIndexByName(category);
+                        state.UIModeTab = 0;
+                    }
+                    ImGui::PopID();
                 }
-                else
-                {
-                    ImGui::TextUnformatted("-");
-                }
-                ImGui::TableSetColumnIndex(3);
-                const char* category = ComposeGMCategoryLabel(state, ch);
-                ImGui::TextUnformatted(category);
-                ImGui::TableSetColumnIndex(4);
-                const int assignedSlot = std::clamp(state.channelAssignments[ch], 0, 15);
-                ImGui::TextUnformatted(SlotSourceLabel(state, assignedSlot).c_str());
-                ImGui::TableSetColumnIndex(5);
-                const bool canFind = std::strcmp(category, "-") != 0 && CategoryHasPreset(state, category);
-                ImGui::BeginDisabled(!canFind);
-                if (ImGui::Button("Playで探す"))
-                {
-                    state.playCategoryIndex = PlayCategoryIndexByName(category);
-                    state.UIModeTab = 0;
-                }
-                ImGui::EndDisabled();
-                ImGui::PopID();
             }
             ImGui::EndTable();
         }
         updateHoverHelp(
             "MIDIのProgram Changeを確認します。",
-            "各チャンネルのGM楽器情報と現在のSound Slot割当を表示します。",
+            "各チャンネルのGM楽器情報と現在の音色を表示します。",
             "Sound Cardは自動適用されません。");
     }
 
@@ -407,14 +468,15 @@ static void DrawComposeView(
     const int displayCh = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     ImGui::Text("表示チャンネル: %s", ChannelLabel(displayCh).c_str());
     int assigned = std::clamp(state.channelAssignments[displayCh], 0, 15);
-    ImGui::Text("このチャンネルで使う音: %s", SlotSourceLabel(state, assigned).c_str());
+    ImGui::Text("このチャンネルの音色: %s", SoundSourceLabel(state, assigned).c_str());
+    int assignedSoundNumber = assigned + 1;
     ImGui::SetNextItemWidth(220.0f);
-    if (ImGui::SliderInt("使うSound Card", &assigned, 0, 15, "slot %d"))
+    if (ImGui::SliderInt("音色の選択", &assignedSoundNumber, 1, 16, "%d"))
     {
-        state.channelAssignments[displayCh] = assigned;
+        state.channelAssignments[displayCh] = std::clamp(assignedSoundNumber - 1, 0, 15);
         state.presetDirty = true;
     }
-    updateHoverHelp("Playで作ったslotをこのチャンネルで使います。", "曲のチャンネルとSound Slotを結びます。", nullptr);
+    updateHoverHelp("表示中チャンネルで鳴る音色を選びます。", "Playで作った音色を曲のチャンネルに使います。", nullptr);
     ImGui::SameLine();
     if (ImGui::Button("Advancedでミックス"))
     {
@@ -465,40 +527,7 @@ static void DrawComposeView(
     }
     updateHoverHelp("ドラムの簡単設定です。", "ch10をDrumKit向けにそろえます。", nullptr);
     ImGui::EndDisabled();
-
-    ImGui::Separator();
-    const bool isShowingDrumCh =
-        (state.pianoRoll.displayChannel == drumMidiChannel) && state.drumChannelSpecialHandling;
-    if (isShowingDrumCh)
-    {
-        if (ImGui::Button(state.stepSeq.viewActive ? "ピアノロール" : "ステップシーケンサー"))
-        {
-            if (state.stepSeq.viewActive)
-            {
-                state.stepSeq.viewActive = false;
-            }
-            else
-            {
-                LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll);
-                state.stepSeq.viewActive = true;
-            }
-        }
-        updateHoverHelp("ドラム編集ビューを切り替えます。", "ピアノロールと16ステップを切り替えます。", nullptr);
-    }
-    if (isShowingDrumCh && state.stepSeq.viewActive)
-    {
-        DrawStepSeqPanel(state);
-    }
-    else
-    {
-        DrawPianoRollPanel(
-            state.pianoRoll,
-            state.midiPath,
-            &state.playback,
-            [&](const std::string& line) { AppendGUILog(state, line); },
-            [&]() { StartGUIRun(state, true); },
-            [&]() { StopGUIRunAndPreview(state); });
-    }
+    ImGui::EndChild();
 }
 
 template <typename ApplyPresetFn, typename HelpFn, typename PreviewFn>
@@ -608,7 +637,7 @@ static void DrawAdvancedView(
                 ImVec2(0.0f, 300.0f)))
         {
             ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 42.0f);
-            ImGui::TableSetupColumn("slot", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+            ImGui::TableSetupColumn("音色", ImGuiTableColumnFlags_WidthFixed, 90.0f);
             ImGui::TableSetupColumn("M", ImGuiTableColumnFlags_WidthFixed, 32.0f);
             ImGui::TableSetupColumn("S", ImGuiTableColumnFlags_WidthFixed, 32.0f);
             ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 0.34f);
@@ -631,13 +660,14 @@ static void DrawAdvancedView(
                 ImGui::TableNextRow();
                 ImGui::PushID(ch);
                 ImGui::TableSetColumnIndex(0);
-                ImGui::Text("ch%d", ch);
+                ImGui::TextUnformatted(ChannelLabel(ch).c_str());
                 ImGui::TableSetColumnIndex(1);
                 int assigned = std::clamp(state.channelAssignments[ch], 0, 15);
+                int assignedSoundNumber = assigned + 1;
                 ImGui::SetNextItemWidth(-FLT_MIN);
-                if (ImGui::SliderInt("##assign", &assigned, 0, 15, "s%d"))
+                if (ImGui::SliderInt("##assign", &assignedSoundNumber, 1, 16, "%d"))
                 {
-                    state.channelAssignments[ch] = assigned;
+                    state.channelAssignments[ch] = std::clamp(assignedSoundNumber - 1, 0, 15);
                     state.presetDirty = true;
                 }
                 ImGui::TableSetColumnIndex(2);

@@ -15,6 +15,36 @@ namespace
 {
 using HoverHelpFn = std::function<void(const char* what, const char* impact, const char* caution)>;
 
+std::string ChannelLabel(int channel)
+{
+    channel = std::clamp(channel, 0, 15);
+    std::string label = "ch" + std::to_string(channel + 1);
+    if (channel == 9)
+    {
+        label += " Drums";
+    }
+    return label;
+}
+
+std::string ChannelsUsingSoundLabel(const GUIState& state, int soundIndex)
+{
+    soundIndex = std::clamp(soundIndex, 0, 15);
+    std::string result;
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        if (std::clamp(state.channelAssignments[ch], 0, 15) != soundIndex)
+        {
+            continue;
+        }
+        if (!result.empty())
+        {
+            result += ", ";
+        }
+        result += ChannelLabel(ch);
+    }
+    return result;
+}
+
 void SetFmOperatorEnv(ModEnvelopeConfig& env, double attack, double decay, double sustain, double release, double curve)
 {
     env.attackSec = attack;
@@ -291,35 +321,43 @@ bool DrawChannelEditor(
     // Layer3 Undo bracketing: IsAnyItemActive() の遷移を利用して before スナップショットを記録する。
     // 精度注記: IsAnyItemActive() はウィンドウ全体のフラグのため Layer2 の操作で誤アーム
     // することがあるが、Layer2 は独自の per-slider undo を持つため実用上の問題はない。
-    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const ChannelConfig frameConfig = (*state.channelConfigs)[slot];
-    const MacroSliderState frameSliders = state.macroSliders[slot];
-
-    ImGui::TextUnformatted("音色スロット");
-    changed |= ImGui::InputInt("選択スロット (0-15)", &state.selectedSoundSlot);
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "編集対象のSound Slotを指定します。",
-            "この後の音色編集が適用されるスロットが変わります。",
-            nullptr);
-    }
-    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
     const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     const int assignedSlot = std::clamp(state.channelAssignments[prChannel], 0, 15);
-    ImGui::TextDisabled("表示ch%d -> 割当スロット s%d", prChannel, assignedSlot);
+    ImGui::Text("編集対象: %sの音色", ChannelLabel(prChannel).c_str());
     ImGui::SameLine();
-    if (ImGui::Button("この割当スロットを編集"))
+    if (ImGui::Button("表示中チャンネルの音色を編集"))
     {
         state.selectedSoundSlot = assignedSlot;
     }
     if (updateHoverHelp)
     {
         updateHoverHelp(
-            "PR ch に割り当てられたSound Slotへ編集対象を移します。",
-            "Music側の表示chで鳴る音色を直接編集できます。",
+            "表示中チャンネルの音色へ編集対象を合わせます。",
+            "Composeで表示しているチャンネルの音を直接編集できます。",
             nullptr);
     }
+    int selectedSoundNumber = state.selectedSoundSlot + 1;
+    if (ImGui::InputInt("詳細 音色番号 (1-16)", &selectedSoundNumber))
+    {
+        state.selectedSoundSlot = std::clamp(selectedSoundNumber - 1, 0, 15);
+        changed = true;
+    }
+    if (updateHoverHelp)
+    {
+        updateHoverHelp(
+            "高度な編集対象を番号で指定します。",
+            "複数チャンネルで同じ音色を共有している場合は、共有先にも編集が反映されます。",
+            nullptr);
+    }
+    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const std::string sharedChannels = ChannelsUsingSoundLabel(state, state.selectedSoundSlot);
+    if (!sharedChannels.empty())
+    {
+        ImGui::TextDisabled("この音色は %s で使用中", sharedChannels.c_str());
+    }
+    const int editSlot = std::clamp(state.selectedSoundSlot, 0, 15);
+    const ChannelConfig frameConfig = (*state.channelConfigs)[editSlot];
+    const MacroSliderState frameSliders = state.macroSliders[editSlot];
 
     auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
     {
@@ -336,8 +374,8 @@ bool DrawChannelEditor(
 
     ImGui::Separator();
     ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];
-    ImGui::Text("選択スロット: s%d", state.selectedSoundSlot);
-    ImGui::TextDisabled("Tone Preview は選択中スロットを使用します。");
+    ImGui::Text("編集中の音色番号: %d", state.selectedSoundSlot + 1);
+    ImGui::TextDisabled("Tone Preview は編集中の音色を使用します。");
 
     if (ImGui::CollapsingHeader("エンベロープ / 音量", ImGuiTreeNodeFlags_DefaultOpen))
     {
@@ -848,8 +886,8 @@ bool DrawChannelEditor(
 
     const bool anyItemActive = ImGui::IsAnyItemActive();
 
-    // スロット切替でアーム状態をリセット
-    if (l3BeforeSlot >= 0 && l3BeforeSlot != slot)
+    // 音色切替でアーム状態をリセット
+    if (l3BeforeSlot >= 0 && l3BeforeSlot != editSlot)
     {
         l3BeforeSlot = -1;
         l3SessionChanged = false;
@@ -860,7 +898,7 @@ bool DrawChannelEditor(
     {
         l3BeforeConfig = frameConfig; // このフレームのレンダリング前の値
         l3BeforeSliders = frameSliders;
-        l3BeforeSlot = slot;
+        l3BeforeSlot = editSlot;
         l3SessionChanged = false;
     }
 

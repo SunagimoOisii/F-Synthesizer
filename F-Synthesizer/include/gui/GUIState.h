@@ -107,6 +107,7 @@ struct GUITransientState
     std::deque<SoundUndoEntry> soundUndoStack;
     std::deque<SoundUndoEntry> soundRedoStack;
     int playCategoryIndex = 0;
+    int playEditingChannel = -1;
     bool playInspectorOpen = true;
 };
 
