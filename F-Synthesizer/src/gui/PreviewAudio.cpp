@@ -211,51 +211,6 @@ void ShutdownPreviewAudio(PreviewPlaybackState& playback)
     }
 }
 
-bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err)
-{
-    if (sound.length <= 0)
-    {
-        err = "Preview buffer is empty.";
-        return false;
-    }
-    playback.channels = (sound.channels >= 2) ? 2 : 1;
-    if (!EnsurePreviewAudioDevice(playback, sound.fs, err))
-    {
-        return false;
-    }
-
-    auto buffer = std::make_shared<PreviewPCMBuffer>();
-    buffer->channels = playback.channels;
-    buffer->sampleRate = static_cast<ma_uint32>(sound.fs);
-    buffer->frameCount = static_cast<ma_uint64>(sound.length);
-    buffer->session = playback.sessionGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
-    buffer->pcm.resize(static_cast<size_t>(sound.length) * playback.channels);
-    for (int i = 0; i < sound.length; i++)
-    {
-        const size_t index = static_cast<size_t>(i);
-        const double lRaw = sound.SampleL(index);
-        const double rRaw = sound.SampleR(index);
-        const double l = (std::max)(-1.0, (std::min)(1.0, lRaw));
-        const double r = (std::max)(-1.0, (std::min)(1.0, rRaw));
-        if (playback.channels == 1)
-        {
-            buffer->pcm[i] = static_cast<float>((l + r) * 0.5);
-        }
-        else
-        {
-            const size_t base = static_cast<size_t>(i) * 2;
-            buffer->pcm[base + 0] = static_cast<float>(l);
-            buffer->pcm[base + 1] = static_cast<float>(r);
-        }
-    }
-    playback.pcmBuffer.store(std::static_pointer_cast<const PreviewPCMBuffer>(buffer), std::memory_order_release);
-    playback.streamMode.store(false, std::memory_order_release);
-    playback.frameCursor.store(0, std::memory_order_relaxed);
-    playback.loop.store(loop, std::memory_order_relaxed);
-    playback.playing.store(true, std::memory_order_relaxed);
-    return true;
-}
-
 uint64_t StartStreamingPreviewAudio(
     PreviewPlaybackState& playback,
     int sampleRate,

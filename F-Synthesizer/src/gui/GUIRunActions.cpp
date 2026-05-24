@@ -92,43 +92,6 @@ double PreviewRangeDurationSec(const GUIState& state)
     return (std::max)(0.0, endSec - startSec);
 }
 
-void TrimPreviewSoundByDuration(SoundData& sound, double durationSec)
-{
-    if (durationSec <= 0.0 || sound.fs <= 0 || sound.length <= 0)
-    {
-        return;
-    }
-    const uint64_t keepSamples = static_cast<uint64_t>(durationSec * static_cast<double>(sound.fs));
-    if (keepSamples == 0)
-    {
-        if (sound.channels >= 2)
-        {
-            sound.dataL.clear();
-            sound.dataR.clear();
-        }
-        else
-        {
-            sound.data.clear();
-        }
-        sound.length = 0;
-        return;
-    }
-    if (keepSamples < static_cast<uint64_t>(sound.length))
-    {
-        const size_t keep = static_cast<size_t>(keepSamples);
-        if (sound.channels >= 2)
-        {
-            sound.dataL.resize(keep);
-            sound.dataR.resize(keep);
-        }
-        else
-        {
-            sound.data.resize(keep);
-        }
-        sound.length = static_cast<int>(keep);
-    }
-}
-
 std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPianoRoll(
     const GUIState& state,
     int& outTicksPerQuarter)
@@ -283,8 +246,7 @@ private:
 int RunSafely(
     AppConfig cfg,
     RenderOptions options,
-    GUIState& state,
-    std::shared_ptr<SoundData> outBuffer)
+    GUIState& state)
 {
     try
     {
@@ -293,7 +255,7 @@ int RunSafely(
             GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
             return RunPreviewStreaming(cfg, options, &state.observer, sink, state.previewLoop);
         }
-        return Run(cfg, options, &state.observer, outBuffer.get());
+        return Run(cfg, options, &state.observer, nullptr);
     }
     catch (const std::exception& ex)
     {
@@ -312,9 +274,7 @@ void MarkRunStartFailed(GUIState& state, const std::string& detail)
     state.running = false;
     state.hasRun = true;
     state.lastRunExitCode = 1;
-    state.runOutputBuffer.reset();
     state.runIsPreview = false;
-    state.autoPlayPreviewOnRunComplete = false;
     gui::AppendGUILog(state, "[GUI] Run start failed: " + detail);
     gui::RaiseGUIError(
         state,
@@ -422,9 +382,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     state.lastPeak = 0.0;
     state.hasPeak = false;
-    state.runOutputBuffer = nullptr;
     state.runIsPreview = previewSelected;
-    state.autoPlayPreviewOnRunComplete = previewSelected;
     detail::AppendGUILogToTab(state, state.runLogTab, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
     if (cfg.overrideNoteTicks != nullptr)
     {
@@ -452,8 +410,8 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.running = true;
     try
     {
-        state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
-            return RunSafely(cfg, options, state, outBuffer);
+        state.runFuture = std::async(std::launch::async, [cfg, options, &state]() {
+            return RunSafely(cfg, options, state);
             });
     }
     catch (const std::exception& ex)
@@ -505,64 +463,16 @@ bool TryFinalizeCompletedRun(GUIState& state)
     const bool finishedPreview = state.runIsPreview;
     if (state.runIsPreview)
     {
-        if (state.lastRunExitCode == 0 &&
-            state.runOutputBuffer == nullptr)
+        if (state.lastRunExitCode == 0)
         {
             state.previewAudioReady = true;
             detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview streaming completed");
         }
-        else if (state.lastRunExitCode == 0 &&
-            state.runOutputBuffer != nullptr &&
-            state.runOutputBuffer->length > 0)
-        {
-            if (state.pianoRoll.previewRangeEnabled)
-            {
-                TrimPreviewSoundByDuration(*state.runOutputBuffer, state.previewRequestedDurationSec);
-            }
-            if (state.runOutputBuffer->length <= 0)
-            {
-                state.previewAudioReady = false;
-                state.previewRenderedSound.reset();
-                detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview range is too short: no audio");
-                state.runOutputBuffer.reset();
-                state.runIsPreview = false;
-                state.autoPlayPreviewOnRunComplete = false;
-                if (state.restorePreviewOnRunComplete)
-                {
-                    DeactivateSoloPreview(state);
-                }
-                return true;
-            }
-            state.previewRenderedSound = state.runOutputBuffer;
-            state.previewAudioReady = true;
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview audio buffer ready");
-            if (state.autoPlayPreviewOnRunComplete)
-            {
-                std::string playErr;
-                state.playback.playStartTick.store(state.previewRequestedStartTick, std::memory_order_relaxed);
-                if (PlayPreviewAudio(state.playback, *state.previewRenderedSound, state.previewLoop, playErr))
-                {
-                    detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback started");
-                }
-                else
-                {
-                    detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview playback failed: " + playErr);
-                    RaiseGUIError(
-                        state,
-                        BuildUserErrorMessage("Preview 再生に失敗しました。設定を確認して再実行してください。", playErr),
-                        0,
-                        true);
-                }
-            }
-        }
         else
         {
             state.previewAudioReady = false;
-            state.previewRenderedSound.reset();
         }
-        state.runOutputBuffer.reset();
         state.runIsPreview = false;
-        state.autoPlayPreviewOnRunComplete = false;
     }
     if (!finishedPreview &&
         state.lastRunExitCode == 0 &&

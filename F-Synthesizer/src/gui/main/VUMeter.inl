@@ -6,43 +6,14 @@
 
 static void DrawVUMeter(GUIState& state)
 {
-    if (!state.previewRenderedSound && !state.playback.playing.load(std::memory_order_relaxed))
+    if (!state.playback.playing.load(std::memory_order_relaxed))
     {
         return;
     }
 
     // ---- 1. 今フレームの peak を計算 ----
-    constexpr int kWindowFrames = 512;
     float instantPeak = GetPreviewPlaybackPeak(state.playback);
     bool clipInWindow = instantPeak > 1.0f;
-    if (instantPeak <= 0.0f && state.previewRenderedSound)
-    {
-        const SoundData& sd = *state.previewRenderedSound;
-        const auto& src = sd.dataL.empty() ? sd.data : sd.dataL;
-        const int srcSize = static_cast<int>(src.size());
-        int windowStart = 0;
-        if (state.playback.playing.load(std::memory_order_relaxed))
-        {
-            const int cursor = static_cast<int>(
-                state.playback.frameCursor.load(std::memory_order_relaxed));
-            windowStart = std::clamp(cursor - kWindowFrames / 2, 0,
-                std::max(0, srcSize - kWindowFrames));
-        }
-        const int windowEnd = std::min(windowStart + kWindowFrames, srcSize);
-
-        for (int i = windowStart; i < windowEnd; ++i)
-        {
-            const float s = static_cast<float>(std::abs(src[i]));
-            if (s > instantPeak)
-            {
-                instantPeak = s;
-            }
-            if (s > 1.0f)
-            {
-                clipInWindow = true;
-            }
-        }
-    }
 
     // ---- 2. 静的状態の更新 ----
     static float vuLevel = 0.0f; // 表示レベル（ファストアタック/スローデケイ）

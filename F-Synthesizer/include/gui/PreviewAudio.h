@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "core/AudioBuffer.h"
 #include "third_party/miniaudio.h"
 
 struct PreviewPCMBuffer
@@ -50,7 +49,6 @@ struct PreviewPlaybackState
 bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, std::string& err);
 void StopPreviewAudio(PreviewPlaybackState& playback);
 void ShutdownPreviewAudio(PreviewPlaybackState& playback);
-bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err);
 uint64_t StartStreamingPreviewAudio(
     PreviewPlaybackState& playback,
     int sampleRate,

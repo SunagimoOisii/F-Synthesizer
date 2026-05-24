@@ -120,9 +120,6 @@ struct GUIAsyncRunState
     std::atomic<bool> stopRequested{ false };
     bool previewAudioReady = false;
     bool runIsPreview = false;
-    bool autoPlayPreviewOnRunComplete = false;
-    std::shared_ptr<SoundData> previewRenderedSound{};
-    std::shared_ptr<SoundData> runOutputBuffer{};
     PreviewPlaybackState playback{};
     std::future<int> runFuture{};
 };

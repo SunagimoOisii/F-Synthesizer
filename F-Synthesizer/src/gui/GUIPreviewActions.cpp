@@ -256,8 +256,7 @@ private:
 int RunPreviewSafely(
     AppConfig cfg,
     RenderOptions options,
-    GUIState& state,
-    std::shared_ptr<SoundData> outBuffer)
+    GUIState& state)
 {
     try
     {
@@ -282,9 +281,7 @@ void MarkPreviewStartFailed(GUIState& state, const std::string& detail)
     state.hasRun = true;
     state.lastRunExitCode = 1;
     state.previewAudioReady = false;
-    state.runOutputBuffer.reset();
     state.runIsPreview = false;
-    state.autoPlayPreviewOnRunComplete = false;
     gui::AppendGUILog(state, "[GUI] Preview start failed: " + detail);
     gui::RaiseGUIError(
         state,
@@ -405,9 +402,7 @@ void StartGUISoundTonePreview(GUIState& state)
     }
     state.lastPeak = 0.0;
     state.hasPeak = false;
-    state.runOutputBuffer = nullptr;
     state.runIsPreview = true;
-    state.autoPlayPreviewOnRunComplete = true;
     detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (note=" + std::to_string(previewNote) + ")");
     detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
     state.hasRun = false;
@@ -415,8 +410,8 @@ void StartGUISoundTonePreview(GUIState& state)
     state.running = true;
     try
     {
-        state.runFuture = std::async(std::launch::async, [cfg, options, outBuffer = state.runOutputBuffer, &state]() {
-            return RunPreviewSafely(cfg, options, state, outBuffer);
+        state.runFuture = std::async(std::launch::async, [cfg, options, &state]() {
+            return RunPreviewSafely(cfg, options, state);
             });
     }
     catch (const std::exception& ex)
@@ -431,8 +426,6 @@ void StartGUISoundTonePreview(GUIState& state)
 
 void StopGUIRunAndPreview(GUIState& state)
 {
-    state.autoPlayPreviewOnRunComplete = false;
-
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);

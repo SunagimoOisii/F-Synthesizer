@@ -297,6 +297,17 @@ public:
     virtual int SampleRate() const = 0;
     virtual void Begin() = 0;
     virtual bool WriteFrame(int sampleIndex, StereoFrame frame) = 0;
+    virtual bool SkipSilentFrames(int sampleIndex, int frameCount)
+    {
+        for (int offset = 0; offset < frameCount; offset++)
+        {
+            if (!WriteFrame(sampleIndex + offset, StereoFrame{}))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     virtual bool IsCanceled() const { return false; }
 };
 

@@ -476,6 +476,11 @@ public:
         return true;
     }
 
+    bool SkipSilentFrames(int, int) override
+    {
+        return true;
+    }
+
 private:
     SoundData& sound_;
 };
@@ -641,7 +646,16 @@ void RenderMIDIEventsToSink(
             }
             if (state.activeVoiceIndices.empty())
             {
-                cleanupCountdown -= (chunkEnd - i);
+                const int silentFrameCount = chunkEnd - i;
+                if (!sink.SkipSilentFrames(i, silentFrameCount))
+                {
+                    if (canceled != nullptr)
+                    {
+                        *canceled = true;
+                    }
+                    return;
+                }
+                cleanupCountdown -= silentFrameCount;
                 i = chunkEnd;
                 continue;
             }

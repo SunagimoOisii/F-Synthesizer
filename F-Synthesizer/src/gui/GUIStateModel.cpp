@@ -82,9 +82,6 @@ void InitializeGUIState(
     state.autoTonePreviewLastEditSec = 0.0;
     state.previewAudioReady = false;
     state.runIsPreview = false;
-    state.autoPlayPreviewOnRunComplete = false;
-    state.previewRenderedSound.reset();
-    state.runOutputBuffer.reset();
     state.pianoRoll = gui::PianoRollState{};
     state.stepSeq = GUIStepSeqState{};
     state.playEditingChannel = -1;
