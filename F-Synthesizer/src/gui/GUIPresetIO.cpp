@@ -241,15 +241,19 @@ std::string CategoryFromPresetNameAndTags(const std::string& name, const std::ve
             return tag.find(key) != std::string::npos;
         });
     };
-    if (has("drum")) return "Drums";
+    if (has("drum") || has("hat")) return "Drums";
     if (has("guitar")) return "Guitar";
     if (has("bass")) return "Bass";
+    if (has("string")) return "Strings";
+    if (has("brass")) return "Brass";
+    if (has("reed")) return "Reed";
+    if (has("pipe")) return "Pipe";
     if (has("lead")) return "Lead";
-    if (has("pad") || has("string")) return "Pad";
-    if (has("key") || has("brass")) return "Keys";
+    if (has("pad")) return "Pad";
+    if (has("key") || has("organ") || has("bell") || has("pluck")) return "Piano/Keys";
     if (has("sfx") || has("laser") || has("riser")) return "SFX";
-    if (has("support")) return "Support";
-    return "Lead";
+    if (has("support")) return "SFX";
+    return "Piano/Keys";
 }
 
 PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)

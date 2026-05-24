@@ -31,9 +31,12 @@ void LogMIDITickSummary(
     int ccCount = 0;
     int channelPressureCount = 0;
     int polyPressureCount = 0;
+    int programChangeCount = 0;
     std::array<int, 16> noteByChannel{};
     std::array<int, 16> ccByChannel{};
     std::array<int, 128> ccByType{};
+    std::array<int, 16> lastProgramByChannel{};
+    std::array<bool, 16> hasProgramByChannel{};
 
     for (const auto& t : ticks)
     {
@@ -58,6 +61,12 @@ void LogMIDITickSummary(
         {
             polyPressureCount++;
         }
+        else if (t.type == MIDIEventType::ProgramChange)
+        {
+            programChangeCount++;
+            hasProgramByChannel[ch] = true;
+            lastProgramByChannel[ch] = std::clamp(t.value, 0, 127);
+        }
     }
 
     {
@@ -72,6 +81,7 @@ void LogMIDITickSummary(
         std::ostringstream oss;
         oss << "Event Counts: note=" << noteCount
             << ", cc=" << ccCount
+            << ", program=" << programChangeCount
             << ", chPressure=" << channelPressureCount
             << ", polyPressure=" << polyPressureCount
             << ", tempo=" << tempoEvents.size();
@@ -103,6 +113,20 @@ void LogMIDITickSummary(
         }
     }
     LogLine(observer, ccTypes.str());
+
+    if (programChangeCount > 0)
+    {
+        std::ostringstream programs;
+        programs << "Program Changes:";
+        for (int ch = 0; ch < 16; ch++)
+        {
+            if (hasProgramByChannel[ch])
+            {
+                programs << " ch" << ch << "=" << GMProgramDisplayLabel(lastProgramByChannel[ch]);
+            }
+        }
+        LogLine(observer, programs.str());
+    }
 
     {
         std::ostringstream oss;

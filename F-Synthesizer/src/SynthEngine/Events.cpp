@@ -209,6 +209,11 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
             state.eventIndex++;
             continue;
         }
+        if (e.type == MIDIEventType::ProgramChange)
+        {
+            state.eventIndex++;
+            continue;
+        }
 
         if (e.isNoteOn)
         {

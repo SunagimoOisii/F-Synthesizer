@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <functional>
 #include <cstdint>
@@ -61,6 +62,9 @@ struct PianoRollState
     int maxTick = 0;
     std::vector<TempoEvent> tempoEvents{};
     std::vector<PianoRollNote> notes{};
+    std::array<int, 16> noteCountByChannel{};
+    std::array<int, 16> programByChannel{};
+    std::array<bool, 16> hasProgramByChannel{};
     std::vector<uint8_t> selected{};
     int primarySelectedIndex = -1;
 

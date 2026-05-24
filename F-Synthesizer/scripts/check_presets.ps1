@@ -239,7 +239,7 @@ function Assert-PracticalPresetLayerPolicy {
         $category = [string]$PresetConfig.category
     }
     if ($category -ne "") {
-        $allowedCategories = @("Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support")
+        $allowedCategories = @("Lead", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Pad", "Piano/Keys", "Drums", "SFX")
         if ($allowedCategories -notcontains $category) {
             throw "${Name}: invalid practical preset category '${category}'."
         }
@@ -270,7 +270,7 @@ function Assert-PracticalPresetLayerPolicy {
                 throw "${Name}: ${guitarLayer} layer is only allowed for practical Guitar presets."
             }
         }
-        if ($category -eq "Keys" -and $displayName -like "*Organ*") {
+        if ($category -eq "Piano/Keys" -and $displayName -like "*Organ*") {
             foreach ($forbidden in @("chord", "string", "body")) {
                 if (Test-LayerEnabled -Layers $layers -Name $forbidden) {
                     throw "${Name}: Keys Organ must use harmonic/source tone instead of ${forbidden} layer."
@@ -278,7 +278,7 @@ function Assert-PracticalPresetLayerPolicy {
             }
         }
         if (Test-LayerEnabled -Layers $layers -Name "body") {
-            $isAllowedBody = $category -eq "Pad" -or ($category -eq "Keys" -and $displayName -like "*Pluck*")
+            $isAllowedBody = $category -eq "Pad" -or ($category -eq "Piano/Keys" -and $displayName -like "*Pluck*")
             if (-not $isAllowedBody) {
                 throw "${Name}: body layer is only allowed for practical Pad presets or pluck keys."
             }

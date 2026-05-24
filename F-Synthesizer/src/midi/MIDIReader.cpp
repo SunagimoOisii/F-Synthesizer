@@ -225,6 +225,26 @@ void AppendPolyPressureEvent(std::vector<MIDIEventTick>& outEvents,
     outEvents.push_back(e);
 }
 
+void AppendProgramChangeEvent(std::vector<MIDIEventTick>& outEvents,
+    uint32_t currentTick,
+    int program,
+    unsigned char channel,
+    int& eventOrder)
+{
+    MIDIEventTick e{};
+    e.tick = static_cast<int>(currentTick);
+    e.type = MIDIEventType::ProgramChange;
+    e.isNoteOn = false;
+    e.noteNumber = 0;
+    e.velocity = 0;
+    e.channel = channel;
+    e.controller = 0;
+    e.value = program;
+    e.noteInstanceID = -1;
+    e.order = eventOrder++;
+    outEvents.push_back(e);
+}
+
 bool ParseMetaEvent(const std::vector<unsigned char>& data,
     size_t& idx,
     uint32_t currentTick,
@@ -350,6 +370,17 @@ bool ParseChannelEvent(unsigned char type,
         if (targetChannel < 0 || ch == targetChannel)
         {
             AppendPolyPressureEvent(outEvents, currentTick, note, value, ch, eventOrder);
+        }
+        return true;
+    }
+
+    if (type == 0xC0)
+    {
+        if (idx >= data.size()) return false;
+        const int program = data[idx++];
+        if (targetChannel < 0 || ch == targetChannel)
+        {
+            AppendProgramChangeEvent(outEvents, currentTick, program, ch, eventOrder);
         }
         return true;
     }

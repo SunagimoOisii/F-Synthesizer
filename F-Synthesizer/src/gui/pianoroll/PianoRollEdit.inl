@@ -246,6 +246,9 @@ void ClearModel(PianoRollState& state)
 {
     state.notes.clear();
     state.tempoEvents.clear();
+    state.noteCountByChannel.fill(0);
+    state.programByChannel.fill(0);
+    state.hasProgramByChannel.fill(false);
     state.maxTick = 0;
     state.ticksPerQuarter = 480;
     state.selected.clear();
@@ -276,6 +279,13 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
     for (const auto& e : sorted)
     {
         state.maxTick = (std::max)(state.maxTick, e.tick);
+        if (e.type == MIDIEventType::ProgramChange)
+        {
+            const int ch = ClampChannel(e.channel);
+            state.hasProgramByChannel[ch] = true;
+            state.programByChannel[ch] = std::clamp(e.value, 0, 127);
+            continue;
+        }
         if (e.type != MIDIEventType::Note)
         {
             continue;
@@ -306,6 +316,7 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
             n.channel = ch;
             n.velocity = st.velocity;
             state.notes.push_back(n);
+            state.noteCountByChannel[ch]++;
         }
     }
 
@@ -327,6 +338,7 @@ void BuildNotesFromTicks(const std::vector<MIDIEventTick>& ticks, int ticksPerQu
                 n.channel = ch;
                 n.velocity = st.velocity;
                 state.notes.push_back(n);
+                state.noteCountByChannel[ch]++;
             }
         }
     }

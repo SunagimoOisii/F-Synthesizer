@@ -1,8 +1,24 @@
 namespace
 {
 static constexpr const char* kPlayCategories[] = {
-    "All", "Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support"
+    "All", "Piano/Keys", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Lead", "Pad", "Drums", "SFX"
 };
+
+static int PlayCategoryIndexByName(const char* category)
+{
+    if (category == nullptr || category[0] == '\0')
+    {
+        return 0;
+    }
+    for (int i = 0; i < static_cast<int>(IM_ARRAYSIZE(kPlayCategories)); ++i)
+    {
+        if (std::strcmp(kPlayCategories[i], category) == 0)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
 
 static const std::string& PresetDisplayName(const GUIState& state, int index)
 {
@@ -21,7 +37,37 @@ static std::string PresetCategory(const GUIState& state, int index)
     {
         return state.presetItemCategories[static_cast<size_t>(index)];
     }
-    return "Lead";
+    return "Piano/Keys";
+}
+
+static const char* ComposeGMCategoryLabel(const GUIState& state, int channel)
+{
+    channel = std::clamp(channel, 0, 15);
+    if (channel == 9)
+    {
+        return "Drums";
+    }
+    if (!state.pianoRoll.hasProgramByChannel[channel])
+    {
+        return "-";
+    }
+    return GMProgramCategory(state.pianoRoll.programByChannel[channel], channel);
+}
+
+static bool CategoryHasPreset(const GUIState& state, const char* category)
+{
+    if (category == nullptr || category[0] == '\0' || std::strcmp(category, "All") == 0)
+    {
+        return !state.presetItems.empty();
+    }
+    for (int i = 0; i < static_cast<int>(state.presetItems.size()); ++i)
+    {
+        if (PresetCategory(state, i) == category)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 static std::string PresetDescription(const GUIState& state, int index)
@@ -105,6 +151,10 @@ static void DrawPlayView(
 {
     (void)pendingPresetOriginalIndex;
     state.playCategoryIndex = std::clamp(state.playCategoryIndex, 0, static_cast<int>(IM_ARRAYSIZE(kPlayCategories)) - 1);
+    if (state.playCategoryIndex > 0 && !CategoryHasPreset(state, kPlayCategories[state.playCategoryIndex]))
+    {
+        state.playCategoryIndex = 0;
+    }
     gui::EnsureChannelConfigs(state);
 
     ImGui::TextUnformatted("Sound Cards");
@@ -113,6 +163,10 @@ static void DrawPlayView(
 
     for (int i = 0; i < static_cast<int>(IM_ARRAYSIZE(kPlayCategories)); ++i)
     {
+        if (i > 0 && !CategoryHasPreset(state, kPlayCategories[i]))
+        {
+            continue;
+        }
         if (i > 0)
         {
             ImGui::SameLine();
@@ -292,6 +346,61 @@ static void DrawComposeView(
     if (ImGui::Button("コピー##compose_midi"))
     {
         ImGui::SetClipboardText(state.midiPath);
+    }
+
+    ImGui::Separator();
+    if (ImGui::CollapsingHeader("Instrument Map", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        if (ImGui::BeginTable("compose_instrument_map", 6,
+            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit))
+        {
+            ImGui::TableSetupColumn("ch", ImGuiTableColumnFlags_WidthFixed, 74.0f);
+            ImGui::TableSetupColumn("notes", ImGuiTableColumnFlags_WidthFixed, 58.0f);
+            ImGui::TableSetupColumn("program", ImGuiTableColumnFlags_WidthStretch, 0.34f);
+            ImGui::TableSetupColumn("GM category", ImGuiTableColumnFlags_WidthFixed, 110.0f);
+            ImGui::TableSetupColumn("current slot/source", ImGuiTableColumnFlags_WidthStretch, 0.33f);
+            ImGui::TableSetupColumn("action", ImGuiTableColumnFlags_WidthFixed, 96.0f);
+            ImGui::TableHeadersRow();
+            for (int ch = 0; ch < 16; ch++)
+            {
+                ImGui::PushID(ch);
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextUnformatted(ChannelLabel(ch).c_str());
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%d", state.pianoRoll.noteCountByChannel[ch]);
+                ImGui::TableSetColumnIndex(2);
+                if (state.pianoRoll.hasProgramByChannel[ch])
+                {
+                    ImGui::TextUnformatted(GMProgramDisplayLabel(state.pianoRoll.programByChannel[ch]).c_str());
+                }
+                else
+                {
+                    ImGui::TextUnformatted("-");
+                }
+                ImGui::TableSetColumnIndex(3);
+                const char* category = ComposeGMCategoryLabel(state, ch);
+                ImGui::TextUnformatted(category);
+                ImGui::TableSetColumnIndex(4);
+                const int assignedSlot = std::clamp(state.channelAssignments[ch], 0, 15);
+                ImGui::TextUnformatted(SlotSourceLabel(state, assignedSlot).c_str());
+                ImGui::TableSetColumnIndex(5);
+                const bool canFind = std::strcmp(category, "-") != 0 && CategoryHasPreset(state, category);
+                ImGui::BeginDisabled(!canFind);
+                if (ImGui::Button("Playで探す"))
+                {
+                    state.playCategoryIndex = PlayCategoryIndexByName(category);
+                    state.UIModeTab = 0;
+                }
+                ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+            ImGui::EndTable();
+        }
+        updateHoverHelp(
+            "MIDIのProgram Changeを確認します。",
+            "各チャンネルのGM楽器情報と現在のSound Slot割当を表示します。",
+            "Sound Cardは自動適用されません。");
     }
 
     ImGui::Separator();

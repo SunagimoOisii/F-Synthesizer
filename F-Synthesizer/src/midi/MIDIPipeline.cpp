@@ -251,7 +251,11 @@ bool BuildMIDIPipeline(
         out.events = BuildWindowedEvents(out.events, startSample, endSample);
     }
 
-    if (out.events.empty())
+    const bool hasNoteEvent = std::any_of(out.events.begin(), out.events.end(), [](const MIDIEvent& e)
+    {
+        return e.type == MIDIEventType::Note;
+    });
+    if (!hasNoteEvent)
     {
         err = "no note events found";
         return false;
