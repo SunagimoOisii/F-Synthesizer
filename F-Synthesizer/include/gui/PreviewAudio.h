@@ -26,6 +26,18 @@ struct PreviewPlaybackState
     bool deviceReady = false;
     std::mutex mutex{};
     std::atomic<std::shared_ptr<const PreviewPCMBuffer>> pcmBuffer{};
+    std::vector<float> streamRing{};
+    std::vector<float> streamArchive{};
+    std::atomic<uint64_t> streamReadFrame{ 0 };
+    std::atomic<uint64_t> streamWriteFrame{ 0 };
+    std::atomic<uint64_t> streamAvailableFrames{ 0 };
+    std::atomic<uint64_t> streamSession{ 0 };
+    std::atomic<bool> streamMode{ false };
+    std::atomic<bool> streamCompleted{ false };
+    std::atomic<bool> streamUnderrun{ false };
+    std::atomic<float> streamPeak{ 0.0f };
+    ma_uint64 streamCapacityFrames = 0;
+    ma_uint64 streamStartupFrames = 0;
     std::atomic<uint64_t> frameCursor{ 0 };
     std::atomic<int> playStartTick{ 0 };
     std::atomic<bool> playing{ false };
@@ -39,3 +51,16 @@ bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, st
 void StopPreviewAudio(PreviewPlaybackState& playback);
 void ShutdownPreviewAudio(PreviewPlaybackState& playback);
 bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bool loop, std::string& err);
+uint64_t StartStreamingPreviewAudio(
+    PreviewPlaybackState& playback,
+    int sampleRate,
+    ma_uint32 channels,
+    bool loop,
+    std::string& err);
+bool WriteStreamingPreviewFrame(
+    PreviewPlaybackState& playback,
+    uint64_t session,
+    double left,
+    double right);
+void CompleteStreamingPreviewAudio(PreviewPlaybackState& playback, uint64_t session, bool canceled);
+float GetPreviewPlaybackPeak(const PreviewPlaybackState& playback);

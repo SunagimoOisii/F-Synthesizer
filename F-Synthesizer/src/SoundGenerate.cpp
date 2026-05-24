@@ -37,6 +37,16 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
     return app::run::RunMain(config, options, observer, renderedSound);
 }
 
+int RunPreviewStreaming(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    IPreviewStreamSink& streamSink,
+    bool loop)
+{
+    return app::run::RunPreviewStreamingInternal(config, options, observer, streamSink, loop);
+}
+
 int Run(const AppConfig& config)
 {
     return Run(config, DefaultRenderOptions(), nullptr, nullptr);

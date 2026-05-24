@@ -22,3 +22,17 @@ void RenderMIDIEvents(
     // canceled が null でない場合は、中断時のみ true を書き戻す。
     const std::function<bool()>& shouldCancel = {},
     bool* canceled = nullptr);
+
+void RenderMIDIEventsWithFrameCallback(
+    int length,
+    int sampleRate,
+    const std::vector<MIDIEvent>& events,
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const std::function<bool(int, double, double)>& onFrame,
+    const MasterEffectConfig& effects = MasterEffectConfig{},
+    const std::vector<TempoEvent>* tempoEvents = nullptr,
+    int ticksPerQuarter = 0,
+    double renderStartSec = 0.0,
+    const std::function<bool()>& shouldCancel = {},
+    bool* canceled = nullptr);

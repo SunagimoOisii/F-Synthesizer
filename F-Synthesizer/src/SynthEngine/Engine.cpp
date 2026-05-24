@@ -462,7 +462,7 @@ public:
         }
     }
 
-    void WriteFrame(int sampleIndex, StereoFrame frame) override
+    bool WriteFrame(int sampleIndex, StereoFrame frame) override
     {
         if (sound_.channels >= 2)
         {
@@ -473,10 +473,47 @@ public:
         {
             sound_.data[sampleIndex] = (frame.left + frame.right) * 0.5;
         }
+        return true;
     }
 
 private:
     SoundData& sound_;
+};
+
+class CallbackFrameSink final : public RenderFrameSink
+{
+public:
+    CallbackFrameSink(
+        int length,
+        int sampleRate,
+        const std::function<bool(int, double, double)>& onFrame)
+        : length_(length)
+        , sampleRate_(sampleRate)
+        , onFrame_(onFrame)
+    {
+    }
+
+    int Length() const override { return length_; }
+    int SampleRate() const override { return sampleRate_; }
+    void Begin() override {}
+
+    bool WriteFrame(int sampleIndex, StereoFrame frame) override
+    {
+        if (!onFrame_)
+        {
+            return false;
+        }
+        canceled_ = !onFrame_(sampleIndex, frame.left, frame.right);
+        return !canceled_;
+    }
+
+    bool IsCanceled() const override { return canceled_; }
+
+private:
+    int length_ = 0;
+    int sampleRate_ = 44100;
+    const std::function<bool(int, double, double)>& onFrame_;
+    bool canceled_ = false;
 };
 
 void RenderMIDIEventsToSink(
@@ -619,7 +656,14 @@ void RenderMIDIEventsToSink(
             {
                 frame = ApplyMasterEffects(state, sink.SampleRate(), frame);
             }
-            sink.WriteFrame(i + offset, frame);
+            if (!sink.WriteFrame(i + offset, frame))
+            {
+                if (canceled != nullptr)
+                {
+                    *canceled = true;
+                }
+                return;
+            }
         }
         cleanupCountdown -= frameCount;
         i = chunkEnd;
@@ -640,6 +684,34 @@ void RenderMIDIEvents(
     bool* canceled)
 {
     SoundDataSink sink(sound);
+    RenderMIDIEventsToSink(
+        sink,
+        events,
+        channelConfigs,
+        channelMixStates,
+        effects,
+        tempoEvents,
+        ticksPerQuarter,
+        renderStartSec,
+        shouldCancel,
+        canceled);
+}
+
+void RenderMIDIEventsWithFrameCallback(
+    int length,
+    int sampleRate,
+    const std::vector<MIDIEvent>& events,
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const std::function<bool(int, double, double)>& onFrame,
+    const MasterEffectConfig& effects,
+    const std::vector<TempoEvent>* tempoEvents,
+    int ticksPerQuarter,
+    double renderStartSec,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
+{
+    CallbackFrameSink sink(length, sampleRate, onFrame);
     RenderMIDIEventsToSink(
         sink,
         events,

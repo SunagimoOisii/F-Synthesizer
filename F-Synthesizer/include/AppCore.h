@@ -58,6 +58,14 @@ struct IRunObserver
     virtual bool ShouldCancel() { return false; }
 };
 
+struct IPreviewStreamSink
+{
+    virtual ~IPreviewStreamSink() = default;
+    virtual bool Begin(int sampleRate, int channels, int totalFrames, bool loop) = 0;
+    virtual bool WriteFrame(double left, double right) = 0;
+    virtual void Complete(bool canceled) = 0;
+};
+
 std::filesystem::path FindProjectRootPath();
 AppConfig DefaultConfig();
 bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
@@ -71,3 +79,9 @@ int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* obs
 // 戻り値は 0=成功, 1=失敗, 2=キャンセル要求受理（allowCancel=true かつ observer 経由）で固定。
 // renderedSound が null でなければ、保存成否にかかわらずレンダ結果を書き戻す。
 int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound);
+int RunPreviewStreaming(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    IPreviewStreamSink& streamSink,
+    bool loop);

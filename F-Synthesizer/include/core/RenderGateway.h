@@ -16,3 +16,11 @@ void RenderWithEngine(
     const RenderConfig& config,
     const std::function<bool()>& shouldCancel,
     bool* canceled);
+
+void RenderWithEngineFrames(
+    int length,
+    int sampleRate,
+    const RenderConfig& config,
+    const std::function<bool(int, double, double)>& onFrame,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled);

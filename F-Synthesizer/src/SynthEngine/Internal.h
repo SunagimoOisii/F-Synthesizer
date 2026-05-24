@@ -296,7 +296,8 @@ public:
     virtual int Length() const = 0;
     virtual int SampleRate() const = 0;
     virtual void Begin() = 0;
-    virtual void WriteFrame(int sampleIndex, StereoFrame frame) = 0;
+    virtual bool WriteFrame(int sampleIndex, StereoFrame frame) = 0;
+    virtual bool IsCanceled() const { return false; }
 };
 
 class RenderWorkerPool

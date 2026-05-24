@@ -22,3 +22,26 @@ void RenderWithEngine(
         shouldCancel,
         canceled);
 }
+
+void RenderWithEngineFrames(
+    int length,
+    int sampleRate,
+    const RenderConfig& config,
+    const std::function<bool(int, double, double)>& onFrame,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
+{
+    RenderMIDIEventsWithFrameCallback(
+        length,
+        sampleRate,
+        config.events,
+        config.channelConfigs,
+        config.channelMixStates,
+        onFrame,
+        config.effects,
+        &config.tempoEvents,
+        config.ticksPerQuarter,
+        config.renderStartSec,
+        shouldCancel,
+        canceled);
+}

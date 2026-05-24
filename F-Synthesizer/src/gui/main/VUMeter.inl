@@ -6,44 +6,41 @@
 
 static void DrawVUMeter(GUIState& state)
 {
-    if (!state.previewRenderedSound)
-    {
-        return;
-    }
-
-    const SoundData& sd = *state.previewRenderedSound;
-    const auto& src = sd.dataL.empty() ? sd.data : sd.dataL;
-    if (src.empty())
+    if (!state.previewRenderedSound && !state.playback.playing.load(std::memory_order_relaxed))
     {
         return;
     }
 
     // ---- 1. 今フレームの peak を計算 ----
     constexpr int kWindowFrames = 512;
-    const int srcSize = static_cast<int>(src.size());
-
-    int windowStart = 0;
-    if (state.playback.playing.load(std::memory_order_relaxed))
+    float instantPeak = GetPreviewPlaybackPeak(state.playback);
+    bool clipInWindow = instantPeak > 1.0f;
+    if (instantPeak <= 0.0f && state.previewRenderedSound)
     {
-        const int cursor = static_cast<int>(
-            state.playback.frameCursor.load(std::memory_order_relaxed));
-        windowStart = std::clamp(cursor - kWindowFrames / 2, 0,
-            std::max(0, srcSize - kWindowFrames));
-    }
-    const int windowEnd = std::min(windowStart + kWindowFrames, srcSize);
-
-    float instantPeak = 0.0f;
-    bool clipInWindow = false;
-    for (int i = windowStart; i < windowEnd; ++i)
-    {
-        const float s = static_cast<float>(std::abs(src[i]));
-        if (s > instantPeak)
+        const SoundData& sd = *state.previewRenderedSound;
+        const auto& src = sd.dataL.empty() ? sd.data : sd.dataL;
+        const int srcSize = static_cast<int>(src.size());
+        int windowStart = 0;
+        if (state.playback.playing.load(std::memory_order_relaxed))
         {
-            instantPeak = s;
+            const int cursor = static_cast<int>(
+                state.playback.frameCursor.load(std::memory_order_relaxed));
+            windowStart = std::clamp(cursor - kWindowFrames / 2, 0,
+                std::max(0, srcSize - kWindowFrames));
         }
-        if (s > 1.0f)
+        const int windowEnd = std::min(windowStart + kWindowFrames, srcSize);
+
+        for (int i = windowStart; i < windowEnd; ++i)
         {
-            clipInWindow = true;
+            const float s = static_cast<float>(std::abs(src[i]));
+            if (s > instantPeak)
+            {
+                instantPeak = s;
+            }
+            if (s > 1.0f)
+            {
+                clipInWindow = true;
+            }
         }
     }
 
@@ -52,16 +49,17 @@ static void DrawVUMeter(GUIState& state)
     static float vuPeakHold = 0.0f; // ピークホールド値
     static float vuPeakTimer = 0.0f; // ピークホールドカウントダウン(秒)
     static bool vuClipFlag = false;
-    static const SoundData* vuLastSound = nullptr; // クリップリセット用
+    static uint64_t vuLastSession = 0; // クリップリセット用
 
     // 新しい sound がセットされたらクリップフラグをリセット
-    if (&sd != vuLastSound)
+    const uint64_t session = state.playback.sessionGeneration.load(std::memory_order_relaxed);
+    if (session != vuLastSession)
     {
         vuLevel = 0.0f;
         vuPeakHold = 0.0f;
         vuPeakTimer = 0.0f;
         vuClipFlag = false;
-        vuLastSound = &sd;
+        vuLastSession = session;
     }
 
     const float dt = ImGui::GetIO().DeltaTime;

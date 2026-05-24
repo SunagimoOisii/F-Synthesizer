@@ -1,5 +1,6 @@
 #include "RunInternal.h"
 
+#include <algorithm>
 #include <sstream>
 
 #include "core/RenderGateway.h"
@@ -198,6 +199,119 @@ int RunPreviewRender(
     previewOptions.mode = RunMode::Preview;
     previewOptions.writeWAV = false;
     return RunRenderCommon(config, previewOptions, observer, renderedSound, false);
+}
+
+int RunPreviewStreamingInternal(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    IPreviewStreamSink& streamSink,
+    bool loop)
+{
+    RenderOptions previewOptions = options;
+    previewOptions.mode = RunMode::Preview;
+    previewOptions.writeWAV = false;
+
+    LogLine(observer, "Run Mode: preview streaming");
+
+    MIDIBuildOutput midiOut{};
+    std::string midiErr;
+    if (!BuildMIDIPipeline(
+        config.midiPath,
+        config.targetChannel,
+        config.sampleRate,
+        previewOptions.startSec,
+        previewOptions.durationSec,
+        config.overrideNoteTicks.get(),
+        config.overrideTicksPerQuarter,
+        midiOut,
+        midiErr))
+    {
+        LogLine(observer, (midiErr == "no note events found") ? "No note events found." : "Failed to load MIDI: " + PathToUtf8(config.midiPath));
+        return 1;
+    }
+
+    std::vector<MIDIEvent> events = std::move(midiOut.events);
+    LogSampleEventSummary(observer, events);
+    if (events.empty())
+    {
+        LogLine(observer, "No note events found.");
+        return 1;
+    }
+
+    const auto* channelConfigs = config.channelConfigs.get();
+    const auto* channelMixStates = config.channelMixStates.get();
+    if (channelConfigs == nullptr)
+    {
+        channelConfigs = BuildDefaultChannelConfigs().get();
+    }
+    if (channelMixStates == nullptr)
+    {
+        channelMixStates = BuildDefaultChannelMixStates().get();
+    }
+
+    int lastSample = events.back().sample;
+    int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
+    int neededSamples = lastSample + extraRelease + 1;
+    if (previewOptions.durationSec >= 0.0)
+    {
+        const double durSec = (previewOptions.durationSec > 0.0) ? previewOptions.durationSec : 0.0;
+        const int previewMax = static_cast<int>(durSec * config.sampleRate) + extraRelease + 1;
+        neededSamples = std::min(neededSamples, previewMax);
+    }
+    int soundLength = config.initialSeconds * config.sampleRate;
+    if (neededSamples > soundLength)
+    {
+        soundLength = neededSamples;
+    }
+    else if (neededSamples > 0 && neededSamples < soundLength)
+    {
+        soundLength = neededSamples;
+    }
+
+    if (!streamSink.Begin(config.sampleRate, 2, soundLength, loop))
+    {
+        LogLine(observer, "[Preview] streaming sink failed to start.");
+        return 1;
+    }
+
+    const RenderConfig renderConfig{
+        events,
+        midiOut.tempoEvents,
+        midiOut.ticksPerQuarter,
+        previewOptions.startSec,
+        *channelConfigs,
+        *channelMixStates,
+        config.masterEffects
+    };
+
+    bool canceled = false;
+    auto shouldCancelObserver = [&]() -> bool {
+        return previewOptions.allowCancel && observer != nullptr && observer->ShouldCancel();
+    };
+    auto onFrame = [&](int, double left, double right) -> bool {
+        if (shouldCancelObserver())
+        {
+            return false;
+        }
+        return streamSink.WriteFrame(left, right);
+    };
+    RenderWithEngineFrames(
+        soundLength,
+        config.sampleRate,
+        renderConfig,
+        onFrame,
+        shouldCancelObserver,
+        &canceled);
+
+    streamSink.Complete(canceled);
+    if (canceled)
+    {
+        LogLine(observer, "[Run] Canceled by request.");
+        return 2;
+    }
+    LogLine(observer, "Preview streaming render completed.");
+    return 0;
 }
 
 int RunMain(

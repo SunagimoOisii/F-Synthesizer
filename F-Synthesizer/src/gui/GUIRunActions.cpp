@@ -240,6 +240,46 @@ std::string FormatRunException(const std::exception& ex)
     return ex.what();
 }
 
+class GUIPreviewStreamSink final : public IPreviewStreamSink
+{
+public:
+    GUIPreviewStreamSink(PreviewPlaybackState& playback, bool loop, int startTick)
+        : playback_(playback)
+        , loop_(loop)
+        , startTick_(startTick)
+    {
+    }
+
+    bool Begin(int sampleRate, int channels, int, bool loop) override
+    {
+        std::string err;
+        session_ = StartStreamingPreviewAudio(
+            playback_,
+            sampleRate,
+            static_cast<ma_uint32>(channels),
+            loop_ || loop,
+            err);
+        playback_.playStartTick.store(startTick_, std::memory_order_relaxed);
+        return session_ != 0;
+    }
+
+    bool WriteFrame(double left, double right) override
+    {
+        return WriteStreamingPreviewFrame(playback_, session_, left, right);
+    }
+
+    void Complete(bool canceled) override
+    {
+        CompleteStreamingPreviewAudio(playback_, session_, canceled);
+    }
+
+private:
+    PreviewPlaybackState& playback_;
+    bool loop_ = false;
+    int startTick_ = 0;
+    uint64_t session_ = 0;
+};
+
 int RunSafely(
     AppConfig cfg,
     RenderOptions options,
@@ -248,6 +288,11 @@ int RunSafely(
 {
     try
     {
+        if (options.mode == RunMode::Preview)
+        {
+            GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
+            return RunPreviewStreaming(cfg, options, &state.observer, sink, state.previewLoop);
+        }
         return Run(cfg, options, &state.observer, outBuffer.get());
     }
     catch (const std::exception& ex)
@@ -377,7 +422,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     state.lastPeak = 0.0;
     state.hasPeak = false;
-    state.runOutputBuffer = previewSelected ? std::make_shared<SoundData>() : nullptr;
+    state.runOutputBuffer = nullptr;
     state.runIsPreview = previewSelected;
     state.autoPlayPreviewOnRunComplete = previewSelected;
     detail::AppendGUILogToTab(state, state.runLogTab, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
@@ -461,6 +506,12 @@ bool TryFinalizeCompletedRun(GUIState& state)
     if (state.runIsPreview)
     {
         if (state.lastRunExitCode == 0 &&
+            state.runOutputBuffer == nullptr)
+        {
+            state.previewAudioReady = true;
+            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview streaming completed");
+        }
+        else if (state.lastRunExitCode == 0 &&
             state.runOutputBuffer != nullptr &&
             state.runOutputBuffer->length > 0)
         {

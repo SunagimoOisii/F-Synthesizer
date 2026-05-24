@@ -213,6 +213,46 @@ std::string FormatPreviewException(const std::exception& ex)
     return ex.what();
 }
 
+class GUIPreviewStreamSink final : public IPreviewStreamSink
+{
+public:
+    GUIPreviewStreamSink(PreviewPlaybackState& playback, bool loop, int startTick)
+        : playback_(playback)
+        , loop_(loop)
+        , startTick_(startTick)
+    {
+    }
+
+    bool Begin(int sampleRate, int channels, int, bool loop) override
+    {
+        std::string err;
+        session_ = StartStreamingPreviewAudio(
+            playback_,
+            sampleRate,
+            static_cast<ma_uint32>(channels),
+            loop_ || loop,
+            err);
+        playback_.playStartTick.store(startTick_, std::memory_order_relaxed);
+        return session_ != 0;
+    }
+
+    bool WriteFrame(double left, double right) override
+    {
+        return WriteStreamingPreviewFrame(playback_, session_, left, right);
+    }
+
+    void Complete(bool canceled) override
+    {
+        CompleteStreamingPreviewAudio(playback_, session_, canceled);
+    }
+
+private:
+    PreviewPlaybackState& playback_;
+    bool loop_ = false;
+    int startTick_ = 0;
+    uint64_t session_ = 0;
+};
+
 int RunPreviewSafely(
     AppConfig cfg,
     RenderOptions options,
@@ -221,7 +261,8 @@ int RunPreviewSafely(
 {
     try
     {
-        return Run(cfg, options, &state.observer, outBuffer.get());
+        GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
+        return RunPreviewStreaming(cfg, options, &state.observer, sink, state.previewLoop);
     }
     catch (const std::exception& ex)
     {
@@ -364,7 +405,7 @@ void StartGUISoundTonePreview(GUIState& state)
     }
     state.lastPeak = 0.0;
     state.hasPeak = false;
-    state.runOutputBuffer = std::make_shared<SoundData>();
+    state.runOutputBuffer = nullptr;
     state.runIsPreview = true;
     state.autoPlayPreviewOnRunComplete = true;
     detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (note=" + std::to_string(previewNote) + ")");

@@ -55,5 +55,12 @@ int RunPreviewRender(
     const RenderOptions& options,
     IRunObserver* observer,
     SoundData* renderedSound);
+
+int RunPreviewStreamingInternal(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    IPreviewStreamSink& streamSink,
+    bool loop);
 } // namespace app::run
 
