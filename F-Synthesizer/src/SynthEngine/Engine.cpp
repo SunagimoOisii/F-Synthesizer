@@ -542,7 +542,10 @@ void RenderMIDIEvents(
             state.tempoChangeIndex++;
         }
         StereoFrame frame = RenderVoices(state, sound);
-        frame = ApplyMasterEffects(state, sound.fs, frame);
+        if (masterEffectsActive)
+        {
+            frame = ApplyMasterEffects(state, sound.fs, frame);
+        }
         if (sound.channels >= 2)
         {
             sound.dataL[i] = frame.left;
