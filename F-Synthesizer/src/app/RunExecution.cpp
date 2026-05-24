@@ -289,18 +289,18 @@ int RunPreviewStreamingInternal(
     auto shouldCancelObserver = [&]() -> bool {
         return previewOptions.allowCancel && observer != nullptr && observer->ShouldCancel();
     };
-    auto onFrame = [&](int, double left, double right) -> bool {
+    auto onFrames = [&](int, const double* interleavedStereo, int frameCount) -> bool {
         if (shouldCancelObserver())
         {
             return false;
         }
-        return streamSink.WriteFrame(left, right);
+        return streamSink.WriteFrames(interleavedStereo, frameCount);
     };
-    RenderWithEngineFrames(
+    RenderWithEngineFrameBlocks(
         soundLength,
         config.sampleRate,
         renderConfig,
-        onFrame,
+        onFrames,
         shouldCancelObserver,
         &canceled);
 

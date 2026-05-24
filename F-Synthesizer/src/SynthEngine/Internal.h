@@ -297,6 +297,21 @@ public:
     virtual int SampleRate() const = 0;
     virtual void Begin() = 0;
     virtual bool WriteFrame(int sampleIndex, StereoFrame frame) = 0;
+    virtual bool WriteFrames(int sampleIndex, const StereoFrame* frames, int frameCount)
+    {
+        if (frames == nullptr && frameCount > 0)
+        {
+            return false;
+        }
+        for (int offset = 0; offset < frameCount; offset++)
+        {
+            if (!WriteFrame(sampleIndex + offset, frames[offset]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     virtual bool SkipSilentFrames(int sampleIndex, int frameCount)
     {
         for (int offset = 0; offset < frameCount; offset++)
@@ -376,6 +391,8 @@ struct RenderState
     std::array<bool, 16> channelSolo{};
     std::array<bool, 16> channelRenderable{};
     std::array<std::vector<size_t>, 16> activeVoiceIndicesByChannel{};
+    std::array<std::array<std::vector<size_t>, config::kSourceKindCount>, 16> activeVoiceIndicesByChannelSource{};
+    std::array<std::vector<int>, 16> activeSourceKindsByChannel{};
     std::vector<StereoFrame> renderBlockFrames{};
     std::vector<int> renderActiveChannels{};
     std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
@@ -429,13 +446,32 @@ inline void RebuildActiveVoiceIndices(RenderState& state)
     {
         bucket.clear();
     }
+    for (auto& channelBuckets : state.activeVoiceIndicesByChannelSource)
+    {
+        for (auto& bucket : channelBuckets)
+        {
+            bucket.clear();
+        }
+    }
+    for (auto& sourceKinds : state.activeSourceKindsByChannel)
+    {
+        sourceKinds.clear();
+    }
     for (size_t i = 0; i < state.voices.size(); i++)
     {
         if (state.voices.pendingRemove[i] == 0 && state.voices.env[i].stage != ADSRStage::Off)
         {
             state.activeVoiceIndices.push_back(i);
             const int channel = state.voices.channelIndex[i];
-            state.activeVoiceIndicesByChannel[(channel >= 0 && channel < 16) ? channel : 0].push_back(i);
+            const int ch = (channel >= 0 && channel < 16) ? channel : 0;
+            const int sourceKind = std::clamp<int>(state.voices.runtimeSourceKind[i], 0, config::kSourceKindCount - 1);
+            state.activeVoiceIndicesByChannel[ch].push_back(i);
+            auto& sourceBucket = state.activeVoiceIndicesByChannelSource[ch][sourceKind];
+            if (sourceBucket.empty())
+            {
+                state.activeSourceKindsByChannel[ch].push_back(sourceKind);
+            }
+            sourceBucket.push_back(i);
         }
     }
     state.activeVoiceIndicesDirty = false;

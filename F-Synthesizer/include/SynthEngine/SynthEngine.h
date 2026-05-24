@@ -36,3 +36,16 @@ void RenderMIDIEventsWithFrameCallback(
     double renderStartSec = 0.0,
     const std::function<bool()>& shouldCancel = {},
     bool* canceled = nullptr);
+void RenderMIDIEventsWithFrameBlockCallback(
+    int length,
+    int sampleRate,
+    const std::vector<MIDIEvent>& events,
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const std::function<bool(int, const double*, int)>& onFrames,
+    const MasterEffectConfig& effects = {},
+    const std::vector<TempoEvent>* tempoEvents = nullptr,
+    int ticksPerQuarter = 480,
+    double renderStartSec = 0.0,
+    const std::function<bool()>& shouldCancel = {},
+    bool* canceled = nullptr);

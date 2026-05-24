@@ -63,6 +63,21 @@ struct IPreviewStreamSink
     virtual ~IPreviewStreamSink() = default;
     virtual bool Begin(int sampleRate, int channels, int totalFrames, bool loop) = 0;
     virtual bool WriteFrame(double left, double right) = 0;
+    virtual bool WriteFrames(const double* interleavedStereo, int frameCount)
+    {
+        if (interleavedStereo == nullptr && frameCount > 0)
+        {
+            return false;
+        }
+        for (int i = 0; i < frameCount; i++)
+        {
+            if (!WriteFrame(interleavedStereo[i * 2 + 0], interleavedStereo[i * 2 + 1]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     virtual void Complete(bool canceled) = 0;
 };
 

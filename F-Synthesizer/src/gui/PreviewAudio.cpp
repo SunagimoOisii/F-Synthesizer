@@ -295,6 +295,34 @@ bool WriteStreamingPreviewFrame(
     return true;
 }
 
+bool WriteStreamingPreviewFrames(
+    PreviewPlaybackState& playback,
+    uint64_t session,
+    const double* interleavedStereo,
+    int frameCount)
+{
+    if (frameCount <= 0)
+    {
+        return true;
+    }
+    if (interleavedStereo == nullptr)
+    {
+        return false;
+    }
+    for (int i = 0; i < frameCount; i++)
+    {
+        if (!WriteStreamingPreviewFrame(
+            playback,
+            session,
+            interleavedStereo[static_cast<size_t>(i) * 2 + 0],
+            interleavedStereo[static_cast<size_t>(i) * 2 + 1]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void CompleteStreamingPreviewAudio(PreviewPlaybackState& playback, uint64_t session, bool canceled)
 {
     if (session == 0 || playback.streamSession.load(std::memory_order_relaxed) != session)

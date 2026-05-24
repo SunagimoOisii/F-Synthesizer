@@ -24,3 +24,10 @@ void RenderWithEngineFrames(
     const std::function<bool(int, double, double)>& onFrame,
     const std::function<bool()>& shouldCancel,
     bool* canceled);
+void RenderWithEngineFrameBlocks(
+    int length,
+    int sampleRate,
+    const RenderConfig& config,
+    const std::function<bool(int, const double*, int)>& onFrames,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled);

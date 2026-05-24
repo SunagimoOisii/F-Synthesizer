@@ -231,6 +231,11 @@ public:
         return WriteStreamingPreviewFrame(playback_, session_, left, right);
     }
 
+    bool WriteFrames(const double* interleavedStereo, int frameCount) override
+    {
+        return WriteStreamingPreviewFrames(playback_, session_, interleavedStereo, frameCount);
+    }
+
     void Complete(bool canceled) override
     {
         CompleteStreamingPreviewAudio(playback_, session_, canceled);

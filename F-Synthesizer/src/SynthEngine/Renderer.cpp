@@ -183,6 +183,31 @@ struct ExpressionRuntime
     double filterDriveAdd = 0.0;
 };
 
+struct ChannelRenderContext
+{
+    int ch = 0;
+    int sampleRate = 44100;
+    double dt = 1.0 / 44100.0;
+    double mixGainL = 1.0;
+    double mixGainR = 1.0;
+    double ccGain = 1.0;
+    double pitch = 1.0;
+    double modwheel = 0.0;
+    double pressure = 0.0;
+    double brightness = 0.5;
+    double resonance = 0.5;
+    double attackScale = 1.0;
+    double decayScale = 1.0;
+    double sustainAdd = 0.0;
+    double releaseScale = 1.0;
+    double brightnessCutoffScale = 1.0;
+    double resonanceScale = 1.0;
+    double portamentoTimeSec = 0.0;
+    bool renderable = true;
+    bool hasPolyPressure = false;
+    bool portamentoOn = true;
+};
+
 double Clamp01(double v)
 {
     return std::clamp(v, 0.0, 1.0);
@@ -405,10 +430,38 @@ void RenderSourceFrameByKind(
     RenderSourceFrame(src, voices, i, in, sampleRate, frame);
 }
 
+ChannelRenderContext BuildChannelRenderContext(const RenderState& state, const SoundData& sound, int ch)
+{
+    ChannelRenderContext ctx{};
+    ctx.ch = ch;
+    ctx.sampleRate = sound.fs;
+    ctx.dt = 1.0 / sound.fs;
+    ctx.mixGainL = state.channelMixGainL[ch];
+    ctx.mixGainR = state.channelMixGainR[ch];
+    ctx.ccGain = state.channelCcGain[ch];
+    ctx.pitch = state.channelPitch[ch];
+    ctx.modwheel = state.channelModwheel[ch];
+    ctx.pressure = state.channelPressure[ch];
+    ctx.brightness = state.channelBrightness[ch];
+    ctx.resonance = state.channelResonance[ch];
+    ctx.attackScale = state.channelAttackScale[ch];
+    ctx.decayScale = state.channelDecayScale[ch];
+    ctx.sustainAdd = state.channelSustainAdd[ch];
+    ctx.releaseScale = state.channelReleaseScale[ch];
+    ctx.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
+    ctx.resonanceScale = state.channelResonanceScale[ch];
+    ctx.portamentoTimeSec = state.channelPortamentoTimeSec[ch];
+    ctx.renderable = state.channelRenderable[ch];
+    ctx.hasPolyPressure = state.channelHasPolyPressure[ch];
+    ctx.portamentoOn = state.channelPortamentoOn[ch];
+    return ctx;
+}
+
 bool RenderVoiceSampleToChannel(
     RenderState& state,
-    const SoundData& sound,
+    const ChannelRenderContext& ctx,
     size_t i,
+    int sourceKindIndex,
     StereoFrame& channelSum,
     DrumBusConfig& channelDrumBus,
     bool& channelHasDrumBus)
@@ -419,15 +472,13 @@ bool RenderVoiceSampleToChannel(
         return false;
     }
 
-    const double dt = 1.0 / sound.fs;
-    const int ch = voices.channelIndex[i];
     const double envGain = StepADSR(
         voices.env[i],
-        dt,
-        voices.attackSec[i] * state.channelAttackScale[ch],
-        voices.decaySec[i] * state.channelDecayScale[ch],
-        std::clamp(voices.sustainLevel[i] + state.channelSustainAdd[ch], 0.0, 1.0),
-        voices.releaseSec[i] * state.channelReleaseScale[ch]);
+        ctx.dt,
+        voices.attackSec[i] * ctx.attackScale,
+        voices.decaySec[i] * ctx.decayScale,
+        std::clamp(voices.sustainLevel[i] + ctx.sustainAdd, 0.0, 1.0),
+        voices.releaseSec[i] * ctx.releaseScale);
     if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
     {
         voices.pendingRemove[i] = 1;
@@ -435,35 +486,35 @@ bool RenderVoiceSampleToChannel(
     }
 
     VoiceRenderInput in{};
-    in.dt = dt;
+    in.dt = ctx.dt;
     in.envGain = envGain;
-    if (!state.channelRenderable[ch])
+    if (!ctx.renderable)
     {
         return false;
     }
 
     const uint8_t fastPathMask = voices.fastPathMask[i];
-    in.mixGainL = state.channelMixGainL[ch];
-    in.mixGainR = state.channelMixGainR[ch];
-    in.pitchFactor = state.channelPitch[ch];
-    in.ccGain = state.channelCcGain[ch];
-    in.modwheel = state.channelModwheel[ch];
-    if (state.channelPressure[ch] > 0.0)
+    in.mixGainL = ctx.mixGainL;
+    in.mixGainR = ctx.mixGainR;
+    in.pitchFactor = ctx.pitch;
+    in.ccGain = ctx.ccGain;
+    in.modwheel = ctx.modwheel;
+    if (ctx.pressure > 0.0)
     {
-        in.channelPressure = state.channelPressure[ch];
+        in.channelPressure = ctx.pressure;
     }
-    if (state.channelHasPolyPressure[ch])
+    if (ctx.hasPolyPressure)
     {
         const int note = std::clamp(voices.noteNumber[i], 0, 127);
-        in.polyPressure = state.channelPolyPressure[ch][note];
+        in.polyPressure = state.channelPolyPressure[ctx.ch][note];
     }
     if ((fastPathMask & kVoiceFastPathExpressionDisabled) != 0)
     {
         in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
         in.expressionVelocity = in.velocityNorm;
         in.velGain = voices.runtimeDefaultAmpVelocity[i];
-        in.brightness = state.channelBrightness[ch];
-        in.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
+        in.brightness = ctx.brightness;
+        in.brightnessCutoffScale = ctx.brightnessCutoffScale;
     }
     else
     {
@@ -474,7 +525,7 @@ bool RenderVoiceSampleToChannel(
             voices.velocity[i],
             in.modwheel,
             pressure,
-            state.channelBrightness[ch]);
+            ctx.brightness);
         in.velocityNorm = expr.velocityNorm;
         in.expressionVelocity = expr.expressionVelocity;
         in.velGain = expr.ampVelocity;
@@ -491,18 +542,18 @@ bool RenderVoiceSampleToChannel(
         in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
         in.expressionDriveAdd = expr.driveAdd;
         in.expressionFilterDriveAdd = expr.filterDriveAdd;
-        in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
+        in.brightness = std::clamp(ctx.brightness + expr.brightnessAdd, 0.0, 1.0);
         in.brightnessCutoffScale = RenderCutoffScaleFromBrightness(in.brightness);
     }
-    in.resonance = state.channelResonance[ch];
-    in.resonanceScale = state.channelResonanceScale[ch];
+    in.resonance = ctx.resonance;
+    in.resonanceScale = ctx.resonanceScale;
 
-    if (state.channelPortamentoOn[ch])
+    if (ctx.portamentoOn)
     {
         const double effectivePortamentoTimeSec =
             ((fastPathMask & kVoiceFastPathPortamentoDisabled) != 0)
-                ? state.channelPortamentoTimeSec[ch]
-                : (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
+                ? ctx.portamentoTimeSec
+                : (std::max)(voices.portamentoTimeSec[i], ctx.portamentoTimeSec);
         if (effectivePortamentoTimeSec > 0.0)
         {
             if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
@@ -519,8 +570,8 @@ bool RenderVoiceSampleToChannel(
     }
 
     SourceRenderFrame frame{};
-    const config::SourceKind sourceKind = config::SourceKindFromIndex(voices.runtimeSourceKind[i]);
-    RenderSourceFrameByKind(sourceKind, voices.source[i], voices, i, in, sound.fs, frame);
+    const config::SourceKind sourceKind = config::SourceKindFromIndex(sourceKindIndex);
+    RenderSourceFrameByKind(sourceKind, voices.source[i], voices, i, in, ctx.sampleRate, frame);
     const uint32_t layerMask = voices.layerMask[i];
     if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
     if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);
@@ -591,19 +642,22 @@ size_t MixChannelBlockToOutput(
     bool replaceOutput)
 {
     size_t removedCount = 0;
-    const auto& indices = state.activeVoiceIndicesByChannel[ch];
-    const double mixGainL = state.channelMixGainL[ch];
-    const double mixGainR = state.channelMixGainR[ch];
+    const ChannelRenderContext ctx = BuildChannelRenderContext(state, sound, ch);
+    const auto& sourceBuckets = state.activeVoiceIndicesByChannelSource[ch];
+    const auto& activeSourceKinds = state.activeSourceKindsByChannel[ch];
     for (int offset = 0; offset < frameCount; offset++)
     {
         StereoFrame channelSum{};
         DrumBusConfig channelDrumBus{};
         bool channelHasDrumBus = false;
-        for (const size_t i : indices)
+        for (const int sourceKind : activeSourceKinds)
         {
-            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
+            for (const size_t i : sourceBuckets[sourceKind])
             {
-                removedCount++;
+                if (RenderVoiceSampleToChannel(state, ctx, i, sourceKind, channelSum, channelDrumBus, channelHasDrumBus))
+                {
+                    removedCount++;
+                }
             }
         }
         if (channelHasDrumBus)
@@ -611,8 +665,8 @@ size_t MixChannelBlockToOutput(
             channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
         }
         StereoFrame& out = outFrames[static_cast<size_t>(offset)];
-        const double left = channelSum.left * mixGainL;
-        const double right = channelSum.right * mixGainR;
+        const double left = channelSum.left * ctx.mixGainL;
+        const double right = channelSum.right * ctx.mixGainR;
         if (replaceOutput)
         {
             out = StereoFrame{ left, right };
@@ -635,19 +689,22 @@ size_t RenderChannelBlockToBuffer(
 {
     size_t removedCount = 0;
     channelFrames.resize(static_cast<size_t>(frameCount));
-    const auto& indices = state.activeVoiceIndicesByChannel[ch];
-    const double mixGainL = state.channelMixGainL[ch];
-    const double mixGainR = state.channelMixGainR[ch];
+    const ChannelRenderContext ctx = BuildChannelRenderContext(state, sound, ch);
+    const auto& sourceBuckets = state.activeVoiceIndicesByChannelSource[ch];
+    const auto& activeSourceKinds = state.activeSourceKindsByChannel[ch];
     for (int offset = 0; offset < frameCount; offset++)
     {
         StereoFrame channelSum{};
         DrumBusConfig channelDrumBus{};
         bool channelHasDrumBus = false;
-        for (const size_t i : indices)
+        for (const int sourceKind : activeSourceKinds)
         {
-            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
+            for (const size_t i : sourceBuckets[sourceKind])
             {
-                removedCount++;
+                if (RenderVoiceSampleToChannel(state, ctx, i, sourceKind, channelSum, channelDrumBus, channelHasDrumBus))
+                {
+                    removedCount++;
+                }
             }
         }
         if (channelHasDrumBus)
@@ -655,8 +712,8 @@ size_t RenderChannelBlockToBuffer(
             channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
         }
         channelFrames[static_cast<size_t>(offset)] = StereoFrame{
-            channelSum.left * mixGainL,
-            channelSum.right * mixGainR
+            channelSum.left * ctx.mixGainL,
+            channelSum.right * ctx.mixGainR
         };
     }
     return removedCount;

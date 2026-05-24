@@ -60,5 +60,10 @@ bool WriteStreamingPreviewFrame(
     uint64_t session,
     double left,
     double right);
+bool WriteStreamingPreviewFrames(
+    PreviewPlaybackState& playback,
+    uint64_t session,
+    const double* interleavedStereo,
+    int frameCount);
 void CompleteStreamingPreviewAudio(PreviewPlaybackState& playback, uint64_t session, bool canceled);
 float GetPreviewPlaybackPeak(const PreviewPlaybackState& playback);

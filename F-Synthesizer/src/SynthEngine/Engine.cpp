@@ -476,6 +476,30 @@ public:
         return true;
     }
 
+    bool WriteFrames(int sampleIndex, const StereoFrame* frames, int frameCount) override
+    {
+        if (frames == nullptr && frameCount > 0)
+        {
+            return false;
+        }
+        if (sound_.channels >= 2)
+        {
+            for (int offset = 0; offset < frameCount; offset++)
+            {
+                sound_.dataL[static_cast<size_t>(sampleIndex + offset)] = frames[offset].left;
+                sound_.dataR[static_cast<size_t>(sampleIndex + offset)] = frames[offset].right;
+            }
+        }
+        else
+        {
+            for (int offset = 0; offset < frameCount; offset++)
+            {
+                sound_.data[static_cast<size_t>(sampleIndex + offset)] = (frames[offset].left + frames[offset].right) * 0.5;
+            }
+        }
+        return true;
+    }
+
     bool SkipSilentFrames(int, int) override
     {
         return true;
@@ -518,6 +542,72 @@ private:
     int length_ = 0;
     int sampleRate_ = 44100;
     const std::function<bool(int, double, double)>& onFrame_;
+    bool canceled_ = false;
+};
+
+class CallbackFrameBlockSink final : public RenderFrameSink
+{
+public:
+    CallbackFrameBlockSink(
+        int length,
+        int sampleRate,
+        const std::function<bool(int, const double*, int)>& onFrames)
+        : length_(length)
+        , sampleRate_(sampleRate)
+        , onFrames_(onFrames)
+    {
+    }
+
+    int Length() const override { return length_; }
+    int SampleRate() const override { return sampleRate_; }
+    void Begin() override {}
+
+    bool WriteFrame(int sampleIndex, StereoFrame frame) override
+    {
+        interleavedScratch_[0] = frame.left;
+        interleavedScratch_[1] = frame.right;
+        return WriteInterleaved(sampleIndex, interleavedScratch_.data(), 1);
+    }
+
+    bool WriteFrames(int sampleIndex, const StereoFrame* frames, int frameCount) override
+    {
+        if (frames == nullptr && frameCount > 0)
+        {
+            return false;
+        }
+        interleavedBlockScratch_.resize(static_cast<size_t>(frameCount) * 2);
+        for (int i = 0; i < frameCount; i++)
+        {
+            interleavedBlockScratch_[static_cast<size_t>(i) * 2 + 0] = frames[i].left;
+            interleavedBlockScratch_[static_cast<size_t>(i) * 2 + 1] = frames[i].right;
+        }
+        return WriteInterleaved(sampleIndex, interleavedBlockScratch_.data(), frameCount);
+    }
+
+    bool SkipSilentFrames(int sampleIndex, int frameCount) override
+    {
+        interleavedBlockScratch_.assign(static_cast<size_t>(frameCount) * 2, 0.0);
+        return WriteInterleaved(sampleIndex, interleavedBlockScratch_.data(), frameCount);
+    }
+
+    bool IsCanceled() const override { return canceled_; }
+
+private:
+    bool WriteInterleaved(int sampleIndex, const double* interleavedStereo, int frameCount)
+    {
+        if (!onFrames_)
+        {
+            return false;
+        }
+        canceled_ = !onFrames_(sampleIndex, interleavedStereo, frameCount);
+        return !canceled_;
+    }
+
+    int length_ = 0;
+    int sampleRate_ = 44100;
+    const std::function<bool(int, const double*, int)>& onFrames_;
+    std::array<double, 2> interleavedScratch_{};
+    std::vector<double> interleavedBlockScratch_{};
     bool canceled_ = false;
 };
 
@@ -663,21 +753,21 @@ void RenderMIDIEventsToSink(
 
         const int frameCount = chunkEnd - i;
         RenderVoicesBlock(state, renderContext, frameCount, state.renderBlockFrames);
-        for (int offset = 0; offset < frameCount; offset++)
+        if (masterEffectsActive)
         {
-            StereoFrame frame = state.renderBlockFrames[static_cast<size_t>(offset)];
-            if (masterEffectsActive)
+            for (int offset = 0; offset < frameCount; offset++)
             {
-                frame = ApplyMasterEffects(state, sink.SampleRate(), frame);
+                state.renderBlockFrames[static_cast<size_t>(offset)] =
+                    ApplyMasterEffects(state, sink.SampleRate(), state.renderBlockFrames[static_cast<size_t>(offset)]);
             }
-            if (!sink.WriteFrame(i + offset, frame))
+        }
+        if (!sink.WriteFrames(i, state.renderBlockFrames.data(), frameCount))
+        {
+            if (canceled != nullptr)
             {
-                if (canceled != nullptr)
-                {
-                    *canceled = true;
-                }
-                return;
+                *canceled = true;
             }
+            return;
         }
         cleanupCountdown -= frameCount;
         i = chunkEnd;
@@ -726,6 +816,34 @@ void RenderMIDIEventsWithFrameCallback(
     bool* canceled)
 {
     CallbackFrameSink sink(length, sampleRate, onFrame);
+    RenderMIDIEventsToSink(
+        sink,
+        events,
+        channelConfigs,
+        channelMixStates,
+        effects,
+        tempoEvents,
+        ticksPerQuarter,
+        renderStartSec,
+        shouldCancel,
+        canceled);
+}
+
+void RenderMIDIEventsWithFrameBlockCallback(
+    int length,
+    int sampleRate,
+    const std::vector<MIDIEvent>& events,
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const std::function<bool(int, const double*, int)>& onFrames,
+    const MasterEffectConfig& effects,
+    const std::vector<TempoEvent>* tempoEvents,
+    int ticksPerQuarter,
+    double renderStartSec,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
+{
+    CallbackFrameBlockSink sink(length, sampleRate, onFrames);
     RenderMIDIEventsToSink(
         sink,
         events,

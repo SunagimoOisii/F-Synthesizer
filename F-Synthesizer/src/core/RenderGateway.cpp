@@ -45,3 +45,26 @@ void RenderWithEngineFrames(
         shouldCancel,
         canceled);
 }
+
+void RenderWithEngineFrameBlocks(
+    int length,
+    int sampleRate,
+    const RenderConfig& config,
+    const std::function<bool(int, const double*, int)>& onFrames,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
+{
+    RenderMIDIEventsWithFrameBlockCallback(
+        length,
+        sampleRate,
+        config.events,
+        config.channelConfigs,
+        config.channelMixStates,
+        onFrames,
+        config.effects,
+        &config.tempoEvents,
+        config.ticksPerQuarter,
+        config.renderStartSec,
+        shouldCancel,
+        canceled);
+}
