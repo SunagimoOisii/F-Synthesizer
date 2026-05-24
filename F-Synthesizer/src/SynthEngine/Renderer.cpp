@@ -57,6 +57,12 @@ double SoftClipNorm(double x, double drive)
     return std::tanh(x * k) / std::tanh(k);
 }
 
+void AddStereoLayer(StereoFrame& sum, const StereoFrame layer)
+{
+    sum.left += layer.left;
+    sum.right += layer.right;
+}
+
 StereoFrame ApplyDrumBus(
     DrumBusRuntimeState& st,
     const DrumBusConfig& cfg,
@@ -308,23 +314,38 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
         if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);
         if ((layerMask & kVoiceLayerLead) != 0) frame.sample += RenderLeadLayer(voices, i, in);
-        const StereoFrame pluck =
-            ((layerMask & kVoiceLayerPluck) != 0) ? RenderPluckLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame stringLayer =
-            ((layerMask & kVoiceLayerString) != 0) ? RenderStringLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame chord =
-            ((layerMask & kVoiceLayerChord) != 0) ? RenderChordLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame pad =
-            ((layerMask & kVoiceLayerPad) != 0) ? RenderPadLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame harmonic =
-            ((layerMask & kVoiceLayerHarmonic) != 0) ? RenderHarmonicLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame powerChord =
-            ((layerMask & kVoiceLayerPowerChord) != 0) ? RenderPowerChordLayer(voices, i, in) : StereoFrame{};
-        const StereoFrame chug =
-            ((layerMask & kVoiceLayerChug) != 0) ? RenderChugLayer(voices, i, in) : StereoFrame{};
-        frame.sample += (pluck.left + pluck.right + stringLayer.left + stringLayer.right + chord.left + chord.right + pad.left + pad.right + harmonic.left + harmonic.right + powerChord.left + powerChord.right + chug.left + chug.right) * 0.5;
-        frame.stereoOffsetL += (pluck.left - pluck.right + stringLayer.left - stringLayer.right + chord.left - chord.right + pad.left - pad.right + harmonic.left - harmonic.right + powerChord.left - powerChord.right + chug.left - chug.right) * 0.5;
-        frame.stereoOffsetR += (pluck.right - pluck.left + stringLayer.right - stringLayer.left + chord.right - chord.left + pad.right - pad.left + harmonic.right - harmonic.left + powerChord.right - powerChord.left + chug.right - chug.left) * 0.5;
+        StereoFrame layerSum{};
+        if ((layerMask & kVoiceLayerPluck) != 0)
+        {
+            AddStereoLayer(layerSum, RenderPluckLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerString) != 0)
+        {
+            AddStereoLayer(layerSum, RenderStringLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerChord) != 0)
+        {
+            AddStereoLayer(layerSum, RenderChordLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerPad) != 0)
+        {
+            AddStereoLayer(layerSum, RenderPadLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerHarmonic) != 0)
+        {
+            AddStereoLayer(layerSum, RenderHarmonicLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerPowerChord) != 0)
+        {
+            AddStereoLayer(layerSum, RenderPowerChordLayer(voices, i, in));
+        }
+        if ((layerMask & kVoiceLayerChug) != 0)
+        {
+            AddStereoLayer(layerSum, RenderChugLayer(voices, i, in));
+        }
+        frame.sample += (layerSum.left + layerSum.right) * 0.5;
+        frame.stereoOffsetL += (layerSum.left - layerSum.right) * 0.5;
+        frame.stereoOffsetR += (layerSum.right - layerSum.left) * 0.5;
         ApplyCommonShaper(voices.source[i], voices, i, in, frame);
         if ((layerMask & kVoiceLayerAmpCab) != 0) ApplyAmpCabLayer(voices, i, in, frame);
         if ((layerMask & kVoiceLayerBody) != 0) ApplyBodyLayer(voices, i, in, frame);

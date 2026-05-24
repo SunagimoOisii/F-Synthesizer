@@ -4,6 +4,9 @@ param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
     [int]$TimeoutSec = 20,
+    [string]$ResultJson = "",
+    [string]$ResultCsv = "",
+    [switch]$NoResultFiles,
     [switch]$SkipBuild
 )
 
@@ -255,6 +258,9 @@ try {
 
     Write-Host "== F-Synthesizer quick perf smoke =="
     Write-Host "Config: $Configuration | Platform: $Platform | Iterations: $Iterations"
+    $startedAt = (Get-Date).ToString("o")
+    $runRows = @()
+    $summaryRows = @()
     foreach ($presetName in $presets) {
         $safeName = $presetName -replace '[^A-Za-z0-9_.-]', '_'
         $configPath = Join-Path $smokeDir "$safeName.json"
@@ -268,12 +274,58 @@ try {
                 throw "Rendered WAV was not found: $wavPath"
             }
             $results += $result
+            $runRows += [PSCustomObject]@{
+                preset = $presetName
+                iteration = $i
+                milliseconds = [Math]::Round($result.Ms, 4)
+                renderStats = $result.Stats
+                wavPath = $wavPath
+            }
             Write-Host ("{0} run {1}/{2}: {3:N2} ms | {4}" -f $presetName, $i, $Iterations, $result.Ms, $result.Stats)
         }
         $avg = ($results | Measure-Object -Property Ms -Average).Average
         $min = ($results | Measure-Object -Property Ms -Minimum).Minimum
         $max = ($results | Measure-Object -Property Ms -Maximum).Maximum
+        $summaryRows += [PSCustomObject]@{
+            preset = $presetName
+            iterations = $Iterations
+            averageMs = [Math]::Round($avg, 4)
+            minMs = [Math]::Round($min, 4)
+            maxMs = [Math]::Round($max, 4)
+            renderStats = ($results | Select-Object -Last 1).Stats
+            wavPath = $wavPath
+        }
         Write-Host ("{0} summary: avg={1:N2} ms min={2:N2} ms max={3:N2} ms wav={4}" -f $presetName, $avg, $min, $max, $wavPath)
+    }
+    if (-not $NoResultFiles) {
+        if (-not $ResultJson) {
+            $ResultJson = Join-Path $smokeDir "quick_perf_smoke_results.json"
+        }
+        if (-not $ResultCsv) {
+            $ResultCsv = Join-Path $smokeDir "quick_perf_smoke_summary.csv"
+        }
+        foreach ($path in @($ResultJson, $ResultCsv)) {
+            $parent = Split-Path -Parent $path
+            if ($parent) {
+                New-Item -ItemType Directory -Path $parent -Force | Out-Null
+            }
+        }
+        $resultDoc = [ordered]@{
+            tool = "quick_perf_smoke"
+            startedAt = $startedAt
+            completedAt = (Get-Date).ToString("o")
+            configuration = $Configuration
+            platform = $Platform
+            iterations = $Iterations
+            executable = $exePath
+            presets = $presets
+            summaries = $summaryRows
+            runs = $runRows
+        }
+        $resultDoc | ConvertTo-Json -Depth 8 | Set-Content -Path $ResultJson -Encoding UTF8
+        $summaryRows | Export-Csv -Path $ResultCsv -NoTypeInformation -Encoding UTF8
+        Write-Host "Result JSON: $ResultJson"
+        Write-Host "Result CSV: $ResultCsv"
     }
     Write-Host "Quick perf smoke completed."
 }
