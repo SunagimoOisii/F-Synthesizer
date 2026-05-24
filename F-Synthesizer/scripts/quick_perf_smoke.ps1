@@ -1,9 +1,10 @@
 param(
-    [int]$Iterations = 1,
+    [int]$Iterations = 5,
     [string]$Preset = "",
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
     [int]$TimeoutSec = 20,
+    [string]$OutputDir = "",
     [string]$ResultJson = "",
     [string]$ResultCsv = "",
     [switch]$NoResultFiles,
@@ -251,7 +252,17 @@ try {
     }
     Ensure-RuntimeDependencies -ExePath $exePath
 
-    $smokeDir = Join-Path $repoRoot "output/check/quick_perf_smoke"
+    if ($OutputDir) {
+        if ([System.IO.Path]::IsPathRooted($OutputDir)) {
+            $smokeDir = $OutputDir
+        }
+        else {
+            $smokeDir = Join-Path $repoRoot $OutputDir
+        }
+    }
+    else {
+        $smokeDir = Join-Path $repoRoot "output/check/quick_perf_smoke"
+    }
     New-Item -ItemType Directory -Path $smokeDir -Force | Out-Null
     $midiPath = Join-Path $smokeDir "quick_perf.mid"
     New-QuickSmokeMidi -Path $midiPath

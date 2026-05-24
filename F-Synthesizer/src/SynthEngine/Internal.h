@@ -263,6 +263,12 @@ struct SourceRenderFrame
     CommonShaperKind shaperKind = CommonShaperKind::None;
 };
 
+struct StereoFrame
+{
+    double left = 0.0;
+    double right = 0.0;
+};
+
 struct RenderState
 {
     // RenderMIDIEvents の 1 実行スコープで共有される可変状態。
@@ -276,6 +282,7 @@ struct RenderState
     std::array<double, 16> channelModwheel{};
     std::array<double, 16> channelPressure{};
     std::array<std::array<double, 128>, 16> channelPolyPressure{};
+    std::array<bool, 16> channelHasPolyPressure{};
     std::array<bool, 16> channelSustain{};
     std::array<double, 16> channelBrightness{};
     std::array<double, 16> channelResonance{};
@@ -294,6 +301,9 @@ struct RenderState
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};
     std::array<bool, 16> channelRenderable{};
+    std::array<StereoFrame, 16> renderChannelSums{};
+    std::array<DrumBusConfig, 16> renderChannelDrumBus{};
+    std::array<bool, 16> renderChannelHasDrumBus{};
     std::array<double, 16> channelPitchBendNorm{};
     std::array<double, 16> channelPitchBendRangeSemis{};
     std::array<int, 16> channelRpnMsb{};
@@ -375,11 +385,5 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs,
     int sampleRate,
     RenderState& state);
-
-struct StereoFrame
-{
-    double left = 0.0;
-    double right = 0.0;
-};
 
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound);

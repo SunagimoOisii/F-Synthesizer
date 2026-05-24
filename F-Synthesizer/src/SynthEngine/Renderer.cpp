@@ -197,9 +197,11 @@ ExpressionRuntime EvaluateExpressionMap(
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 {
     // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
-    std::array<StereoFrame, 16> channelSums{};
-    std::array<DrumBusConfig, 16> channelDrumBus{};
-    std::array<bool, 16> channelHasDrumBus{};
+    auto& channelSums = state.renderChannelSums;
+    auto& channelDrumBus = state.renderChannelDrumBus;
+    auto& channelHasDrumBus = state.renderChannelHasDrumBus;
+    channelSums.fill(StereoFrame{});
+    channelHasDrumBus.fill(false);
     auto& voices = state.voices;
     const double dt = 1.0 / sound.fs;
 
@@ -245,9 +247,13 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.ccGain = state.channelCcGain[ch];
         in.modwheel = state.channelModwheel[ch];
         in.channelPressure = state.channelPressure[ch];
-        const int note = std::clamp(voices.noteNumber[i], 0, 127);
-        in.polyPressure = state.channelPolyPressure[ch][note];
-        const double pressure = (std::max)(in.channelPressure, in.polyPressure);
+        if (state.channelHasPolyPressure[ch])
+        {
+            const int note = std::clamp(voices.noteNumber[i], 0, 127);
+            in.polyPressure = state.channelPolyPressure[ch][note];
+        }
+        const double pressure =
+            (in.channelPressure > in.polyPressure) ? in.channelPressure : in.polyPressure;
         if (!voices.expressionMap[i].enabled)
         {
             in.velocityNorm = voices.expressionDefaultVelocityNorm[i];

@@ -153,7 +153,12 @@ namespace
     {
         const int ch = ClampChannel(e.channel);
         const int note = std::clamp(e.noteNumber, 0, 127);
-        state.channelPolyPressure[ch][note] = NormalizeCc(e.value);
+        const double norm = NormalizeCc(e.value);
+        state.channelPolyPressure[ch][note] = norm;
+        if (norm > 0.0)
+        {
+            state.channelHasPolyPressure[ch] = true;
+        }
     }
 
     ChannelConfig ResolveRealtimeChannelConfig(const ChannelConfig& cfg, int channel, const RenderState& state)
