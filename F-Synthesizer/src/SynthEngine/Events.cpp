@@ -245,12 +245,14 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
                         0,
                         127);
                     state.voices.AddVoice(drumCfg, drumEvent, sampleRate);
+                    MarkActiveVoiceIndicesDirty(state);
                 }
             }
             else
             {
                 const ChannelConfig resolvedCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
                 state.voices.AddVoice(resolvedCfg, e, sampleRate);
+                MarkActiveVoiceIndicesDirty(state);
             }
         }
         else

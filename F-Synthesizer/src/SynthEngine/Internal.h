@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+#include "config/SourceRegistry.h"
 #include "SynthEngine/Filter.h"
 #include "SynthEngine/Smoothing.h"
 #include "SynthEngine/SynthEngine.h"
@@ -195,6 +196,12 @@ struct Voice
     std::vector<double> expressionDefaultAmpVelocity;
     std::vector<uint32_t> layerMask;
     std::vector<uint8_t> fastPathMask;
+    std::vector<double> runtimeAmp;
+    std::vector<double> runtimeDefaultAmpVelocity;
+    std::vector<uint8_t> runtimeHasDrumBus;
+    std::vector<uint8_t> runtimeSourceKind;
+    std::vector<uint8_t> runtimeSourceHasModTargets;
+    std::vector<uint8_t> runtimeSourceIsOneShot;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;
@@ -342,7 +349,28 @@ struct RenderState
     double sampleRateReduceHoldR = 0.0;
     bool hasAnySolo = false;
     std::vector<uint8_t> cleanupKeepScratch{};
+    std::vector<size_t> activeVoiceIndices{};
+    bool activeVoiceIndicesDirty = true;
 };
+
+inline void MarkActiveVoiceIndicesDirty(RenderState& state)
+{
+    state.activeVoiceIndicesDirty = true;
+}
+
+inline void RebuildActiveVoiceIndices(RenderState& state)
+{
+    state.activeVoiceIndices.clear();
+    state.activeVoiceIndices.reserve(state.voices.size());
+    for (size_t i = 0; i < state.voices.size(); i++)
+    {
+        if (state.voices.pendingRemove[i] == 0 && state.voices.env[i].stage != ADSRStage::Off)
+        {
+            state.activeVoiceIndices.push_back(i);
+        }
+    }
+    state.activeVoiceIndicesDirty = false;
+}
 
 inline int ClampChannel(int channel)
 {

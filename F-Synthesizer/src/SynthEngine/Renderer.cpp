@@ -197,6 +197,10 @@ ExpressionRuntime EvaluateExpressionMap(
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 {
     // 前提: audio thread のサンプルループから1サンプル単位で呼ぶ。
+    if (state.activeVoiceIndicesDirty)
+    {
+        RebuildActiveVoiceIndices(state);
+    }
     auto& channelSums = state.renderChannelSums;
     auto& channelDrumBus = state.renderChannelDrumBus;
     auto& channelHasDrumBus = state.renderChannelHasDrumBus;
@@ -207,9 +211,9 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 
     // SoA 配列を先頭から順に処理するホットパス。
     // 目的: キャッシュ局所性を高め、Voice 数増加時の劣化を抑える。
-    for (size_t i = 0; i < voices.size(); i++)
+    for (const size_t i : state.activeVoiceIndices)
     {
-        if (voices.env[i].stage == ADSRStage::Off)
+        if (voices.pendingRemove[i] != 0 || voices.env[i].stage == ADSRStage::Off)
         {
             continue;
         }
@@ -227,6 +231,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
             // 即時 erase は O(n) 連鎖になるため、削除フラグだけ立てて後段でまとめて圧縮する。
             voices.pendingRemove[i] = 1;
             state.pendingRemoveCount++;
+            MarkActiveVoiceIndicesDirty(state);
             continue;
         }
 
@@ -260,7 +265,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         {
             in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
             in.expressionVelocity = in.velocityNorm;
-            in.velGain = voices.expressionDefaultAmpVelocity[i];
+            in.velGain = voices.runtimeDefaultAmpVelocity[i];
             in.brightness = state.channelBrightness[ch];
             in.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
         }
@@ -366,7 +371,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
 
         const double gain =
             frame.sourceGain *
-            voices.amp[i] *
+            voices.runtimeAmp[i] *
             in.ccGain *
             in.velGain *
             in.envGain *
@@ -376,7 +381,7 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         const double stereoR = gain * (frame.sample + frame.stereoOffsetR);
         channelSums[ch].left += stereoL;
         channelSums[ch].right += stereoR;
-        if (voices.drumBus[i].enabled)
+        if (voices.runtimeHasDrumBus[i] != 0)
         {
             channelDrumBus[ch] = voices.drumBus[i];
             channelHasDrumBus[ch] = true;

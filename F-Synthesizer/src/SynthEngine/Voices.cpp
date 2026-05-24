@@ -214,6 +214,14 @@ void InitializeVoiceAtIndex(
     voices.expressionDefaultVelocityNorm[i] =
         std::clamp(static_cast<double>(std::clamp(e.velocity, 0, 127)) / 127.0, 0.0, 1.0);
     voices.expressionDefaultAmpVelocity[i] = VelocityToGain(e.velocity);
+    voices.runtimeAmp[i] = cfg.amp;
+    voices.runtimeDefaultAmpVelocity[i] = voices.expressionDefaultAmpVelocity[i];
+    voices.runtimeHasDrumBus[i] = cfg.drumBus.enabled ? 1 : 0;
+    const config::SourceKind sourceKind = config::SourceConfigKind(cfg.source);
+    const config::SourceCapability sourceCapability = config::SourceCapabilityOf(sourceKind);
+    voices.runtimeSourceKind[i] = static_cast<uint8_t>(config::SourceKindToIndex(sourceKind));
+    voices.runtimeSourceHasModTargets[i] = sourceCapability.hasModTargets ? 1 : 0;
+    voices.runtimeSourceIsOneShot[i] = sourceCapability.isOneShot ? 1 : 0;
     uint32_t layerMask = 0;
     if (cfg.attackLayer.enabled && cfg.attackLayer.level > 0.0) layerMask |= kVoiceLayerAttack;
     if (cfg.bassLayer.enabled && cfg.bassLayer.level > 0.0) layerMask |= kVoiceLayerBass;
@@ -561,6 +569,12 @@ void Voice::reserve(size_t n)
     expressionDefaultAmpVelocity.reserve(n);
     layerMask.reserve(n);
     fastPathMask.reserve(n);
+    runtimeAmp.reserve(n);
+    runtimeDefaultAmpVelocity.reserve(n);
+    runtimeHasDrumBus.reserve(n);
+    runtimeSourceKind.reserve(n);
+    runtimeSourceHasModTargets.reserve(n);
+    runtimeSourceIsOneShot.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -637,6 +651,12 @@ void Voice::clear()
     expressionDefaultAmpVelocity.clear();
     layerMask.clear();
     fastPathMask.clear();
+    runtimeAmp.clear();
+    runtimeDefaultAmpVelocity.clear();
+    runtimeHasDrumBus.clear();
+    runtimeSourceKind.clear();
+    runtimeSourceHasModTargets.clear();
+    runtimeSourceIsOneShot.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -724,6 +744,12 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     expressionDefaultAmpVelocity.push_back(1.0);
     layerMask.push_back(0);
     fastPathMask.push_back(0);
+    runtimeAmp.push_back(0.0);
+    runtimeDefaultAmpVelocity.push_back(1.0);
+    runtimeHasDrumBus.push_back(0);
+    runtimeSourceKind.push_back(0);
+    runtimeSourceHasModTargets.push_back(0);
+    runtimeSourceIsOneShot.push_back(0);
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -772,7 +798,7 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
 
 void Voice::MarkNoteOff(int ch, int note, int noteInstanceID, bool holdBySustain)
 {
-    auto applyRelease = [&](size_t i, const config::SourceCapability& cap)
+    auto applyRelease = [&](size_t i, bool hasModTargets)
     {
         if (holdBySustain)
         {
@@ -780,7 +806,7 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID, bool holdBySustain
             return;
         }
         NoteOff(env[i]);
-        if (cap.hasModTargets)
+        if (hasModTargets)
         {
             NoteOffVoiceModulation(sourceState[i]);
         }
@@ -794,14 +820,13 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID, bool holdBySustain
     {
         for (size_t i = 0; i < size(); i++)
         {
-            const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
-            if (cap.isOneShot)
+            if (runtimeSourceIsOneShot[i] != 0)
             {
                 continue;
             }
             if (released[i] == 0 && this->noteInstanceID[i] == noteInstanceID)
             {
-                applyRelease(i, cap);
+                applyRelease(i, runtimeSourceHasModTargets[i] != 0);
                 return;
             }
         }
@@ -810,14 +835,13 @@ void Voice::MarkNoteOff(int ch, int note, int noteInstanceID, bool holdBySustain
     // 旧互換経路: 既存データや異常入力でIDが取れない場合のみ利用。
     for (size_t i = 0; i < size(); i++)
     {
-        const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
-        if (cap.isOneShot)
+        if (runtimeSourceIsOneShot[i] != 0)
         {
             continue;
         }
         if (released[i] == 0 && noteNumber[i] == note && channel[i] == ch)
         {
-            applyRelease(i, cap);
+            applyRelease(i, runtimeSourceHasModTargets[i] != 0);
             break;
         }
     }
@@ -831,14 +855,13 @@ void Voice::ReleaseSustained(int ch)
         {
             continue;
         }
-        const config::SourceCapability cap = config::SourceCapabilityOf(source[i]);
-        if (cap.isOneShot)
+        if (runtimeSourceIsOneShot[i] != 0)
         {
             sustainedPendingOff[i] = 0;
             continue;
         }
         NoteOff(env[i]);
-        if (cap.hasModTargets)
+        if (runtimeSourceHasModTargets[i] != 0)
         {
             NoteOffVoiceModulation(sourceState[i]);
         }
@@ -902,6 +925,12 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(expressionDefaultAmpVelocity, keepScratch);
     CompactVectorByKeep(layerMask, keepScratch);
     CompactVectorByKeep(fastPathMask, keepScratch);
+    CompactVectorByKeep(runtimeAmp, keepScratch);
+    CompactVectorByKeep(runtimeDefaultAmpVelocity, keepScratch);
+    CompactVectorByKeep(runtimeHasDrumBus, keepScratch);
+    CompactVectorByKeep(runtimeSourceKind, keepScratch);
+    CompactVectorByKeep(runtimeSourceHasModTargets, keepScratch);
+    CompactVectorByKeep(runtimeSourceIsOneShot, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);

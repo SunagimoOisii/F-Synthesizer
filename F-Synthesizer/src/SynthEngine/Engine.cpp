@@ -28,6 +28,7 @@ void CleanupVoices(RenderState& state)
     if (removed > 0)
     {
         state.pendingRemoveCount = 0;
+        RebuildActiveVoiceIndices(state);
     }
 }
 
@@ -502,61 +503,67 @@ void RenderMIDIEvents(
     // 前提: pendingRemove は短時間遅延しても音として破綻しない。
     // トレードオフ: 削除タイミングが最大 cleanupInterval サンプルぶん遅れる。
     const int cleanupInterval = 256;
+    constexpr int renderBlockSize = 64;
     const bool masterEffectsActive = HasActiveMasterEffects(state.effects);
     int cleanupCountdown = 0;
-    for (int i = 0; i < sound.length; i++)
+    for (int i = 0; i < sound.length;)
     {
-        // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
-        if (cleanupCountdown <= 0)
+        const int blockEnd = std::min(i + renderBlockSize, sound.length);
+        for (; i < blockEnd; i++)
         {
-            if (shouldCancel && shouldCancel())
+            // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
+            if (cleanupCountdown <= 0)
             {
-                if (canceled != nullptr)
+                if (shouldCancel && shouldCancel())
                 {
-                    *canceled = true;
+                    if (canceled != nullptr)
+                    {
+                        *canceled = true;
+                    }
+                    i = sound.length;
+                    break;
                 }
-                break;
+                CleanupVoices(state);
+                cleanupCountdown = cleanupInterval;
             }
-            CleanupVoices(state);
-            cleanupCountdown = cleanupInterval;
-        }
 
-        if (!masterEffectsActive &&
-            state.voices.empty() &&
-            state.eventIndex < events.size() &&
-            events[state.eventIndex].sample > i)
-        {
-            const int nextSample = std::min(events[state.eventIndex].sample, sound.length);
-            if (nextSample > i)
+            if (!masterEffectsActive &&
+                state.voices.empty() &&
+                state.eventIndex < events.size() &&
+                events[state.eventIndex].sample > i)
             {
-                cleanupCountdown -= (nextSample - i);
-                i = nextSample - 1;
-                continue;
+                const int nextSample = std::min(events[state.eventIndex].sample, sound.length);
+                if (nextSample > i)
+                {
+                    cleanupCountdown -= (nextSample - i);
+                    i = nextSample - 1;
+                    continue;
+                }
             }
-        }
 
-        ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
-        while (state.tempoChangeIndex < state.tempoChangeSamples.size() &&
-            i >= state.tempoChangeSamples[state.tempoChangeIndex])
-        {
-            state.currentBpm = state.tempoChangeBpms[state.tempoChangeIndex];
-            state.tempoChangeIndex++;
-        }
-        StereoFrame frame = RenderVoices(state, sound);
-        if (masterEffectsActive)
-        {
-            frame = ApplyMasterEffects(state, sound.fs, frame);
-        }
-        if (sound.channels >= 2)
-        {
-            sound.dataL[i] = frame.left;
-            sound.dataR[i] = frame.right;
-        }
-        else
-        {
-            sound.data[i] = (frame.left + frame.right) * 0.5;
-        }
+            ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
+            while (state.tempoChangeIndex < state.tempoChangeSamples.size() &&
+                i >= state.tempoChangeSamples[state.tempoChangeIndex])
+            {
+                state.currentBpm = state.tempoChangeBpms[state.tempoChangeIndex];
+                state.tempoChangeIndex++;
+            }
+            StereoFrame frame = RenderVoices(state, sound);
+            if (masterEffectsActive)
+            {
+                frame = ApplyMasterEffects(state, sound.fs, frame);
+            }
+            if (sound.channels >= 2)
+            {
+                sound.dataL[i] = frame.left;
+                sound.dataR[i] = frame.right;
+            }
+            else
+            {
+                sound.data[i] = (frame.left + frame.right) * 0.5;
+            }
 
-        cleanupCountdown--;
+            cleanupCountdown--;
+        }
     }
 }
