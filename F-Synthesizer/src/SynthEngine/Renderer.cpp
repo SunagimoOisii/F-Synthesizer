@@ -2,8 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <future>
-#include <thread>
 #include <type_traits>
 
 #include "synth/Oscillator.h"
@@ -457,6 +455,42 @@ size_t RenderChannelBlock(RenderState& state, const SoundData& sound, int ch, in
     }
     return removedCount;
 }
+
+size_t RenderSingleChannelBlockToOutput(
+    RenderState& state,
+    const SoundData& sound,
+    int ch,
+    int frameCount,
+    std::vector<StereoFrame>& outFrames)
+{
+    size_t removedCount = 0;
+    const auto& indices = state.activeVoiceIndicesByChannel[ch];
+    const double mixGainL = state.channelMixGainL[ch];
+    const double mixGainR = state.channelMixGainR[ch];
+    for (int offset = 0; offset < frameCount; offset++)
+    {
+        StereoFrame channelSum{};
+        DrumBusConfig channelDrumBus{};
+        bool channelHasDrumBus = false;
+        for (const size_t i : indices)
+        {
+            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
+            {
+                removedCount++;
+            }
+        }
+        if (channelHasDrumBus)
+        {
+            channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
+        }
+        outFrames[static_cast<size_t>(offset)] = StereoFrame{
+            channelSum.left * mixGainL,
+            channelSum.right * mixGainR
+        };
+    }
+    return removedCount;
+}
+
 } // namespace
 
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
@@ -510,45 +544,38 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
         RebuildActiveVoiceIndices(state);
     }
 
-    outFrames.assign(static_cast<size_t>(frameCount), StereoFrame{});
-    std::vector<int> activeChannels;
+    outFrames.resize(static_cast<size_t>(frameCount));
+    auto& activeChannels = state.renderActiveChannels;
+    activeChannels.clear();
     activeChannels.reserve(16);
     for (int ch = 0; ch < 16; ch++)
     {
         if (!state.activeVoiceIndicesByChannel[ch].empty())
         {
-            state.renderChannelBlockFrames[ch].assign(static_cast<size_t>(frameCount), StereoFrame{});
+            auto& frames = state.renderChannelBlockFrames[ch];
+            if (frames.size() < static_cast<size_t>(frameCount))
+            {
+                frames.resize(static_cast<size_t>(frameCount));
+            }
             activeChannels.push_back(ch);
         }
     }
 
     if (activeChannels.empty())
     {
+        std::fill(outFrames.begin(), outFrames.end(), StereoFrame{});
         return;
     }
 
     size_t removedCount = 0;
-    const unsigned hardwareThreads = std::thread::hardware_concurrency();
-    const bool useParallel =
-        hardwareThreads > 1 &&
-        frameCount >= 32 &&
-        activeChannels.size() > 1;
-
-    if (useParallel)
+    if (activeChannels.size() == 1)
     {
-        std::vector<std::future<size_t>> futures;
-        futures.reserve(activeChannels.size());
-        for (const int ch : activeChannels)
-        {
-            futures.push_back(std::async(std::launch::async, [&state, &sound, ch, frameCount]()
-            {
-                return RenderChannelBlock(state, sound, ch, frameCount);
-            }));
-        }
-        for (auto& future : futures)
-        {
-            removedCount += future.get();
-        }
+        removedCount = RenderSingleChannelBlockToOutput(
+            state,
+            sound,
+            activeChannels.front(),
+            frameCount,
+            outFrames);
     }
     else
     {
@@ -556,23 +583,23 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
         {
             removedCount += RenderChannelBlock(state, sound, ch, frameCount);
         }
+
+        for (int offset = 0; offset < frameCount; offset++)
+        {
+            StereoFrame sum{};
+            for (const int ch : activeChannels)
+            {
+                const StereoFrame frame = state.renderChannelBlockFrames[ch][offset];
+                sum.left += frame.left * state.channelMixGainL[ch];
+                sum.right += frame.right * state.channelMixGainR[ch];
+            }
+            outFrames[static_cast<size_t>(offset)] = sum;
+        }
     }
 
     if (removedCount > 0)
     {
         state.pendingRemoveCount += removedCount;
         MarkActiveVoiceIndicesDirty(state);
-    }
-
-    for (int offset = 0; offset < frameCount; offset++)
-    {
-        StereoFrame sum{};
-        for (const int ch : activeChannels)
-        {
-            const StereoFrame frame = state.renderChannelBlockFrames[ch][offset];
-            sum.left += frame.left * state.channelMixGainL[ch];
-            sum.right += frame.right * state.channelMixGainR[ch];
-        }
-        outFrames[offset] = sum;
     }
 }

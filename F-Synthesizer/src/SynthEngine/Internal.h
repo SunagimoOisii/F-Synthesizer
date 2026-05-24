@@ -322,6 +322,7 @@ struct RenderState
     std::array<std::vector<size_t>, 16> activeVoiceIndicesByChannel{};
     std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
     std::vector<StereoFrame> renderBlockFrames{};
+    std::vector<int> renderActiveChannels{};
     std::array<double, 16> channelPitchBendNorm{};
     std::array<double, 16> channelPitchBendRangeSemis{};
     std::array<int, 16> channelRpnMsb{};
