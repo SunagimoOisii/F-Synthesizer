@@ -339,7 +339,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         {
             options.durationSec = rangeDurationSec;
         }
-        int startTick = state.pianoRoll.previewStartTick;
+        else if (!state.pianoRoll.previewRangeEnabled)
+        {
+            options.startSec = 0.0;
+            options.durationSec = -1.0;
+        }
+        int startTick = 0;
         if (state.pianoRoll.previewRangeEnabled)
         {
             startTick = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
@@ -384,14 +389,13 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         {
             const int a = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
             const int b = (std::max)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview range tick=" + std::to_string(a) + "-" +
+            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview optional range tick=" + std::to_string(a) + "-" +
                 std::to_string(b) + " secStart=" + std::to_string(options.startSec) +
                 " secDuration=" + std::to_string(options.durationSec));
         }
         else
         {
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview start tick=" + std::to_string(state.pianoRoll.previewStartTick) +
-                " sec=" + std::to_string(options.startSec));
+            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview full range secStart=0 secDuration=full");
         }
     }
     detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);

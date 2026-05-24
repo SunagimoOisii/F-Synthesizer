@@ -72,13 +72,13 @@ void DrawPianoRollPanel(
     ImGui::SameLine();
     if (state.previewRangeEnabled)
     {
-        ImGui::Text("再生範囲=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
+        ImGui::Text("Preview範囲=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
     }
     else
     {
-        ImGui::Text("再生開始Tick=%d", state.previewStartTick);
+        ImGui::TextUnformatted("Preview対象=全体");
     }
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=範囲選択 / Delete=削除 / ルーラD&D=再生範囲 / Space=再生停止 / Q,1-4=スナップ");
+    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=任意範囲Preview / Delete=削除 / ルーラD&D=Preview範囲 / Space=再生停止 / Q,1-4=スナップ");
 
     if (state.hasLoadError)
     {
@@ -194,13 +194,13 @@ void DrawPianoRollPanel(
             else if (io.KeyShift)
             {
                 // Shift+ホイール: 時間軸の横スクロール。
-                const int tickStep = (std::max)(1, state.ticksPerQuarter / 2);
+                const int tickStep = (std::max)(1, state.ticksPerQuarter * 2);
                 state.tickOffset = (std::max)(0, state.tickOffset - wheelSteps * tickStep);
             }
             else
             {
                 // 通常ホイール: 音高軸の縦スクロール。
-                const int noteStep = (std::max)(1, state.visibleNoteCount / 8);
+                const int noteStep = (std::max)(1, state.visibleNoteCount / 4);
                 state.noteOffset = std::clamp(
                     state.noteOffset + wheelSteps * noteStep,
                     0,
@@ -212,7 +212,7 @@ void DrawPianoRollPanel(
         if (std::fabs(io.MouseWheelH) > 0.0001f && !io.KeyCtrl)
         {
             const int wheelHSteps = (io.MouseWheelH > 0.0f) ? 1 : -1;
-            const int tickStep = (std::max)(1, state.ticksPerQuarter / 2);
+            const int tickStep = (std::max)(1, state.ticksPerQuarter * 2);
             state.tickOffset = (std::max)(0, state.tickOffset - wheelHSteps * tickStep);
             InvalidateVisibleCache(state);
         }
@@ -242,7 +242,7 @@ void DrawPianoRollPanel(
                 state.previewStartTick = state.previewRangeStartTick;
                 if (appendLog)
                 {
-                    appendLog("[PianoRoll] preview start tick set: " + std::to_string(state.previewStartTick));
+                    appendLog("[PianoRoll] preview range cleared: full range");
                 }
             }
             else
