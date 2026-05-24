@@ -1,8 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cmath>
 #include <variant>
 #include <vector>
 
@@ -167,6 +169,8 @@ struct Voice
     std::vector<AmpCabLayerConfig> ampCabLayer;
     std::vector<DrumBusConfig> drumBus;
     std::vector<ExpressionMapConfig> expressionMap;
+    std::vector<double> expressionDefaultVelocityNorm;
+    std::vector<double> expressionDefaultAmpVelocity;
     std::vector<ADSRState> env;
 
     std::vector<double> phase;
@@ -250,6 +254,7 @@ struct RenderState
     size_t pendingRemoveCount = 0;
     std::array<double, 16> channelCc7{};
     std::array<double, 16> channelCc11{};
+    std::array<double, 16> channelCcGain{};
     std::array<double, 16> channelPitch{};
     std::array<double, 16> channelModwheel{};
     std::array<double, 16> channelPressure{};
@@ -258,6 +263,12 @@ struct RenderState
     std::array<double, 16> channelBrightness{};
     std::array<double, 16> channelResonance{};
     std::array<ChannelAdsrOffset, 16> channelAdsrOffset{};
+    std::array<double, 16> channelAttackScale{};
+    std::array<double, 16> channelDecayScale{};
+    std::array<double, 16> channelSustainAdd{};
+    std::array<double, 16> channelReleaseScale{};
+    std::array<double, 16> channelBrightnessCutoffScale{};
+    std::array<double, 16> channelResonanceScale{};
     std::array<double, 16> channelPortamentoTimeSec{};
     std::array<bool, 16> channelPortamentoOn{};
     std::array<double, 16> channelMixGainL{};
@@ -302,6 +313,44 @@ struct RenderState
 inline int ClampChannel(int channel)
 {
     return (channel >= 0 && channel < 16) ? channel : 0;
+}
+
+inline double RenderTimeScaleFromOffset(double offset)
+{
+    return std::exp2(std::clamp(offset, -1.0, 1.0) * 2.0);
+}
+
+inline double RenderCutoffScaleFromBrightness(double brightness)
+{
+    return std::exp2((std::clamp(brightness, 0.0, 1.0) - 0.5) * 4.0);
+}
+
+inline double RenderResonanceScaleFromCc(double resonance)
+{
+    return std::exp2((std::clamp(resonance, 0.0, 1.0) - 0.5) * 2.0);
+}
+
+inline void RecomputeChannelCcGain(RenderState& state, int ch)
+{
+    ch = ClampChannel(ch);
+    state.channelCcGain[ch] = state.channelCc7[ch] * state.channelCc11[ch];
+}
+
+inline void RecomputeChannelAdsrCache(RenderState& state, int ch)
+{
+    ch = ClampChannel(ch);
+    const ChannelAdsrOffset& offset = state.channelAdsrOffset[ch];
+    state.channelAttackScale[ch] = RenderTimeScaleFromOffset(offset.attack);
+    state.channelDecayScale[ch] = RenderTimeScaleFromOffset(offset.decay);
+    state.channelSustainAdd[ch] = offset.sustain * 0.5;
+    state.channelReleaseScale[ch] = RenderTimeScaleFromOffset(offset.release);
+}
+
+inline void RecomputeChannelToneCache(RenderState& state, int ch)
+{
+    ch = ClampChannel(ch);
+    state.channelBrightnessCutoffScale[ch] = RenderCutoffScaleFromBrightness(state.channelBrightness[ch]);
+    state.channelResonanceScale[ch] = RenderResonanceScaleFromCc(state.channelResonance[ch]);
 }
 
 void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,

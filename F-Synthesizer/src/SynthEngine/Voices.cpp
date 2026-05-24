@@ -211,6 +211,9 @@ void InitializeVoiceAtIndex(
     voices.ampCabLayer[i] = cfg.ampCabLayer;
     voices.drumBus[i] = cfg.drumBus;
     voices.expressionMap[i] = cfg.expressionMap;
+    voices.expressionDefaultVelocityNorm[i] =
+        std::clamp(static_cast<double>(std::clamp(e.velocity, 0, 127)) / 127.0, 0.0, 1.0);
+    voices.expressionDefaultAmpVelocity[i] = VelocityToGain(e.velocity);
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -536,6 +539,8 @@ void Voice::reserve(size_t n)
     ampCabLayer.reserve(n);
     drumBus.reserve(n);
     expressionMap.reserve(n);
+    expressionDefaultVelocityNorm.reserve(n);
+    expressionDefaultAmpVelocity.reserve(n);
     env.reserve(n);
     phase.reserve(n);
     phaseInc.reserve(n);
@@ -608,6 +613,8 @@ void Voice::clear()
     ampCabLayer.clear();
     drumBus.clear();
     expressionMap.clear();
+    expressionDefaultVelocityNorm.clear();
+    expressionDefaultAmpVelocity.clear();
     env.clear();
     phase.clear();
     phaseInc.clear();
@@ -691,6 +698,8 @@ void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRat
     ampCabLayer.emplace_back();
     drumBus.emplace_back();
     expressionMap.emplace_back();
+    expressionDefaultVelocityNorm.push_back(1.0);
+    expressionDefaultAmpVelocity.push_back(1.0);
     env.emplace_back();
 
     phase.push_back(0.0);
@@ -865,6 +874,8 @@ size_t Voice::CleanupPending(std::vector<uint8_t>& keepScratch)
     CompactVectorByKeep(ampCabLayer, keepScratch);
     CompactVectorByKeep(drumBus, keepScratch);
     CompactVectorByKeep(expressionMap, keepScratch);
+    CompactVectorByKeep(expressionDefaultVelocityNorm, keepScratch);
+    CompactVectorByKeep(expressionDefaultAmpVelocity, keepScratch);
     CompactVectorByKeep(env, keepScratch);
     CompactVectorByKeep(phase, keepScratch);
     CompactVectorByKeep(phaseInc, keepScratch);

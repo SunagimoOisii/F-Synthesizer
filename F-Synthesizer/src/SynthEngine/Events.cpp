@@ -48,9 +48,11 @@ namespace
             break;
         case 7:
             state.channelCc7[ch] = norm;
+            RecomputeChannelCcGain(state, ch);
             break;
         case 11:
             state.channelCc11[ch] = norm;
+            RecomputeChannelCcGain(state, ch);
             break;
         case 64:
         {
@@ -67,21 +69,27 @@ namespace
             break;
         case 70:
             state.channelAdsrOffset[ch].sustain = NormalizeCcCentered(e.value);
+            RecomputeChannelAdsrCache(state, ch);
             break;
         case 71:
             state.channelResonance[ch] = norm;
+            RecomputeChannelToneCache(state, ch);
             break;
         case 72:
             state.channelAdsrOffset[ch].release = NormalizeCcCentered(e.value);
+            RecomputeChannelAdsrCache(state, ch);
             break;
         case 73:
             state.channelAdsrOffset[ch].attack = NormalizeCcCentered(e.value);
+            RecomputeChannelAdsrCache(state, ch);
             break;
         case 74:
             state.channelBrightness[ch] = norm;
+            RecomputeChannelToneCache(state, ch);
             break;
         case 75:
             state.channelAdsrOffset[ch].decay = NormalizeCcCentered(e.value);
+            RecomputeChannelAdsrCache(state, ch);
             break;
         case 101:
             state.channelRpnMsb[ch] = std::clamp(e.value, 0, 127);

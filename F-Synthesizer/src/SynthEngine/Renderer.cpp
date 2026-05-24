@@ -206,16 +206,14 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
             continue;
         }
 
+        const int ch = voices.channelIndex[i];
         const double envGain = StepADSR(
             voices.env[i],
             dt,
-            voices.attackSec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].attack),
-            voices.decaySec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].decay),
-            std::clamp(
-                voices.sustainLevel[i] + (state.channelAdsrOffset[voices.channelIndex[i]].sustain * 0.5),
-                0.0,
-                1.0),
-            voices.releaseSec[i] * TimeScaleFromOffset(state.channelAdsrOffset[voices.channelIndex[i]].release));
+            voices.attackSec[i] * state.channelAttackScale[ch],
+            voices.decaySec[i] * state.channelDecayScale[ch],
+            std::clamp(voices.sustainLevel[i] + state.channelSustainAdd[ch], 0.0, 1.0),
+            voices.releaseSec[i] * state.channelReleaseScale[ch]);
         if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
         {
             // 即時 erase は O(n) 連鎖になるため、削除フラグだけ立てて後段でまとめて圧縮する。
@@ -227,7 +225,6 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         VoiceRenderInput in{};
         in.dt = dt;
         in.envGain = envGain;
-        const int ch = voices.channelIndex[i];
         // mute/solo/mixGain 判定は事前計算済みフラグを参照する。
         // 目的: ホットループの分岐段数を減らし、分岐予測ミスを抑える。
         // 前提: channel mix 状態は RenderMIDIEvents 実行中に変化しない。
@@ -239,54 +236,70 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         in.mixGainL = state.channelMixGainL[ch];
         in.mixGainR = state.channelMixGainR[ch];
         in.pitchFactor = state.channelPitch[ch];
-        in.ccGain = state.channelCc7[ch] * state.channelCc11[ch];
+        in.ccGain = state.channelCcGain[ch];
         in.modwheel = state.channelModwheel[ch];
         in.channelPressure = state.channelPressure[ch];
         const int note = std::clamp(voices.noteNumber[i], 0, 127);
         in.polyPressure = state.channelPolyPressure[ch][note];
         const double pressure = (std::max)(in.channelPressure, in.polyPressure);
-        const ExpressionRuntime expr = EvaluateExpressionMap(
-            voices.expressionMap[i],
-            voices.velocity[i],
-            in.modwheel,
-            pressure,
-            state.channelBrightness[ch]);
-        in.velocityNorm = expr.velocityNorm;
-        in.expressionVelocity = expr.expressionVelocity;
-        in.velGain = expr.ampVelocity;
-        in.expressionFmIndexMul = expr.fmIndexMul;
-        in.expressionAttackMul = expr.attackMul;
-        in.expressionBassMul = expr.bassMul;
-        in.expressionLeadMul = expr.leadMul;
-        in.expressionChordMul = expr.chordMul;
-        in.expressionPadMul = expr.padMul;
-        in.expressionPluckMul = expr.pluckMul;
-        in.expressionStringMul = expr.stringMul;
-        in.expressionBodyMul = expr.bodyMul;
-        in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
-        in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
-        in.expressionDriveAdd = expr.driveAdd;
-        in.expressionFilterDriveAdd = expr.filterDriveAdd;
-        in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
+        if (!voices.expressionMap[i].enabled)
+        {
+            in.velocityNorm = voices.expressionDefaultVelocityNorm[i];
+            in.expressionVelocity = in.velocityNorm;
+            in.velGain = voices.expressionDefaultAmpVelocity[i];
+            in.brightness = state.channelBrightness[ch];
+            in.brightnessCutoffScale = state.channelBrightnessCutoffScale[ch];
+        }
+        else
+        {
+            const ExpressionRuntime expr = EvaluateExpressionMap(
+                voices.expressionMap[i],
+                voices.velocity[i],
+                in.modwheel,
+                pressure,
+                state.channelBrightness[ch]);
+            in.velocityNorm = expr.velocityNorm;
+            in.expressionVelocity = expr.expressionVelocity;
+            in.velGain = expr.ampVelocity;
+            in.expressionFmIndexMul = expr.fmIndexMul;
+            in.expressionAttackMul = expr.attackMul;
+            in.expressionBassMul = expr.bassMul;
+            in.expressionLeadMul = expr.leadMul;
+            in.expressionChordMul = expr.chordMul;
+            in.expressionPadMul = expr.padMul;
+            in.expressionPluckMul = expr.pluckMul;
+            in.expressionStringMul = expr.stringMul;
+            in.expressionBodyMul = expr.bodyMul;
+            in.expressionPadBrightnessAdd = expr.padBrightnessAdd;
+            in.expressionStringBrightnessAdd = expr.stringBrightnessAdd;
+            in.expressionDriveAdd = expr.driveAdd;
+            in.expressionFilterDriveAdd = expr.filterDriveAdd;
+            in.brightness = std::clamp(state.channelBrightness[ch] + expr.brightnessAdd, 0.0, 1.0);
+            in.brightnessCutoffScale = RenderCutoffScaleFromBrightness(in.brightness);
+        }
         in.resonance = state.channelResonance[ch];
+        in.resonanceScale = state.channelResonanceScale[ch];
 
         // ポルタメント: 現在ピッチをターゲットへ指数平滑しつつ pitchFactor へ反映する。
-        const double effectivePortamentoTimeSec = state.channelPortamentoOn[ch]
-            ? (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch])
-            : 0.0;
-        if (effectivePortamentoTimeSec > 0.0 &&
-            std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
+        if (state.channelPortamentoOn[ch])
         {
-            const double tau = effectivePortamentoTimeSec;
-            voices.portamentoPitchHz[i] +=
-                (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
-                (1.0 - std::exp(-in.dt / tau));
-        }
-        // portamentoPitchHz を phaseInc に対する倍率として pitchFactor へ乗算する。
-        // (phaseInc = targetHz / sampleRate なので比率で戻す)
-        if (effectivePortamentoTimeSec > 0.0 && voices.portamentoTargetHz[i] > 0.0)
-        {
-            in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
+            const double effectivePortamentoTimeSec =
+                (std::max)(voices.portamentoTimeSec[i], state.channelPortamentoTimeSec[ch]);
+            if (effectivePortamentoTimeSec > 0.0)
+            {
+                if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
+                {
+                    voices.portamentoPitchHz[i] +=
+                        (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
+                        (1.0 - std::exp(-in.dt / effectivePortamentoTimeSec));
+                }
+                // portamentoPitchHz を phaseInc に対する倍率として pitchFactor へ乗算する。
+                // (phaseInc = targetHz / sampleRate なので比率で戻す)
+                if (voices.portamentoTargetHz[i] > 0.0)
+                {
+                    in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
+                }
+            }
         }
 
         SourceRenderFrame frame{};

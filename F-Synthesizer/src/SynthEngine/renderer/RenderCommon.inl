@@ -27,21 +27,23 @@ struct VoiceRenderInput
     double polyPressure = 0.0;
     double brightness = 0.5;
     double resonance = 0.5;
+    double brightnessCutoffScale = 1.0;
+    double resonanceScale = 1.0;
 };
 
 double TimeScaleFromOffset(double offset)
 {
-    return std::exp2(std::clamp(offset, -1.0, 1.0) * 2.0);
+    return RenderTimeScaleFromOffset(offset);
 }
 
 double CutoffScaleFromBrightness(double brightness)
 {
-    return std::exp2((std::clamp(brightness, 0.0, 1.0) - 0.5) * 4.0);
+    return RenderCutoffScaleFromBrightness(brightness);
 }
 
 double ResonanceScaleFromCc(double resonance)
 {
-    return std::exp2((std::clamp(resonance, 0.0, 1.0) - 0.5) * 2.0);
+    return RenderResonanceScaleFromCc(resonance);
 }
 
 double SourceFilterResonance(const SourceConfig& src)

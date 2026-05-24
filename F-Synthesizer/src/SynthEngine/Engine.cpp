@@ -402,6 +402,16 @@ StereoFrame ApplyMasterEffects(RenderState& state, int sampleRate, StereoFrame i
     ApplyReverb(state, l3, r3, l4, r4);
     return StereoFrame{ l4, r4 };
 }
+
+bool HasActiveMasterEffects(const MasterEffectConfig& effects)
+{
+    return effects.sampleRateReducer.ratio < 1.0 ||
+        effects.bitCrusher.bits < 16 ||
+        (effects.chorus.enabled && effects.chorus.mix > 0.0) ||
+        (effects.flanger.enabled && effects.flanger.mix > 0.0) ||
+        (effects.delay.enabled && effects.delay.mix > 0.0) ||
+        (effects.reverb.enabled && effects.reverb.mix > 0.0);
+}
 } // namespace
 
 void RenderMIDIEvents(
@@ -432,6 +442,7 @@ void RenderMIDIEvents(
     {
         state.channelCc7[i] = 1.0;
         state.channelCc11[i] = 1.0;
+        RecomputeChannelCcGain(state, i);
         state.channelPitch[i] = 1.0;
         state.channelModwheel[i] = 0.0;
         state.channelPressure[i] = 0.0;
@@ -440,6 +451,8 @@ void RenderMIDIEvents(
         state.channelBrightness[i] = 0.5;
         state.channelResonance[i] = 0.5;
         state.channelAdsrOffset[i] = ChannelAdsrOffset{};
+        RecomputeChannelAdsrCache(state, i);
+        RecomputeChannelToneCache(state, i);
         state.channelPortamentoTimeSec[i] = 0.0;
         state.channelPortamentoOn[i] = true;
         state.channelPitchBendNorm[i] = 0.0;
@@ -488,16 +501,37 @@ void RenderMIDIEvents(
     // 前提: pendingRemove は短時間遅延しても音として破綻しない。
     // トレードオフ: 削除タイミングが最大 cleanupInterval サンプルぶん遅れる。
     const int cleanupInterval = 256;
+    const bool masterEffectsActive = HasActiveMasterEffects(state.effects);
+    int cleanupCountdown = 0;
     for (int i = 0; i < sound.length; i++)
     {
         // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
-        if (shouldCancel && ((i % cleanupInterval) == 0) && shouldCancel())
+        if (cleanupCountdown <= 0)
         {
-            if (canceled != nullptr)
+            if (shouldCancel && shouldCancel())
             {
-                *canceled = true;
+                if (canceled != nullptr)
+                {
+                    *canceled = true;
+                }
+                break;
             }
-            break;
+            CleanupVoices(state);
+            cleanupCountdown = cleanupInterval;
+        }
+
+        if (!masterEffectsActive &&
+            state.voices.empty() &&
+            state.eventIndex < events.size() &&
+            events[state.eventIndex].sample > i)
+        {
+            const int nextSample = std::min(events[state.eventIndex].sample, sound.length);
+            if (nextSample > i)
+            {
+                cleanupCountdown -= (nextSample - i);
+                i = nextSample - 1;
+                continue;
+            }
         }
 
         ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
@@ -519,9 +553,6 @@ void RenderMIDIEvents(
             sound.data[i] = (frame.left + frame.right) * 0.5;
         }
 
-        if ((i % cleanupInterval) == 0)
-        {
-            CleanupVoices(state);
-        }
+        cleanupCountdown--;
     }
 }
