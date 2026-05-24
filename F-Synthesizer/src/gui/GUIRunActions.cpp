@@ -315,9 +315,12 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
 
     AppConfig cfg = BuildConfigFromGUI(state);
-    if (previewSelected && state.UIModeTab == 0)
+    if (previewSelected)
     {
         cfg.targetChannel = previewChannel;
+    }
+    if (previewSelected && state.UIModeTab == 0)
+    {
         OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
         AppendGUILog(state, "[GUI] Sound Preview route: PR Channel ch" + std::to_string(previewChannel) +
             " <= Selected Slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
