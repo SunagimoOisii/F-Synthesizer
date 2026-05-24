@@ -3,6 +3,7 @@
 #include "gui/PreviewAudio.h"
 
 #include <algorithm>
+#include <memory>
 
 namespace
 {
@@ -22,9 +23,17 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
         return;
     }
 
-    const ma_uint64 totalFrames = playback->pcm.empty()
-        ? 0
-        : static_cast<ma_uint64>(playback->pcm.size() / channels);
+    std::shared_ptr<const PreviewPCMBuffer> buffer =
+        playback->pcmBuffer.load(std::memory_order_acquire);
+    const ma_uint64 activeSession = playback->sessionGeneration.load(std::memory_order_relaxed);
+    if (!buffer || buffer->session != activeSession || buffer->channels != channels || buffer->pcm.empty())
+    {
+        std::fill(out, out + static_cast<size_t>(frameCount) * channels, 0.0f);
+        playback->playing.store(false, std::memory_order_relaxed);
+        return;
+    }
+
+    const ma_uint64 totalFrames = buffer->frameCount;
 
     ma_uint32 written = 0;
     // コールバックスレッドではロックを持たず、frameCursorの原子的更新で追従する。
@@ -51,7 +60,7 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
         const size_t srcOffset = static_cast<size_t>(cursor * channels);
         const size_t dstOffset = static_cast<size_t>(written * channels);
         const size_t sampleCount = static_cast<size_t>(chunk * channels);
-        std::copy_n(playback->pcm.data() + srcOffset, sampleCount, out + dstOffset);
+        std::copy_n(buffer->pcm.data() + srcOffset, sampleCount, out + dstOffset);
         playback->frameCursor.store(cursor + chunk, std::memory_order_relaxed);
         written += chunk;
     }
@@ -108,6 +117,8 @@ void StopPreviewAudio(PreviewPlaybackState& playback)
     playback.playing.store(false, std::memory_order_relaxed);
     playback.frameCursor.store(0, std::memory_order_relaxed);
     playback.playStartTick.store(0, std::memory_order_relaxed);
+    playback.sessionGeneration.fetch_add(1, std::memory_order_relaxed);
+    playback.pcmBuffer.store({}, std::memory_order_release);
 }
 
 void ShutdownPreviewAudio(PreviewPlaybackState& playback)
@@ -133,9 +144,12 @@ bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bo
         return false;
     }
 
-    // PCM書き換え中だけロックし、コールバック側は読み取り専用で動かす。
-    std::lock_guard<std::mutex> lock(playback.mutex);
-    playback.pcm.resize(static_cast<size_t>(sound.length) * playback.channels);
+    auto buffer = std::make_shared<PreviewPCMBuffer>();
+    buffer->channels = playback.channels;
+    buffer->sampleRate = static_cast<ma_uint32>(sound.fs);
+    buffer->frameCount = static_cast<ma_uint64>(sound.length);
+    buffer->session = playback.sessionGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
+    buffer->pcm.resize(static_cast<size_t>(sound.length) * playback.channels);
     for (int i = 0; i < sound.length; i++)
     {
         const size_t index = static_cast<size_t>(i);
@@ -145,15 +159,16 @@ bool PlayPreviewAudio(PreviewPlaybackState& playback, const SoundData& sound, bo
         const double r = (std::max)(-1.0, (std::min)(1.0, rRaw));
         if (playback.channels == 1)
         {
-            playback.pcm[i] = static_cast<float>((l + r) * 0.5);
+            buffer->pcm[i] = static_cast<float>((l + r) * 0.5);
         }
         else
         {
             const size_t base = static_cast<size_t>(i) * 2;
-            playback.pcm[base + 0] = static_cast<float>(l);
-            playback.pcm[base + 1] = static_cast<float>(r);
+            buffer->pcm[base + 0] = static_cast<float>(l);
+            buffer->pcm[base + 1] = static_cast<float>(r);
         }
     }
+    playback.pcmBuffer.store(std::static_pointer_cast<const PreviewPCMBuffer>(buffer), std::memory_order_release);
     playback.frameCursor.store(0, std::memory_order_relaxed);
     playback.loop.store(loop, std::memory_order_relaxed);
     playback.playing.store(true, std::memory_order_relaxed);

@@ -432,10 +432,55 @@ void AdvanceTempoChanges(RenderState& state, int sampleIndex)
         state.tempoChangeIndex++;
     }
 }
-} // namespace
 
-void RenderMIDIEvents(
-    SoundData& sound,
+class SoundDataSink final : public RenderFrameSink
+{
+public:
+    explicit SoundDataSink(SoundData& sound)
+        : sound_(sound)
+    {
+    }
+
+    int Length() const override { return sound_.length; }
+    int SampleRate() const override { return sound_.fs; }
+
+    void Begin() override
+    {
+        if (sound_.channels >= 2)
+        {
+            sound_.channels = 2;
+            sound_.data.clear();
+            sound_.dataL.resize(static_cast<size_t>(sound_.length));
+            sound_.dataR.resize(static_cast<size_t>(sound_.length));
+        }
+        else
+        {
+            sound_.channels = 1;
+            sound_.data.resize(static_cast<size_t>(sound_.length));
+            sound_.dataL.clear();
+            sound_.dataR.clear();
+        }
+    }
+
+    void WriteFrame(int sampleIndex, StereoFrame frame) override
+    {
+        if (sound_.channels >= 2)
+        {
+            sound_.dataL[sampleIndex] = frame.left;
+            sound_.dataR[sampleIndex] = frame.right;
+        }
+        else
+        {
+            sound_.data[sampleIndex] = (frame.left + frame.right) * 0.5;
+        }
+    }
+
+private:
+    SoundData& sound_;
+};
+
+void RenderMIDIEventsToSink(
+    RenderFrameSink& sink,
     const std::vector<MIDIEvent>& events,
     const std::array<ChannelConfig, 16>& channelConfigs,
     const std::array<ChannelMixState, 16>& channelMixStates,
@@ -456,8 +501,8 @@ void RenderMIDIEvents(
     state.voices.reserve(256);
     state.cleanupKeepScratch.reserve(256);
     state.effects = effects;
-    BuildTempoSampleMap(state, tempoEvents, ticksPerQuarter, sound.fs, renderStartSec);
-    EnsureEffectBuffers(state, sound.fs);
+    BuildTempoSampleMap(state, tempoEvents, ticksPerQuarter, sink.SampleRate(), renderStartSec);
+    EnsureEffectBuffers(state, sink.SampleRate());
     for (int i = 0; i < 16; i++)
     {
         state.channelCc7[i] = 1.0;
@@ -503,20 +548,7 @@ void RenderMIDIEvents(
             (state.channelMixGainL[i] > 0.0 || state.channelMixGainR[i] > 0.0);
     }
 
-    if (sound.channels >= 2)
-    {
-        sound.channels = 2;
-        sound.data.clear();
-        sound.dataL.resize(static_cast<size_t>(sound.length));
-        sound.dataR.resize(static_cast<size_t>(sound.length));
-    }
-    else
-    {
-        sound.channels = 1;
-        sound.data.resize(static_cast<size_t>(sound.length));
-        sound.dataL.clear();
-        sound.dataR.clear();
-    }
+    sink.Begin();
 
     // 目的: 毎サンプルで削除圧縮を走らせず、一定間隔でまとめて掃除して負荷を抑える。
     // 前提: pendingRemove は短時間遅延しても音として破綻しない。
@@ -525,8 +557,9 @@ void RenderMIDIEvents(
     constexpr int renderBlockSize = 64;
     const bool masterEffectsActive = HasActiveMasterEffects(state.effects);
     const bool masterEffectsSkipUnsafe = HasMasterEffectTailOrState(state.effects);
+    const SoundData renderContext(1, 16, sink.SampleRate(), 2);
     int cleanupCountdown = 0;
-    for (int i = 0; i < sound.length;)
+    for (int i = 0; i < sink.Length();)
     {
         // キャンセル確認と voice compact は chunk 境界で行う。
         if (cleanupCountdown <= 0)
@@ -543,10 +576,10 @@ void RenderMIDIEvents(
             cleanupCountdown = cleanupInterval;
         }
 
-        ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
+        ProcessEventsAtSample(events, i, channelConfigs, sink.SampleRate(), state);
         AdvanceTempoChanges(state, i);
 
-        const int blockEnd = std::min(i + renderBlockSize, sound.length);
+        const int blockEnd = std::min(i + renderBlockSize, sink.Length());
         int chunkEnd = std::min(blockEnd, i + cleanupCountdown);
         if (state.eventIndex < events.size() && events[state.eventIndex].sample > i)
         {
@@ -578,26 +611,44 @@ void RenderMIDIEvents(
         }
 
         const int frameCount = chunkEnd - i;
-        RenderVoicesBlock(state, sound, frameCount, state.renderBlockFrames);
+        RenderVoicesBlock(state, renderContext, frameCount, state.renderBlockFrames);
         for (int offset = 0; offset < frameCount; offset++)
         {
-            const int sampleIndex = i + offset;
             StereoFrame frame = state.renderBlockFrames[static_cast<size_t>(offset)];
             if (masterEffectsActive)
             {
-                frame = ApplyMasterEffects(state, sound.fs, frame);
+                frame = ApplyMasterEffects(state, sink.SampleRate(), frame);
             }
-            if (sound.channels >= 2)
-            {
-                sound.dataL[sampleIndex] = frame.left;
-                sound.dataR[sampleIndex] = frame.right;
-            }
-            else
-            {
-                sound.data[sampleIndex] = (frame.left + frame.right) * 0.5;
-            }
+            sink.WriteFrame(i + offset, frame);
         }
         cleanupCountdown -= frameCount;
         i = chunkEnd;
     }
+}
+} // namespace
+
+void RenderMIDIEvents(
+    SoundData& sound,
+    const std::vector<MIDIEvent>& events,
+    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<ChannelMixState, 16>& channelMixStates,
+    const MasterEffectConfig& effects,
+    const std::vector<TempoEvent>* tempoEvents,
+    int ticksPerQuarter,
+    double renderStartSec,
+    const std::function<bool()>& shouldCancel,
+    bool* canceled)
+{
+    SoundDataSink sink(sound);
+    RenderMIDIEventsToSink(
+        sink,
+        events,
+        channelConfigs,
+        channelMixStates,
+        effects,
+        tempoEvents,
+        ticksPerQuarter,
+        renderStartSec,
+        shouldCancel,
+        canceled);
 }

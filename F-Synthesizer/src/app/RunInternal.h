@@ -43,5 +43,17 @@ int RunMain(
     const RenderOptions& options,
     IRunObserver* observer,
     SoundData* renderedSound);
+
+int RunExportRender(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    SoundData* renderedSound);
+
+int RunPreviewRender(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    SoundData* renderedSound);
 } // namespace app::run
 

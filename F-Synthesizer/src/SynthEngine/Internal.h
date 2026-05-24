@@ -289,6 +289,16 @@ struct StereoFrame
     double right = 0.0;
 };
 
+class RenderFrameSink
+{
+public:
+    virtual ~RenderFrameSink() = default;
+    virtual int Length() const = 0;
+    virtual int SampleRate() const = 0;
+    virtual void Begin() = 0;
+    virtual void WriteFrame(int sampleIndex, StereoFrame frame) = 0;
+};
+
 class RenderWorkerPool
 {
 public:

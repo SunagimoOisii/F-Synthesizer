@@ -7,11 +7,14 @@
 
 namespace app::run
 {
-int RunMain(
+namespace
+{
+int RunRenderCommon(
     const AppConfig& config,
     const RenderOptions& options,
     IRunObserver* observer,
-    SoundData* renderedSound)
+    SoundData* renderedSound,
+    bool saveOutput)
 {
     const bool previewMode = (options.mode == RunMode::Preview);
 
@@ -167,7 +170,47 @@ int RunMain(
         *renderedSound = sound;
     }
 
+    if (!saveOutput)
+    {
+        LogLine(observer, "Preview render completed (memory only, no WAV write).");
+        return 0;
+    }
     return SaveRunOutput(config, options, sound, observer);
+}
+} // namespace
+
+int RunExportRender(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    SoundData* renderedSound)
+{
+    return RunRenderCommon(config, options, observer, renderedSound, true);
+}
+
+int RunPreviewRender(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    SoundData* renderedSound)
+{
+    RenderOptions previewOptions = options;
+    previewOptions.mode = RunMode::Preview;
+    previewOptions.writeWAV = false;
+    return RunRenderCommon(config, previewOptions, observer, renderedSound, false);
+}
+
+int RunMain(
+    const AppConfig& config,
+    const RenderOptions& options,
+    IRunObserver* observer,
+    SoundData* renderedSound)
+{
+    if (options.mode == RunMode::Preview)
+    {
+        return RunPreviewRender(config, options, observer, renderedSound);
+    }
+    return RunExportRender(config, options, observer, renderedSound);
 }
 } // namespace app::run
 
