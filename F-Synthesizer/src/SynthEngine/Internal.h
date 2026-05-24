@@ -315,11 +315,7 @@ struct RenderState
     std::array<bool, 16> channelMute{};
     std::array<bool, 16> channelSolo{};
     std::array<bool, 16> channelRenderable{};
-    std::array<StereoFrame, 16> renderChannelSums{};
-    std::array<DrumBusConfig, 16> renderChannelDrumBus{};
-    std::array<bool, 16> renderChannelHasDrumBus{};
     std::array<std::vector<size_t>, 16> activeVoiceIndicesByChannel{};
-    std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
     std::vector<StereoFrame> renderBlockFrames{};
     std::vector<int> renderActiveChannels{};
     std::array<double, 16> channelPitchBendNorm{};

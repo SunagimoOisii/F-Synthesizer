@@ -430,38 +430,13 @@ bool RenderVoiceSampleToChannel(
     return false;
 }
 
-size_t RenderChannelBlock(RenderState& state, const SoundData& sound, int ch, int frameCount)
-{
-    size_t removedCount = 0;
-    auto& out = state.renderChannelBlockFrames[ch];
-    const auto& indices = state.activeVoiceIndicesByChannel[ch];
-    for (int offset = 0; offset < frameCount; offset++)
-    {
-        StereoFrame channelSum{};
-        DrumBusConfig channelDrumBus{};
-        bool channelHasDrumBus = false;
-        for (const size_t i : indices)
-        {
-            if (RenderVoiceSampleToChannel(state, sound, i, channelSum, channelDrumBus, channelHasDrumBus))
-            {
-                removedCount++;
-            }
-        }
-        if (channelHasDrumBus)
-        {
-            channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
-        }
-        out[offset] = channelSum;
-    }
-    return removedCount;
-}
-
-size_t RenderSingleChannelBlockToOutput(
+size_t MixChannelBlockToOutput(
     RenderState& state,
     const SoundData& sound,
     int ch,
     int frameCount,
-    std::vector<StereoFrame>& outFrames)
+    std::vector<StereoFrame>& outFrames,
+    bool replaceOutput)
 {
     size_t removedCount = 0;
     const auto& indices = state.activeVoiceIndicesByChannel[ch];
@@ -483,10 +458,18 @@ size_t RenderSingleChannelBlockToOutput(
         {
             channelSum = ApplyDrumBus(state.drumBusState[ch], channelDrumBus, channelSum, sound.fs);
         }
-        outFrames[static_cast<size_t>(offset)] = StereoFrame{
-            channelSum.left * mixGainL,
-            channelSum.right * mixGainR
-        };
+        StereoFrame& out = outFrames[static_cast<size_t>(offset)];
+        const double left = channelSum.left * mixGainL;
+        const double right = channelSum.right * mixGainR;
+        if (replaceOutput)
+        {
+            out = StereoFrame{ left, right };
+        }
+        else
+        {
+            out.left += left;
+            out.right += right;
+        }
     }
     return removedCount;
 }
@@ -513,11 +496,6 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
     {
         if (!state.activeVoiceIndicesByChannel[ch].empty())
         {
-            auto& frames = state.renderChannelBlockFrames[ch];
-            if (frames.size() < static_cast<size_t>(frameCount))
-            {
-                frames.resize(static_cast<size_t>(frameCount));
-            }
             activeChannels.push_back(ch);
         }
     }
@@ -529,33 +507,11 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
     }
 
     size_t removedCount = 0;
-    if (activeChannels.size() == 1)
+    bool replaceOutput = true;
+    for (const int ch : activeChannels)
     {
-        removedCount = RenderSingleChannelBlockToOutput(
-            state,
-            sound,
-            activeChannels.front(),
-            frameCount,
-            outFrames);
-    }
-    else
-    {
-        for (const int ch : activeChannels)
-        {
-            removedCount += RenderChannelBlock(state, sound, ch, frameCount);
-        }
-
-        for (int offset = 0; offset < frameCount; offset++)
-        {
-            StereoFrame sum{};
-            for (const int ch : activeChannels)
-            {
-                const StereoFrame frame = state.renderChannelBlockFrames[ch][offset];
-                sum.left += frame.left * state.channelMixGainL[ch];
-                sum.right += frame.right * state.channelMixGainR[ch];
-            }
-            outFrames[static_cast<size_t>(offset)] = sum;
-        }
+        removedCount += MixChannelBlockToOutput(state, sound, ch, frameCount, outFrames, replaceOutput);
+        replaceOutput = false;
     }
 
     if (removedCount > 0)
