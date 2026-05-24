@@ -413,6 +413,25 @@ bool HasActiveMasterEffects(const MasterEffectConfig& effects)
         (effects.delay.enabled && effects.delay.mix > 0.0) ||
         (effects.reverb.enabled && effects.reverb.mix > 0.0);
 }
+
+bool HasMasterEffectTailOrState(const MasterEffectConfig& effects)
+{
+    return effects.sampleRateReducer.ratio < 1.0 ||
+        (effects.chorus.enabled && effects.chorus.mix > 0.0) ||
+        (effects.flanger.enabled && effects.flanger.mix > 0.0) ||
+        (effects.delay.enabled && effects.delay.mix > 0.0) ||
+        (effects.reverb.enabled && effects.reverb.mix > 0.0);
+}
+
+void AdvanceTempoChanges(RenderState& state, int sampleIndex)
+{
+    while (state.tempoChangeIndex < state.tempoChangeSamples.size() &&
+        sampleIndex >= state.tempoChangeSamples[state.tempoChangeIndex])
+    {
+        state.currentBpm = state.tempoChangeBpms[state.tempoChangeIndex];
+        state.tempoChangeIndex++;
+    }
+}
 } // namespace
 
 void RenderMIDIEvents(
@@ -505,10 +524,27 @@ void RenderMIDIEvents(
     const int cleanupInterval = 256;
     constexpr int renderBlockSize = 64;
     const bool masterEffectsActive = HasActiveMasterEffects(state.effects);
+    const bool masterEffectsSkipUnsafe = HasMasterEffectTailOrState(state.effects);
     int cleanupCountdown = 0;
     for (int i = 0; i < sound.length;)
     {
         const int blockEnd = std::min(i + renderBlockSize, sound.length);
+        if (cleanupCountdown > (blockEnd - i) &&
+            !masterEffectsSkipUnsafe &&
+            (state.eventIndex >= events.size() || events[state.eventIndex].sample >= blockEnd))
+        {
+            if (state.activeVoiceIndicesDirty)
+            {
+                RebuildActiveVoiceIndices(state);
+            }
+            if (state.activeVoiceIndices.empty())
+            {
+                AdvanceTempoChanges(state, blockEnd - 1);
+                cleanupCountdown -= (blockEnd - i);
+                i = blockEnd;
+                continue;
+            }
+        }
         for (; i < blockEnd; i++)
         {
             // キャンセル確認も間引いて実施し、ホットパスの分岐コストを抑える。
@@ -542,12 +578,7 @@ void RenderMIDIEvents(
             }
 
             ProcessEventsAtSample(events, i, channelConfigs, sound.fs, state);
-            while (state.tempoChangeIndex < state.tempoChangeSamples.size() &&
-                i >= state.tempoChangeSamples[state.tempoChangeIndex])
-            {
-                state.currentBpm = state.tempoChangeBpms[state.tempoChangeIndex];
-                state.tempoChangeIndex++;
-            }
+            AdvanceTempoChanges(state, i);
             StereoFrame frame = RenderVoices(state, sound);
             if (masterEffectsActive)
             {

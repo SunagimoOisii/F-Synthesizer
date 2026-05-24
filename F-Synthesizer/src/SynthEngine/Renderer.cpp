@@ -192,6 +192,66 @@ ExpressionRuntime EvaluateExpressionMap(
 #include "renderer/RenderDrum.inl"
 #include "renderer/RenderNoise.inl"
 #include "renderer/RenderMix.inl"
+
+void RenderSourceFrameByKind(
+    config::SourceKind kind,
+    const SourceConfig& src,
+    Voice& voices,
+    size_t i,
+    const VoiceRenderInput& in,
+    int sampleRate,
+    SourceRenderFrame& frame)
+{
+    switch (kind)
+    {
+    case config::SourceKind::Waveform:
+        if (const auto* source = std::get_if<WaveformConfig>(&src))
+        {
+            RenderWaveformSource(*source, voices, i, in, frame);
+            return;
+        }
+        break;
+    case config::SourceKind::Analog:
+        if (const auto* source = std::get_if<AnalogConfig>(&src))
+        {
+            RenderAnalogSource(*source, voices, i, in, frame);
+            return;
+        }
+        break;
+    case config::SourceKind::Noise:
+        if (const auto* source = std::get_if<NoiseConfig>(&src))
+        {
+            RenderNoiseSource(*source, frame);
+            return;
+        }
+        break;
+    case config::SourceKind::Fm:
+        if (const auto* source = std::get_if<FmConfig>(&src))
+        {
+            RenderFmSource(*source, voices, i, in, frame);
+            return;
+        }
+        break;
+    case config::SourceKind::Drum:
+        if (const auto* source = std::get_if<DrumConfig>(&src))
+        {
+            RenderDrumSource(*source, voices, i, in, sampleRate, frame);
+            return;
+        }
+        break;
+    case config::SourceKind::Psg:
+        if (const auto* source = std::get_if<PsgConfig>(&src))
+        {
+            RenderPsgSource(*source, voices, i, in, frame);
+            return;
+        }
+        break;
+    default:
+        break;
+    }
+
+    RenderSourceFrame(src, voices, i, in, sampleRate, frame);
+}
 } // namespace
 
 StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
@@ -326,7 +386,8 @@ StereoFrame RenderVoices(RenderState& state, const SoundData& sound)
         }
 
         SourceRenderFrame frame{};
-        RenderSourceFrame(voices.source[i], voices, i, in, sound.fs, frame);
+        const config::SourceKind sourceKind = config::SourceKindFromIndex(voices.runtimeSourceKind[i]);
+        RenderSourceFrameByKind(sourceKind, voices.source[i], voices, i, in, sound.fs, frame);
         const uint32_t layerMask = voices.layerMask[i];
         if ((layerMask & kVoiceLayerAttack) != 0) frame.sample += RenderAttackLayer(voices, i, in);
         if ((layerMask & kVoiceLayerBass) != 0) frame.sample += RenderBassLayer(voices, i, in);

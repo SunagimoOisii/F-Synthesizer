@@ -3,6 +3,7 @@ param(
     [string]$BaselineJson,
     [Parameter(Mandatory = $true)]
     [string]$CandidateJson,
+    [string]$OutputCsv = "",
     [switch]$IncludeWavDiff
 )
 
@@ -210,3 +211,11 @@ Write-Host "== F-Synthesizer perf result comparison =="
 Write-Host "Baseline:  $BaselineJson"
 Write-Host "Candidate: $CandidateJson"
 $rows | Format-Table -AutoSize
+if ($OutputCsv) {
+    $parent = Split-Path -Parent $OutputCsv
+    if ($parent) {
+        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    }
+    $rows | Export-Csv -Path $OutputCsv -NoTypeInformation -Encoding UTF8
+    Write-Host "Result CSV: $OutputCsv"
+}
