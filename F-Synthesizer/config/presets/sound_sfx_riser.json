@@ -1,35 +1,42 @@
 {
-  "displayName": "SFX Riser",
-  "category": "SFX",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
+    "instruments": {
+      "sound_sfx_riser__ch0": {
+        "displayName": "SFX Riser",
+        "category": "SFX",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "riser",
+          "noise",
+          "transition"
+        ],
+        "description": "控えめなノイズ上昇音。場面転換や盛り上げに、目立ちすぎない動きを足す。",
+        "sound": {
+          "amp": 0.095,
+          "attackSec": 0.001,
+          "decaySec": 0.24,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.12,
+          "source": {
+            "type": "noise",
+            "noise": "pink",
+            "filter": {
+              "mode": "bandpass",
+              "cutoffHz": 720,
+              "resonance": 0.5,
+              "drive": 0.0
+            }
+          },
+          "layers": {}
+        }
+      }
+    },
     "channels": {
       "0": {
-        "amp": 0.095,
-        "attackSec": 0.001,
-        "decaySec": 0.24,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.12,
-        "source": {
-          "type": "noise",
-          "noise": "pink",
-          "filter": {
-            "mode": "bandpass",
-            "cutoffHz": 720,
-            "resonance": 0.5,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+        "instrumentId": "sound_sfx_riser__ch0"
       }
     }
-  },
-  "tags": [
-    "sfx",
-    "riser",
-    "noise",
-    "transition"
-  ],
-  "description": "控えめなノイズ上昇音。場面転換や盛り上げに、目立ちすぎない動きを足す。"
+  }
 }

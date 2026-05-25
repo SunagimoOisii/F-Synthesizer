@@ -1,82 +1,6 @@
 {
-  "displayName": "Brass PWM Fanfare",
-  "category": "Brass",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.125,
-        "attackSec": 0.004,
-        "decaySec": 0.2,
-        "sustainLevel": 0.58,
-        "releaseSec": 0.16,
-        "source": {
-          "type": "analog",
-          "wave": "square",
-          "unisonVoices": 3,
-          "unisonDetuneCents": 4.0,
-          "unisonSpread": 0.3,
-          "subOscLevel": 0.06,
-          "pulseWidth": 0.42,
-          "drive": 0.035,
-          "driftDepthCents": 2.5,
-          "driftRateHz": 0.18,
-          "filter": {
-            "mode": "ladderLowpass",
-            "cutoffHz": 4100.0,
-            "resonance": 0.66,
-            "drive": 0.03
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "brass",
-            "level": 0.1,
-            "decaySec": 0.038,
-            "brightness": 0.56,
-            "bodyMix": 0.58,
-            "pitchOffsetSemis": 0,
-            "drive": 0.015
-          },
-          "lead": {
-            "enabled": true,
-            "type": "brass",
-            "level": 0.09,
-            "edgeLevel": 0.24,
-            "bodyLevel": 0.28,
-            "detuneCents": 3.5,
-            "pitchBendSemis": 0.18,
-            "bendDecaySec": 0.045,
-            "attackBoost": 0.07,
-            "attackDecaySec": 0.035,
-            "drive": 0.035,
-            "characterLevel": 0.08,
-            "characterTone": 0.5,
-            "biteLevel": 0.035,
-            "biteDecaySec": 0.026,
-            "wobbleDepthCents": 1.8,
-            "wobbleRateHz": 3.2
-          }
-        },
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.86,
-          "velocityToAmp": 0.86,
-          "velocityToBrightness": 0.11,
-          "velocityToFmIndex": 0.0,
-          "velocityToLead": 0.16,
-          "velocityToString": 0.0,
-          "modWheelToBrightness": 0.08,
-          "modWheelToString": 0.12,
-          "pressureToDrive": 0.014,
-          "cc74ToBrightness": 0.14,
-          "cc74ToStringBrightness": 0.18,
-          "pressureToFilterDrive": 0.04
-        }
-      }
-    },
     "effects": {
       "chorus": {
         "enabled": true,
@@ -92,13 +16,96 @@
         "roomSize": 0.34,
         "damping": 0.58
       }
+    },
+    "instruments": {
+      "sound_brass_pwm_fanfare__ch0": {
+        "displayName": "Brass PWM Fanfare",
+        "category": "Brass",
+        "internal": false,
+        "tags": [
+          "brass",
+          "pwm",
+          "fanfare",
+          "retro"
+        ],
+        "description": "PWMの明るいブラス。短いテーマや勝利ジングルに使う。",
+        "sound": {
+          "amp": 0.125,
+          "attackSec": 0.004,
+          "decaySec": 0.2,
+          "sustainLevel": 0.58,
+          "releaseSec": 0.16,
+          "source": {
+            "type": "analog",
+            "wave": "square",
+            "unisonVoices": 3,
+            "unisonDetuneCents": 4.0,
+            "unisonSpread": 0.3,
+            "subOscLevel": 0.06,
+            "pulseWidth": 0.42,
+            "drive": 0.035,
+            "driftDepthCents": 2.5,
+            "driftRateHz": 0.18,
+            "filter": {
+              "mode": "ladderLowpass",
+              "cutoffHz": 4100.0,
+              "resonance": 0.66,
+              "drive": 0.03
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "brass",
+              "level": 0.1,
+              "decaySec": 0.038,
+              "brightness": 0.56,
+              "bodyMix": 0.58,
+              "pitchOffsetSemis": 0,
+              "drive": 0.015
+            },
+            "lead": {
+              "enabled": true,
+              "type": "brass",
+              "level": 0.09,
+              "edgeLevel": 0.24,
+              "bodyLevel": 0.28,
+              "detuneCents": 3.5,
+              "pitchBendSemis": 0.18,
+              "bendDecaySec": 0.045,
+              "attackBoost": 0.07,
+              "attackDecaySec": 0.035,
+              "drive": 0.035,
+              "characterLevel": 0.08,
+              "characterTone": 0.5,
+              "biteLevel": 0.035,
+              "biteDecaySec": 0.026,
+              "wobbleDepthCents": 1.8,
+              "wobbleRateHz": 3.2
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 0.86,
+            "velocityToAmp": 0.86,
+            "velocityToBrightness": 0.11,
+            "velocityToFmIndex": 0.0,
+            "velocityToLead": 0.16,
+            "velocityToString": 0.0,
+            "modWheelToBrightness": 0.08,
+            "modWheelToString": 0.12,
+            "pressureToDrive": 0.014,
+            "cc74ToBrightness": 0.14,
+            "cc74ToStringBrightness": 0.18,
+            "pressureToFilterDrive": 0.04
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_brass_pwm_fanfare__ch0"
+      }
     }
-  },
-  "tags": [
-    "brass",
-    "pwm",
-    "fanfare",
-    "retro"
-  ],
-  "description": "PWMの明るいブラス。短いテーマや勝利ジングルに使う。"
+  }
 }

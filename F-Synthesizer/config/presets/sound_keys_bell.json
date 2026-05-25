@@ -1,51 +1,58 @@
 {
-  "displayName": "Keys Bell",
-  "category": "Piano/Keys",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
+    "instruments": {
+      "sound_keys_bell__ch0": {
+        "displayName": "Keys Bell",
+        "category": "Piano/Keys",
+        "internal": false,
+        "tags": [
+          "keys",
+          "bell",
+          "glass",
+          "accent"
+        ],
+        "description": "澄んだベル系キー。金属感を控えめにして、短い装飾音や高いフレーズに使う。",
+        "sound": {
+          "amp": 0.085,
+          "attackSec": 0.008,
+          "decaySec": 0.34,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.28,
+          "source": {
+            "type": "waveform",
+            "wave": "triangle",
+            "unisonVoices": 1,
+            "unisonDetuneCents": 0,
+            "unisonSpread": 0,
+            "subOscLevel": 0,
+            "pulseWidth": 0.5,
+            "smoothing": {
+              "enabled": true,
+              "pitchEnabled": true,
+              "ampTimeMs": 5.0,
+              "pitchTimeMs": 8.0,
+              "filterCutoffTimeMs": 18.0
+            },
+            "ringModEnabled": true,
+            "ringModRatio": 1.5,
+            "ringModMix": 0.055,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3900.0,
+              "resonance": 0.58,
+              "keytrack": 0.1,
+              "drive": 0.0
+            }
+          },
+          "layers": {}
+        }
+      }
+    },
     "channels": {
       "0": {
-        "amp": 0.085,
-        "attackSec": 0.008,
-        "decaySec": 0.34,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.28,
-        "source": {
-          "type": "waveform",
-          "wave": "triangle",
-          "unisonVoices": 1,
-          "unisonDetuneCents": 0,
-          "unisonSpread": 0,
-          "subOscLevel": 0,
-          "pulseWidth": 0.5,
-          "smoothing": {
-            "enabled": true,
-            "pitchEnabled": true,
-            "ampTimeMs": 5.0,
-            "pitchTimeMs": 8.0,
-            "filterCutoffTimeMs": 18.0
-          },
-          "ringModEnabled": true,
-          "ringModRatio": 1.5,
-          "ringModMix": 0.055,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 3900.0,
-            "resonance": 0.58,
-            "keytrack": 0.1,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+        "instrumentId": "sound_keys_bell__ch0"
       }
     }
-  },
-  "tags": [
-    "keys",
-    "bell",
-    "glass",
-    "accent"
-  ],
-  "description": "澄んだベル系キー。金属感を控えめにして、短い装飾音や高いフレーズに使う。"
+  }
 }

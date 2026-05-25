@@ -1,149 +1,6 @@
 {
-  "displayName": "Keys FM Clav",
-  "category": "Piano/Keys",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.125,
-        "attackSec": 0.002,
-        "decaySec": 0.12,
-        "sustainLevel": 0.22,
-        "releaseSec": 0.1,
-        "source": {
-          "type": "fm",
-          "algorithm": 0,
-          "feedback": 0.035,
-          "ops": [
-            {
-              "wave": "sine",
-              "ratio": 1.0,
-              "level": 0.6,
-              "index": 0.62,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 2.0,
-              "level": 0.32,
-              "index": 0.22,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 3.0,
-              "level": 0.2,
-              "index": 0.12,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 4.0,
-              "level": 0.1,
-              "index": 0.0,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            }
-          ],
-          "drive": 0.015,
-          "filter": {
-            "mode": "ladderLowpass",
-            "cutoffHz": 4600.0,
-            "resonance": 0.76,
-            "drive": 0.05
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "pick",
-            "level": 0.1,
-            "decaySec": 0.016,
-            "brightness": 0.62,
-            "bodyMix": 0.38,
-            "pitchOffsetSemis": 0,
-            "drive": 0.015
-          },
-          "pluck": {
-            "enabled": true,
-            "level": 0.18,
-            "decaySec": 0.16,
-            "brightness": 0.62,
-            "noiseMix": 0.06,
-            "pitchOffsetSemis": 0,
-            "bodySend": 0.24,
-            "drive": 0.022
-          }
-        },
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.86,
-          "velocityToAmp": 0.86,
-          "velocityToBrightness": 0.1,
-          "velocityToFmIndex": 0.08,
-          "velocityToLead": 0.0,
-          "velocityToString": 0.0,
-          "modWheelToBrightness": 0.08,
-          "modWheelToString": 0.12,
-          "pressureToDrive": 0.014,
-          "cc74ToBrightness": 0.14,
-          "cc74ToStringBrightness": 0.18,
-          "pressureToFilterDrive": 0.04
-        }
-      }
-    },
     "effects": {
       "chorus": {
         "enabled": true,
@@ -159,13 +16,163 @@
         "roomSize": 0.34,
         "damping": 0.58
       }
+    },
+    "instruments": {
+      "sound_keys_fm_clav__ch0": {
+        "displayName": "Keys FM Clav",
+        "category": "Piano/Keys",
+        "internal": false,
+        "tags": [
+          "keys",
+          "fm",
+          "clav",
+          "retro"
+        ],
+        "description": "硬めのFMクラビ。リズム刻みやファンク寄りの伴奏に使う。",
+        "sound": {
+          "amp": 0.125,
+          "attackSec": 0.002,
+          "decaySec": 0.12,
+          "sustainLevel": 0.22,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "fm",
+            "algorithm": 0,
+            "feedback": 0.035,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1.0,
+                "level": 0.6,
+                "index": 0.62,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2.0,
+                "level": 0.32,
+                "index": 0.22,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3.0,
+                "level": 0.2,
+                "index": 0.12,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 4.0,
+                "level": 0.1,
+                "index": 0.0,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              }
+            ],
+            "drive": 0.015,
+            "filter": {
+              "mode": "ladderLowpass",
+              "cutoffHz": 4600.0,
+              "resonance": 0.76,
+              "drive": 0.05
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.1,
+              "decaySec": 0.016,
+              "brightness": 0.62,
+              "bodyMix": 0.38,
+              "pitchOffsetSemis": 0,
+              "drive": 0.015
+            },
+            "pluck": {
+              "enabled": true,
+              "level": 0.18,
+              "decaySec": 0.16,
+              "brightness": 0.62,
+              "noiseMix": 0.06,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0.24,
+              "drive": 0.022
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 0.86,
+            "velocityToAmp": 0.86,
+            "velocityToBrightness": 0.1,
+            "velocityToFmIndex": 0.08,
+            "velocityToLead": 0.0,
+            "velocityToString": 0.0,
+            "modWheelToBrightness": 0.08,
+            "modWheelToString": 0.12,
+            "pressureToDrive": 0.014,
+            "cc74ToBrightness": 0.14,
+            "cc74ToStringBrightness": 0.18,
+            "pressureToFilterDrive": 0.04
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_fm_clav__ch0"
+      }
     }
-  },
-  "tags": [
-    "keys",
-    "fm",
-    "clav",
-    "retro"
-  ],
-  "description": "硬めのFMクラビ。リズム刻みやファンク寄りの伴奏に使う。"
+  }
 }

@@ -159,7 +159,7 @@ function Assert-ProjectModelJsonShape {
     if ($Config.PSObject.Properties.Name -notcontains "format") {
         throw "${Label}: missing format."
     }
-    if ($Config.format -ne "projectModel.v2") {
+    if ($Config.format -ne "projectModel.v3") {
         throw "${Label}: unsupported format '$($Config.format)'."
     }
     if ($Config.PSObject.Properties.Name -notcontains "project" -or $null -eq $Config.project) {
@@ -172,6 +172,40 @@ function Assert-ProjectModelJsonShape {
     foreach ($legacyKey in @("channels", "channelMix", "effects")) {
         if ($Config.PSObject.Properties.Name -contains $legacyKey) {
             throw "${Label}: legacy top-level '$legacyKey' must be under project."
+        }
+    }
+    if ((Test-JsonProperty -Object $Config.project -Name "channelMix")) {
+        throw "${Label}: project.channelMix is legacy v2 shape; use project.channels.*.mix."
+    }
+    if ((Test-JsonProperty -Object $Config.project -Name "instruments")) {
+        if ($Config.project.instruments -isnot [pscustomobject]) {
+            throw "${Label}: project.instruments must be an object."
+        }
+        foreach ($instrumentProp in $Config.project.instruments.PSObject.Properties) {
+            $instrument = $instrumentProp.Value
+            if ($instrument -isnot [pscustomobject]) {
+                throw "${Label}: project.instruments.$($instrumentProp.Name) must be an object."
+            }
+            if (-not (Test-JsonProperty -Object $instrument -Name "sound")) {
+                throw "${Label}: project.instruments.$($instrumentProp.Name).sound is required."
+            }
+        }
+    }
+    if ((Test-JsonProperty -Object $Config.project -Name "channels")) {
+        foreach ($channelProp in $Config.project.channels.PSObject.Properties) {
+            $channel = $channelProp.Value
+            if (-not (Test-JsonProperty -Object $channel -Name "instrumentId")) {
+                throw "${Label}: project.channels.$($channelProp.Name).instrumentId is required."
+            }
+            $instrumentId = [string]$channel.instrumentId
+            if (-not (Test-JsonProperty -Object $Config.project -Name "instruments") -or -not (Test-JsonProperty -Object $Config.project.instruments -Name $instrumentId)) {
+                throw "${Label}: project.channels.$($channelProp.Name).instrumentId references unknown instrument '${instrumentId}'."
+            }
+            foreach ($legacyKey in @("source", "layers", "expressionMap", "amp", "attackSec", "decaySec", "sustainLevel", "releaseSec")) {
+                if (Test-JsonProperty -Object $channel -Name $legacyKey) {
+                    throw "${Label}: project.channels.$($channelProp.Name).${legacyKey} is legacy sound shape; move it to instrument.sound."
+                }
+            }
         }
     }
 }
@@ -234,31 +268,34 @@ function Assert-PracticalPresetLayerPolicy {
         return
     }
 
-    $category = ""
-    if (Test-JsonProperty -Object $PresetConfig -Name "category") {
-        $category = [string]$PresetConfig.category
-    }
-    if ($category -ne "") {
-        $allowedCategories = @("Lead", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Pad", "Piano/Keys", "Drums", "SFX")
-        if ($allowedCategories -notcontains $category) {
-            throw "${Name}: invalid practical preset category '${category}'."
-        }
-    }
-    $displayName = ""
-    if (Test-JsonProperty -Object $PresetConfig -Name "displayName") {
-        $displayName = [string]$PresetConfig.displayName
-    }
-
-    if (-not (Test-JsonProperty -Object $PresetConfig.project -Name "channels")) {
+    if (-not (Test-JsonProperty -Object $PresetConfig.project -Name "instruments")) {
         return
     }
 
-    foreach ($channelProp in $PresetConfig.project.channels.PSObject.Properties) {
-        $channel = $channelProp.Value
-        if (-not (Test-JsonProperty -Object $channel -Name "layers")) {
+    foreach ($instrumentProp in $PresetConfig.project.instruments.PSObject.Properties) {
+        $instrument = $instrumentProp.Value
+        $category = ""
+        if (Test-JsonProperty -Object $instrument -Name "category") {
+            $category = [string]$instrument.category
+        }
+        if ($category -ne "") {
+            $allowedCategories = @("Lead", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Pad", "Piano/Keys", "Drums", "SFX", "Support")
+            if ($allowedCategories -notcontains $category) {
+                throw "${Name}: invalid practical instrument category '${category}'."
+            }
+        }
+        $displayName = ""
+        if (Test-JsonProperty -Object $instrument -Name "displayName") {
+            $displayName = [string]$instrument.displayName
+        }
+        if (-not (Test-JsonProperty -Object $instrument -Name "sound")) {
             continue
         }
-        $layers = $channel.layers
+        $sound = $instrument.sound
+        if (-not (Test-JsonProperty -Object $sound -Name "layers")) {
+            continue
+        }
+        $layers = $sound.layers
         if ((Test-LayerEnabled -Layers $layers -Name "chord") -and ($category -ne "Pad" -and $category -ne "Strings")) {
             throw "${Name}: chord layer is only allowed for practical Pad/Strings presets."
         }
@@ -314,7 +351,7 @@ function Write-ShortPresetConfig {
             $project | Add-Member -NotePropertyName effects -NotePropertyValue $PresetConfig.effects -Force
             $PresetConfig.PSObject.Properties.Remove("effects")
         }
-        $PresetConfig | Add-Member -NotePropertyName format -NotePropertyValue "projectModel.v2" -Force
+        $PresetConfig | Add-Member -NotePropertyName format -NotePropertyValue "projectModel.v3" -Force
         $PresetConfig | Add-Member -NotePropertyName project -NotePropertyValue $project -Force
     }
 

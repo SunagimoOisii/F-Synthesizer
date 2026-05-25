@@ -1,5 +1,5 @@
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
     "midiPath": "../../assets/midi/solstice_intro.mid",
     "wavPath": "../../output/mix_all_mute.wav",
@@ -9,54 +9,232 @@
     "bits": 16,
     "sampleRate": 44100,
     "extraReleaseSec": 0.3,
-    "channelMix": {
+    "instruments": {
+      "mix_all_mute__ch0": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch1": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch2": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch3": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch4": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch5": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch6": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch7": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch8": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch9": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch10": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch11": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch12": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch13": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch14": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      },
+      "mix_all_mute__ch15": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      }
+    },
+    "channels": {
       "0": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch0",
+        "mix": {
+          "mute": true
+        }
       },
       "1": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch1",
+        "mix": {
+          "mute": true
+        }
       },
       "2": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch2",
+        "mix": {
+          "mute": true
+        }
       },
       "3": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch3",
+        "mix": {
+          "mute": true
+        }
       },
       "4": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch4",
+        "mix": {
+          "mute": true
+        }
       },
       "5": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch5",
+        "mix": {
+          "mute": true
+        }
       },
       "6": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch6",
+        "mix": {
+          "mute": true
+        }
       },
       "7": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch7",
+        "mix": {
+          "mute": true
+        }
       },
       "8": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch8",
+        "mix": {
+          "mute": true
+        }
       },
       "9": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch9",
+        "mix": {
+          "mute": true
+        }
       },
       "10": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch10",
+        "mix": {
+          "mute": true
+        }
       },
       "11": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch11",
+        "mix": {
+          "mute": true
+        }
       },
       "12": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch12",
+        "mix": {
+          "mute": true
+        }
       },
       "13": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch13",
+        "mix": {
+          "mute": true
+        }
       },
       "14": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch14",
+        "mix": {
+          "mute": true
+        }
       },
       "15": {
-        "mute": true
+        "instrumentId": "mix_all_mute__ch15",
+        "mix": {
+          "mute": true
+        }
       }
     }
   }

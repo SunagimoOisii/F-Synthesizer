@@ -151,8 +151,8 @@ function New-QuickPresetConfig {
     }
 
     $presetJson = Get-Content -Path $presetPath -Raw | ConvertFrom-Json
-    if ($null -eq $presetJson.project -or $null -eq $presetJson.project.channels) {
-        throw "Preset has no project.channels: $presetPath"
+    if ($null -eq $presetJson.project -or $null -eq $presetJson.project.instruments -or $null -eq $presetJson.project.channels) {
+        throw "Preset has no project.instruments/project.channels: $presetPath"
     }
 
     $project = [ordered]@{
@@ -163,6 +163,7 @@ function New-QuickPresetConfig {
         bits = 16
         sampleRate = 44100
         extraReleaseSec = 0.15
+        instruments = $presetJson.project.instruments
         channels = $presetJson.project.channels
     }
     if ($presetJson.project.PSObject.Properties.Name -contains "effects") {
@@ -170,7 +171,7 @@ function New-QuickPresetConfig {
     }
 
     $config = [ordered]@{
-        format = "projectModel.v2"
+        format = "projectModel.v3"
         project = $project
     }
     $config | ConvertTo-Json -Depth 100 | Set-Content -Path $ConfigPath -Encoding UTF8

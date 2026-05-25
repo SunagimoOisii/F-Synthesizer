@@ -324,7 +324,63 @@ PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
         projectRoot = &root["project"];
     }
 
-    if (projectRoot->contains("channels") && (*projectRoot)["channels"].is_object())
+    if (projectRoot->contains("instruments") && (*projectRoot)["instruments"].is_object())
+    {
+        for (auto it = (*projectRoot)["instruments"].begin(); it != (*projectRoot)["instruments"].end(); ++it)
+        {
+            if (!it.value().is_object())
+            {
+                continue;
+            }
+            if (it.value().contains("description") && it.value()["description"].is_string())
+            {
+                meta.description = it.value()["description"].get<std::string>();
+            }
+            if (it.value().contains("displayName") && it.value()["displayName"].is_string())
+            {
+                meta.displayName = it.value()["displayName"].get<std::string>();
+            }
+            if (it.value().contains("category") && it.value()["category"].is_string())
+            {
+                meta.category = it.value()["category"].get<std::string>();
+            }
+            if (it.value().contains("internal") && it.value()["internal"].is_boolean())
+            {
+                meta.internalOnly = it.value()["internal"].get<bool>();
+            }
+            if (meta.tags.empty() && it.value().contains("tags") && it.value()["tags"].is_array())
+            {
+                for (const auto& tag : it.value()["tags"])
+                {
+                    if (tag.is_string())
+                    {
+                        meta.tags.push_back(ToLower(tag.get<std::string>()));
+                    }
+                }
+            }
+            const auto soundIt = it.value().find("sound");
+            if (soundIt == it.value().end() || !soundIt->is_object())
+            {
+                continue;
+            }
+            const auto srcIt = soundIt->find("source");
+            if (srcIt == soundIt->end() || !srcIt->is_object())
+            {
+                continue;
+            }
+            const auto typeIt = srcIt->find("type");
+            if (typeIt == srcIt->end() || !typeIt->is_string())
+            {
+                continue;
+            }
+            meta.sourceKind = SourceKindFromTypeString(typeIt->get<std::string>());
+            if (meta.sourceKind != config::SourceKind::Count)
+            {
+                break;
+            }
+        }
+    }
+    else if (projectRoot->contains("channels") && (*projectRoot)["channels"].is_object())
     {
         for (auto it = (*projectRoot)["channels"].begin(); it != (*projectRoot)["channels"].end(); ++it)
         {
@@ -423,10 +479,12 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         return false;
     }
 
+    const std::string stem = presetPath.stem().string();
+
     out << "{\n";
-    out << "  \"format\": \"projectModel.v2\",\n";
+    out << "  \"format\": \"projectModel.v3\",\n";
     out << "  \"project\": {\n";
-    out << "    \"channels\": {\n";
+    out << "    \"instruments\": {\n";
 
     bool first = true;
     for (int ch = 0; ch < 16; ch++)
@@ -439,7 +497,13 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         }
         if (!first) out << ",\n";
         first = false;
-        out << "      \"" << ch << "\": {\n";
+        out << "      \"" << stem << "__ch" << ch << "\": {\n";
+        out << "        \"displayName\": \"\",\n";
+        out << "        \"category\": \"\",\n";
+        out << "        \"internal\": false,\n";
+        out << "        \"tags\": [],\n";
+        out << "        \"description\": \"\",\n";
+        out << "        \"sound\": {\n";
         out << "        \"amp\": " << cur.amp << ",\n";
         out << "        \"attackSec\": " << cur.attackSec << ",\n";
         out << "        \"decaySec\": " << cur.decaySec << ",\n";
@@ -469,10 +533,28 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         {
             WriteExpressionMapJSON(out, cur.expressionMap);
         }
-        config::WriteSourceJSON(out, cur.source, 6);
-        out << "\n      }";
+        config::WriteSourceJSON(out, cur.source, 8);
+        out << "\n        }\n";
+        out << "      }";
     }
 
+    out << "\n    },\n";
+    out << "    \"channels\": {\n";
+    first = true;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const ChannelConfig& cur = snapshot.channelConfigs[ch];
+        const ChannelConfig& def = (*base.channelConfigs)[ch];
+        if (ChannelConfigEquals(cur, def))
+        {
+            continue;
+        }
+        if (!first) out << ",\n";
+        first = false;
+        out << "      \"" << ch << "\": {\n";
+        out << "        \"instrumentId\": \"" << stem << "__ch" << ch << "\"\n";
+        out << "      }";
+    }
     out << "\n    }\n";
     out << "  }\n";
     out << "}\n";

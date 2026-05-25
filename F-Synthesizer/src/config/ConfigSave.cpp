@@ -1,11 +1,86 @@
 #include "ConfigFileInternal.h"
 
 #include <fstream>
+#include <sstream>
 
 #include "io/PlatformPaths.h"
+#include "third_party/nlohmann/json.hpp"
 
 namespace config::internal
 {
+namespace
+{
+using Json = nlohmann::json;
+
+std::string DumpChannelSound(const ChannelConfig& config)
+{
+    std::ostringstream tmp;
+    WriteChannelConfig(tmp, 0, config, false);
+    Json wrapped = Json::parse("{" + tmp.str() + "}", nullptr, false);
+    if (wrapped.is_discarded() || !wrapped.contains("0"))
+    {
+        return "{}";
+    }
+    return wrapped["0"].dump(6);
+}
+
+void WriteStringField(std::ostream& out, const char* key, const std::string& value, int indent, bool comma)
+{
+    WriteIndent(out, indent);
+    out << "\"" << key << "\": \"" << EscapeJSON(value) << "\"";
+    if (comma)
+    {
+        out << ",";
+    }
+    out << "\n";
+}
+
+void WriteInstrument(std::ostream& out, const std::string& id, const InstrumentConfig& instrument, bool withComma)
+{
+    WriteIndent(out, 6); out << "\"" << EscapeJSON(id) << "\": {\n";
+    WriteStringField(out, "displayName", instrument.displayName, 8, true);
+    WriteStringField(out, "category", instrument.category, 8, true);
+    WriteIndent(out, 8); out << "\"internal\": " << (instrument.internal ? "true" : "false") << ",\n";
+    WriteIndent(out, 8); out << "\"tags\": [";
+    for (size_t i = 0; i < instrument.tags.size(); i++)
+    {
+        if (i > 0)
+        {
+            out << ", ";
+        }
+        out << "\"" << EscapeJSON(instrument.tags[i]) << "\"";
+    }
+    out << "],\n";
+    WriteStringField(out, "description", instrument.description, 8, true);
+    WriteIndent(out, 8); out << "\"sound\": " << DumpChannelSound(instrument.sound) << "\n";
+    WriteIndent(out, 6); out << "}";
+    if (withComma)
+    {
+        out << ",";
+    }
+    out << "\n";
+}
+
+void WriteProjectChannel(std::ostream& out, int ch, const ProjectChannelConfig& channel, bool withComma)
+{
+    WriteIndent(out, 6); out << "\"" << ch << "\": {\n";
+    WriteStringField(out, "instrumentId", channel.instrumentId, 8, true);
+    WriteIndent(out, 8); out << "\"mix\": {\n";
+    WriteIndent(out, 10); out << "\"mute\": " << (channel.mix.mute ? "true" : "false") << ",\n";
+    WriteIndent(out, 10); out << "\"solo\": " << (channel.mix.solo ? "true" : "false") << ",\n";
+    WriteIndent(out, 10); out << "\"level\": " << channel.mix.level << ",\n";
+    WriteIndent(out, 10); out << "\"pan\": " << channel.mix.pan << ",\n";
+    WriteIndent(out, 10); out << "\"gain\": " << channel.mix.gain << "\n";
+    WriteIndent(out, 8); out << "}\n";
+    WriteIndent(out, 6); out << "}";
+    if (withComma)
+    {
+        out << ",";
+    }
+    out << "\n";
+}
+} // namespace
+
 bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err)
 {
     std::error_code ec;
@@ -21,10 +96,13 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
         return false;
     }
 
-    const AppConfig config = ToAppConfig(model);
+    const ProjectModel saveModel = (model.instruments && model.projectChannels)
+        ? model
+        : ProjectModelFromAppConfig(ToAppConfig(model));
+    const AppConfig config = ToAppConfig(saveModel);
 
     out << "{\n";
-    out << "  \"format\": \"projectModel.v2\",\n";
+    out << "  \"format\": \"projectModel.v3\",\n";
     out << "  \"project\": {\n";
     out << "    \"midiPath\": \"" << EscapeJSON(PathToUtf8(config.midiPath)) << "\",\n";
     out << "    \"wavPath\": \"" << EscapeJSON(PathToUtf8(config.wavPath)) << "\",\n";
@@ -33,22 +111,39 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
     out << "    \"bits\": " << config.bits << ",\n";
     out << "    \"sampleRate\": " << config.sampleRate << ",\n";
     out << "    \"extraReleaseSec\": " << config.extraReleaseSec << ",\n";
-    out << "    \"channels\": {\n";
-
-    // 出力時に常に16ch/16mixを書き出し、ロード側の差分適用と組み合わせて再現性を優先する。
-    AppConfig base = DefaultConfig();
-    const auto& channels = config.channelConfigs ? *config.channelConfigs : *base.channelConfigs;
-    for (int ch = 0; ch < 16; ch++)
+    out << "    \"instruments\": {\n";
+    bool firstInstrument = true;
+    if (saveModel.instruments)
     {
-        WriteChannelConfig(out, ch, channels[ch], ch != 15);
+        for (const auto& [id, instrument] : *saveModel.instruments)
+        {
+            if (!firstInstrument)
+            {
+                out << ",\n";
+            }
+            firstInstrument = false;
+            WriteInstrument(out, id, instrument, false);
+        }
     }
-
     out << "    },\n";
-    out << "    \"channelMix\": {\n";
-    const auto& channelMix = config.channelMixStates ? *config.channelMixStates : *base.channelMixStates;
-    for (int ch = 0; ch < 16; ch++)
+    out << "    \"channels\": {\n";
+    bool firstChannel = true;
+    if (saveModel.projectChannels)
     {
-        WriteChannelMixState(out, ch, channelMix[ch], ch != 15);
+        for (int ch = 0; ch < 16; ch++)
+        {
+            const ProjectChannelConfig& channel = (*saveModel.projectChannels)[ch];
+            if (!channel.enabled)
+            {
+                continue;
+            }
+            if (!firstChannel)
+            {
+                out << ",\n";
+            }
+            firstChannel = false;
+            WriteProjectChannel(out, ch, channel, false);
+        }
     }
     out << "    },\n";
     out << "    \"effects\": {\n";

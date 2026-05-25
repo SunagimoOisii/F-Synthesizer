@@ -1,35 +1,42 @@
 {
-  "displayName": "Support Hat",
-  "category": "Drums",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
+    "instruments": {
+      "sound_support_hat__ch9": {
+        "displayName": "Support Hat",
+        "category": "Drums",
+        "internal": false,
+        "tags": [
+          "support",
+          "hat",
+          "noise",
+          "thin"
+        ],
+        "description": "薄いハット補助。ドラムやリズムに、耳につきにくい高域の刻みを足す。",
+        "sound": {
+          "amp": 0.055,
+          "attackSec": 0.001,
+          "decaySec": 0.07,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.04,
+          "source": {
+            "type": "noise",
+            "noise": "pink",
+            "filter": {
+              "mode": "highpass",
+              "cutoffHz": 5200,
+              "resonance": 0.48,
+              "drive": 0.0
+            }
+          },
+          "layers": {}
+        }
+      }
+    },
     "channels": {
       "9": {
-        "amp": 0.055,
-        "attackSec": 0.001,
-        "decaySec": 0.07,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.04,
-        "source": {
-          "type": "noise",
-          "noise": "pink",
-          "filter": {
-            "mode": "highpass",
-            "cutoffHz": 5200,
-            "resonance": 0.48,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+        "instrumentId": "sound_support_hat__ch9"
       }
     }
-  },
-  "tags": [
-    "support",
-    "hat",
-    "noise",
-    "thin"
-  ],
-  "description": "薄いハット補助。ドラムやリズムに、耳につきにくい高域の刻みを足す。"
+  }
 }

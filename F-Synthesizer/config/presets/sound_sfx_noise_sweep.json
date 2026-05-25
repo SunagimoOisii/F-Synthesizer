@@ -1,35 +1,42 @@
 {
-  "displayName": "SFX Noise Sweep",
-  "category": "SFX",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
+    "instruments": {
+      "sound_sfx_noise_sweep__ch0": {
+        "displayName": "SFX Noise Sweep",
+        "category": "SFX",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "noise",
+          "sweep",
+          "retro"
+        ],
+        "description": "レトロなノイズスイープ。短い上昇感やフィルイン前の動きに使う。",
+        "sound": {
+          "amp": 0.1,
+          "attackSec": 0.001,
+          "decaySec": 0.3,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.14,
+          "source": {
+            "type": "noise",
+            "noise": "pink",
+            "filter": {
+              "mode": "bandpass",
+              "cutoffHz": 980.0,
+              "resonance": 0.72,
+              "drive": 0.0
+            }
+          },
+          "layers": {}
+        }
+      }
+    },
     "channels": {
       "0": {
-        "amp": 0.1,
-        "attackSec": 0.001,
-        "decaySec": 0.3,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.14,
-        "source": {
-          "type": "noise",
-          "noise": "pink",
-          "filter": {
-            "mode": "bandpass",
-            "cutoffHz": 980.0,
-            "resonance": 0.72,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+        "instrumentId": "sound_sfx_noise_sweep__ch0"
       }
     }
-  },
-  "tags": [
-    "sfx",
-    "noise",
-    "sweep",
-    "retro"
-  ],
-  "description": "レトロなノイズスイープ。短い上昇感やフィルイン前の動きに使う。"
+  }
 }

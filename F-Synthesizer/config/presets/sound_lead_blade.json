@@ -1,96 +1,103 @@
 {
-  "displayName": "Lead Blade",
-  "category": "Lead",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.145,
-        "attackSec": 0.006,
-        "decaySec": 0.18,
-        "sustainLevel": 0.74,
-        "releaseSec": 0.18,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 3,
-          "unisonDetuneCents": 4.0,
-          "unisonSpread": 0.42,
-          "subOscLevel": 0.16,
-          "pulseWidth": 0.5,
-          "drive": 0.07,
-          "driftDepthCents": 3,
-          "driftRateHz": 0.16,
-          "smoothing": {
-            "enabled": true,
-            "pitchEnabled": true,
-            "ampTimeMs": 5.0,
-            "pitchTimeMs": 9.0,
-            "filterCutoffTimeMs": 18.0
+    "instruments": {
+      "sound_lead_blade__ch0": {
+        "displayName": "Lead Blade",
+        "category": "Lead",
+        "internal": false,
+        "tags": [
+          "lead",
+          "heavy",
+          "blade",
+          "sync"
+        ],
+        "description": "鋭い芯を保ちながら、耳に刺さりにくく整えた主旋律リード。速いフレーズでも輪郭を残したい時に使う。",
+        "sound": {
+          "amp": 0.145,
+          "attackSec": 0.006,
+          "decaySec": 0.18,
+          "sustainLevel": 0.74,
+          "releaseSec": 0.18,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 3,
+            "unisonDetuneCents": 4.0,
+            "unisonSpread": 0.42,
+            "subOscLevel": 0.16,
+            "pulseWidth": 0.5,
+            "drive": 0.07,
+            "driftDepthCents": 3,
+            "driftRateHz": 0.16,
+            "smoothing": {
+              "enabled": true,
+              "pitchEnabled": true,
+              "ampTimeMs": 5.0,
+              "pitchTimeMs": 9.0,
+              "filterCutoffTimeMs": 18.0
+            },
+            "hardSyncEnabled": false,
+            "hardSyncRatio": 2.0,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3600.0,
+              "resonance": 0.72,
+              "keytrack": 0.28,
+              "drive": 0.0
+            }
           },
-          "hardSyncEnabled": false,
-          "hardSyncRatio": 2.0,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 3600.0,
-            "resonance": 0.72,
-            "keytrack": 0.28,
-            "drive": 0.0
-          }
-        },
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.85,
-          "velocityToAmp": 0.88,
-          "velocityToBrightness": 0.112,
-          "velocityToFmIndex": 0.0,
-          "velocityToAttack": 0.1,
-          "velocityToBass": 0.0,
-          "velocityToLead": 0.12,
-          "modWheelToBrightness": 0.12,
-          "pressureToDrive": 0.02,
-          "cc74ToBrightness": 0.175
-        },
-        "layers": {
-          "lead": {
+          "expressionMap": {
             "enabled": true,
-            "type": "blade",
-            "level": 0.09,
-            "edgeLevel": 0.2448,
-            "bodyLevel": 0.24,
-            "detuneCents": 5.0,
-            "pitchBendSemis": 0.35,
-            "bendDecaySec": 0.045,
-            "attackBoost": 0.105,
-            "attackDecaySec": 0.04,
-            "drive": 0.0295,
-            "characterLevel": 0.0576,
-            "characterTone": 0.52,
-            "biteLevel": 0.052,
-            "biteDecaySec": 0.026,
-            "wobbleDepthCents": 3.0,
-            "wobbleRateHz": 3.7
+            "velocityCurve": 0.85,
+            "velocityToAmp": 0.88,
+            "velocityToBrightness": 0.112,
+            "velocityToFmIndex": 0.0,
+            "velocityToAttack": 0.1,
+            "velocityToBass": 0.0,
+            "velocityToLead": 0.12,
+            "modWheelToBrightness": 0.12,
+            "pressureToDrive": 0.02,
+            "cc74ToBrightness": 0.175
           },
-          "attack": {
-            "enabled": true,
-            "type": "pick",
-            "level": 0.1,
-            "decaySec": 0.032,
-            "brightness": 0.52,
-            "bodyMix": 0.5,
-            "pitchOffsetSemis": 0,
-            "drive": 0.0216
+          "layers": {
+            "lead": {
+              "enabled": true,
+              "type": "blade",
+              "level": 0.09,
+              "edgeLevel": 0.2448,
+              "bodyLevel": 0.24,
+              "detuneCents": 5.0,
+              "pitchBendSemis": 0.35,
+              "bendDecaySec": 0.045,
+              "attackBoost": 0.105,
+              "attackDecaySec": 0.04,
+              "drive": 0.0295,
+              "characterLevel": 0.0576,
+              "characterTone": 0.52,
+              "biteLevel": 0.052,
+              "biteDecaySec": 0.026,
+              "wobbleDepthCents": 3.0,
+              "wobbleRateHz": 3.7
+            },
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.1,
+              "decaySec": 0.032,
+              "brightness": 0.52,
+              "bodyMix": 0.5,
+              "pitchOffsetSemis": 0,
+              "drive": 0.0216
+            }
           }
         }
       }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_blade__ch0"
+      }
     }
-  },
-  "tags": [
-    "lead",
-    "heavy",
-    "blade",
-    "sync"
-  ],
-  "description": "鋭い芯を保ちながら、耳に刺さりにくく整えた主旋律リード。速いフレーズでも輪郭を残したい時に使う。"
+  }
 }

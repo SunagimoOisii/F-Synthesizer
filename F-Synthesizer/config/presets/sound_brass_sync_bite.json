@@ -1,82 +1,6 @@
 {
-  "displayName": "Brass Sync Bite",
-  "category": "Brass",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.12,
-        "attackSec": 0.003,
-        "decaySec": 0.18,
-        "sustainLevel": 0.54,
-        "releaseSec": 0.14,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 2,
-          "unisonDetuneCents": 3.5,
-          "unisonSpread": 0.22,
-          "subOscLevel": 0.04,
-          "pulseWidth": 0.46,
-          "drive": 0.07,
-          "driftDepthCents": 2.5,
-          "driftRateHz": 0.18,
-          "filter": {
-            "mode": "ladderLowpass",
-            "cutoffHz": 3600.0,
-            "resonance": 0.78,
-            "drive": 0.03
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "brass",
-            "level": 0.12,
-            "decaySec": 0.028,
-            "brightness": 0.62,
-            "bodyMix": 0.54,
-            "pitchOffsetSemis": 0,
-            "drive": 0.015
-          },
-          "lead": {
-            "enabled": true,
-            "type": "edge",
-            "level": 0.1,
-            "edgeLevel": 0.32,
-            "bodyLevel": 0.22,
-            "detuneCents": 3.5,
-            "pitchBendSemis": 0.18,
-            "bendDecaySec": 0.045,
-            "attackBoost": 0.07,
-            "attackDecaySec": 0.035,
-            "drive": 0.035,
-            "characterLevel": 0.08,
-            "characterTone": 0.56,
-            "biteLevel": 0.035,
-            "biteDecaySec": 0.026,
-            "wobbleDepthCents": 1.8,
-            "wobbleRateHz": 3.2
-          }
-        },
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.86,
-          "velocityToAmp": 0.86,
-          "velocityToBrightness": 0.12,
-          "velocityToFmIndex": 0.0,
-          "velocityToLead": 0.2,
-          "velocityToString": 0.0,
-          "modWheelToBrightness": 0.08,
-          "modWheelToString": 0.12,
-          "pressureToDrive": 0.014,
-          "cc74ToBrightness": 0.14,
-          "cc74ToStringBrightness": 0.18,
-          "pressureToFilterDrive": 0.04
-        }
-      }
-    },
     "effects": {
       "chorus": {
         "enabled": true,
@@ -92,13 +16,96 @@
         "roomSize": 0.34,
         "damping": 0.58
       }
+    },
+    "instruments": {
+      "sound_brass_sync_bite__ch0": {
+        "displayName": "Brass Sync Bite",
+        "category": "Brass",
+        "internal": false,
+        "tags": [
+          "brass",
+          "sync",
+          "bite",
+          "retro"
+        ],
+        "description": "噛みつくシンセブラス。リフやアクセントを前に出す。",
+        "sound": {
+          "amp": 0.12,
+          "attackSec": 0.003,
+          "decaySec": 0.18,
+          "sustainLevel": 0.54,
+          "releaseSec": 0.14,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 2,
+            "unisonDetuneCents": 3.5,
+            "unisonSpread": 0.22,
+            "subOscLevel": 0.04,
+            "pulseWidth": 0.46,
+            "drive": 0.07,
+            "driftDepthCents": 2.5,
+            "driftRateHz": 0.18,
+            "filter": {
+              "mode": "ladderLowpass",
+              "cutoffHz": 3600.0,
+              "resonance": 0.78,
+              "drive": 0.03
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "brass",
+              "level": 0.12,
+              "decaySec": 0.028,
+              "brightness": 0.62,
+              "bodyMix": 0.54,
+              "pitchOffsetSemis": 0,
+              "drive": 0.015
+            },
+            "lead": {
+              "enabled": true,
+              "type": "edge",
+              "level": 0.1,
+              "edgeLevel": 0.32,
+              "bodyLevel": 0.22,
+              "detuneCents": 3.5,
+              "pitchBendSemis": 0.18,
+              "bendDecaySec": 0.045,
+              "attackBoost": 0.07,
+              "attackDecaySec": 0.035,
+              "drive": 0.035,
+              "characterLevel": 0.08,
+              "characterTone": 0.56,
+              "biteLevel": 0.035,
+              "biteDecaySec": 0.026,
+              "wobbleDepthCents": 1.8,
+              "wobbleRateHz": 3.2
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 0.86,
+            "velocityToAmp": 0.86,
+            "velocityToBrightness": 0.12,
+            "velocityToFmIndex": 0.0,
+            "velocityToLead": 0.2,
+            "velocityToString": 0.0,
+            "modWheelToBrightness": 0.08,
+            "modWheelToString": 0.12,
+            "pressureToDrive": 0.014,
+            "cc74ToBrightness": 0.14,
+            "cc74ToStringBrightness": 0.18,
+            "pressureToFilterDrive": 0.04
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_brass_sync_bite__ch0"
+      }
     }
-  },
-  "tags": [
-    "brass",
-    "sync",
-    "bite",
-    "retro"
-  ],
-  "description": "噛みつくシンセブラス。リフやアクセントを前に出す。"
+  }
 }

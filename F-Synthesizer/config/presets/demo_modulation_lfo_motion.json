@@ -1,70 +1,77 @@
 {
-  "displayName": "Modulation lfo motion",
-  "category": "Piano/Keys",
-  "internal": true,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.18,
-        "attackSec": 0.004,
-        "decaySec": 0.18,
-        "sustainLevel": 0.7,
-        "releaseSec": 0.16,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 1,
-          "unisonDetuneCents": 0,
-          "unisonSpread": 0,
-          "subOscLevel": 0.08,
-          "pulseWidth": 0.5,
-          "drive": 0.12,
-          "driftDepthCents": 2,
-          "driftRateHz": 0.2,
-          "smoothing": {
-            "enabled": true,
-            "pitchEnabled": true,
-            "ampTimeMs": 4.0,
-            "pitchTimeMs": 7.0,
-            "filterCutoffTimeMs": 14.0
-          },
-          "modulation": {
-            "lfo1": {
-              "wave": "sampleAndHold",
-              "rateHz": 5.0,
-              "depth": 0.8,
-              "bipolar": true,
-              "keySync": true,
-              "delayMs": 0.0,
-              "fadeMs": 0.0
+    "instruments": {
+      "demo_modulation_lfo_motion__ch0": {
+        "displayName": "Modulation lfo motion",
+        "category": "Piano/Keys",
+        "internal": true,
+        "tags": [
+          "demo",
+          "modulation",
+          "LFO",
+          "検証"
+        ],
+        "description": "LFOによる段階的なfilter変調を確認する検査用プリセット。周期変化そのものを聴く。",
+        "sound": {
+          "amp": 0.18,
+          "attackSec": 0.004,
+          "decaySec": 0.18,
+          "sustainLevel": 0.7,
+          "releaseSec": 0.16,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "unisonDetuneCents": 0,
+            "unisonSpread": 0,
+            "subOscLevel": 0.08,
+            "pulseWidth": 0.5,
+            "drive": 0.12,
+            "driftDepthCents": 2,
+            "driftRateHz": 0.2,
+            "smoothing": {
+              "enabled": true,
+              "pitchEnabled": true,
+              "ampTimeMs": 4.0,
+              "pitchTimeMs": 7.0,
+              "filterCutoffTimeMs": 14.0
             },
-            "routes": {
-              "0": {
-                "source": "lfo1",
-                "destination": "filterCutoffHz",
-                "amount": 0.46,
-                "enabled": true
+            "modulation": {
+              "lfo1": {
+                "wave": "sampleAndHold",
+                "rateHz": 5.0,
+                "depth": 0.8,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0.0,
+                "fadeMs": 0.0
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.46,
+                  "enabled": true
+                }
               }
+            },
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 4200,
+              "resonance": 1.2,
+              "keytrack": 0.35,
+              "drive": 0.0
             }
           },
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 4200,
-            "resonance": 1.2,
-            "keytrack": 0.35,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+          "layers": {}
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "demo_modulation_lfo_motion__ch0"
       }
     }
-  },
-  "tags": [
-    "demo",
-    "modulation",
-    "LFO",
-    "検証"
-  ],
-  "description": "LFOによる段階的なfilter変調を確認する検査用プリセット。周期変化そのものを聴く。"
+  }
 }

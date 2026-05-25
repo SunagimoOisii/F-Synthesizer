@@ -1,128 +1,6 @@
 {
-  "displayName": "Pipe Bottle FM",
-  "category": "Pipe",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.1,
-        "attackSec": 0.018,
-        "decaySec": 0.26,
-        "sustainLevel": 0.62,
-        "releaseSec": 0.22,
-        "source": {
-          "type": "fm",
-          "algorithm": 5,
-          "feedback": 0.04,
-          "ops": [
-            {
-              "wave": "sine",
-              "ratio": 1.0,
-              "level": 0.48,
-              "index": 0.5,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 2.5,
-              "level": 0.3,
-              "index": 0.22,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 3.5,
-              "level": 0.18,
-              "index": 0.12,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 0.5,
-              "level": 0.1,
-              "index": 0.0,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.68,
-                "releaseSec": 0.12,
-                "curve": 0.55
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.12,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.05,
-                "curve": 0.72
-              }
-            }
-          ],
-          "drive": 0.015,
-          "filter": {
-            "mode": "ladderLowpass",
-            "cutoffHz": 3600.0,
-            "resonance": 0.8,
-            "drive": 0.05
-          }
-        },
-        "layers": {},
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.86,
-          "velocityToAmp": 0.86,
-          "velocityToBrightness": 0.09,
-          "velocityToFmIndex": 0.1,
-          "velocityToLead": 0.0,
-          "velocityToString": 0.0,
-          "modWheelToBrightness": 0.08,
-          "modWheelToString": 0.12,
-          "pressureToDrive": 0.014,
-          "cc74ToBrightness": 0.14,
-          "cc74ToStringBrightness": 0.18,
-          "pressureToFilterDrive": 0.04
-        }
-      }
-    },
     "effects": {
       "chorus": {
         "enabled": true,
@@ -138,13 +16,142 @@
         "roomSize": 0.34,
         "damping": 0.58
       }
+    },
+    "instruments": {
+      "sound_pipe_bottle_fm__ch0": {
+        "displayName": "Pipe Bottle FM",
+        "category": "Pipe",
+        "internal": false,
+        "tags": [
+          "pipe",
+          "bottle",
+          "fm",
+          "retro"
+        ],
+        "description": "瓶笛風のFM音色。少し不思議な旋律やSFX寄りのメロディに使う。",
+        "sound": {
+          "amp": 0.1,
+          "attackSec": 0.018,
+          "decaySec": 0.26,
+          "sustainLevel": 0.62,
+          "releaseSec": 0.22,
+          "source": {
+            "type": "fm",
+            "algorithm": 5,
+            "feedback": 0.04,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1.0,
+                "level": 0.48,
+                "index": 0.5,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2.5,
+                "level": 0.3,
+                "index": 0.22,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3.5,
+                "level": 0.18,
+                "index": 0.12,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 0.5,
+                "level": 0.1,
+                "index": 0.0,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              }
+            ],
+            "drive": 0.015,
+            "filter": {
+              "mode": "ladderLowpass",
+              "cutoffHz": 3600.0,
+              "resonance": 0.8,
+              "drive": 0.05
+            }
+          },
+          "layers": {},
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 0.86,
+            "velocityToAmp": 0.86,
+            "velocityToBrightness": 0.09,
+            "velocityToFmIndex": 0.1,
+            "velocityToLead": 0.0,
+            "velocityToString": 0.0,
+            "modWheelToBrightness": 0.08,
+            "modWheelToString": 0.12,
+            "pressureToDrive": 0.014,
+            "cc74ToBrightness": 0.14,
+            "cc74ToStringBrightness": 0.18,
+            "pressureToFilterDrive": 0.04
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_pipe_bottle_fm__ch0"
+      }
     }
-  },
-  "tags": [
-    "pipe",
-    "bottle",
-    "fm",
-    "retro"
-  ],
-  "description": "瓶笛風のFM音色。少し不思議な旋律やSFX寄りのメロディに使う。"
+  }
 }

@@ -1,33 +1,47 @@
-# チャンネル設定スキーマ（projectModel.v2 / v0.2）
+# チャンネル設定スキーマ（projectModel.v3 / Instrument Phase 2）
 
 ## 目的
 
-- ch0-15 の音設定を JSON で定義し、CLI/GUI で共通利用する。
-- `projectModel.v2` の C++ typed config を正本とし、この文書は利用者向けの同期メモとして扱う。
-- v2 第一段では既存の legacy `layers` 構造を保持する。次段の Instrument Model 移行で `layers` の直接編集契約を整理する。
+- ch0-15 の Instrument 割当と Instrument 内の legacy sound config を JSON で定義し、CLI/GUI で共通利用する。
+- `projectModel.v3` の C++ typed config を正本とし、この文書は利用者向けの同期メモとして扱う。
+- v3 Phase 2 では Instrument が legacy `source` / `layers` / `expressionMap` を `sound` として保持する。意味的な再設計は Phase 4 の preset / Sound Card 再編で行う。
 - `projectModel.v1` は読み込み対象外とする。
+- `projectModel.v2` は読み込み対象外とする。
 
 ## 適用位置
 
-- 既存キー（`midiPath`, `wavPath`, `sampleRate` など）はそのまま使用。
-- 新規に `channels` キーを追加する。
+- 既存キー（`midiPath`, `wavPath`, `sampleRate` など）は `project` 直下で使用する。
+- 音色本体は `project.instruments.<instrumentId>.sound` に置く。
+- `project.channels.<ch>` は `instrumentId` と任意の `mix` だけを持つ。
 
 ```json
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
+    "instruments": {
+      "sound_guitar_clean__ch0": {
+        "displayName": "Guitar Clean",
+        "category": "Guitar",
+        "internal": false,
+        "tags": ["guitar", "clean"],
+        "description": "...",
+        "sound": { "... legacy channel sound config ...": true }
+      }
+    },
     "channels": {
-      "0": { "... channel config ..." },
-      "1": { "... channel config ..." }
+      "0": {
+        "instrumentId": "sound_guitar_clean__ch0",
+        "mix": { "mute": false, "solo": false, "level": 1.0, "pan": 0.0, "gain": 1.0 }
+      }
     }
   }
 }
 ```
 
 - `channels` 未指定のチャンネルは `DefaultConfig()` の既定値を使用する。
-- 指定されたチャンネルのみ上書き（後勝ち）。
+- 指定されたチャンネルは `instrumentId` で Instrument を参照し、`sound` を既存 `ChannelConfig` へ展開する。
 
-## チャンネルオブジェクト
+## Instrument sound オブジェクト
 
 ```json
 {

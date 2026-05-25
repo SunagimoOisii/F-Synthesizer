@@ -1,68 +1,6 @@
 {
-  "displayName": "Keys Chip Piano",
-  "category": "Piano/Keys",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.12,
-        "attackSec": 0.002,
-        "decaySec": 0.18,
-        "sustainLevel": 0.28,
-        "releaseSec": 0.12,
-        "source": {
-          "type": "psg",
-          "wave": "triangle",
-          "duty": 2,
-          "volumeSteps": 12,
-          "maxVoices": 3,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 5200.0,
-            "resonance": 0.62,
-            "drive": 0.0
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "pick",
-            "level": 0.07,
-            "decaySec": 0.018,
-            "brightness": 0.48,
-            "bodyMix": 0.36,
-            "pitchOffsetSemis": 0,
-            "drive": 0.015
-          },
-          "pluck": {
-            "enabled": true,
-            "level": 0.16,
-            "decaySec": 0.2,
-            "brightness": 0.52,
-            "noiseMix": 0.03,
-            "pitchOffsetSemis": 0,
-            "bodySend": 0.28,
-            "drive": 0.014
-          }
-        },
-        "expressionMap": {
-          "enabled": true,
-          "velocityCurve": 0.86,
-          "velocityToAmp": 0.86,
-          "velocityToBrightness": 0.08,
-          "velocityToFmIndex": 0.0,
-          "velocityToLead": 0.0,
-          "velocityToString": 0.0,
-          "modWheelToBrightness": 0.08,
-          "modWheelToString": 0.12,
-          "pressureToDrive": 0.014,
-          "cc74ToBrightness": 0.14,
-          "cc74ToStringBrightness": 0.18,
-          "pressureToFilterDrive": 0.04
-        }
-      }
-    },
     "effects": {
       "chorus": {
         "enabled": true,
@@ -78,13 +16,82 @@
         "roomSize": 0.34,
         "damping": 0.58
       }
+    },
+    "instruments": {
+      "sound_keys_chip_piano__ch0": {
+        "displayName": "Keys Chip Piano",
+        "category": "Piano/Keys",
+        "internal": false,
+        "tags": [
+          "keys",
+          "chip",
+          "piano",
+          "retro"
+        ],
+        "description": "チップピアノ風の短い鍵盤音。軽いコードやアルペジオに使う。",
+        "sound": {
+          "amp": 0.12,
+          "attackSec": 0.002,
+          "decaySec": 0.18,
+          "sustainLevel": 0.28,
+          "releaseSec": 0.12,
+          "source": {
+            "type": "psg",
+            "wave": "triangle",
+            "duty": 2,
+            "volumeSteps": 12,
+            "maxVoices": 3,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 5200.0,
+              "resonance": 0.62,
+              "drive": 0.0
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.07,
+              "decaySec": 0.018,
+              "brightness": 0.48,
+              "bodyMix": 0.36,
+              "pitchOffsetSemis": 0,
+              "drive": 0.015
+            },
+            "pluck": {
+              "enabled": true,
+              "level": 0.16,
+              "decaySec": 0.2,
+              "brightness": 0.52,
+              "noiseMix": 0.03,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0.28,
+              "drive": 0.014
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 0.86,
+            "velocityToAmp": 0.86,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.0,
+            "velocityToLead": 0.0,
+            "velocityToString": 0.0,
+            "modWheelToBrightness": 0.08,
+            "modWheelToString": 0.12,
+            "pressureToDrive": 0.014,
+            "cc74ToBrightness": 0.14,
+            "cc74ToStringBrightness": 0.18,
+            "pressureToFilterDrive": 0.04
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_chip_piano__ch0"
+      }
     }
-  },
-  "tags": [
-    "keys",
-    "chip",
-    "piano",
-    "retro"
-  ],
-  "description": "チップピアノ風の短い鍵盤音。軽いコードやアルペジオに使う。"
+  }
 }

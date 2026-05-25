@@ -1,281 +1,318 @@
 {
-  "displayName": "Expression velocity",
-  "category": "Piano/Keys",
-  "internal": true,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.22,
-        "attackSec": 0.002,
-        "decaySec": 0.1,
-        "sustainLevel": 0.72,
-        "releaseSec": 0.1,
-        "source": {
-          "type": "fm",
-          "algorithm": 3,
-          "feedback": 0.12,
-          "ops": [
-            {
-              "wave": "sine",
-              "ratio": 0.5,
-              "level": 1.0,
-              "index": 1.7,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.86,
-                "releaseSec": 0.06,
-                "curve": 0.2
+    "instruments": {
+      "demo_expression_velocity__ch0": {
+        "displayName": "Expression velocity",
+        "category": "Piano/Keys",
+        "internal": true,
+        "tags": [
+          "demo",
+          "expression",
+          "velocity",
+          "検証"
+        ],
+        "description": "velocityでアタック量と明るさが変わることを確認する検査用プリセット。強弱差の検査用。",
+        "sound": {
+          "amp": 0.22,
+          "attackSec": 0.002,
+          "decaySec": 0.1,
+          "sustainLevel": 0.72,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "fm",
+            "algorithm": 3,
+            "feedback": 0.12,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 0.5,
+                "level": 1.0,
+                "index": 1.7,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.86,
+                  "releaseSec": 0.06,
+                  "curve": 0.2
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.035,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.035,
+                  "curve": 0.8
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.035,
-                "sustainLevel": 0.25,
-                "releaseSec": 0.035,
-                "curve": 0.8
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 1.0,
-              "level": 0.8,
-              "index": 0.7,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.86,
-                "releaseSec": 0.06,
-                "curve": 0.2
+              {
+                "wave": "sine",
+                "ratio": 1.0,
+                "level": 0.8,
+                "index": 0.7,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.86,
+                  "releaseSec": 0.06,
+                  "curve": 0.2
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.035,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.035,
+                  "curve": 0.8
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.035,
-                "sustainLevel": 0.25,
-                "releaseSec": 0.035,
-                "curve": 0.8
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 2.0,
-              "level": 0.25,
-              "index": 0.25,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.86,
-                "releaseSec": 0.06,
-                "curve": 0.2
+              {
+                "wave": "sine",
+                "ratio": 2.0,
+                "level": 0.25,
+                "index": 0.25,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.86,
+                  "releaseSec": 0.06,
+                  "curve": 0.2
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.035,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.035,
+                  "curve": 0.8
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.035,
-                "sustainLevel": 0.25,
-                "releaseSec": 0.035,
-                "curve": 0.8
+              {
+                "wave": "sine",
+                "ratio": 3.0,
+                "level": 0.18,
+                "index": 0.0,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.86,
+                  "releaseSec": 0.06,
+                  "curve": 0.2
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.035,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.035,
+                  "curve": 0.8
+                }
               }
-            },
-            {
-              "wave": "sine",
-              "ratio": 3.0,
+            ],
+            "drive": 0.16,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3600,
+              "resonance": 0.9,
+              "drive": 0.0
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "pick",
               "level": 0.18,
-              "index": 0.0,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.86,
-                "releaseSec": 0.06,
-                "curve": 0.2
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.035,
-                "sustainLevel": 0.25,
-                "releaseSec": 0.035,
-                "curve": 0.8
-              }
+              "decaySec": 0.03,
+              "brightness": 0.46,
+              "bodyMix": 0.7,
+              "pitchOffsetSemis": -12,
+              "drive": 0.064
             }
-          ],
-          "drive": 0.16,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 3600,
-            "resonance": 0.9,
-            "drive": 0.0
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "pick",
-            "level": 0.18,
-            "decaySec": 0.03,
-            "brightness": 0.46,
-            "bodyMix": 0.7,
-            "pitchOffsetSemis": -12,
-            "drive": 0.064
           }
         }
       },
-      "1": {
-        "amp": 0.18,
-        "attackSec": 0.01,
-        "decaySec": 0.24,
-        "sustainLevel": 0.78,
-        "releaseSec": 0.22,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 3,
-          "unisonDetuneCents": 6,
-          "unisonSpread": 0.35,
-          "subOscLevel": 0.1,
-          "pulseWidth": 0.5,
-          "drive": 0.18,
-          "driftDepthCents": 3,
-          "driftRateHz": 0.18,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 3300,
-            "resonance": 0.9,
-            "keytrack": 0.25,
-            "drive": 0.0
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "brass",
-            "level": 0.15,
-            "decaySec": 0.065,
-            "brightness": 0.42,
-            "bodyMix": 0.62,
-            "pitchOffsetSemis": -2,
-            "drive": 0.048
+      "demo_expression_velocity__ch1": {
+        "displayName": "Expression velocity",
+        "category": "Piano/Keys",
+        "internal": true,
+        "tags": [
+          "demo",
+          "expression",
+          "velocity",
+          "検証"
+        ],
+        "description": "velocityでアタック量と明るさが変わることを確認する検査用プリセット。強弱差の検査用。",
+        "sound": {
+          "amp": 0.18,
+          "attackSec": 0.01,
+          "decaySec": 0.24,
+          "sustainLevel": 0.78,
+          "releaseSec": 0.22,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 3,
+            "unisonDetuneCents": 6,
+            "unisonSpread": 0.35,
+            "subOscLevel": 0.1,
+            "pulseWidth": 0.5,
+            "drive": 0.18,
+            "driftDepthCents": 3,
+            "driftRateHz": 0.18,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3300,
+              "resonance": 0.9,
+              "keytrack": 0.25,
+              "drive": 0.0
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "brass",
+              "level": 0.15,
+              "decaySec": 0.065,
+              "brightness": 0.42,
+              "bodyMix": 0.62,
+              "pitchOffsetSemis": -2,
+              "drive": 0.048
+            }
           }
         }
       },
-      "2": {
-        "amp": 0.16,
-        "attackSec": 0.001,
-        "decaySec": 0.55,
-        "sustainLevel": 0.3,
-        "releaseSec": 0.6,
-        "source": {
-          "type": "fm",
-          "algorithm": 5,
-          "feedback": 0.08,
-          "ops": [
-            {
-              "wave": "sine",
-              "ratio": 1.0,
-              "level": 0.35,
-              "index": 2.8,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.35,
-                "sustainLevel": 0.2,
-                "releaseSec": 0.3,
-                "curve": 0.55
+      "demo_expression_velocity__ch2": {
+        "displayName": "Expression velocity",
+        "category": "Piano/Keys",
+        "internal": true,
+        "tags": [
+          "demo",
+          "expression",
+          "velocity",
+          "検証"
+        ],
+        "description": "velocityでアタック量と明るさが変わることを確認する検査用プリセット。強弱差の検査用。",
+        "sound": {
+          "amp": 0.16,
+          "attackSec": 0.001,
+          "decaySec": 0.55,
+          "sustainLevel": 0.3,
+          "releaseSec": 0.6,
+          "source": {
+            "type": "fm",
+            "algorithm": 5,
+            "feedback": 0.08,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1.0,
+                "level": 0.35,
+                "index": 2.8,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.35,
+                  "sustainLevel": 0.2,
+                  "releaseSec": 0.3,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 0.08,
+                  "curve": 0.9
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.08,
-                "sustainLevel": 0.05,
-                "releaseSec": 0.08,
-                "curve": 0.9
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 2.41,
-              "level": 0.55,
-              "index": 0.3,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.45,
-                "sustainLevel": 0.22,
-                "releaseSec": 0.35,
-                "curve": 0.5
+              {
+                "wave": "sine",
+                "ratio": 2.41,
+                "level": 0.55,
+                "index": 0.3,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.45,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.35,
+                  "curve": 0.5
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 0.08,
+                  "curve": 0.9
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.08,
-                "sustainLevel": 0.05,
-                "releaseSec": 0.08,
-                "curve": 0.9
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 3.02,
-              "level": 0.38,
-              "index": 0.2,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.38,
-                "sustainLevel": 0.18,
-                "releaseSec": 0.32,
-                "curve": 0.5
+              {
+                "wave": "sine",
+                "ratio": 3.02,
+                "level": 0.38,
+                "index": 0.2,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.38,
+                  "sustainLevel": 0.18,
+                  "releaseSec": 0.32,
+                  "curve": 0.5
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 0.08,
+                  "curve": 0.9
+                }
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.08,
-                "sustainLevel": 0.05,
-                "releaseSec": 0.08,
-                "curve": 0.9
+              {
+                "wave": "triangle",
+                "ratio": 4.76,
+                "level": 0.26,
+                "index": 0.0,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.42,
+                  "sustainLevel": 0.16,
+                  "releaseSec": 0.35,
+                  "curve": 0.5
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 0.08,
+                  "curve": 0.9
+                }
               }
-            },
-            {
-              "wave": "triangle",
-              "ratio": 4.76,
-              "level": 0.26,
-              "index": 0.0,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.42,
-                "sustainLevel": 0.16,
-                "releaseSec": 0.35,
-                "curve": 0.5
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.08,
-                "sustainLevel": 0.05,
-                "releaseSec": 0.08,
-                "curve": 0.9
-              }
+            ],
+            "drive": 0.1,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 6200,
+              "resonance": 1.1,
+              "drive": 0.0
             }
-          ],
-          "drive": 0.1,
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 6200,
-            "resonance": 1.1,
-            "drive": 0.0
-          }
-        },
-        "layers": {
-          "attack": {
-            "enabled": true,
-            "type": "metal",
-            "level": 0.18,
-            "decaySec": 0.085,
-            "brightness": 0.78,
-            "bodyMix": 0.45,
-            "pitchOffsetSemis": 12,
-            "drive": 0.04
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "metal",
+              "level": 0.18,
+              "decaySec": 0.085,
+              "brightness": 0.78,
+              "bodyMix": 0.45,
+              "pitchOffsetSemis": 12,
+              "drive": 0.04
+            }
           }
         }
       }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "demo_expression_velocity__ch0"
+      },
+      "1": {
+        "instrumentId": "demo_expression_velocity__ch1"
+      },
+      "2": {
+        "instrumentId": "demo_expression_velocity__ch2"
+      }
     }
-  },
-  "tags": [
-    "demo",
-    "expression",
-    "velocity",
-    "検証"
-  ],
-  "description": "velocityでアタック量と明るさが変わることを確認する検査用プリセット。強弱差の検査用。"
+  }
 }

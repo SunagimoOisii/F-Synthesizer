@@ -1,5 +1,5 @@
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
     "midiPath": "../../assets/midi/solstice_intro.mid",
     "wavPath": "../../output/mix_invalid.wav",
@@ -9,13 +9,26 @@
     "bits": 16,
     "sampleRate": 44100,
     "extraReleaseSec": 0.3,
-    "channelMix": {
+    "instruments": {
+      "channel_mix_invalid__ch0": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {}
+      }
+    },
+    "channels": {
       "0": {
-        "mute": false,
-        "solo": false,
-        "level": 1.0,
-        "pan": 1.5,
-        "gain": 1.0
+        "instrumentId": "channel_mix_invalid__ch0",
+        "mix": {
+          "mute": false,
+          "solo": false,
+          "level": 1.0,
+          "pan": 1.5,
+          "gain": 1.0
+        }
       }
     }
   }

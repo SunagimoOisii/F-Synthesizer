@@ -1,37 +1,90 @@
 {
-  "displayName": "Lead Guitarish",
-  "category": "Guitar",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.135,
-        "attackSec": 0.003,
-        "decaySec": 0.15,
-        "sustainLevel": 0.80,
-        "releaseSec": 0.18,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 2,
-          "unisonDetuneCents": 5.0,
-          "unisonSpread": 0.32,
-          "subOscLevel": 0.06,
-          "pulseWidth": 0.48,
-          "drive": 0.05,
-          "driftDepthCents": 2.0,
-          "driftRateHz": 0.22,
-          "filter": { "mode": "lowpass", "cutoffHz": 3300, "resonance": 0.70, "keytrack": 0.24, "drive": 0.0 }
-        },
-        "layers": {
-          "lead": { "enabled": true, "type": "edge", "level": 0.12, "edgeLevel": 0.32, "bodyLevel": 0.26, "detuneCents": 4.0, "pitchBendSemis": 0.22, "bendDecaySec": 0.045, "attackBoost": 0.08, "attackDecaySec": 0.035, "drive": 0.06, "characterLevel": 0.10, "characterTone": 0.56, "biteLevel": 0.04, "biteDecaySec": 0.026, "wobbleDepthCents": 2.0, "wobbleRateHz": 4.2 },
-          "attack": { "enabled": true, "type": "pick", "level": 0.11, "decaySec": 0.026, "brightness": 0.50, "bodyMix": 0.48, "pitchOffsetSemis": 0, "drive": 0.02 },
-          "ampCab": { "enabled": true, "drive": 0.32, "tone": 0.60, "cabLow": 0.28, "cabHigh": 0.60, "presence": 0.40, "output": 0.76 }
+    "instruments": {
+      "sound_lead_guitarish__ch0": {
+        "displayName": "Lead Guitarish",
+        "category": "Guitar",
+        "internal": false,
+        "tags": [
+          "lead",
+          "guitar",
+          "rock",
+          "solo"
+        ],
+        "description": "ギター風の歪みを持つ主旋律リード。ロックのソロや太いメロディに使う。",
+        "sound": {
+          "amp": 0.135,
+          "attackSec": 0.003,
+          "decaySec": 0.15,
+          "sustainLevel": 0.8,
+          "releaseSec": 0.18,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 2,
+            "unisonDetuneCents": 5.0,
+            "unisonSpread": 0.32,
+            "subOscLevel": 0.06,
+            "pulseWidth": 0.48,
+            "drive": 0.05,
+            "driftDepthCents": 2.0,
+            "driftRateHz": 0.22,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3300,
+              "resonance": 0.7,
+              "keytrack": 0.24,
+              "drive": 0.0
+            }
+          },
+          "layers": {
+            "lead": {
+              "enabled": true,
+              "type": "edge",
+              "level": 0.12,
+              "edgeLevel": 0.32,
+              "bodyLevel": 0.26,
+              "detuneCents": 4.0,
+              "pitchBendSemis": 0.22,
+              "bendDecaySec": 0.045,
+              "attackBoost": 0.08,
+              "attackDecaySec": 0.035,
+              "drive": 0.06,
+              "characterLevel": 0.1,
+              "characterTone": 0.56,
+              "biteLevel": 0.04,
+              "biteDecaySec": 0.026,
+              "wobbleDepthCents": 2.0,
+              "wobbleRateHz": 4.2
+            },
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.11,
+              "decaySec": 0.026,
+              "brightness": 0.5,
+              "bodyMix": 0.48,
+              "pitchOffsetSemis": 0,
+              "drive": 0.02
+            },
+            "ampCab": {
+              "enabled": true,
+              "drive": 0.32,
+              "tone": 0.6,
+              "cabLow": 0.28,
+              "cabHigh": 0.6,
+              "presence": 0.4,
+              "output": 0.76
+            }
+          }
         }
       }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_guitarish__ch0"
+      }
     }
-  },
-  "tags": ["lead", "guitar", "rock", "solo"],
-  "description": "ギター風の歪みを持つ主旋律リード。ロックのソロや太いメロディに使う。"
+  }
 }

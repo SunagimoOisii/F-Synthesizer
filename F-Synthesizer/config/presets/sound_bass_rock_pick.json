@@ -1,37 +1,89 @@
 {
-  "displayName": "Bass Rock Pick",
-  "category": "Bass",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.215,
-        "attackSec": 0.002,
-        "decaySec": 0.12,
-        "sustainLevel": 0.78,
-        "releaseSec": 0.10,
-        "source": {
-          "type": "analog",
-          "wave": "saw",
-          "unisonVoices": 1,
-          "unisonDetuneCents": 0,
-          "unisonSpread": 0,
-          "subOscLevel": 0.38,
-          "pulseWidth": 0.50,
-          "drive": 0.08,
-          "driftDepthCents": 1.2,
-          "driftRateHz": 0.16,
-          "filter": { "mode": "lowpass", "cutoffHz": 1450, "resonance": 0.68, "keytrack": 0.28, "drive": 0.0 }
-        },
-        "layers": {
-          "bass": { "enabled": true, "type": "drive", "level": 0.24, "subLevel": 0.30, "bodyLevel": 0.48, "gritLevel": 0.18, "cutoffHz": 1200, "drive": 0.12, "pitchOffsetSemis": -12, "velocityToDrive": 0.18, "focusHz": 230, "focusLevel": 0.18, "bodySaturation": 0.18, "gritTone": 0.46, "attackBoost": 0.18, "attackDecaySec": 0.036 },
-          "attack": { "enabled": true, "type": "pick", "level": 0.16, "decaySec": 0.028, "brightness": 0.42, "bodyMix": 0.72, "pitchOffsetSemis": -12, "drive": 0.02 },
-          "ampCab": { "enabled": true, "drive": 0.18, "tone": 0.42, "cabLow": 0.16, "cabHigh": 0.52, "presence": 0.18, "output": 0.82 }
+    "instruments": {
+      "sound_bass_rock_pick__ch0": {
+        "displayName": "Bass Rock Pick",
+        "category": "Bass",
+        "internal": false,
+        "tags": [
+          "bass",
+          "rock",
+          "pick",
+          "drive"
+        ],
+        "description": "ピックで弾いたロックベース風の音。ギターと重ねても輪郭を残したい時に使う。",
+        "sound": {
+          "amp": 0.215,
+          "attackSec": 0.002,
+          "decaySec": 0.12,
+          "sustainLevel": 0.78,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "analog",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "unisonDetuneCents": 0,
+            "unisonSpread": 0,
+            "subOscLevel": 0.38,
+            "pulseWidth": 0.5,
+            "drive": 0.08,
+            "driftDepthCents": 1.2,
+            "driftRateHz": 0.16,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 1450,
+              "resonance": 0.68,
+              "keytrack": 0.28,
+              "drive": 0.0
+            }
+          },
+          "layers": {
+            "bass": {
+              "enabled": true,
+              "type": "drive",
+              "level": 0.24,
+              "subLevel": 0.3,
+              "bodyLevel": 0.48,
+              "gritLevel": 0.18,
+              "cutoffHz": 1200,
+              "drive": 0.12,
+              "pitchOffsetSemis": -12,
+              "velocityToDrive": 0.18,
+              "focusHz": 230,
+              "focusLevel": 0.18,
+              "bodySaturation": 0.18,
+              "gritTone": 0.46,
+              "attackBoost": 0.18,
+              "attackDecaySec": 0.036
+            },
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.16,
+              "decaySec": 0.028,
+              "brightness": 0.42,
+              "bodyMix": 0.72,
+              "pitchOffsetSemis": -12,
+              "drive": 0.02
+            },
+            "ampCab": {
+              "enabled": true,
+              "drive": 0.18,
+              "tone": 0.42,
+              "cabLow": 0.16,
+              "cabHigh": 0.52,
+              "presence": 0.18,
+              "output": 0.82
+            }
+          }
         }
       }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_bass_rock_pick__ch0"
+      }
     }
-  },
-  "tags": ["bass", "rock", "pick", "drive"],
-  "description": "ピックで弾いたロックベース風の音。ギターと重ねても輪郭を残したい時に使う。"
+  }
 }

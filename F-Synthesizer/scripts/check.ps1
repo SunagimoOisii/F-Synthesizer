@@ -195,7 +195,7 @@ function Run-RuntimeSmoke {
 
     $json = @"
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
     "midiPath": "$midiPath",
     "wavPath": "$wavPathNorm",

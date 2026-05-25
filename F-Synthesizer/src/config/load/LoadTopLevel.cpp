@@ -13,7 +13,7 @@ namespace
 {
 using Json = nlohmann::json;
 
-constexpr const char* kProjectModelFormat = "projectModel.v2";
+constexpr const char* kProjectModelFormat = "projectModel.v3";
 
 bool ReadOptionalBool(const Json& obj, const char* key, const std::string& path, bool& out, std::string& err)
 {
@@ -95,10 +95,65 @@ bool ValidateProjectModelFormat(const Json& root, std::string& err)
     const std::string format = it->get<std::string>();
     if (format != kProjectModelFormat)
     {
-        err = "unsupported format '" + format + "'; expected projectModel.v2";
+        err = "unsupported format '" + format + "'; expected projectModel.v3";
         return false;
     }
     return true;
+}
+
+bool ValidateOptionalStringArray(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_array())
+    {
+        err = path + "." + key + " must be array";
+        return false;
+    }
+    for (size_t i = 0; i < it->size(); i++)
+    {
+        if (!(*it)[i].is_string())
+        {
+            err = path + "." + key + "[" + std::to_string(i) + "] must be string";
+            return false;
+        }
+    }
+    return true;
+}
+
+void RewriteInstrumentSoundError(const std::string& instrumentId, const std::string& channelKey, std::string& err)
+{
+    const std::string channelPrefix = "channels." + channelKey;
+    const std::string targetPrefix = "project.instruments." + instrumentId + ".sound";
+    if (err.rfind(channelPrefix, 0) == 0)
+    {
+        err = targetPrefix + err.substr(channelPrefix.size());
+        return;
+    }
+
+    const std::string parsePrefix = "channel " + channelKey + ": ";
+    if (err.rfind(parsePrefix, 0) == 0)
+    {
+        err = targetPrefix + ": " + err.substr(parsePrefix.size());
+    }
+}
+
+void RewriteChannelMixError(const std::string& channelKey, std::string& err)
+{
+    const std::string mixPrefix = "channelMix " + channelKey + ": ";
+    if (err.rfind(mixPrefix, 0) == 0)
+    {
+        err = "project.channels." + channelKey + ".mix: " + err.substr(mixPrefix.size());
+        return;
+    }
+    const std::string keyPrefix = "channelMix key";
+    if (err.rfind(keyPrefix, 0) == 0)
+    {
+        err = "project.channels." + channelKey + ".mix: " + err;
+    }
 }
 
 bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err)
@@ -249,6 +304,154 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
 
     return true;
 }
+
+bool ValidateInstrumentObject(const Json& instrument, const std::string& path, std::string& err)
+{
+    if (!instrument.is_object())
+    {
+        err = path + " must be object";
+        return false;
+    }
+
+    std::string unused;
+    bool unusedBool = false;
+    if (!ReadOptionalString(instrument, "displayName", path, unused, err)) return false;
+    if (!ReadOptionalString(instrument, "category", path, unused, err)) return false;
+    if (!ReadOptionalBool(instrument, "internal", path, unusedBool, err)) return false;
+    if (!ValidateOptionalStringArray(instrument, "tags", path, err)) return false;
+    if (!ReadOptionalString(instrument, "description", path, unused, err)) return false;
+
+    const auto soundIt = instrument.find("sound");
+    if (soundIt != instrument.end() && !soundIt->is_object())
+    {
+        err = path + ".sound must be object";
+        return false;
+    }
+    return true;
+}
+
+bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::string& err)
+{
+    const Json* instruments = nullptr;
+    const auto instrumentsIt = projectRoot.find("instruments");
+    if (instrumentsIt != projectRoot.end())
+    {
+        if (!instrumentsIt->is_object())
+        {
+            err = "project.instruments must be object";
+            return false;
+        }
+        instruments = &(*instrumentsIt);
+        for (const auto& [id, instrument] : instruments->items())
+        {
+            if (id.empty())
+            {
+                err = "project.instruments key must not be empty";
+                return false;
+            }
+            if (!ValidateInstrumentObject(instrument, "project.instruments." + id, err))
+            {
+                return false;
+            }
+        }
+    }
+
+    const auto channelsIt = projectRoot.find("channels");
+    if (channelsIt == projectRoot.end())
+    {
+        return true;
+    }
+    if (!channelsIt->is_object())
+    {
+        err = "project.channels must be object";
+        return false;
+    }
+
+    for (const auto& [channelKey, channelValue] : channelsIt->items())
+    {
+        int ch = -1;
+        try
+        {
+            ch = std::stoi(channelKey);
+        }
+        catch (...)
+        {
+            err = "project.channels invalid channel key: " + channelKey;
+            return false;
+        }
+        if (ch < 0 || ch > 15)
+        {
+            err = "project.channels channel key out of range: " + channelKey;
+            return false;
+        }
+        if (!channelValue.is_object())
+        {
+            err = "project.channels." + channelKey + " must be object";
+            return false;
+        }
+
+        std::string instrumentId;
+        if (!ReadOptionalString(channelValue, "instrumentId", "project.channels." + channelKey, instrumentId, err))
+        {
+            return false;
+        }
+        if (instrumentId.empty())
+        {
+            err = "project.channels." + channelKey + ".instrumentId is required";
+            return false;
+        }
+        if (instruments == nullptr)
+        {
+            err = "project.instruments is required when channels reference instruments";
+            return false;
+        }
+        const auto instrumentIt = instruments->find(instrumentId);
+        if (instrumentIt == instruments->end())
+        {
+            err = "project.channels." + channelKey + ".instrumentId references unknown instrument '" + instrumentId + "'";
+            return false;
+        }
+        const auto soundIt = instrumentIt->find("sound");
+        if (soundIt == instrumentIt->end())
+        {
+            err = "project.instruments." + instrumentId + ".sound is required";
+            return false;
+        }
+        if (!soundIt->is_object())
+        {
+            err = "project.instruments." + instrumentId + ".sound must be object";
+            return false;
+        }
+
+        Json syntheticSound = Json::object();
+        syntheticSound["channels"] = Json::object();
+        syntheticSound["channels"][channelKey] = *soundIt;
+        if (!LoadChannelsDiff(syntheticSound.dump(), cfg, err))
+        {
+            RewriteInstrumentSoundError(instrumentId, channelKey, err);
+            return false;
+        }
+
+        const auto mixIt = channelValue.find("mix");
+        if (mixIt != channelValue.end())
+        {
+            if (!mixIt->is_object())
+            {
+                err = "project.channels." + channelKey + ".mix must be object";
+                return false;
+            }
+            Json syntheticMix = Json::object();
+            syntheticMix["channelMix"] = Json::object();
+            syntheticMix["channelMix"][channelKey] = *mixIt;
+            if (!LoadChannelMixDiff(syntheticMix.dump(), cfg, err))
+            {
+                RewriteChannelMixError(channelKey, err);
+                return false;
+            }
+        }
+    }
+    return true;
+}
 } // namespace
 
 bool LoadConfigFromText(
@@ -279,7 +482,6 @@ bool LoadConfigFromText(
         return false;
     }
     const Json& configRootJson = *projectIt;
-    const std::string configRoot = configRootJson.dump();
 
     std::string pathValue;
     if (!ReadOptionalString(configRootJson, "midiPath", "project", pathValue, err)) return false;
@@ -318,11 +520,7 @@ bool LoadConfigFromText(
         err = "bits must be 16";
         return false;
     }
-    if (!LoadChannelsDiff(configRoot, cfg, err))
-    {
-        return false;
-    }
-    if (!LoadChannelMixDiff(configRoot, cfg, err))
+    if (!LoadV3InstrumentProject(configRootJson, cfg, err))
     {
         return false;
     }

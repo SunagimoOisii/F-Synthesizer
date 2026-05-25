@@ -1,26 +1,38 @@
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
     "midiPath": "../../assets/midi/solstice_intro.mid",
     "wavPath": "../../output/invalid.wav",
+    "instruments": {
+      "channel_invalid__ch16": {
+        "displayName": "",
+        "category": "",
+        "internal": false,
+        "tags": [],
+        "description": "",
+        "sound": {
+          "amp": 0.5,
+          "attackSec": 0.1,
+          "decaySec": 0.2,
+          "sustainLevel": 0.7,
+          "releaseSec": 0.3,
+          "source": {
+            "type": "waveform",
+            "wave": "sine",
+            "filter": {
+              "mode": "bypass",
+              "cutoffHz": 8000.0,
+              "resonance": 0.707,
+              "drive": 0.0
+            }
+          },
+          "layers": {}
+        }
+      }
+    },
     "channels": {
       "16": {
-        "amp": 0.5,
-        "attackSec": 0.1,
-        "decaySec": 0.2,
-        "sustainLevel": 0.7,
-        "releaseSec": 0.3,
-        "source": {
-          "type": "waveform",
-          "wave": "sine",
-          "filter": {
-            "mode": "bypass",
-            "cutoffHz": 8000.0,
-            "resonance": 0.707,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+        "instrumentId": "channel_invalid__ch16"
       }
     }
   }

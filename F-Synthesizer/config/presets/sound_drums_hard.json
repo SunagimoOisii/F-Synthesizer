@@ -1,29 +1,160 @@
 {
-  "displayName": "Drums Hard",
-  "category": "Drums",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "9": {
-        "amp": 0.25,
-        "attackSec": 0.001,
-        "decaySec": 0.55,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.10,
-        "source": {
-          "type": "drumkit",
-          "map": {
-            "36": { "drumType": "kick", "gain": 1.12, "bodyFreq": 45, "bodyLevel": 1.10, "bodyDecaySec": 0.20, "pitchStart": 5.0, "pitchDecaySec": 0.056, "transientLevel": 0.38, "transientDecaySec": 0.007, "noiseLevel": 0.0, "snapLevel": 0.0, "snapDecaySec": 0.0, "metalLevel": 0.0, "airLevel": 0.0, "decaySec": 0.22, "hpCut": 0, "lpCut": 0, "drive": 0.17, "noiseColor": "pink", "velocityToTone": 0.26, "velocityToDecay": 0.08, "humanizePitchCents": 1.5, "humanizeDecayPct": 0.08 },
-            "38": { "drumType": "snare", "gain": 1.08, "bodyFreq": 190, "bodyLevel": 0.66, "bodyDecaySec": 0.12, "pitchStart": 1.0, "pitchDecaySec": 0.03, "transientLevel": 0.28, "transientDecaySec": 0.007, "noiseLevel": 0.42, "snapLevel": 0.62, "snapDecaySec": 0.060, "metalLevel": 0.06, "airLevel": 0.10, "decaySec": 0.14, "hpCut": 820, "lpCut": 5000, "drive": 0.15, "noiseColor": "pink", "velocityToTone": 0.34, "velocityToDecay": 0.12, "humanizePitchCents": 2.0, "humanizeDecayPct": 0.10 },
-            "42": { "drumType": "hat", "gain": 0.58, "bodyFreq": 7600, "bodyLevel": 0.0, "bodyDecaySec": 0.03, "pitchStart": 1.0, "pitchDecaySec": 0.02, "transientLevel": 0.16, "transientDecaySec": 0.003, "noiseLevel": 0.36, "snapLevel": 0.0, "snapDecaySec": 0.0, "metalLevel": 0.24, "airLevel": 0.16, "decaySec": 0.045, "hpCut": 5600, "lpCut": 9600, "drive": 0.05, "noiseColor": "blue", "velocityToTone": 0.18, "velocityToDecay": 0.10, "humanizePitchCents": 2.0, "humanizeDecayPct": 0.12 },
-            "45": { "drumType": "tom", "gain": 0.78, "bodyFreq": 155, "bodyLevel": 0.74, "bodyDecaySec": 0.18, "pitchStart": 2.1, "pitchDecaySec": 0.070, "transientLevel": 0.13, "transientDecaySec": 0.008, "noiseLevel": 0.0, "snapLevel": 0.0, "snapDecaySec": 0.0, "metalLevel": 0.02, "airLevel": 0.02, "decaySec": 0.20, "hpCut": 0, "lpCut": 0, "drive": 0.08, "noiseColor": "pink", "velocityToTone": 0.24, "velocityToDecay": 0.14, "humanizePitchCents": 2.5, "humanizeDecayPct": 0.12 },
-            "49": { "drumType": "crash", "gain": 0.66, "bodyFreq": 5200, "bodyLevel": 0.0, "bodyDecaySec": 0.05, "pitchStart": 1.0, "pitchDecaySec": 0.02, "transientLevel": 0.08, "transientDecaySec": 0.006, "noiseLevel": 0.30, "snapLevel": 0.0, "snapDecaySec": 0.0, "metalLevel": 0.34, "airLevel": 0.28, "decaySec": 0.70, "hpCut": 4000, "lpCut": 10800, "drive": 0.04, "noiseColor": "blue", "velocityToTone": 0.16, "velocityToDecay": 0.18, "humanizePitchCents": 2.5, "humanizeDecayPct": 0.14 }
+    "instruments": {
+      "sound_drums_hard__ch9": {
+        "displayName": "Drums Hard",
+        "category": "Drums",
+        "internal": false,
+        "tags": [
+          "drums",
+          "hard",
+          "rock"
+        ],
+        "description": "硬めのキックとスネアを持つロックドラム。重いギターリフの下で押し出しを作る。",
+        "sound": {
+          "amp": 0.25,
+          "attackSec": 0.001,
+          "decaySec": 0.55,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "drumkit",
+            "map": {
+              "36": {
+                "drumType": "kick",
+                "gain": 1.12,
+                "bodyFreq": 45,
+                "bodyLevel": 1.1,
+                "bodyDecaySec": 0.2,
+                "pitchStart": 5.0,
+                "pitchDecaySec": 0.056,
+                "transientLevel": 0.38,
+                "transientDecaySec": 0.007,
+                "noiseLevel": 0.0,
+                "snapLevel": 0.0,
+                "snapDecaySec": 0.0,
+                "metalLevel": 0.0,
+                "airLevel": 0.0,
+                "decaySec": 0.22,
+                "hpCut": 0,
+                "lpCut": 0,
+                "drive": 0.17,
+                "noiseColor": "pink",
+                "velocityToTone": 0.26,
+                "velocityToDecay": 0.08,
+                "humanizePitchCents": 1.5,
+                "humanizeDecayPct": 0.08
+              },
+              "38": {
+                "drumType": "snare",
+                "gain": 1.08,
+                "bodyFreq": 190,
+                "bodyLevel": 0.66,
+                "bodyDecaySec": 0.12,
+                "pitchStart": 1.0,
+                "pitchDecaySec": 0.03,
+                "transientLevel": 0.28,
+                "transientDecaySec": 0.007,
+                "noiseLevel": 0.42,
+                "snapLevel": 0.62,
+                "snapDecaySec": 0.06,
+                "metalLevel": 0.06,
+                "airLevel": 0.1,
+                "decaySec": 0.14,
+                "hpCut": 820,
+                "lpCut": 5000,
+                "drive": 0.15,
+                "noiseColor": "pink",
+                "velocityToTone": 0.34,
+                "velocityToDecay": 0.12,
+                "humanizePitchCents": 2.0,
+                "humanizeDecayPct": 0.1
+              },
+              "42": {
+                "drumType": "hat",
+                "gain": 0.58,
+                "bodyFreq": 7600,
+                "bodyLevel": 0.0,
+                "bodyDecaySec": 0.03,
+                "pitchStart": 1.0,
+                "pitchDecaySec": 0.02,
+                "transientLevel": 0.16,
+                "transientDecaySec": 0.003,
+                "noiseLevel": 0.36,
+                "snapLevel": 0.0,
+                "snapDecaySec": 0.0,
+                "metalLevel": 0.24,
+                "airLevel": 0.16,
+                "decaySec": 0.045,
+                "hpCut": 5600,
+                "lpCut": 9600,
+                "drive": 0.05,
+                "noiseColor": "blue",
+                "velocityToTone": 0.18,
+                "velocityToDecay": 0.1,
+                "humanizePitchCents": 2.0,
+                "humanizeDecayPct": 0.12
+              },
+              "45": {
+                "drumType": "tom",
+                "gain": 0.78,
+                "bodyFreq": 155,
+                "bodyLevel": 0.74,
+                "bodyDecaySec": 0.18,
+                "pitchStart": 2.1,
+                "pitchDecaySec": 0.07,
+                "transientLevel": 0.13,
+                "transientDecaySec": 0.008,
+                "noiseLevel": 0.0,
+                "snapLevel": 0.0,
+                "snapDecaySec": 0.0,
+                "metalLevel": 0.02,
+                "airLevel": 0.02,
+                "decaySec": 0.2,
+                "hpCut": 0,
+                "lpCut": 0,
+                "drive": 0.08,
+                "noiseColor": "pink",
+                "velocityToTone": 0.24,
+                "velocityToDecay": 0.14,
+                "humanizePitchCents": 2.5,
+                "humanizeDecayPct": 0.12
+              },
+              "49": {
+                "drumType": "crash",
+                "gain": 0.66,
+                "bodyFreq": 5200,
+                "bodyLevel": 0.0,
+                "bodyDecaySec": 0.05,
+                "pitchStart": 1.0,
+                "pitchDecaySec": 0.02,
+                "transientLevel": 0.08,
+                "transientDecaySec": 0.006,
+                "noiseLevel": 0.3,
+                "snapLevel": 0.0,
+                "snapDecaySec": 0.0,
+                "metalLevel": 0.34,
+                "airLevel": 0.28,
+                "decaySec": 0.7,
+                "hpCut": 4000,
+                "lpCut": 10800,
+                "drive": 0.04,
+                "noiseColor": "blue",
+                "velocityToTone": 0.16,
+                "velocityToDecay": 0.18,
+                "humanizePitchCents": 2.5,
+                "humanizeDecayPct": 0.14
+              }
+            }
           }
         }
       }
+    },
+    "channels": {
+      "9": {
+        "instrumentId": "sound_drums_hard__ch9"
+      }
     }
-  },
-  "tags": ["drums", "hard", "rock"],
-  "description": "硬めのキックとスネアを持つロックドラム。重いギターリフの下で押し出しを作る。"
+  }
 }

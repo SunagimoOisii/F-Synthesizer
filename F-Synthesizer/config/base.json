@@ -1,11 +1,12 @@
 {
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
     "wavPath": "../output/test.wav",
     "targetChannel": -1,
     "initialSeconds": 6,
     "bits": 16,
     "sampleRate": 44100,
-    "extraReleaseSec": 0.3
+    "extraReleaseSec": 0.3,
+    "instruments": {}
   }
 }

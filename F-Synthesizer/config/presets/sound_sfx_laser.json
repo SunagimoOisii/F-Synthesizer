@@ -1,136 +1,143 @@
 {
-  "displayName": "SFX Laser",
-  "category": "SFX",
-  "internal": false,
-  "format": "projectModel.v2",
+  "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "amp": 0.12,
-        "attackSec": 0.001,
-        "decaySec": 0.2,
-        "sustainLevel": 0.0,
-        "releaseSec": 0.12,
-        "source": {
-          "type": "fm",
-          "algorithm": 0,
-          "feedback": 0.08,
-          "ops": [
-            {
-              "wave": "sine",
-              "ratio": 2,
-              "level": 0.6724,
-              "index": 1.056,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.24,
-                "sustainLevel": 0.08,
-                "releaseSec": 0.08,
-                "curve": 0.8
+    "instruments": {
+      "sound_sfx_laser__ch0": {
+        "displayName": "SFX Laser",
+        "category": "SFX",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "laser",
+          "fm",
+          "accent"
+        ],
+        "description": "短いレーザー効果音。耳に刺さる高域を抑えた、アクセント向けのレトロSFX。",
+        "sound": {
+          "amp": 0.12,
+          "attackSec": 0.001,
+          "decaySec": 0.2,
+          "sustainLevel": 0.0,
+          "releaseSec": 0.12,
+          "source": {
+            "type": "fm",
+            "algorithm": 0,
+            "feedback": 0.08,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.6724,
+                "index": 1.056,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.24,
+                  "sustainLevel": 0.08,
+                  "releaseSec": 0.08,
+                  "curve": 0.8
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.0,
+                  "releaseSec": 0.04,
+                  "curve": 0.95
+                }
               },
-              "indexEnv": {
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.3116,
+                "index": 0.384,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.24,
+                  "sustainLevel": 0.08,
+                  "releaseSec": 0.08,
+                  "curve": 0.8
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.0,
+                  "releaseSec": 0.04,
+                  "curve": 0.95
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 4,
+                "level": 0.2132,
+                "index": 0.168,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.24,
+                  "sustainLevel": 0.08,
+                  "releaseSec": 0.08,
+                  "curve": 0.8
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.0,
+                  "releaseSec": 0.04,
+                  "curve": 0.95
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 0.5,
+                "level": 0.123,
+                "index": 0.0,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.24,
+                  "sustainLevel": 0.0,
+                  "releaseSec": 0.08,
+                  "curve": 0.8
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.02,
+                  "sustainLevel": 1.0,
+                  "releaseSec": 0.05,
+                  "curve": 0.0
+                }
+              }
+            ],
+            "drive": 0.0,
+            "modulation": {
+              "env2": {
                 "attackSec": 0.0,
-                "decaySec": 0.09,
+                "decaySec": 0.2,
                 "sustainLevel": 0.0,
                 "releaseSec": 0.04,
-                "curve": 0.95
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 1,
-              "level": 0.3116,
-              "index": 0.384,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.24,
-                "sustainLevel": 0.08,
-                "releaseSec": 0.08,
-                "curve": 0.8
+                "curve": 0.75
               },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.0,
-                "releaseSec": 0.04,
-                "curve": 0.95
+              "routes": {
+                "0": {
+                  "source": "env2",
+                  "destination": "fm.index",
+                  "amount": 0.5,
+                  "enabled": true
+                }
               }
             },
-            {
-              "wave": "sine",
-              "ratio": 4,
-              "level": 0.2132,
-              "index": 0.168,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.24,
-                "sustainLevel": 0.08,
-                "releaseSec": 0.08,
-                "curve": 0.8
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.09,
-                "sustainLevel": 0.0,
-                "releaseSec": 0.04,
-                "curve": 0.95
-              }
-            },
-            {
-              "wave": "sine",
-              "ratio": 0.5,
-              "level": 0.123,
-              "index": 0.0,
-              "levelEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.24,
-                "sustainLevel": 0.0,
-                "releaseSec": 0.08,
-                "curve": 0.8
-              },
-              "indexEnv": {
-                "attackSec": 0.0,
-                "decaySec": 0.02,
-                "sustainLevel": 1.0,
-                "releaseSec": 0.05,
-                "curve": 0.0
-              }
-            }
-          ],
-          "drive": 0.0,
-          "modulation": {
-            "env2": {
-              "attackSec": 0.0,
-              "decaySec": 0.2,
-              "sustainLevel": 0.0,
-              "releaseSec": 0.04,
-              "curve": 0.75
-            },
-            "routes": {
-              "0": {
-                "source": "env2",
-                "destination": "fm.index",
-                "amount": 0.5,
-                "enabled": true
-              }
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 5600,
+              "resonance": 0.78,
+              "drive": 0.0
             }
           },
-          "filter": {
-            "mode": "lowpass",
-            "cutoffHz": 5600,
-            "resonance": 0.78,
-            "drive": 0.0
-          }
-        },
-        "layers": {}
+          "layers": {}
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_sfx_laser__ch0"
       }
     }
-  },
-  "tags": [
-    "sfx",
-    "laser",
-    "fm",
-    "accent"
-  ],
-  "description": "短いレーザー効果音。耳に刺さる高域を抑えた、アクセント向けのレトロSFX。"
+  }
 }

@@ -1,7 +1,7 @@
 # 長期改変計画: Instrument Model から Preset 再編、GUI 再設計まで
 
 この文書は、F-Synthesizer の次の大きな構造変更を AI コンテキスト圧縮後も引き継げるようにするための長期計画です。
-現在の `projectModel.v2` は Config / Schema 整理済みの足場として固定し、Instrument Model 導入時には `projectModel.v3` を切ります。
+現在は Phase 2 の最小導入により `projectModel.v3` を使い、Instrument / Sound Card を音色定義の正本へ移す足場を作っています。
 
 ## 基本方針
 
@@ -9,7 +9,7 @@
 - `channel` は音色そのものではなく、Instrument の割当、音量、パン、演奏設定、必要最小限の override を持つ器に寄せる。
 - `ProjectModel`、`AppConfig`、`RenderConfig`、`GUIState`、`GUIProjectFacade` の責務を分け、保存形式、実行設定、GUI 一時状態、renderer 入力を混ぜない。
 - GUI の大枠は `Play / Compose / Export / Advanced` を維持するが、中身の責務とデータ接続は作り直す。
-- 破壊的変更は許容する。v2 互換読み込みは原則残さず、必要なら一時的な機械変換で v3 へ移す。
+- 破壊的変更は許容する。旧 format 互換読み込みは原則残さず、必要なら一時的な機械変換で次 format へ移す。
 - 実音の意味的な preset 再設計は Instrument Model 導入後に行う。
 
 ## Phase 1: モデル境界整理
@@ -40,7 +40,8 @@
 - channel は Instrument 参照、channel mix、演奏割当、必要最小限の channel-local override を持つ。
 - legacy `source`、`layers`、`expressionMap` は Instrument 内部へ移すか、Instrument 生成時の互換入力として畳む。
 - `projectModel.v2` は v3 loader の読み込み対象外にする。
-- 既存 config / preset は、必要に応じて一時変換スクリプトで v3 へ機械移行する。
+- 既存 config / preset / sample は v3 へ機械移行済みとし、意味的な preset 再設計は Phase 4 で行う。
+- Phase 2 の最小導入では `project.instruments.<id>.sound` に legacy `ChannelConfig` 相当を内包し、`project.channels.<ch>.instrumentId` から参照する。
 
 完了条件:
 
@@ -155,7 +156,7 @@ GUI 再設計時は追加で次を確認する。
 
 ## 判断メモ
 
-- `projectModel.v2` は Config / Schema 整理済みの足場であり、Instrument Model の最終形ではない。
+- `projectModel.v2` は Config / Schema 整理済みの足場だったが、Instrument Model の最終形ではない。
 - `projectModel.v3` は Sound Card / Instrument を正本にするための破壊的変更として扱う。
-- v2 互換を残すより、committed config / preset を機械移行して v3 を正本にする。
+- v2 互換を残さず、committed config / preset / sample は機械移行して v3 を正本にする。
 - GUI の画面名は維持するが、内部の責務と data flow は v3 に合わせて作り直す。
