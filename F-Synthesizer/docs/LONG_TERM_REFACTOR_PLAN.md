@@ -1,7 +1,7 @@
 # 長期改変計画: Instrument Model から Preset 再編、GUI 再設計まで
 
 この文書は、F-Synthesizer の次の大きな構造変更を AI コンテキスト圧縮後も引き継げるようにするための長期計画です。
-現在は Phase 2 の最小導入により `projectModel.v3` を使い、Instrument / Sound Card を音色定義の正本へ移す足場を作っています。
+現在は Phase 5 により、`projectModel.v3` の Sound Card / Instrument を GUI 主要導線から扱うための Facade / view model 境界を固定しています。
 
 ## 基本方針
 
@@ -92,12 +92,14 @@
 - GUI は `ProjectModel` を直接細かく編集せず、Facade / view model 経由で Instrument と channel assignment を操作する。
 - preset 読み込み、Sound Card 選択、macro 編集、channel 割当の責務を GUI `.inl` から外す。
 - GUI 状態保存は project 保存形式と混ぜない。
+- Phase 5 実装後は、Sound Card catalog を `GUIPresetItem` view model として扱い、Play / Compose の主要導線、Layer2 macro、preview / export project 構築を `GUIProjectFacade` 経由へ寄せている。
+- Advanced の詳細 Channel Editor には legacy `ChannelConfig` 直接編集が残る。これは Phase 6/7 の GUI 再設計と legacy cleanup で削る。
 
 完了条件:
 
-- GUI `.inl` 群に音色契約や保存形式の知識が増えない。
-- Sound Card 選択、macro 編集、channel assignment が Facade / view model 経由で動く。
+- Play / Compose の Sound Card 選択、macro 編集、channel assignment が Facade / view model 経由で動く。
 - preview と export が同じ project / render 変換を使う。
+- GUI state storage は `config/gui_state.json` の既存 schema を維持し、project 保存形式と混ざらない。
 
 ## Phase 6: GUI 再設計
 

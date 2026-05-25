@@ -35,7 +35,7 @@ GUI 状態に依存しません。
 ## 守る境界
 
 - GUI は編集、表示、プレビュー操作を担当し、音生成アルゴリズムを直接実装しない。
-- App は CLI/GUI からの実行条件を `AppConfig` と `RenderOptions` にそろえる。
+- App は CLI/GUI からの実行条件を `ProjectModel`、`RenderOptions`、runtime override にそろえる。
 - Core は app から SynthEngine への薄い実行境界に保つ。
 - SynthEngine は音生成、voice、modulation、filter、mix/effects の実行時処理に集中する。
 - Config は JSON load/save、preset merge、schema validation を担当し、GUI と renderer に同じ契約を重複させない。
@@ -46,10 +46,11 @@ GUI 状態に依存しません。
 保存、GUI、実行時レンダリングの境界は、次のモデルで分けます。
 
 - `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力する。
-- `AppConfig`: CLI/GUI 実行境界。`ProjectModel` から生成し、preview override など実行時だけの入力をここに残す。
-- `RenderConfig`: SynthEngine へ渡す実行用モデル。App 層で既定値を解決してから作り、GUI や保存形式に依存しない render 入力にする。
-- GUI Facade: 既存画面コードから `ProjectModel` へアクセスするための中間層。`BuildProjectModelFromGUI` / `ApplyProjectModelToGUI` を変換点にする。
-- `GUIState`: 互換用の集約型。内部は永続状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
+- `AppConfig`: legacy 互換や一部補助処理に残る移行型。Run 境界の正本にはしない。
+- `RenderConfig`: SynthEngine へ渡す実行用モデル。`ProjectModel` と runtime override から作り、GUI や保存形式に依存しない render 入力にする。
+- `GUIProjectFacade`: 既存画面コードから `ProjectModel` へ接続する中間層。sound slot、channel assignment、mix、macro、preview/export project 構築の正規入口にする。
+- Preset view model: GUI の Sound Card 一覧は `GUIPresetItem` として扱い、表示コードは v3 JSON shape や metadata 配列を直接知らない。
+- `GUIState`: 互換用の集約型。内部は永続 project/workspace 状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
 
 ## 肥大化リスク
 
@@ -60,12 +61,12 @@ GUI 状態に依存しません。
 
 ## 実行フロー
 
-1. CLI または GUI が `AppConfig` を作る。
-2. 設定読み込みが `base.json`、任意の preset JSON、明示 config、GUI 編集状態をマージする。
+1. CLI または GUI が `ProjectModel` を作る。
+2. 設定読み込みが `base.json`、任意の preset JSON、明示 config、GUI 編集状態を `ProjectModel` へ反映する。
 3. MIDI 入力を時間付きの音楽イベントへ解析する。
 4. Sequencer が音楽時間を sample 基準の render event へ変換する。
 5. `SynthEngine` が source voice をレンダリングし、modulation と common shaping を適用し、channel mix と master effects を処理する。
-6. `Writer` が WAV を書き出す。GUI preview も可能な限り同じ実行経路を使う。
+6. `Writer` が WAV を書き出す。GUI preview / export も同じ `ProjectModel -> RenderConfig -> SynthEngine` 経路を使う。
 
 ## 設定と音源
 
@@ -96,6 +97,7 @@ GUI 状態に依存しません。
 - Piano-roll 編集と drum step-sequencer 編集は、preview と export の両方へ反映する。
 - GUI 状態は `config/gui_state.json` に保存する。Piano-roll project は `config/piano_roll_project.json` に保存する。
 - GUI code は sound synthesis を直接実装せず、`ProjectModel` を作って app/core のレンダリング経路を呼ぶ。
+- GUI の主要導線は `GUIProjectFacade` と `GUIPresetItem` を通して Sound Card、macro、channel assignment、mix を操作する。Advanced の詳細 Channel Editor は Phase 6/7 まで legacy direct edit を一部残す。
 
 ## 音とレンダリング契約
 

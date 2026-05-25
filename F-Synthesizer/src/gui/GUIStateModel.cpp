@@ -30,7 +30,7 @@ AppConfig BuildConfigFromGUI(const GUIState& state)
         auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
         for (int ch = 0; ch < 16; ch++)
         {
-            const int src = std::clamp(state.channelAssignments[ch], 0, 15);
+            const int src = AssignedSoundSlot(state, ch);
             (*remapped)[ch] = (*state.channelConfigs)[src];
         }
         cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(remapped);
@@ -58,7 +58,7 @@ void InitializeGUIState(
     state.tonePreviewNoteNumber = 60;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
-    strncpy_s(state.presetName, sizeof(state.presetName), "retro_heavy_fm_brass_ensemble", _TRUNCATE);
+    strncpy_s(state.presetName, sizeof(state.presetName), "sound_lead_blade", _TRUNCATE);
     state.running = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.hasRun = false;
@@ -93,7 +93,7 @@ void InitializeGUIState(
         refreshPresetItems(state.presetName);
     }
 
-    state.soloPreviewBackup = *state.channelMixStates;
+    state.soloPreviewBackup = MutableChannelMixStates(state);
 }
 
 void RepairGUIStatePaths(
@@ -338,7 +338,7 @@ void RepairGUIStatePaths(
     {
         if (state.channelAssignments[ch] < 0 || state.channelAssignments[ch] > 15)
         {
-            state.channelAssignments[ch] = std::clamp(state.channelAssignments[ch], 0, 15);
+            SetChannelAssignment(state, ch, state.channelAssignments[ch]);
             repaired = true;
         }
     }
@@ -346,7 +346,7 @@ void RepairGUIStatePaths(
     EnsureChannelMixStates(state);
     for (int ch = 0; ch < 16; ch++)
     {
-        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        ChannelMixState& mix = MutableChannelMix(state, ch);
         bool mixRepaired = false;
         if (mix.level < 0.0 || mix.level > 2.0)
         {

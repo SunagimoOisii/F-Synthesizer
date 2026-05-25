@@ -35,8 +35,8 @@ MacroLabels GetMacroLabels(const SourceConfig& src)
 void ApplyAndTriggerPreview(GUIState& state, int ch)
 {
     gui::EnsureChannelConfigs(state);
-    ChannelConfig& cfg = (*state.channelConfigs)[ch];
-    const MacroSliderState& sl = state.macroSliders[ch];
+    ChannelConfig& cfg = gui::MutableSoundSlot(state, ch);
+    const MacroSliderState& sl = gui::ReadMacroSliders(state, ch);
 
     if (std::holds_alternative<DrumKitConfig>(cfg.source))
     {
@@ -74,8 +74,8 @@ void DrawLayer2Macros(GUIState& state)
 
     gui::EnsureChannelConfigs(state);
     const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
-    ChannelConfig& cfg = (*state.channelConfigs)[ch];
-    MacroSliderState& sliders = state.macroSliders[ch];
+    ChannelConfig& cfg = gui::MutableSoundSlot(state, ch);
+    MacroSliderState& sliders = gui::MutableMacroSliders(state, ch);
     const MacroLabels labels = GetMacroLabels(cfg.source);
 
     // --- Undo 用 before スナップショット（スライダーのドラッグ開始時にキャプチャ） ---

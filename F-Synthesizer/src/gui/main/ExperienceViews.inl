@@ -1,7 +1,7 @@
 namespace
 {
 static constexpr const char* kPlayCategories[] = {
-    "All", "Piano/Keys", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Lead", "Pad", "Drums", "SFX"
+    "All", "Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support"
 };
 
 static int PlayCategoryIndexByName(const char* category)
@@ -22,22 +22,22 @@ static int PlayCategoryIndexByName(const char* category)
 
 static const std::string& PresetDisplayName(const GUIState& state, int index)
 {
-    if (index >= 0 && index < static_cast<int>(state.presetItemDisplayNames.size())
-        && !state.presetItemDisplayNames[static_cast<size_t>(index)].empty())
+    if (index >= 0 && index < static_cast<int>(state.presetItems.size())
+        && !state.presetItems[static_cast<size_t>(index)].displayName.empty())
     {
-        return state.presetItemDisplayNames[static_cast<size_t>(index)];
+        return state.presetItems[static_cast<size_t>(index)].displayName;
     }
-    return state.presetItems[static_cast<size_t>(index)];
+    return state.presetItems[static_cast<size_t>(index)].name;
 }
 
 static std::string PresetCategory(const GUIState& state, int index)
 {
-    if (index >= 0 && index < static_cast<int>(state.presetItemCategories.size())
-        && !state.presetItemCategories[static_cast<size_t>(index)].empty())
+    if (index >= 0 && index < static_cast<int>(state.presetItems.size())
+        && !state.presetItems[static_cast<size_t>(index)].category.empty())
     {
-        return state.presetItemCategories[static_cast<size_t>(index)];
+        return state.presetItems[static_cast<size_t>(index)].category;
     }
-    return "Piano/Keys";
+    return "Keys";
 }
 
 static const char* ComposeGMCategoryLabel(const GUIState& state, int channel)
@@ -72,9 +72,9 @@ static bool CategoryHasPreset(const GUIState& state, const char* category)
 
 static std::string PresetDescription(const GUIState& state, int index)
 {
-    if (index >= 0 && index < static_cast<int>(state.presetItemDescriptions.size()))
+    if (index >= 0 && index < static_cast<int>(state.presetItems.size()))
     {
-        return state.presetItemDescriptions[static_cast<size_t>(index)];
+        return state.presetItems[static_cast<size_t>(index)].description;
     }
     return {};
 }
@@ -93,19 +93,14 @@ static std::string ChannelLabel(int channel)
 static std::string SoundSourceLabel(const GUIState& state, int soundIndex)
 {
     soundIndex = std::clamp(soundIndex, 0, 15);
-    if (!state.channelConfigs)
-    {
-        return "-";
-    }
-
-    const config::SourceKind sourceKind = config::SourceConfigKind((*state.channelConfigs)[soundIndex].source);
+    const config::SourceKind sourceKind = config::SourceConfigKind(gui::ReadSoundSlot(state, soundIndex).source);
     return config::SourceKindToDisplayName(sourceKind);
 }
 
 static std::string ChannelSoundLabel(const GUIState& state, int channel)
 {
     channel = std::clamp(channel, 0, 15);
-    const int soundIndex = std::clamp(state.channelAssignments[channel], 0, 15);
+    const int soundIndex = gui::AssignedSoundSlot(state, channel);
     return SoundSourceLabel(state, soundIndex);
 }
 
@@ -135,7 +130,7 @@ static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
                 const std::string label = ChannelLabel(ch);
                 if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 0.0f)))
                 {
-                    state.channelAssignments[ch] = soundIndex;
+                    gui::SetChannelAssignment(state, ch, soundIndex);
                     state.pianoRoll.displayChannel = ch;
                     state.playEditingChannel = -1;
                     state.UIModeTab = 1;
@@ -271,7 +266,7 @@ static void DrawPlayView(
 
         DrawLayer2Macros(state);
         const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-        if (config::UsesDrumKitNoteSelection((*state.channelConfigs)[slot].source))
+        if (config::UsesDrumKitNoteSelection(gui::ReadSoundSlot(state, slot).source))
         {
             DrawDrumPadPreview(state);
         }
@@ -448,7 +443,7 @@ static void DrawComposeView(
                     if (ImGui::Button("探す"))
                     {
                         state.pianoRoll.displayChannel = ch;
-                        state.selectedSoundSlot = std::clamp(state.channelAssignments[ch], 0, 15);
+                        state.selectedSoundSlot = gui::AssignedSoundSlot(state, ch);
                         state.playEditingChannel = ch;
                         state.playCategoryIndex = PlayCategoryIndexByName(category);
                         state.UIModeTab = 0;
@@ -467,13 +462,13 @@ static void DrawComposeView(
     ImGui::Separator();
     const int displayCh = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     ImGui::Text("表示チャンネル: %s", ChannelLabel(displayCh).c_str());
-    int assigned = std::clamp(state.channelAssignments[displayCh], 0, 15);
+    int assigned = gui::AssignedSoundSlot(state, displayCh);
     ImGui::Text("このチャンネルの音色: %s", SoundSourceLabel(state, assigned).c_str());
     int assignedSoundNumber = assigned + 1;
     ImGui::SetNextItemWidth(220.0f);
     if (ImGui::SliderInt("音色の選択", &assignedSoundNumber, 1, 16, "%d"))
     {
-        state.channelAssignments[displayCh] = std::clamp(assignedSoundNumber - 1, 0, 15);
+        gui::SetChannelAssignment(state, displayCh, assignedSoundNumber - 1);
         state.presetDirty = true;
     }
     updateHoverHelp("表示中チャンネルで鳴る音色を選びます。", "Playで作った音色を曲のチャンネルに使います。", nullptr);
@@ -482,7 +477,7 @@ static void DrawComposeView(
     {
         state.UIModeTab = 3;
     }
-    ChannelMixState& displayMix = (*state.channelMixStates)[displayCh];
+    ChannelMixState& displayMix = gui::MutableChannelMix(state, displayCh);
     auto sliderMixDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
     {
         float v = static_cast<float>(value);
@@ -504,8 +499,8 @@ static void DrawComposeView(
 
     auto applyDrumCh10Setup = [&]()
     {
-        state.channelAssignments[drumMidiChannel] = drumMidiChannel;
-        ChannelConfig& drumCh = (*state.channelConfigs)[drumMidiChannel];
+        gui::SetChannelAssignment(state, drumMidiChannel, drumMidiChannel);
+        ChannelConfig& drumCh = gui::MutableSoundSlot(state, drumMidiChannel);
         if (!config::SourceCapabilityOf(drumCh.source).isPercussion)
         {
             drumCh.source = config::DefaultSourceConfig(config::SourceKind::DrumKit);
@@ -551,7 +546,7 @@ static void DrawAdvancedView(
         {
             const bool selected = state.presetIndex == i;
             std::string label = PresetDisplayName(state, i);
-            if (i < static_cast<int>(state.presetItemInternal.size()) && state.presetItemInternal[static_cast<size_t>(i)])
+            if (state.presetItems[static_cast<size_t>(i)].internalOnly)
             {
                 label += "  [demo]";
             }
@@ -656,18 +651,18 @@ static void DrawAdvancedView(
             };
             for (int ch = 0; ch < 16; ch++)
             {
-                ChannelMixState& mix = (*state.channelMixStates)[ch];
+                ChannelMixState& mix = gui::MutableChannelMix(state, ch);
                 ImGui::TableNextRow();
                 ImGui::PushID(ch);
                 ImGui::TableSetColumnIndex(0);
                 ImGui::TextUnformatted(ChannelLabel(ch).c_str());
                 ImGui::TableSetColumnIndex(1);
-                int assigned = std::clamp(state.channelAssignments[ch], 0, 15);
+                int assigned = gui::AssignedSoundSlot(state, ch);
                 int assignedSoundNumber = assigned + 1;
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 if (ImGui::SliderInt("##assign", &assignedSoundNumber, 1, 16, "%d"))
                 {
-                    state.channelAssignments[ch] = std::clamp(assignedSoundNumber - 1, 0, 15);
+                    gui::SetChannelAssignment(state, ch, assignedSoundNumber - 1);
                     state.presetDirty = true;
                 }
                 ImGui::TableSetColumnIndex(2);

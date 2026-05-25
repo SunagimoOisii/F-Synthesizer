@@ -33,7 +33,17 @@ struct GUIStepSeqState
     }
 };
 
-// GUI状態のうち、GUI state storage に保存する値、またはProjectModelへ反映される値。
+struct GUIPresetItem
+{
+    std::string name{};
+    std::vector<std::string> tags{};
+    std::string description{};
+    std::string displayName{};
+    std::string category{};
+    bool internalOnly = false;
+};
+
+// GUI state storage に保存する値、またはProjectModelへ反映される値。
 // projectModel の保存形式そのものではなく、GUI の復元に必要な永続状態を表す。
 struct GUIPersistentState
 {
@@ -57,13 +67,6 @@ struct GUIPersistentState
     bool chordModeEnabled = false;
     int chordType = 0; // 0=Major 1=Minor 2=7th 3=Minor7th 4=Sus4
     char presetName[128]{ "custom" };
-    bool presetDirty = false;
-    std::vector<std::string> presetItems{};
-    std::vector<std::vector<std::string>> presetItemTags{};
-    std::vector<std::string> presetItemDescriptions{};
-    std::vector<std::string> presetItemDisplayNames{};
-    std::vector<std::string> presetItemCategories{};
-    std::vector<bool> presetItemInternal{};
     std::string lastOutputPath{};
     std::string lastPresetPath{};
     std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
@@ -110,6 +113,8 @@ struct GUITransientState
     int playCategoryIndex = 0;
     int playEditingChannel = -1;
     bool playInspectorOpen = true;
+    bool presetDirty = false;
+    std::vector<GUIPresetItem> presetItems{};
 };
 
 // 非同期Run/Preview再生に関係する状態。project/config 保存対象にはしない。

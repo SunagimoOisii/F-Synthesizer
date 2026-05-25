@@ -20,6 +20,7 @@
 #include "gui/GUIMacroMapping.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/GUIPlatform.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIState.h"
 #include "gui/GUIStateModel.h"
 #include "gui/GUIStatePersistence.h"

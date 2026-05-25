@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "gui/GUIState.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIStateModel.h" // for EnsureChannelConfigs
 
 void PushSoundHistoryEntry(
@@ -31,8 +32,8 @@ void ApplySoundHistoryEntry(GUIState& state, const SoundUndoEntry& entry)
 {
     gui::EnsureChannelConfigs(state);
     const int slot = std::clamp(entry.slot, 0, 15);
-    (*state.channelConfigs)[slot] = entry.channelConfig;
-    state.macroSliders[slot] = entry.macroSliders;
+    gui::MutableSoundSlot(state, slot) = entry.channelConfig;
+    gui::MutableMacroSliders(state, slot) = entry.macroSliders;
     state.presetDirty = true;
 }
 
@@ -48,8 +49,8 @@ bool UndoSound(GUIState& state)
     gui::EnsureChannelConfigs(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.channelConfig = (*state.channelConfigs)[slot];
-    current.macroSliders = state.macroSliders[slot];
+    current.channelConfig = gui::ReadSoundSlot(state, slot);
+    current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundRedoStack.push_back(std::move(current));
 
     // Undo スタックから取り出して適用
@@ -70,8 +71,8 @@ bool RedoSound(GUIState& state)
     gui::EnsureChannelConfigs(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.channelConfig = (*state.channelConfigs)[slot];
-    current.macroSliders = state.macroSliders[slot];
+    current.channelConfig = gui::ReadSoundSlot(state, slot);
+    current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundUndoStack.push_back(std::move(current));
 
     // Redo スタックから取り出して適用

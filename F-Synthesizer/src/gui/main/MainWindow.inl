@@ -117,11 +117,11 @@ auto preparePlayPresetTarget = [&]()
         return;
     }
     gui::EnsureChannelConfigs(state);
-    const int currentSound = std::clamp(state.channelAssignments[targetCh], 0, 15);
+    const int currentSound = gui::AssignedSoundSlot(state, targetCh);
     int users = 0;
     for (int ch = 0; ch < 16; ++ch)
     {
-        if (std::clamp(state.channelAssignments[ch], 0, 15) == currentSound)
+        if (gui::AssignedSoundSlot(state, ch) == currentSound)
         {
             ++users;
         }
@@ -135,7 +135,7 @@ auto preparePlayPresetTarget = [&]()
     bool used[16]{};
     for (int ch = 0; ch < 16; ++ch)
     {
-        used[std::clamp(state.channelAssignments[ch], 0, 15)] = true;
+        used[gui::AssignedSoundSlot(state, ch)] = true;
     }
     int freeSound = -1;
     for (int i = 0; i < 16; ++i)
@@ -153,9 +153,9 @@ auto preparePlayPresetTarget = [&]()
         return;
     }
 
-    (*state.channelConfigs)[freeSound] = (*state.channelConfigs)[currentSound];
-    state.macroSliders[freeSound] = state.macroSliders[currentSound];
-    state.channelAssignments[targetCh] = freeSound;
+    gui::MutableSoundSlot(state, freeSound) = gui::ReadSoundSlot(state, currentSound);
+    gui::MutableMacroSliders(state, freeSound) = gui::ReadMacroSliders(state, currentSound);
+    gui::SetChannelAssignment(state, targetCh, freeSound);
     state.selectedSoundSlot = freeSound;
     state.presetDirty = true;
     AppendGUILog(state, "[GUI] " + ChannelLabel(targetCh) + " sound isolated before preset apply.");
@@ -173,7 +173,7 @@ auto applyPresetByIndex = [&](int idx)
     {
         state.presetDirty = false;
         requestAutoTonePreview();
-        AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[idx] +
+        AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[static_cast<size_t>(idx)].name +
             " -> sound " + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15) + 1));
     }
     else
@@ -216,7 +216,7 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
             {
                 const int ch = std::clamp(state.pianoRoll.displayChannel, 0, 15);
                 state.playEditingChannel = ch;
-                state.selectedSoundSlot = std::clamp(state.channelAssignments[ch], 0, 15);
+                state.selectedSoundSlot = gui::AssignedSoundSlot(state, ch);
             }
             else if (state.UIModeTab != 0)
             {
@@ -251,12 +251,9 @@ if (ImGui::BeginTable("top_header_row", 2, ImGuiTableFlags_SizingStretchSame))
     ImGui::TableSetColumnIndex(1);
     const int selectedSlotChip = std::clamp(state.selectedSoundSlot, 0, 15);
     const char* sourceChip = "-";
-    if (state.channelConfigs)
-    {
-        const config::SourceKind sourceKindChip =
-            config::SourceConfigKind((*state.channelConfigs)[selectedSlotChip].source);
-        sourceChip = config::SourceKindToDisplayName(sourceKindChip);
-    }
+    const config::SourceKind sourceKindChip =
+        config::SourceConfigKind(gui::ReadSoundSlot(state, selectedSlotChip).source);
+    sourceChip = config::SourceKindToDisplayName(sourceKindChip);
     if (ImGui::BeginTable("top_header_chips", 5, ImGuiTableFlags_SizingStretchProp))
     {
         static const char* uiThemes[] = { "Light", "Dark" };

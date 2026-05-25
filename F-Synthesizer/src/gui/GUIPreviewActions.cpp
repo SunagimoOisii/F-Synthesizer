@@ -139,13 +139,8 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForChord
 
 int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
 {
-    if (!state.channelConfigs)
-    {
-        return 60;
-    }
-
     slot = std::clamp(slot, 0, 15);
-    const SourceConfig& src = (*state.channelConfigs)[slot].source;
+    const SourceConfig& src = gui::ReadSoundSlot(state, slot).source;
     if (!config::UsesDrumKitNoteSelection(src))
     {
         return std::clamp(state.tonePreviewNoteNumber, 0, 127);
@@ -176,60 +171,6 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
         return 36;
     }
     return std::clamp(state.tonePreviewNoteNumber, 0, 127);
-}
-
-std::string RuntimeInstrumentId(int ch)
-{
-    return "gui_tone_preview__ch" + std::to_string(ch);
-}
-
-ProjectModel BuildTonePreviewProjectFromGUI(GUIState& state)
-{
-    ProjectModel project = gui::BuildProjectModelFromGUI(state);
-    auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>();
-    auto projectChannels = std::make_shared<std::array<ProjectChannelConfig, 16>>();
-
-    const auto& channelConfigs = state.channelConfigs ? *state.channelConfigs : gui::ReadChannelConfigs(state);
-    const auto& channelMixStates = state.channelMixStates ? *state.channelMixStates : gui::ReadChannelMixStates(state);
-
-    for (int ch = 0; ch < 16; ch++)
-    {
-        const std::string id = RuntimeInstrumentId(ch);
-        InstrumentConfig instrument{};
-        instrument.sound = channelConfigs[ch];
-        instruments->emplace(id, instrument);
-
-        ProjectChannelConfig projectChannel{};
-        projectChannel.enabled = true;
-        projectChannel.instrumentId = id;
-        projectChannel.mix = channelMixStates[ch];
-        (*projectChannels)[ch] = projectChannel;
-    }
-
-    project.channelConfigs = std::make_shared<const std::array<ChannelConfig, 16>>(channelConfigs);
-    project.channelMixStates = std::make_shared<const std::array<ChannelMixState, 16>>(channelMixStates);
-    project.instruments = instruments;
-    project.projectChannels = projectChannels;
-    return project;
-}
-
-void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, ProjectModel& project)
-{
-    if (!state.channelConfigs || !project.instruments || !project.projectChannels)
-    {
-        return;
-    }
-
-    previewChannel = std::clamp(previewChannel, 0, 15);
-    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    auto mutableInstruments = std::make_shared<std::map<std::string, InstrumentConfig>>(*project.instruments);
-    const std::string instrumentId = (*project.projectChannels)[previewChannel].instrumentId;
-    auto it = mutableInstruments->find(instrumentId);
-    if (it != mutableInstruments->end())
-    {
-        it->second.sound = (*state.channelConfigs)[slot];
-    }
-    project.instruments = mutableInstruments;
 }
 
 std::string FormatPreviewException(const std::exception& ex)
@@ -335,11 +276,11 @@ void ActivateSoloPreview(GUIState& state, int channel)
     channel = std::clamp(channel, 0, 15);
     if (!state.soloPreviewActive)
     {
-        state.soloPreviewBackup = *state.channelMixStates;
+        state.soloPreviewBackup = MutableChannelMixStates(state);
     }
     for (int ch = 0; ch < 16; ch++)
     {
-        ChannelMixState& mix = (*state.channelMixStates)[ch];
+        ChannelMixState& mix = MutableChannelMix(state, ch);
         mix.solo = (ch == channel);
         if (ch == channel)
         {
@@ -353,11 +294,11 @@ void ActivateSoloPreview(GUIState& state, int channel)
 
 void DeactivateSoloPreview(GUIState& state)
 {
-    if (!state.soloPreviewActive || !state.channelMixStates)
+    if (!state.soloPreviewActive)
     {
         return;
     }
-    *state.channelMixStates = state.soloPreviewBackup;
+    MutableChannelMixStates(state) = state.soloPreviewBackup;
     AppendGUILog(state, "[GUI] Solo Preview OFF: restore previous mix state");
     state.soloPreviewActive = false;
     state.restorePreviewOnRunComplete = false;
@@ -388,9 +329,9 @@ void StartGUISoundTonePreview(GUIState& state)
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
-    ProjectModel project = BuildTonePreviewProjectFromGUI(state);
+    ProjectModel project = BuildRuntimeProjectFromGUI(state, "gui_tone_preview__ch", false);
     project.targetChannel = previewChannel;
-    OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, project);
+    OverrideProjectChannelWithSoundSlot(state, previewChannel, state.selectedSoundSlot, project);
     const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
     project.midiPath.clear();
     RenderRuntimeOverrides overrides{};

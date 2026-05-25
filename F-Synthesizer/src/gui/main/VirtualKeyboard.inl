@@ -23,13 +23,8 @@ static const char* DrumPadLabel(DrumType type)
 
 static void DrawDrumPadPreview(GUIState& state)
 {
-    if (!state.channelConfigs)
-    {
-        return;
-    }
-
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const auto* kit = std::get_if<DrumKitConfig>(&(*state.channelConfigs)[slot].source);
+    const auto* kit = std::get_if<DrumKitConfig>(&gui::ReadSoundSlot(state, slot).source);
     if (kit == nullptr)
     {
         return;
@@ -96,13 +91,10 @@ static void DrawDrumPadPreview(GUIState& state)
 static void DrawVirtualKeyboard(GUIState& state)
 {
     // DrumKit の場合は非表示（既存 Preview Note スライダーと同じ条件）
-    if (state.channelConfigs)
+    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+    if (config::UsesDrumKitNoteSelection(gui::ReadSoundSlot(state, slot).source))
     {
-        const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-        if (config::UsesDrumKitNoteSelection((*state.channelConfigs)[slot].source))
-        {
-            return;
-        }
+        return;
     }
 
     constexpr int kFirstNote = 36;    // C2

@@ -10,6 +10,7 @@
 #include "config/SourceRegistry.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIStateModel.h"
 #include "io/PlatformPaths.h"
 #include "third_party/nlohmann/json.hpp"
@@ -244,16 +245,13 @@ std::string CategoryFromPresetNameAndTags(const std::string& name, const std::ve
     if (has("drum") || has("hat")) return "Drums";
     if (has("guitar")) return "Guitar";
     if (has("bass")) return "Bass";
-    if (has("string")) return "Strings";
-    if (has("brass")) return "Brass";
-    if (has("reed")) return "Reed";
-    if (has("pipe")) return "Pipe";
     if (has("lead")) return "Lead";
+    if (has("string") || has("brass") || has("reed")) return "Pad";
     if (has("pad")) return "Pad";
-    if (has("key") || has("organ") || has("bell") || has("pluck")) return "Piano/Keys";
+    if (has("key") || has("organ") || has("bell") || has("pluck")) return "Keys";
     if (has("sfx") || has("laser") || has("riser")) return "SFX";
-    if (has("support")) return "SFX";
-    return "Piano/Keys";
+    if (has("support") || has("pipe")) return "Support";
+    return "Keys";
 }
 
 PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
@@ -413,7 +411,7 @@ int FindPresetIndex(const GUIState& state, const std::string& name)
 {
     for (int i = 0; i < static_cast<int>(state.presetItems.size()); i++)
     {
-        if (state.presetItems[i] == name)
+        if (state.presetItems[i].name == name)
         {
             return i;
         }
@@ -584,7 +582,7 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     }
 
     std::sort(names.begin(), names.end());
-    const auto it = std::find(names.begin(), names.end(), "retro_heavy_fm_brass_ensemble");
+    const auto it = std::find(names.begin(), names.end(), "sound_lead_blade");
     if (it != names.end() && it != names.begin())
     {
         std::rotate(names.begin(), it, it + 1);
@@ -638,19 +636,9 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
 
     EnsureChannelConfigs(state);
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const config::SourceKind kind = config::SourceConfigKind((*state.channelConfigs)[slot].source);
+    const config::SourceKind kind = config::SourceConfigKind(ReadSoundSlot(state, slot).source);
     state.presetItems.clear();
-    state.presetItemTags.clear();
-    state.presetItemDescriptions.clear();
-    state.presetItemDisplayNames.clear();
-    state.presetItemCategories.clear();
-    state.presetItemInternal.clear();
     state.presetItems.reserve(all.size());
-    state.presetItemTags.reserve(all.size());
-    state.presetItemDescriptions.reserve(all.size());
-    state.presetItemDisplayNames.reserve(all.size());
-    state.presetItemCategories.reserve(all.size());
-    state.presetItemInternal.reserve(all.size());
     const bool playMode = (state.UIModeTab == 0);
     const bool advancedMode = (state.UIModeTab == 3);
     for (const auto& name : all)
@@ -663,53 +651,47 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
                 || (!playMode && !advancedMode && !meta->internalOnly && PresetMatchesSourceKind(name, kind, *meta)));
         if (includeByMode)
         {
-            state.presetItems.push_back(name);
-            state.presetItemTags.push_back(meta->tags);
-            state.presetItemDescriptions.push_back(meta->description);
-            state.presetItemDisplayNames.push_back(meta->displayName);
-            state.presetItemCategories.push_back(meta->category);
-            state.presetItemInternal.push_back(meta->internalOnly);
+            GUIPresetItem item{};
+            item.name = name;
+            item.tags = meta->tags;
+            item.description = meta->description;
+            item.displayName = meta->displayName;
+            item.category = meta->category;
+            item.internalOnly = meta->internalOnly;
+            state.presetItems.push_back(std::move(item));
         }
     }
     const bool allowUnfilteredFallback = (kind == config::SourceKind::Count);
     if (state.presetItems.empty() && allowUnfilteredFallback)
     {
-        state.presetItems = std::move(all);
-        state.presetItemTags.clear();
-        state.presetItemDescriptions.clear();
-        state.presetItemDisplayNames.clear();
-        state.presetItemCategories.clear();
-        state.presetItemInternal.clear();
-        state.presetItemTags.reserve(state.presetItems.size());
-        state.presetItemDescriptions.reserve(state.presetItems.size());
-        state.presetItemDisplayNames.reserve(state.presetItems.size());
-        state.presetItemCategories.reserve(state.presetItems.size());
-        state.presetItemInternal.reserve(state.presetItems.size());
-        for (const auto& name : state.presetItems)
+        state.presetItems.clear();
+        state.presetItems.reserve(all.size());
+        for (const auto& name : all)
         {
+            GUIPresetItem item{};
+            item.name = name;
             const auto it = metaByName.find(name);
             if (it != metaByName.end())
             {
-                state.presetItemTags.push_back(it->second.tags);
-                state.presetItemDescriptions.push_back(it->second.description);
-                state.presetItemDisplayNames.push_back(it->second.displayName);
-                state.presetItemCategories.push_back(it->second.category);
-                state.presetItemInternal.push_back(it->second.internalOnly);
+                item.tags = it->second.tags;
+                item.description = it->second.description;
+                item.displayName = it->second.displayName;
+                item.category = it->second.category;
+                item.internalOnly = it->second.internalOnly;
             }
             else
             {
-                state.presetItemTags.emplace_back();
-                state.presetItemDescriptions.emplace_back();
-                state.presetItemDisplayNames.push_back(DisplayNameFromPresetName(name));
-                state.presetItemCategories.push_back(CategoryFromPresetNameAndTags(name, state.presetItemTags.back()));
-                state.presetItemInternal.push_back(name.rfind("demo_", 0) == 0);
+                item.displayName = DisplayNameFromPresetName(name);
+                item.category = CategoryFromPresetNameAndTags(name, item.tags);
+                item.internalOnly = name.rfind("demo_", 0) == 0;
             }
+            state.presetItems.push_back(std::move(item));
         }
     }
     int idx = FindPresetIndex(state, preferName);
     if (idx < 0)
     {
-        idx = FindPresetIndex(state, "retro_heavy_fm_brass_ensemble");
+        idx = FindPresetIndex(state, "sound_lead_blade");
     }
     if (state.presetItems.empty())
     {
@@ -734,7 +716,7 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
         return false;
     }
 
-    const std::string& presetName = state.presetItems[state.presetIndex];
+    const std::string& presetName = state.presetItems[state.presetIndex].name;
     strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
     AppConfig cfg{};
     if (!LoadPresetConfig(FindProjectRootPath(), presetName, cfg, err))
@@ -762,11 +744,11 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
         {
             const int dstSlot = std::clamp(state.selectedSoundSlot, 0, 15);
             const int srcCh = changedChannels.front();
-            (*state.channelConfigs)[dstSlot] = (*cfg.channelConfigs)[srcCh];
+            MutableSoundSlot(state, dstSlot) = (*cfg.channelConfigs)[srcCh];
         }
         else
         {
-            *state.channelConfigs = *cfg.channelConfigs;
+            MutableChannelConfigs(state) = *cfg.channelConfigs;
         }
     }
     return true;
