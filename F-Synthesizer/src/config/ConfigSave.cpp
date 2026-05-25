@@ -12,97 +12,100 @@ namespace
 {
 using Json = nlohmann::json;
 
-std::string DumpChannelSound(const ChannelConfig& config)
+Json ChannelSoundToJson(const ChannelConfig& config)
 {
     std::ostringstream tmp;
     WriteChannelConfig(tmp, 0, config, false);
     Json wrapped = Json::parse("{" + tmp.str() + "}", nullptr, false);
-    if (wrapped.is_discarded() || !wrapped.contains("0"))
+    if (wrapped.is_discarded() || !wrapped.contains("0") || !wrapped["0"].is_object())
     {
-        return "{}";
+        return Json::object();
     }
-    return wrapped["0"].dump(6);
+    return wrapped["0"];
 }
 
-void WriteStringField(std::ostream& out, const char* key, const std::string& value, int indent, bool comma)
+Json InstrumentToJson(const InstrumentConfig& instrument)
 {
-    WriteIndent(out, indent);
-    out << "\"" << key << "\": \"" << EscapeJSON(value) << "\"";
-    if (comma)
+    Json macroHints = Json::array();
+    for (const MacroHint& hint : instrument.macroHints)
     {
-        out << ",";
+        macroHints.push_back(Json{
+            {"id", hint.id},
+            {"label", hint.label},
+            {"description", hint.description},
+        });
     }
-    out << "\n";
+
+    return Json{
+        {"displayName", instrument.displayName},
+        {"category", instrument.category},
+        {"internal", instrument.internal},
+        {"tags", instrument.tags},
+        {"description", instrument.description},
+        {"recommendedRange", Json{
+            {"low", instrument.recommendedRange.low},
+            {"high", instrument.recommendedRange.high},
+            {"preview", instrument.recommendedRange.preview},
+        }},
+        {"macroHints", std::move(macroHints)},
+        {"sound", ChannelSoundToJson(instrument.sound)},
+    };
 }
 
-void WriteInstrument(std::ostream& out, const std::string& id, const InstrumentConfig& instrument, bool withComma)
+Json ProjectChannelToJson(const ProjectChannelConfig& channel)
 {
-    WriteIndent(out, 6); out << "\"" << EscapeJSON(id) << "\": {\n";
-    WriteStringField(out, "displayName", instrument.displayName, 8, true);
-    WriteStringField(out, "category", instrument.category, 8, true);
-    WriteIndent(out, 8); out << "\"internal\": " << (instrument.internal ? "true" : "false") << ",\n";
-    WriteIndent(out, 8); out << "\"tags\": [";
-    for (size_t i = 0; i < instrument.tags.size(); i++)
-    {
-        if (i > 0)
-        {
-            out << ", ";
-        }
-        out << "\"" << EscapeJSON(instrument.tags[i]) << "\"";
-    }
-    out << "],\n";
-    WriteStringField(out, "description", instrument.description, 8, true);
-    WriteIndent(out, 8); out << "\"recommendedRange\": {\n";
-    WriteIndent(out, 10); out << "\"low\": " << instrument.recommendedRange.low << ",\n";
-    WriteIndent(out, 10); out << "\"high\": " << instrument.recommendedRange.high << ",\n";
-    WriteIndent(out, 10); out << "\"preview\": " << instrument.recommendedRange.preview << "\n";
-    WriteIndent(out, 8); out << "},\n";
-    WriteIndent(out, 8); out << "\"macroHints\": [";
-    if (!instrument.macroHints.empty())
-    {
-        out << "\n";
-        for (size_t i = 0; i < instrument.macroHints.size(); i++)
-        {
-            const MacroHint& hint = instrument.macroHints[i];
-            WriteIndent(out, 10); out << "{ ";
-            out << "\"id\": \"" << EscapeJSON(hint.id) << "\", ";
-            out << "\"label\": \"" << EscapeJSON(hint.label) << "\", ";
-            out << "\"description\": \"" << EscapeJSON(hint.description) << "\" }";
-            if (i + 1 < instrument.macroHints.size())
-            {
-                out << ",";
-            }
-            out << "\n";
-        }
-        WriteIndent(out, 8);
-    }
-    out << "],\n";
-    WriteIndent(out, 8); out << "\"sound\": " << DumpChannelSound(instrument.sound) << "\n";
-    WriteIndent(out, 6); out << "}";
-    if (withComma)
-    {
-        out << ",";
-    }
-    out << "\n";
+    return Json{
+        {"instrumentId", channel.instrumentId},
+        {"mix", Json{
+            {"mute", channel.mix.mute},
+            {"solo", channel.mix.solo},
+            {"level", channel.mix.level},
+            {"pan", channel.mix.pan},
+            {"gain", channel.mix.gain},
+        }},
+    };
 }
 
-void WriteProjectChannel(std::ostream& out, int ch, const ProjectChannelConfig& channel, bool withComma)
+Json MasterEffectsToJson(const MasterEffectConfig& effects)
 {
-    WriteIndent(out, 6); out << "\"" << ch << "\": {\n";
-    WriteStringField(out, "instrumentId", channel.instrumentId, 8, true);
-    WriteIndent(out, 8); out << "\"mix\": {\n";
-    WriteIndent(out, 10); out << "\"mute\": " << (channel.mix.mute ? "true" : "false") << ",\n";
-    WriteIndent(out, 10); out << "\"solo\": " << (channel.mix.solo ? "true" : "false") << ",\n";
-    WriteIndent(out, 10); out << "\"level\": " << channel.mix.level << ",\n";
-    WriteIndent(out, 10); out << "\"pan\": " << channel.mix.pan << ",\n";
-    WriteIndent(out, 10); out << "\"gain\": " << channel.mix.gain << "\n";
-    WriteIndent(out, 8); out << "}\n";
-    WriteIndent(out, 6); out << "}";
-    if (withComma)
-    {
-        out << ",";
-    }
-    out << "\n";
+    return Json{
+        {"reverb", Json{
+            {"enabled", effects.reverb.enabled},
+            {"mix", effects.reverb.mix},
+            {"roomSize", effects.reverb.roomSize},
+            {"damping", effects.reverb.damping},
+        }},
+        {"delay", Json{
+            {"enabled", effects.delay.enabled},
+            {"mix", effects.delay.mix},
+            {"timeSec", effects.delay.timeSec},
+            {"feedback", effects.delay.feedback},
+            {"tempoSync", effects.delay.tempoSync},
+            {"syncBeats", effects.delay.syncBeats},
+        }},
+        {"chorus", Json{
+            {"enabled", effects.chorus.enabled},
+            {"mix", effects.chorus.mix},
+            {"baseDelayMs", effects.chorus.baseDelayMs},
+            {"depthMs", effects.chorus.depthMs},
+            {"rateHz", effects.chorus.rateHz},
+            {"feedback", effects.chorus.feedback},
+        }},
+        {"flanger", Json{
+            {"enabled", effects.flanger.enabled},
+            {"mix", effects.flanger.mix},
+            {"baseDelayMs", effects.flanger.baseDelayMs},
+            {"depthMs", effects.flanger.depthMs},
+            {"rateHz", effects.flanger.rateHz},
+            {"feedback", effects.flanger.feedback},
+        }},
+        {"bitCrusher", Json{
+            {"bits", effects.bitCrusher.bits},
+        }},
+        {"sampleRateReducer", Json{
+            {"ratio", effects.sampleRateReducer.ratio},
+        }},
+    };
 }
 } // namespace
 
@@ -114,45 +117,20 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
         std::filesystem::create_directories(configPath.parent_path(), ec);
     }
 
-    std::ofstream out(configPath, std::ios::binary | std::ios::trunc);
-    if (!out)
-    {
-        err = "failed to open output file";
-        return false;
-    }
-
     const ProjectModel saveModel = (model.instruments && model.projectChannels)
         ? model
         : ProjectModelFromAppConfig(ToAppConfig(model));
-    const AppConfig config = ToAppConfig(saveModel);
 
-    out << "{\n";
-    out << "  \"format\": \"projectModel.v3\",\n";
-    out << "  \"project\": {\n";
-    out << "    \"midiPath\": \"" << EscapeJSON(PathToUtf8(config.midiPath)) << "\",\n";
-    out << "    \"wavPath\": \"" << EscapeJSON(PathToUtf8(config.wavPath)) << "\",\n";
-    out << "    \"targetChannel\": " << config.targetChannel << ",\n";
-    out << "    \"initialSeconds\": " << config.initialSeconds << ",\n";
-    out << "    \"bits\": " << config.bits << ",\n";
-    out << "    \"sampleRate\": " << config.sampleRate << ",\n";
-    out << "    \"extraReleaseSec\": " << config.extraReleaseSec << ",\n";
-    out << "    \"instruments\": {\n";
-    bool firstInstrument = true;
+    Json instruments = Json::object();
     if (saveModel.instruments)
     {
         for (const auto& [id, instrument] : *saveModel.instruments)
         {
-            if (!firstInstrument)
-            {
-                out << ",\n";
-            }
-            firstInstrument = false;
-            WriteInstrument(out, id, instrument, false);
+            instruments[id] = InstrumentToJson(instrument);
         }
     }
-    out << "    },\n";
-    out << "    \"channels\": {\n";
-    bool firstChannel = true;
+
+    Json channels = Json::object();
     if (saveModel.projectChannels)
     {
         for (int ch = 0; ch < 16; ch++)
@@ -162,55 +140,34 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
             {
                 continue;
             }
-            if (!firstChannel)
-            {
-                out << ",\n";
-            }
-            firstChannel = false;
-            WriteProjectChannel(out, ch, channel, false);
+            channels[std::to_string(ch)] = ProjectChannelToJson(channel);
         }
     }
-    out << "    },\n";
-    out << "    \"effects\": {\n";
-    out << "      \"reverb\": {\n";
-    out << "        \"enabled\": " << (config.masterEffects.reverb.enabled ? "true" : "false") << ",\n";
-    out << "        \"mix\": " << config.masterEffects.reverb.mix << ",\n";
-    out << "        \"roomSize\": " << config.masterEffects.reverb.roomSize << ",\n";
-    out << "        \"damping\": " << config.masterEffects.reverb.damping << "\n";
-    out << "      },\n";
-    out << "      \"delay\": {\n";
-    out << "        \"enabled\": " << (config.masterEffects.delay.enabled ? "true" : "false") << ",\n";
-    out << "        \"mix\": " << config.masterEffects.delay.mix << ",\n";
-    out << "        \"timeSec\": " << config.masterEffects.delay.timeSec << ",\n";
-    out << "        \"feedback\": " << config.masterEffects.delay.feedback << ",\n";
-    out << "        \"tempoSync\": " << (config.masterEffects.delay.tempoSync ? "true" : "false") << ",\n";
-    out << "        \"syncBeats\": " << config.masterEffects.delay.syncBeats << "\n";
-    out << "      },\n";
-    out << "      \"chorus\": {\n";
-    out << "        \"enabled\": " << (config.masterEffects.chorus.enabled ? "true" : "false") << ",\n";
-    out << "        \"mix\": " << config.masterEffects.chorus.mix << ",\n";
-    out << "        \"baseDelayMs\": " << config.masterEffects.chorus.baseDelayMs << ",\n";
-    out << "        \"depthMs\": " << config.masterEffects.chorus.depthMs << ",\n";
-    out << "        \"rateHz\": " << config.masterEffects.chorus.rateHz << ",\n";
-    out << "        \"feedback\": " << config.masterEffects.chorus.feedback << "\n";
-    out << "      },\n";
-    out << "      \"flanger\": {\n";
-    out << "        \"enabled\": " << (config.masterEffects.flanger.enabled ? "true" : "false") << ",\n";
-    out << "        \"mix\": " << config.masterEffects.flanger.mix << ",\n";
-    out << "        \"baseDelayMs\": " << config.masterEffects.flanger.baseDelayMs << ",\n";
-    out << "        \"depthMs\": " << config.masterEffects.flanger.depthMs << ",\n";
-    out << "        \"rateHz\": " << config.masterEffects.flanger.rateHz << ",\n";
-    out << "        \"feedback\": " << config.masterEffects.flanger.feedback << "\n";
-    out << "      },\n";
-    out << "      \"bitCrusher\": {\n";
-    out << "        \"bits\": " << config.masterEffects.bitCrusher.bits << "\n";
-    out << "      },\n";
-    out << "      \"sampleRateReducer\": {\n";
-    out << "        \"ratio\": " << config.masterEffects.sampleRateReducer.ratio << "\n";
-    out << "      }\n";
-    out << "    }\n";
-    out << "  }\n";
-    out << "}\n";
+
+    Json root = Json{
+        {"format", "projectModel.v3"},
+        {"project", Json{
+            {"midiPath", PathToUtf8(saveModel.midiPath)},
+            {"wavPath", PathToUtf8(saveModel.wavPath)},
+            {"targetChannel", saveModel.targetChannel},
+            {"initialSeconds", saveModel.initialSeconds},
+            {"bits", saveModel.bits},
+            {"sampleRate", saveModel.sampleRate},
+            {"extraReleaseSec", saveModel.extraReleaseSec},
+            {"instruments", std::move(instruments)},
+            {"channels", std::move(channels)},
+            {"effects", MasterEffectsToJson(saveModel.masterEffects)},
+        }},
+    };
+
+    std::ofstream out(configPath, std::ios::binary | std::ios::trunc);
+    if (!out)
+    {
+        err = "failed to open output file";
+        return false;
+    }
+
+    out << root.dump(2) << '\n';
 
     return true;
 }

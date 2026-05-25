@@ -7,6 +7,7 @@
 - 実戦 Sound Card は `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` の8カテゴリに統一する。
 - Instrument は `source` / `layers` / `expressionMap` を含む `sound`、表示用 metadata、試聴の推奨音域を持つ。
 - 実行経路は `ProjectModel -> RenderConfig -> SynthEngine` を正本にする。
+- 保存経路は `ProjectModel -> projectModel.v3 JSON` を正本にし、旧 `AppConfig` shape へ戻してから出力しない。
 - `projectModel.v1` / `projectModel.v2` は読み込み対象外とする。
 
 ## 適用位置

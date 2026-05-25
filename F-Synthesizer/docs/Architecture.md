@@ -45,7 +45,7 @@ GUI 状態に依存しません。
 
 保存、GUI、実行時レンダリングの境界は、次のモデルで分けます。
 
-- `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力する。
+- `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力し、save は `ProjectModel -> projectModel.v3 JSON` を直接構築する。
 - `AppConfig`: legacy 互換や一部補助処理に残る移行型。Run 境界の正本にはしない。
 - `RenderConfig`: SynthEngine へ渡す実行用モデル。`ProjectModel` と runtime override から作り、GUI や保存形式に依存しない render 入力にする。
 - `GUIProjectFacade`: 既存画面コードから `ProjectModel` へ接続する中間層。sound slot、channel assignment、mix、macro、preview/export project 構築の正規入口にする。
