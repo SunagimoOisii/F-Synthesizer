@@ -11,6 +11,8 @@
 #include "SynthEngine/ChannelConfig.h"
 #include "SynthEngine/EffectsConfig.h"
 
+struct ProjectModel;
+
 enum class RunMode
 {
     Export,
@@ -29,6 +31,13 @@ struct RenderOptions
     bool allowCancel = true;
 };
 
+// Project保存形式に入れない、1回の実行だけの差し替え入力。
+struct RenderRuntimeOverrides
+{
+    std::shared_ptr<const std::vector<MIDIEventTick>> noteTicks;
+    int ticksPerQuarter = 0;
+};
+
 // アプリ実行に必要な解決済み設定。
 // CLI/GUI/ConfigResolver で構築され、Run境界へ受け渡される。
 // 保存形式の正本ではなく、preview override など実行時だけの入力を含められる境界型。
@@ -45,9 +54,6 @@ struct AppConfig
     MasterEffectConfig masterEffects;
     std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
     std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
-    // GUI編集のNoteイベント差し替え用（nullならMIDIファイルのNoteをそのまま使用）。
-    std::shared_ptr<const std::vector<MIDIEventTick>> overrideNoteTicks;
-    int overrideTicksPerQuarter = 0;
 };
 
 // Run実行の進捗通知と停止要求を受け持つ観測I/F。
@@ -88,16 +94,22 @@ bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std
 bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
 RenderOptions DefaultRenderOptions();
 RenderOptions DefaultPreviewRenderOptions();
-int Run(const AppConfig& config);
-int Run(const AppConfig& config, IRunObserver* observer);
-int Run(const AppConfig& config, const RenderOptions& options);
-int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer);
+int Run(const ProjectModel& project);
+int Run(const ProjectModel& project, IRunObserver* observer);
+int Run(const ProjectModel& project, const RenderOptions& options);
+int Run(const ProjectModel& project, const RenderOptions& options, IRunObserver* observer);
 // 戻り値は 0=成功, 1=失敗, 2=キャンセル要求受理（allowCancel=true かつ observer 経由）で固定。
 // renderedSound が null でなければ、保存成否にかかわらずレンダ結果を書き戻す。
-int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound);
-int RunPreviewStreaming(
-    const AppConfig& config,
+int Run(
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
+    IRunObserver* observer,
+    SoundData* renderedSound);
+int RunPreviewStreaming(
+    const ProjectModel& project,
+    const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     IPreviewStreamSink& streamSink,
     bool loop);

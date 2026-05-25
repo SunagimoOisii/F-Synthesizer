@@ -3,62 +3,19 @@
 #include <algorithm>
 #include <sstream>
 
+#include "core/RenderConfigBuilder.h"
 #include "core/RenderGateway.h"
 #include "io/PlatformPaths.h"
+#include "project/ProjectModel.h"
 
 namespace app::run
 {
 namespace
 {
-struct ResolvedRenderInputs
-{
-    std::shared_ptr<const std::array<ChannelConfig, 16>> defaultChannelConfigs{};
-    std::shared_ptr<const std::array<ChannelMixState, 16>> defaultChannelMixStates{};
-    const std::array<ChannelConfig, 16>* channelConfigs = nullptr;
-    const std::array<ChannelMixState, 16>* channelMixStates = nullptr;
-};
-
-ResolvedRenderInputs ResolveRenderInputs(const AppConfig& config)
-{
-    ResolvedRenderInputs resolved{};
-    resolved.channelConfigs = config.channelConfigs.get();
-    resolved.channelMixStates = config.channelMixStates.get();
-
-    if (resolved.channelConfigs == nullptr)
-    {
-        // AppConfig は実行境界なので、不完全な入力はここで既定 render table に解決する。
-        resolved.defaultChannelConfigs = BuildDefaultChannelConfigs();
-        resolved.channelConfigs = resolved.defaultChannelConfigs.get();
-    }
-    if (resolved.channelMixStates == nullptr)
-    {
-        resolved.defaultChannelMixStates = BuildDefaultChannelMixStates();
-        resolved.channelMixStates = resolved.defaultChannelMixStates.get();
-    }
-    return resolved;
-}
-
-RenderConfig BuildRenderConfig(
-    const AppConfig& config,
-    const RenderOptions& options,
-    const std::vector<MIDIEvent>& events,
-    const MIDIBuildOutput& midiOut,
-    const ResolvedRenderInputs& renderInputs)
-{
-    return RenderConfig{
-        events,
-        midiOut.tempoEvents,
-        midiOut.ticksPerQuarter,
-        options.startSec,
-        *renderInputs.channelConfigs,
-        *renderInputs.channelMixStates,
-        config.masterEffects
-    };
-}
-
 int RunRenderCommon(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound,
     bool saveOutput)
@@ -68,7 +25,7 @@ int RunRenderCommon(
     if (options.writeWAV)
     {
         std::string dirErr;
-        if (!EnsureDirectoryForFile(config.wavPath, dirErr))
+        if (!EnsureDirectoryForFile(project.wavPath, dirErr))
         {
             LogLine(observer, dirErr);
             return 1;
@@ -85,21 +42,20 @@ int RunRenderCommon(
     {
         LogLine(observer, "Working Directory: " + PathToUtf8(cwd));
     }
-    LogLine(observer, "MIDI Path: " + PathToUtf8(config.midiPath));
-    LogLine(observer, "Output Path: " + PathToUtf8(config.wavPath));
+    LogLine(observer, "MIDI Path: " + PathToUtf8(project.midiPath));
+    LogLine(observer, "Output Path: " + PathToUtf8(project.wavPath));
     LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));
 
-    // app層の責務として、MIDI読込〜sampleイベント化まではここで完結させる。
     MIDIBuildOutput midiOut{};
     std::string midiErr;
     if (!BuildMIDIPipeline(
-        config.midiPath,
-        config.targetChannel,
-        config.sampleRate,
+        project.midiPath,
+        project.targetChannel,
+        project.sampleRate,
         options.startSec,
         options.durationSec,
-        config.overrideNoteTicks.get(),
-        config.overrideTicksPerQuarter,
+        overrides.noteTicks.get(),
+        overrides.ticksPerQuarter,
         midiOut,
         midiErr))
     {
@@ -109,7 +65,7 @@ int RunRenderCommon(
         }
         else
         {
-            LogLine(observer, "Failed to load MIDI: " + PathToUtf8(config.midiPath));
+            LogLine(observer, "Failed to load MIDI: " + PathToUtf8(project.midiPath));
         }
         return 1;
     }
@@ -128,22 +84,21 @@ int RunRenderCommon(
         return 1;
     }
 
-    const ResolvedRenderInputs renderInputs = ResolveRenderInputs(config);
+    const ResolvedRenderConfigInputs renderInputs = ResolveRenderConfigInputs(project);
 
     int lastSample = events.back().sample;
-    int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
+    int extraRelease = static_cast<int>(project.extraReleaseSec * project.sampleRate);
     int neededSamples = lastSample + extraRelease + 1;
     if (previewMode && options.durationSec >= 0.0)
     {
-        // Previewは指定window内に収め、Exportの全長確保方針と分離する。
         const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
-        const int previewMax = static_cast<int>(durSec * config.sampleRate) + extraRelease + 1;
+        const int previewMax = static_cast<int>(durSec * project.sampleRate) + extraRelease + 1;
         if (neededSamples > previewMax)
         {
             neededSamples = previewMax;
         }
     }
-    int soundLength = config.initialSeconds * config.sampleRate;
+    int soundLength = project.initialSeconds * project.sampleRate;
     if (neededSamples > soundLength)
     {
         soundLength = neededSamples;
@@ -152,7 +107,7 @@ int RunRenderCommon(
     {
         soundLength = neededSamples;
     }
-    SoundData sound(soundLength, config.bits, config.sampleRate, 2);
+    SoundData sound(soundLength, project.bits, project.sampleRate, 2);
 
     {
         std::ostringstream oss;
@@ -163,28 +118,19 @@ int RunRenderCommon(
         LogLine(observer, oss.str());
     }
 
-    const RenderConfig renderConfig = BuildRenderConfig(config, options, events, midiOut, renderInputs);
+    const RenderConfig renderConfig = BuildRenderConfig(project, options, events, midiOut, renderInputs);
 
     bool canceled = false;
-    // レンダループ内の分岐を減らすため、キャンセル有無で経路を先に分ける。
     const bool canCancel = options.allowCancel && observer != nullptr;
     if (canCancel)
     {
         auto shouldCancelObserver = [&]() -> bool { return observer->ShouldCancel(); };
-        RenderWithEngine(
-            sound,
-            renderConfig,
-            shouldCancelObserver,
-            &canceled);
+        RenderWithEngine(sound, renderConfig, shouldCancelObserver, &canceled);
     }
     else
     {
         auto neverCancel = []() -> bool { return false; };
-        RenderWithEngine(
-            sound,
-            renderConfig,
-            neverCancel,
-            &canceled);
+        RenderWithEngine(sound, renderConfig, neverCancel, &canceled);
     }
     if (canceled)
     {
@@ -204,34 +150,37 @@ int RunRenderCommon(
         LogLine(observer, "Preview render completed (memory only, no WAV write).");
         return 0;
     }
-    return SaveRunOutput(config, options, sound, observer);
+    return SaveRunOutput(project, options, sound, observer);
 }
 } // namespace
 
 int RunExportRender(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound)
 {
-    return RunRenderCommon(config, options, observer, renderedSound, true);
+    return RunRenderCommon(project, options, overrides, observer, renderedSound, true);
 }
 
 int RunPreviewRender(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound)
 {
     RenderOptions previewOptions = options;
     previewOptions.mode = RunMode::Preview;
     previewOptions.writeWAV = false;
-    return RunRenderCommon(config, previewOptions, observer, renderedSound, false);
+    return RunRenderCommon(project, previewOptions, overrides, observer, renderedSound, false);
 }
 
 int RunPreviewStreamingInternal(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     IPreviewStreamSink& streamSink,
     bool loop)
@@ -245,17 +194,17 @@ int RunPreviewStreamingInternal(
     MIDIBuildOutput midiOut{};
     std::string midiErr;
     if (!BuildMIDIPipeline(
-        config.midiPath,
-        config.targetChannel,
-        config.sampleRate,
+        project.midiPath,
+        project.targetChannel,
+        project.sampleRate,
         previewOptions.startSec,
         previewOptions.durationSec,
-        config.overrideNoteTicks.get(),
-        config.overrideTicksPerQuarter,
+        overrides.noteTicks.get(),
+        overrides.ticksPerQuarter,
         midiOut,
         midiErr))
     {
-        LogLine(observer, (midiErr == "no note events found") ? "No note events found." : "Failed to load MIDI: " + PathToUtf8(config.midiPath));
+        LogLine(observer, (midiErr == "no note events found") ? "No note events found." : "Failed to load MIDI: " + PathToUtf8(project.midiPath));
         return 1;
     }
 
@@ -267,18 +216,18 @@ int RunPreviewStreamingInternal(
         return 1;
     }
 
-    const ResolvedRenderInputs renderInputs = ResolveRenderInputs(config);
+    const ResolvedRenderConfigInputs renderInputs = ResolveRenderConfigInputs(project);
 
     int lastSample = events.back().sample;
-    int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
+    int extraRelease = static_cast<int>(project.extraReleaseSec * project.sampleRate);
     int neededSamples = lastSample + extraRelease + 1;
     if (previewOptions.durationSec >= 0.0)
     {
         const double durSec = (previewOptions.durationSec > 0.0) ? previewOptions.durationSec : 0.0;
-        const int previewMax = static_cast<int>(durSec * config.sampleRate) + extraRelease + 1;
+        const int previewMax = static_cast<int>(durSec * project.sampleRate) + extraRelease + 1;
         neededSamples = std::min(neededSamples, previewMax);
     }
-    int soundLength = config.initialSeconds * config.sampleRate;
+    int soundLength = project.initialSeconds * project.sampleRate;
     if (neededSamples > soundLength)
     {
         soundLength = neededSamples;
@@ -288,13 +237,13 @@ int RunPreviewStreamingInternal(
         soundLength = neededSamples;
     }
 
-    if (!streamSink.Begin(config.sampleRate, 2, soundLength, loop))
+    if (!streamSink.Begin(project.sampleRate, 2, soundLength, loop))
     {
         LogLine(observer, "[Preview] streaming sink failed to start.");
         return 1;
     }
 
-    const RenderConfig renderConfig = BuildRenderConfig(config, previewOptions, events, midiOut, renderInputs);
+    const RenderConfig renderConfig = BuildRenderConfig(project, previewOptions, events, midiOut, renderInputs);
 
     bool canceled = false;
     auto shouldCancelObserver = [&]() -> bool {
@@ -309,7 +258,7 @@ int RunPreviewStreamingInternal(
     };
     RenderWithEngineFrameBlocks(
         soundLength,
-        config.sampleRate,
+        project.sampleRate,
         renderConfig,
         onFrames,
         shouldCancelObserver,
@@ -326,16 +275,16 @@ int RunPreviewStreamingInternal(
 }
 
 int RunMain(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound)
 {
     if (options.mode == RunMode::Preview)
     {
-        return RunPreviewRender(config, options, observer, renderedSound);
+        return RunPreviewRender(project, options, overrides, observer, renderedSound);
     }
-    return RunExportRender(config, options, observer, renderedSound);
+    return RunExportRender(project, options, overrides, observer, renderedSound);
 }
 } // namespace app::run
-

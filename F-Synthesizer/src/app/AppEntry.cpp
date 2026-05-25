@@ -20,5 +20,5 @@ int RunCLIApplication(const CLIOptions& options)
     {
         std::cout << line << std::endl;
     }
-    return Run(resolved.config);
+    return Run(resolved.project);
 }

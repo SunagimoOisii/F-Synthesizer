@@ -52,16 +52,18 @@
 
 ## Phase 3: RenderConfig 変換層の確立
 
-目的は、保存形式と SynthEngine の実行入力を切り離すことです。
+目的は、保存形式と SynthEngine の実行入力を切り離すことです。Phase 3 実装後は、CLI と GUI preview / export が `ProjectModel -> RenderConfig -> SynthEngine` の経路を使います。
 
 - `ProjectModel v3 -> RenderConfig` の変換を正本にする。
+- `Run` 境界は `ProjectModel` を受け取り、`AppConfig` は実行経路の正本から外す。
+- Piano-roll preview などの一時入力は `RenderRuntimeOverrides` として project 保存形式から分離する。
 - SynthEngine は Instrument、Sound Card、保存形式を直接知らない。
 - `source`、`layers`、`expressionMap`、`effects` は render 用 config に展開してから renderer へ渡す。
 - 音源固有の挙動は該当 renderer に置き、source 非依存の modulation と shared shaping は common engine path に置く。
 
 完了条件:
 
-- 音作りの実行経路が `ProjectModel -> RenderConfig -> SynthEngine` に一本化される。
+- 音作りの実行経路が `ProjectModel -> RenderConfig -> SynthEngine` に一本化されている。
 - CLI と GUI preview / export が同じ変換経路を使う。
 - renderer 側に保存形式や GUI 状態の知識がない。
 

@@ -4,11 +4,12 @@
 
 #include "io/Writer.h"
 #include "io/PlatformPaths.h"
+#include "project/ProjectModel.h"
 
 namespace app::run
 {
 int SaveRunOutput(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
     const SoundData& sound,
     IRunObserver* observer)
@@ -21,10 +22,10 @@ int SaveRunOutput(
     }
 
     std::error_code existsEc;
-    if (std::filesystem::exists(config.wavPath, existsEc))
+    if (std::filesystem::exists(project.wavPath, existsEc))
     {
         std::error_code rmEc;
-        std::filesystem::remove(config.wavPath, rmEc);
+        std::filesystem::remove(project.wavPath, rmEc);
         if (rmEc)
         {
             LogLine(observer, "[SavePrep] failed to remove old file: " + rmEc.message());
@@ -36,7 +37,7 @@ int SaveRunOutput(
     }
 
     WAVWriteError err{};
-    if (!SaveWAVFilePath(sound, config.wavPath, &err))
+    if (!SaveWAVFilePath(sound, project.wavPath, &err))
     {
         // 保存失敗は path + cause + hint 形式へそろえて上位ログへ返す。
         std::ostringstream cause;
@@ -44,11 +45,11 @@ int SaveRunOutput(
             << " code=" << err.code
             << " errno=" << err.errnoValue
             << " winerr=" << err.systemError;
-        LogLine(observer, FormatPathDiagnostic("save wav", config.wavPath, cause.str(), err.hint));
+        LogLine(observer, FormatPathDiagnostic("save wav", project.wavPath, cause.str(), err.hint));
         return 1;
     }
 
-    LogLine(observer, "Saved SoundData: " + PathToUtf8(config.wavPath));
+    LogLine(observer, "Saved SoundData: " + PathToUtf8(project.wavPath));
     return 0;
 }
 } // namespace app::run

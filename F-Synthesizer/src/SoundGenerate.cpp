@@ -4,6 +4,7 @@
 #include "app/AppEntry.h"
 #include "app/CLI.h"
 #include "app/RunInternal.h"
+#include "project/ProjectModel.h"
 
 std::filesystem::path FindProjectRootPath()
 {
@@ -32,39 +33,45 @@ RenderOptions DefaultPreviewRenderOptions()
     return opt;
 }
 
-int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer, SoundData* renderedSound)
+int Run(
+    const ProjectModel& project,
+    const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
+    IRunObserver* observer,
+    SoundData* renderedSound)
 {
-    return app::run::RunMain(config, options, observer, renderedSound);
+    return app::run::RunMain(project, options, overrides, observer, renderedSound);
 }
 
 int RunPreviewStreaming(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     IPreviewStreamSink& streamSink,
     bool loop)
 {
-    return app::run::RunPreviewStreamingInternal(config, options, observer, streamSink, loop);
+    return app::run::RunPreviewStreamingInternal(project, options, overrides, observer, streamSink, loop);
 }
 
-int Run(const AppConfig& config)
+int Run(const ProjectModel& project)
 {
-    return Run(config, DefaultRenderOptions(), nullptr, nullptr);
+    return Run(project, DefaultRenderOptions(), RenderRuntimeOverrides{}, nullptr, nullptr);
 }
 
-int Run(const AppConfig& config, const RenderOptions& options)
+int Run(const ProjectModel& project, const RenderOptions& options)
 {
-    return Run(config, options, nullptr, nullptr);
+    return Run(project, options, RenderRuntimeOverrides{}, nullptr, nullptr);
 }
 
-int Run(const AppConfig& config, IRunObserver* observer)
+int Run(const ProjectModel& project, IRunObserver* observer)
 {
-    return Run(config, DefaultRenderOptions(), observer, nullptr);
+    return Run(project, DefaultRenderOptions(), RenderRuntimeOverrides{}, observer, nullptr);
 }
 
-int Run(const AppConfig& config, const RenderOptions& options, IRunObserver* observer)
+int Run(const ProjectModel& project, const RenderOptions& options, IRunObserver* observer)
 {
-    return Run(config, options, observer, nullptr);
+    return Run(project, options, RenderRuntimeOverrides{}, observer, nullptr);
 }
 
 int RunGUIApp();

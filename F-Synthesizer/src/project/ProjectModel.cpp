@@ -70,8 +70,6 @@ AppConfig ToAppConfig(const ProjectModel& model)
         config.channelConfigs = ResolveChannelConfigs(model.channelConfigs, defaults);
         config.channelMixStates = ResolveChannelMixStates(model.channelMixStates, defaults);
     }
-    config.overrideNoteTicks.reset();
-    config.overrideTicksPerQuarter = 0;
     return config;
 }
 

@@ -18,6 +18,9 @@
     <ClCompile Include="src\\core\\AudioBuffer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\\core\\RenderConfigBuilder.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="src\\app\\AppEntry.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -207,6 +210,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\core\\RenderConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="include\\core\\RenderConfigBuilder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\core\\RenderGateway.h">

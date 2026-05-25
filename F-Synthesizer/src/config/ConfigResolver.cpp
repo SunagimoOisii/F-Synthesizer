@@ -4,11 +4,12 @@
 #include <string>
 
 #include "io/PlatformPaths.h"
+#include "project/ProjectModel.h"
 
 bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outResolved, std::string& err)
 {
     outResolved = ResolvedRuntimeConfig{};
-    outResolved.config = DefaultConfig();
+    outResolved.project = DefaultProjectModel();
 
     const std::filesystem::path projectRoot = FindProjectRootPath();
     // 優先順:
@@ -32,7 +33,7 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
     if (!outResolved.selectedConfigPath.empty())
     {
         std::string loadErr;
-        if (!LoadConfigFile(outResolved.selectedConfigPath, outResolved.config, loadErr))
+        if (!LoadProjectModelFile(outResolved.selectedConfigPath, outResolved.project, loadErr))
         {
             err = "Failed to load config: " + PathToUtf8(outResolved.selectedConfigPath) + " (" + loadErr + ")";
             return false;
@@ -58,12 +59,12 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
         }
 
         std::string loadErr;
-        if (!LoadConfigFile(basePath, outResolved.config, loadErr))
+        if (!LoadProjectModelFile(basePath, outResolved.project, loadErr))
         {
             err = "Failed to load base config: " + PathToUtf8(basePath) + " (" + loadErr + ")";
             return false;
         }
-        if (!LoadConfigFile(presetPath, outResolved.config, loadErr))
+        if (!LoadProjectModelFile(presetPath, outResolved.project, loadErr))
         {
             err = "Failed to load preset config: " + PathToUtf8(presetPath) + " (" + loadErr + ")";
             return false;
@@ -80,12 +81,12 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
     if (std::filesystem::exists(basePath) && std::filesystem::exists(fallbackPresetPath))
     {
         std::string loadErr;
-        if (!LoadConfigFile(basePath, outResolved.config, loadErr))
+        if (!LoadProjectModelFile(basePath, outResolved.project, loadErr))
         {
             err = "Failed to load base config: " + PathToUtf8(basePath) + " (" + loadErr + ")";
             return false;
         }
-        if (!LoadConfigFile(fallbackPresetPath, outResolved.config, loadErr))
+        if (!LoadProjectModelFile(fallbackPresetPath, outResolved.project, loadErr))
         {
             err = "Failed to load preset config: " + PathToUtf8(fallbackPresetPath) + " (" + loadErr + ")";
             return false;
@@ -95,6 +96,6 @@ bool ResolveRuntimeConfig(const CLIOptions& options, ResolvedRuntimeConfig& outR
         outResolved.infoLines.push_back("Preset Config Path: " + PathToUtf8(fallbackPresetPath));
     }
 
-    // base/preset が無い環境でも、DefaultConfig だけで起動可能にして初期セットアップを妨げない。
+    // base/preset が無い環境でも、DefaultProjectModel だけで起動可能にして初期セットアップを妨げない。
     return true;
 }

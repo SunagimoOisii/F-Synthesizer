@@ -4,6 +4,7 @@
 #include <chrono>
 #include <exception>
 #include <future>
+#include <map>
 #include <mutex>
 #include <system_error>
 #include <vector>
@@ -11,10 +12,12 @@
 #include "AppCore.h"
 #include "gui/GUIActionsInternal.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIRunHelpers.h"
 #include "gui/GUIStateModel.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
+#include "project/ProjectModel.h"
 
 namespace
 {
@@ -165,31 +168,59 @@ bool ValidateBeforeRun(const GUIState& state, std::string& err)
         err);
 }
 
-void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, AppConfig& cfg)
+std::string RuntimeInstrumentId(int ch)
 {
-    if (!state.channelConfigs)
+    return "gui_runtime__ch" + std::to_string(ch);
+}
+
+ProjectModel BuildRuntimeProjectFromGUI(GUIState& state)
+{
+    ProjectModel project = gui::BuildProjectModelFromGUI(state);
+
+    auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>();
+    auto projectChannels = std::make_shared<std::array<ProjectChannelConfig, 16>>();
+    const auto& channelConfigs = state.channelConfigs ? *state.channelConfigs : gui::ReadChannelConfigs(state);
+    const auto& channelMixStates = state.channelMixStates ? *state.channelMixStates : gui::ReadChannelMixStates(state);
+
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const int src = std::clamp(state.channelAssignments[ch], 0, 15);
+        const std::string id = RuntimeInstrumentId(ch);
+        InstrumentConfig instrument{};
+        instrument.sound = channelConfigs[src];
+        instruments->emplace(id, instrument);
+
+        ProjectChannelConfig projectChannel{};
+        projectChannel.enabled = true;
+        projectChannel.instrumentId = id;
+        projectChannel.mix = channelMixStates[ch];
+        (*projectChannels)[ch] = projectChannel;
+    }
+
+    project.channelConfigs = std::make_shared<const std::array<ChannelConfig, 16>>(channelConfigs);
+    project.channelMixStates = std::make_shared<const std::array<ChannelMixState, 16>>(channelMixStates);
+    project.instruments = instruments;
+    project.projectChannels = projectChannels;
+    return project;
+}
+
+void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, ProjectModel& project)
+{
+    if (!state.channelConfigs || !project.instruments || !project.projectChannels)
     {
         return;
     }
 
-    auto previewConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
-    if (cfg.channelConfigs)
-    {
-        *previewConfigs = *cfg.channelConfigs;
-    }
-    else
-    {
-        const AppConfig def = DefaultConfig();
-        if (def.channelConfigs)
-        {
-            *previewConfigs = *def.channelConfigs;
-        }
-    }
-
     previewChannel = std::clamp(previewChannel, 0, 15);
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    (*previewConfigs)[previewChannel] = (*state.channelConfigs)[slot];
-    cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(previewConfigs);
+    const std::string instrumentId = (*project.projectChannels)[previewChannel].instrumentId;
+    auto mutableInstruments = std::make_shared<std::map<std::string, InstrumentConfig>>(*project.instruments);
+    auto it = mutableInstruments->find(instrumentId);
+    if (it != mutableInstruments->end())
+    {
+        it->second.sound = (*state.channelConfigs)[slot];
+    }
+    project.instruments = mutableInstruments;
 }
 
 std::string FormatRunException(const std::exception& ex)
@@ -249,8 +280,9 @@ private:
 };
 
 int RunSafely(
-    AppConfig cfg,
+    ProjectModel project,
     RenderOptions options,
+    RenderRuntimeOverrides overrides,
     GUIState& state)
 {
     try
@@ -258,9 +290,9 @@ int RunSafely(
         if (options.mode == RunMode::Preview)
         {
             GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
-            return RunPreviewStreaming(cfg, options, &state.observer, sink, state.previewLoop);
+            return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
         }
-        return Run(cfg, options, &state.observer, nullptr);
+        return Run(project, options, overrides, &state.observer, nullptr);
     }
     catch (const std::exception& ex)
     {
@@ -324,24 +356,25 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
-    AppConfig cfg = BuildConfigFromGUI(state);
+    ProjectModel project = BuildRuntimeProjectFromGUI(state);
     if (previewSelected)
     {
-        cfg.targetChannel = previewChannel;
+        project.targetChannel = previewChannel;
     }
     if (previewSelected && state.UIModeTab == 0)
     {
-        OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
+        OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, project);
         AppendGUILog(state, "[GUI] Sound Preview route: PR Channel ch" + std::to_string(previewChannel) +
             " <= Selected Slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
     }
     int overrideTicksPerQuarter = 0;
-    cfg.overrideNoteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);
-    cfg.overrideTicksPerQuarter = overrideTicksPerQuarter;
+    RenderRuntimeOverrides overrides{};
+    overrides.noteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);
+    overrides.ticksPerQuarter = overrideTicksPerQuarter;
     RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
     if (!previewSelected && state.serialSave)
     {
-        cfg.wavPath = BuildSerialWAVPath(cfg.wavPath);
+        project.wavPath = BuildSerialWAVPath(project.wavPath);
     }
     if (previewSelected)
     {
@@ -377,7 +410,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         state.previewRequestedStartTick = 0;
         state.previewRequestedDurationSec = 0.0;
     }
-    state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(cfg.wavPath);
+    state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(project.wavPath);
 
     state.runLogTab = state.UIModeTab;
     state.observer.logs = &detail::LogsByTab(state, state.runLogTab);
@@ -389,10 +422,10 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.hasPeak = false;
     state.runIsPreview = previewSelected;
     detail::AppendGUILogToTab(state, state.runLogTab, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
-    if (cfg.overrideNoteTicks != nullptr)
+    if (overrides.noteTicks != nullptr)
     {
         detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] PianoRoll edited notes applied: count=" +
-            std::to_string(cfg.overrideNoteTicks->size() / 2));
+            std::to_string(overrides.noteTicks->size() / 2));
     }
     if (previewSelected)
     {
@@ -415,8 +448,8 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     state.running = true;
     try
     {
-        state.runFuture = std::async(std::launch::async, [cfg, options, &state]() {
-            return RunSafely(cfg, options, state);
+        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state]() {
+            return RunSafely(project, options, overrides, state);
             });
     }
     catch (const std::exception& ex)

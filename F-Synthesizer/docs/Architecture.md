@@ -74,7 +74,7 @@ GUI 状態に依存しません。
 - config / preset の保存形式は `format: "projectModel.v3"` と `project` object を持つ。
 - `project.instruments` は Sound Card / Instrument の音色定義を表す。
 - `project.channels` は MIDI チャンネルごとの `instrumentId` 参照と mix を表す。
-- v3 Phase 2 では Instrument 内の `sound` が legacy `source` / `layers` / `expressionMap` を保持し、既存 `ChannelConfig` へ展開される。
+- v3 Phase 3 では実行経路を `ProjectModel -> RenderConfig -> SynthEngine` に一本化し、Instrument 内の `sound` を render 用 `ChannelConfig` へ展開してから SynthEngine へ渡す。
 - `source.type` は音源契約を選ぶ。
   - `waveform`: 基本 oscillator、unison、sub oscillator、filter、smoothing、PWM、ring modulation、hard sync、arpeggio。
   - `analog`: waveform 系の減算的音源。drive と drift を持つ。
@@ -95,7 +95,7 @@ GUI 状態に依存しません。
 - 専門的な音色編集は Play に常時表示せず、Advanced または Play の Inspector 導線から開く。
 - Piano-roll 編集と drum step-sequencer 編集は、preview と export の両方へ反映する。
 - GUI 状態は `config/gui_state.json` に保存する。Piano-roll project は `config/piano_roll_project.json` に保存する。
-- GUI code は sound synthesis を直接実装せず、app/core のレンダリング経路を呼ぶ。
+- GUI code は sound synthesis を直接実装せず、`ProjectModel` を作って app/core のレンダリング経路を呼ぶ。
 
 ## 音とレンダリング契約
 

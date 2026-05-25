@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\\core\\AudioBuffer.cpp" />
+    <ClCompile Include="src\\core\\RenderConfigBuilder.cpp" />
     <ClCompile Include="src\\app\\AppEntry.cpp" />
     <ClCompile Include="src\\app\\CLI.cpp" />
     <ClCompile Include="src\\app\\RunDefaults.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="include\\app\\CLI.h" />
     <ClInclude Include="src\\app\\RunInternal.h" />
     <ClInclude Include="include\\core\\RenderConfig.h" />
+    <ClInclude Include="include\\core\\RenderConfigBuilder.h" />
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
     <ClInclude Include="include\\config\\SourceJSON.h" />

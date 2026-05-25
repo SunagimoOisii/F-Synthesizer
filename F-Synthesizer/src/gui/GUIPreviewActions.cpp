@@ -4,6 +4,7 @@
 #include <array>
 #include <exception>
 #include <future>
+#include <map>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -12,8 +13,10 @@
 #include "AppCore.h"
 #include "config/SourceRegistry.h"
 #include "gui/GUIActionsInternal.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIStateModel.h"
 #include "gui/PreviewAudio.h"
+#include "project/ProjectModel.h"
 
 namespace
 {
@@ -175,31 +178,58 @@ int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
     return std::clamp(state.tonePreviewNoteNumber, 0, 127);
 }
 
-void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, AppConfig& cfg)
+std::string RuntimeInstrumentId(int ch)
 {
-    if (!state.channelConfigs)
+    return "gui_tone_preview__ch" + std::to_string(ch);
+}
+
+ProjectModel BuildTonePreviewProjectFromGUI(GUIState& state)
+{
+    ProjectModel project = gui::BuildProjectModelFromGUI(state);
+    auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>();
+    auto projectChannels = std::make_shared<std::array<ProjectChannelConfig, 16>>();
+
+    const auto& channelConfigs = state.channelConfigs ? *state.channelConfigs : gui::ReadChannelConfigs(state);
+    const auto& channelMixStates = state.channelMixStates ? *state.channelMixStates : gui::ReadChannelMixStates(state);
+
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const std::string id = RuntimeInstrumentId(ch);
+        InstrumentConfig instrument{};
+        instrument.sound = channelConfigs[ch];
+        instruments->emplace(id, instrument);
+
+        ProjectChannelConfig projectChannel{};
+        projectChannel.enabled = true;
+        projectChannel.instrumentId = id;
+        projectChannel.mix = channelMixStates[ch];
+        (*projectChannels)[ch] = projectChannel;
+    }
+
+    project.channelConfigs = std::make_shared<const std::array<ChannelConfig, 16>>(channelConfigs);
+    project.channelMixStates = std::make_shared<const std::array<ChannelMixState, 16>>(channelMixStates);
+    project.instruments = instruments;
+    project.projectChannels = projectChannels;
+    return project;
+}
+
+void OverridePreviewChannelWithSelectedSoundSlot(const GUIState& state, int previewChannel, ProjectModel& project)
+{
+    if (!state.channelConfigs || !project.instruments || !project.projectChannels)
     {
         return;
     }
 
-    auto previewConfigs = std::make_shared<std::array<ChannelConfig, 16>>();
-    if (cfg.channelConfigs)
-    {
-        *previewConfigs = *cfg.channelConfigs;
-    }
-    else
-    {
-        const AppConfig def = DefaultConfig();
-        if (def.channelConfigs)
-        {
-            *previewConfigs = *def.channelConfigs;
-        }
-    }
-
     previewChannel = std::clamp(previewChannel, 0, 15);
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    (*previewConfigs)[previewChannel] = (*state.channelConfigs)[slot];
-    cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(previewConfigs);
+    auto mutableInstruments = std::make_shared<std::map<std::string, InstrumentConfig>>(*project.instruments);
+    const std::string instrumentId = (*project.projectChannels)[previewChannel].instrumentId;
+    auto it = mutableInstruments->find(instrumentId);
+    if (it != mutableInstruments->end())
+    {
+        it->second.sound = (*state.channelConfigs)[slot];
+    }
+    project.instruments = mutableInstruments;
 }
 
 std::string FormatPreviewException(const std::exception& ex)
@@ -259,14 +289,15 @@ private:
 };
 
 int RunPreviewSafely(
-    AppConfig cfg,
+    ProjectModel project,
     RenderOptions options,
+    RenderRuntimeOverrides overrides,
     GUIState& state)
 {
     try
     {
         GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
-        return RunPreviewStreaming(cfg, options, &state.observer, sink, state.previewLoop);
+        return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
     }
     catch (const std::exception& ex)
     {
@@ -357,12 +388,13 @@ void StartGUISoundTonePreview(GUIState& state)
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
-    AppConfig cfg = BuildConfigFromGUI(state);
-    cfg.targetChannel = previewChannel;
-    OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, cfg);
+    ProjectModel project = BuildTonePreviewProjectFromGUI(state);
+    project.targetChannel = previewChannel;
+    OverridePreviewChannelWithSelectedSoundSlot(state, previewChannel, project);
     const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
-    cfg.midiPath.clear();
-    cfg.overrideTicksPerQuarter = 480;
+    project.midiPath.clear();
+    RenderRuntimeOverrides overrides{};
+    overrides.ticksPerQuarter = 480;
     if (state.chordModeEnabled)
     {
         constexpr int kChordOffsets[5][4] = {
@@ -380,13 +412,13 @@ void StartGUISoundTonePreview(GUIState& state)
         {
             notes[i] = previewNote + kChordOffsets[ct][i];
         }
-        cfg.overrideNoteTicks = BuildOverrideNoteTicksForChord(
-            previewChannel, notes, sz, 110, cfg.overrideTicksPerQuarter);
+        overrides.noteTicks = BuildOverrideNoteTicksForChord(
+            previewChannel, notes, sz, 110, overrides.ticksPerQuarter);
     }
     else
     {
-        cfg.overrideNoteTicks = BuildOverrideNoteTicksForSoundTone(
-            previewChannel, previewNote, 110, cfg.overrideTicksPerQuarter);
+        overrides.noteTicks = BuildOverrideNoteTicksForSoundTone(
+            previewChannel, previewNote, 110, overrides.ticksPerQuarter);
     }
 
     RenderOptions options = DefaultPreviewRenderOptions();
@@ -415,8 +447,8 @@ void StartGUISoundTonePreview(GUIState& state)
     state.running = true;
     try
     {
-        state.runFuture = std::async(std::launch::async, [cfg, options, &state]() {
-            return RunPreviewSafely(cfg, options, state);
+        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state]() {
+            return RunPreviewSafely(project, options, overrides, state);
             });
     }
     catch (const std::exception& ex)

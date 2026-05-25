@@ -6,9 +6,6 @@
 bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
 {
     // 公開I/Fは薄いラッパーに保ち、実装詳細は config::internal へ閉じ込める。
-    const auto overrideNoteTicks = cfg.overrideNoteTicks;
-    const int overrideTicksPerQuarter = cfg.overrideTicksPerQuarter;
-
     ProjectModel model = ProjectModelFromAppConfig(cfg);
     if (!config::internal::LoadProjectModelFileInternal(configPath, model, err))
     {
@@ -16,8 +13,6 @@ bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std
     }
 
     cfg = ToAppConfig(model);
-    cfg.overrideNoteTicks = overrideNoteTicks;
-    cfg.overrideTicksPerQuarter = overrideTicksPerQuarter;
     return true;
 }
 

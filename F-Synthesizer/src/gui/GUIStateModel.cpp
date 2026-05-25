@@ -23,7 +23,7 @@ void EnsureChannelMixStates(GUIState& state)
 
 AppConfig BuildConfigFromGUI(const GUIState& state)
 {
-    // GUI入力をRun境界のAppConfig形式にそろえる唯一の変換点。
+    // Phase 5 までの移行補助。Run境界ではなく、legacy AppConfig 互換が必要な処理で使う。
     AppConfig cfg = ToAppConfig(BuildProjectModelFromGUI(state));
     if (state.channelConfigs)
     {

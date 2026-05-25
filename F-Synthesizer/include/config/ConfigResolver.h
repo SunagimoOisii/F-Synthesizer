@@ -6,12 +6,13 @@
 
 #include "AppCore.h"
 #include "app/CLI.h"
+#include "project/ProjectModel.h"
 
 // 実行時設定の解決結果。
-// 解決済みAppConfigと、採用された設定ファイル情報/通知行をまとめて返す。
+// 解決済みProjectModelと、採用された設定ファイル情報/通知行をまとめて返す。
 struct ResolvedRuntimeConfig
 {
-    AppConfig config;
+    ProjectModel project;
     std::filesystem::path selectedConfigPath;
     std::vector<std::string> infoLines;
 };

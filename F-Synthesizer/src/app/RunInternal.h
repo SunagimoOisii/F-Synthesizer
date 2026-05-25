@@ -33,32 +33,36 @@ void LogSampleEventSummary(
 void LogRenderStats(IRunObserver* observer, const SoundData& sound);
 
 int SaveRunOutput(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
     const SoundData& sound,
     IRunObserver* observer);
 
 int RunMain(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound);
 
 int RunExportRender(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound);
 
 int RunPreviewRender(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     SoundData* renderedSound);
 
 int RunPreviewStreamingInternal(
-    const AppConfig& config,
+    const ProjectModel& project,
     const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides,
     IRunObserver* observer,
     IPreviewStreamSink& streamSink,
     bool loop);
