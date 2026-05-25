@@ -10,6 +10,52 @@ namespace app::run
 {
 namespace
 {
+struct ResolvedRenderInputs
+{
+    std::shared_ptr<const std::array<ChannelConfig, 16>> defaultChannelConfigs{};
+    std::shared_ptr<const std::array<ChannelMixState, 16>> defaultChannelMixStates{};
+    const std::array<ChannelConfig, 16>* channelConfigs = nullptr;
+    const std::array<ChannelMixState, 16>* channelMixStates = nullptr;
+};
+
+ResolvedRenderInputs ResolveRenderInputs(const AppConfig& config)
+{
+    ResolvedRenderInputs resolved{};
+    resolved.channelConfigs = config.channelConfigs.get();
+    resolved.channelMixStates = config.channelMixStates.get();
+
+    if (resolved.channelConfigs == nullptr)
+    {
+        // AppConfig は実行境界なので、不完全な入力はここで既定 render table に解決する。
+        resolved.defaultChannelConfigs = BuildDefaultChannelConfigs();
+        resolved.channelConfigs = resolved.defaultChannelConfigs.get();
+    }
+    if (resolved.channelMixStates == nullptr)
+    {
+        resolved.defaultChannelMixStates = BuildDefaultChannelMixStates();
+        resolved.channelMixStates = resolved.defaultChannelMixStates.get();
+    }
+    return resolved;
+}
+
+RenderConfig BuildRenderConfig(
+    const AppConfig& config,
+    const RenderOptions& options,
+    const std::vector<MIDIEvent>& events,
+    const MIDIBuildOutput& midiOut,
+    const ResolvedRenderInputs& renderInputs)
+{
+    return RenderConfig{
+        events,
+        midiOut.tempoEvents,
+        midiOut.ticksPerQuarter,
+        options.startSec,
+        *renderInputs.channelConfigs,
+        *renderInputs.channelMixStates,
+        config.masterEffects
+    };
+}
+
 int RunRenderCommon(
     const AppConfig& config,
     const RenderOptions& options,
@@ -82,17 +128,7 @@ int RunRenderCommon(
         return 1;
     }
 
-    const auto* channelConfigs = config.channelConfigs.get();
-    const auto* channelMixStates = config.channelMixStates.get();
-    if (channelConfigs == nullptr)
-    {
-        // 互換維持: 不完全な設定入力でも既定テーブルで実行可能にする。
-        channelConfigs = BuildDefaultChannelConfigs().get();
-    }
-    if (channelMixStates == nullptr)
-    {
-        channelMixStates = BuildDefaultChannelMixStates().get();
-    }
+    const ResolvedRenderInputs renderInputs = ResolveRenderInputs(config);
 
     int lastSample = events.back().sample;
     int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
@@ -127,15 +163,7 @@ int RunRenderCommon(
         LogLine(observer, oss.str());
     }
 
-    const RenderConfig renderConfig{
-        events,
-        midiOut.tempoEvents,
-        midiOut.ticksPerQuarter,
-        options.startSec,
-        *channelConfigs,
-        *channelMixStates,
-        config.masterEffects
-    };
+    const RenderConfig renderConfig = BuildRenderConfig(config, options, events, midiOut, renderInputs);
 
     bool canceled = false;
     // レンダループ内の分岐を減らすため、キャンセル有無で経路を先に分ける。
@@ -239,16 +267,7 @@ int RunPreviewStreamingInternal(
         return 1;
     }
 
-    const auto* channelConfigs = config.channelConfigs.get();
-    const auto* channelMixStates = config.channelMixStates.get();
-    if (channelConfigs == nullptr)
-    {
-        channelConfigs = BuildDefaultChannelConfigs().get();
-    }
-    if (channelMixStates == nullptr)
-    {
-        channelMixStates = BuildDefaultChannelMixStates().get();
-    }
+    const ResolvedRenderInputs renderInputs = ResolveRenderInputs(config);
 
     int lastSample = events.back().sample;
     int extraRelease = static_cast<int>(config.extraReleaseSec * config.sampleRate);
@@ -275,15 +294,7 @@ int RunPreviewStreamingInternal(
         return 1;
     }
 
-    const RenderConfig renderConfig{
-        events,
-        midiOut.tempoEvents,
-        midiOut.ticksPerQuarter,
-        previewOptions.startSec,
-        *channelConfigs,
-        *channelMixStates,
-        config.masterEffects
-    };
+    const RenderConfig renderConfig = BuildRenderConfig(config, previewOptions, events, midiOut, renderInputs);
 
     bool canceled = false;
     auto shouldCancelObserver = [&]() -> bool {

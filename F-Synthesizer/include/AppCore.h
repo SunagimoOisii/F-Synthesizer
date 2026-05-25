@@ -31,6 +31,7 @@ struct RenderOptions
 
 // アプリ実行に必要な解決済み設定。
 // CLI/GUI/ConfigResolver で構築され、Run境界へ受け渡される。
+// 保存形式の正本ではなく、preview override など実行時だけの入力を含められる境界型。
 // channelConfigs/channelMixStates は共有所有で不変参照する前提。
 struct AppConfig
 {

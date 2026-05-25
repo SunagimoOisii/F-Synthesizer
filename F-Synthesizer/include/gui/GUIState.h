@@ -33,7 +33,8 @@ struct GUIStepSeqState
     }
 };
 
-// GUI状態のうち、保存対象またはProjectModelへ反映される値。
+// GUI状態のうち、GUI state storage に保存する値、またはProjectModelへ反映される値。
+// projectModel の保存形式そのものではなく、GUI の復元に必要な永続状態を表す。
 struct GUIPersistentState
 {
     char midiPath[1024]{};
@@ -83,7 +84,7 @@ struct GUIPersistentState
     GUIStepSeqState stepSeq{};
 };
 
-// 画面表示中だけ意味を持つ一時状態。
+// 画面表示中だけ意味を持つ一時状態。project/config 保存対象にはしない。
 struct GUITransientState
 {
     bool hasUIError = false;
@@ -111,7 +112,7 @@ struct GUITransientState
     bool playInspectorOpen = true;
 };
 
-// 非同期Run/Preview再生に関係する状態。
+// 非同期Run/Preview再生に関係する状態。project/config 保存対象にはしない。
 struct GUIAsyncRunState
 {
     int lastRunExitCode = 0;
@@ -146,7 +147,7 @@ struct GUIRunObserver : IRunObserver
     }
 };
 
-// ログとRun観測用の状態。
+// ログとRun観測用の状態。GUI session の運用情報であり、project/config 保存対象にはしない。
 struct GUILogState
 {
     std::mutex logMutex{};

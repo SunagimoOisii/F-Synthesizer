@@ -9,7 +9,8 @@
 namespace gui
 {
 // 既存 GUIState の背後で ProjectModel へ接続する Facade。
-// 画面コードは段階的にこの入口へ寄せる。
+// GUI 表示コードが保存形式や preset 差分仕様を直接知らないようにする正規入口。
+// 画面コードの直接 state.channelConfigs 参照は Phase 5 で段階的にこの入口へ寄せる。
 ProjectModel BuildProjectModelFromGUI(const GUIState& state);
 void ApplyProjectModelToGUI(GUIState& state, const ProjectModel& model);
 

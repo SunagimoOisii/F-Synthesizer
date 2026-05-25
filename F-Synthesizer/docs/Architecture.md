@@ -46,9 +46,9 @@ GUI 状態に依存しません。
 保存、GUI、実行時レンダリングの境界は、次のモデルで分けます。
 
 - `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力する。
-- `RenderConfig`: SynthEngine へ渡す実行用モデル。GUI や保存形式に依存しない render 入力にする。
-- `AppConfig`: CLI/GUI 実行境界。`ProjectModel` から生成し、app 層の実行条件をまとめる。
-- GUI Facade: 既存画面コードから `ProjectModel` へアクセスするための中間層。GUI と保存モデルの変換点を集約する。
+- `AppConfig`: CLI/GUI 実行境界。`ProjectModel` から生成し、preview override など実行時だけの入力をここに残す。
+- `RenderConfig`: SynthEngine へ渡す実行用モデル。App 層で既定値を解決してから作り、GUI や保存形式に依存しない render 入力にする。
+- GUI Facade: 既存画面コードから `ProjectModel` へアクセスするための中間層。`BuildProjectModelFromGUI` / `ApplyProjectModelToGUI` を変換点にする。
 - `GUIState`: 互換用の集約型。内部は永続状態、画面一時状態、非同期実行状態、ログ状態の base struct に分ける。
 
 ## 肥大化リスク

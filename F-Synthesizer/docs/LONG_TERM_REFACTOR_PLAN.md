@@ -15,10 +15,11 @@
 ## Phase 1: モデル境界整理
 
 目的は、Instrument Model を入れる前に、保存モデル、実行モデル、GUI 状態、renderer 入力の境界を明確にすることです。
+このフェーズでは境界入口の固定に限定し、GUI `.inl` 群の大規模置換や `projectModel.v3` 導入には入りません。
 
 - `ProjectModel` は保存、preset、config の正本として扱う。
 - `AppConfig` は CLI / GUI 実行境界の設定に限定する。
-- `RenderConfig` は SynthEngine へ渡す実行用モデルにする。
+- `RenderConfig` は SynthEngine へ渡す実行用モデルにし、App 層で既定 render table を解決してから組み立てる。
 - `GUIState` は互換用の集約型として扱い、永続 project 状態、画面一時状態、非同期実行状態、ログ状態へ分ける準備を進める。
 - `GUIProjectFacade` を GUI と `ProjectModel` の変換点として育て、GUI 表示コードが JSON shape や preset 差分仕様へ直接依存しないようにする。
 - 既存 `ChannelConfig` はすぐ捨てず、v3 への移行元として扱う。
@@ -28,6 +29,7 @@
 - CLI / GUI / renderer が直接 JSON shape や preset 差分仕様に依存しない入口を持つ。
 - `ProjectModel -> AppConfig` と `ProjectModel -> RenderConfig` の責務が混ざらない。
 - 新規の保存項目を追加するときに `SynthEngine.h` や GUI `.inl` へ直足ししなくてよい判断基準がある。
+- Phase 1 時点では `AppConfig -> RenderConfig` 準備 helper までに留め、`ProjectModel -> RenderConfig` 直変換は Phase 3 で扱う。
 
 ## Phase 2: ProjectModel v3 + Instrument Model 導入
 

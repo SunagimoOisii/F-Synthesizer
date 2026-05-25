@@ -8,7 +8,9 @@
 #include "AppCore.h"
 
 // 保存、preset、config の正本モデル。
-// 実行時だけの差し替え入力は AppConfig 側に残し、ここには永続化対象だけを置く。
+// 実行時だけの差し替え入力や preview override は AppConfig 側に残し、
+// ここには projectModel.v2 として永続化する値だけを置く。
+// ChannelConfig/ChannelMixState は Phase 1 では v3 Instrument Model への移行元として維持する。
 struct ProjectModel
 {
     std::filesystem::path midiPath;
@@ -24,7 +26,9 @@ struct ProjectModel
 };
 
 ProjectModel DefaultProjectModel();
+// ProjectModel -> AppConfig: 永続 project を CLI/GUI Run 境界の実行設定へ展開する。
 AppConfig ToAppConfig(const ProjectModel& model);
+// AppConfig -> ProjectModel: 実行時 override を落とし、永続化可能な値だけを回収する。
 ProjectModel ProjectModelFromAppConfig(const AppConfig& config);
 bool LoadProjectModelFile(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
 bool SaveProjectModelFile(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);
