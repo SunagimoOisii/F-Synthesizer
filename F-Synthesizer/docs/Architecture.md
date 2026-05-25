@@ -2,6 +2,7 @@
 
 このファイルを F-Synthesizer のコンパクトなアーキテクチャ正本にします。
 開発方針と設計基準は `docs/ArchitectureAssessment.md` に置きます。
+Instrument Model、preset 再編、GUI 再設計までの長期改変計画は `docs/LONG_TERM_REFACTOR_PLAN.md` に置きます。
 
 ## レイヤー構成
 
