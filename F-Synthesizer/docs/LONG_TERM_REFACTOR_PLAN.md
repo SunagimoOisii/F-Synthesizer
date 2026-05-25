@@ -103,19 +103,21 @@
 
 ## Phase 6: GUI 再設計
 
-目的は、Instrument / Sound Card 中心の利用体験へ GUI を合わせることです。
+目的は、Instrument / Sound Card 中心の利用体験へ GUI を合わせることです。Phase 6 実装後は、Play が Sound Card metadata の `recommendedRange` / `macroHints` を使い、Compose が Sound Card slot assignment と mix を曲作りの中心として扱います。
 
 - `Play` は Sound Card 選択、4 macro、試聴、簡易割当を中心にする。
 - `Compose` は MIDI、ピアノロール、ステップシーケンサー、channel assignment を中心にする。
 - `Export` は WAV 出力と出力条件に集中する。
 - `Advanced` は Instrument 詳細編集、Master FX、Mixer、検証 preset を扱う。
 - 専門的な音色編集は Play に常時表示せず、Advanced または Play の Inspector 導線から開く。
+- Sound Card の推奨 preview note と macro label / hint は Play の試聴と4 macro表示へ反映する。
 
 完了条件:
 
 - GUI から JSON や legacy `layers` を意識せず、Instrument / Sound Card 中心に操作できる。
 - Sound Card 選択から preview までが短い導線で動く。
 - Compose の channel assignment が preview と export の両方へ反映される。
+- Advanced は詳細編集と検証 preset の到達先として残し、legacy direct edit の完全削除は Phase 7 で扱う。
 
 ## Phase 7: Legacy Cleanup
 

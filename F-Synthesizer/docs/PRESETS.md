@@ -10,8 +10,8 @@
 - Advanced では `internal: true` の `demo_*` 検証 preset に到達できます。
 - 表示名は短い英語名、説明文は初心者が用途を判断できる日本語短文にします。
 - tags は用途と質感を表す英語 lowercase を基本にします。
-- `recommendedRange` は preview や将来の GUI 表示のための推奨音域 metadata です。
-- `macroHints` は既存4 macro の表示補助 metadata です。DSP 挙動は `GUIMacroMapping` が担当します。
+- `recommendedRange` は Play の preview note と Inspector 表示に使う推奨音域 metadata です。
+- `macroHints` は Play の4 macro label / tooltip に使う表示補助 metadata です。DSP 挙動は `GUIMacroMapping` が担当します。
 - 実戦 Sound Card は重厚なレトロ感を残しつつ、不要な hiss、耳につく aliasing、過剰 drive、用途不明な noise を避けます。
 - `demo_*` は完成音色ではなく機能差分を確認するための検証 preset です。
 

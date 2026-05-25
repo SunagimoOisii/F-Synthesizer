@@ -90,6 +90,7 @@ GUI 状態に依存しません。
 - UI は短い編集→試聴サイクルを最優先する。
 - 主導線は `Play / Compose / Export / Advanced`。
 - `Play` は起動直後の画面で、音楽用途の Sound Card、4 つの感覚的な macro、試聴、簡易キーボードだけを前面に出す。カテゴリは `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` を基本にする。
+- Play の試聴 note と macro 表示は Sound Card metadata の `recommendedRange` / `macroHints` を使う。
 - `Compose` は MIDI、ピアノロール、ステップシーケンサー、簡易チャンネル割当を扱う。
 - `Export` は WAV 書き出しに集中し、形式設定は折りたたみの詳細設定に置く。
 - `Advanced` は詳細 source control、Master FX、Mixer/割当、検査用 preset の到達先にする。

@@ -181,6 +181,8 @@ struct PresetMeta
     std::string description{};
     std::string displayName{};
     std::string category{};
+    GUIPresetItem::RecommendedRange recommendedRange{};
+    std::vector<GUIPresetItem::MacroHint> macroHints{};
     bool internalOnly = false;
     config::SourceKind sourceKind = config::SourceKind::Count;
 };
@@ -353,6 +355,47 @@ PresetMeta ReadPresetMeta(const std::filesystem::path& presetPath)
                     if (tag.is_string())
                     {
                         meta.tags.push_back(ToLower(tag.get<std::string>()));
+                    }
+                }
+            }
+            if (it.value().contains("recommendedRange") && it.value()["recommendedRange"].is_object())
+            {
+                const auto& range = it.value()["recommendedRange"];
+                if (range.contains("low") && range["low"].is_number_integer()
+                    && range.contains("high") && range["high"].is_number_integer()
+                    && range.contains("preview") && range["preview"].is_number_integer())
+                {
+                    meta.recommendedRange.low = std::clamp(range["low"].get<int>(), 0, 127);
+                    meta.recommendedRange.high = std::clamp(range["high"].get<int>(), 0, 127);
+                    meta.recommendedRange.preview = std::clamp(range["preview"].get<int>(), 0, 127);
+                    meta.recommendedRange.available = true;
+                }
+            }
+            if (it.value().contains("macroHints") && it.value()["macroHints"].is_array())
+            {
+                meta.macroHints.clear();
+                for (const auto& hint : it.value()["macroHints"])
+                {
+                    if (!hint.is_object())
+                    {
+                        continue;
+                    }
+                    GUIPresetItem::MacroHint out{};
+                    if (hint.contains("id") && hint["id"].is_string())
+                    {
+                        out.id = hint["id"].get<std::string>();
+                    }
+                    if (hint.contains("label") && hint["label"].is_string())
+                    {
+                        out.label = hint["label"].get<std::string>();
+                    }
+                    if (hint.contains("description") && hint["description"].is_string())
+                    {
+                        out.description = hint["description"].get<std::string>();
+                    }
+                    if (!out.id.empty())
+                    {
+                        meta.macroHints.push_back(std::move(out));
                     }
                 }
             }
@@ -657,6 +700,8 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
             item.description = meta->description;
             item.displayName = meta->displayName;
             item.category = meta->category;
+            item.recommendedRange = meta->recommendedRange;
+            item.macroHints = meta->macroHints;
             item.internalOnly = meta->internalOnly;
             state.presetItems.push_back(std::move(item));
         }
@@ -677,6 +722,8 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
                 item.description = it->second.description;
                 item.displayName = it->second.displayName;
                 item.category = it->second.category;
+                item.recommendedRange = it->second.recommendedRange;
+                item.macroHints = it->second.macroHints;
                 item.internalOnly = it->second.internalOnly;
             }
             else
@@ -717,7 +764,12 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
     }
 
     const std::string& presetName = state.presetItems[state.presetIndex].name;
+    const GUIPresetItem& selectedItem = state.presetItems[state.presetIndex];
     strncpy_s(state.presetName, sizeof(state.presetName), presetName.c_str(), _TRUNCATE);
+    if (selectedItem.recommendedRange.available)
+    {
+        state.tonePreviewNoteNumber = selectedItem.recommendedRange.preview;
+    }
     AppConfig cfg{};
     if (!LoadPresetConfig(FindProjectRootPath(), presetName, cfg, err))
     {
@@ -745,10 +797,28 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
             const int dstSlot = std::clamp(state.selectedSoundSlot, 0, 15);
             const int srcCh = changedChannels.front();
             MutableSoundSlot(state, dstSlot) = (*cfg.channelConfigs)[srcCh];
+            state.soundSlotDisplayNames[static_cast<size_t>(dstSlot)] =
+                selectedItem.displayName.empty() ? selectedItem.name : selectedItem.displayName;
+            if (selectedItem.recommendedRange.available
+                && config::UsesDrumKitNoteSelection(MutableSoundSlot(state, dstSlot).source))
+            {
+                state.selectedDrumNote = selectedItem.recommendedRange.preview;
+            }
         }
         else
         {
             MutableChannelConfigs(state) = *cfg.channelConfigs;
+            const std::string label = selectedItem.displayName.empty() ? selectedItem.name : selectedItem.displayName;
+            for (std::string& slotName : state.soundSlotDisplayNames)
+            {
+                slotName = label;
+            }
+            const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
+            if (selectedItem.recommendedRange.available
+                && config::UsesDrumKitNoteSelection(MutableSoundSlot(state, slot).source))
+            {
+                state.selectedDrumNote = selectedItem.recommendedRange.preview;
+            }
         }
     }
     return true;

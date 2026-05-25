@@ -6,6 +6,10 @@ struct MacroLabels
     const char* roughness = nullptr;
     const char* movement = nullptr;
     const char* envelope = nullptr;
+    const char* brightnessHelp = nullptr;
+    const char* roughnessHelp = nullptr;
+    const char* movementHelp = nullptr;
+    const char* envelopeHelp = nullptr;
 };
 
 MacroLabels GetMacroLabels(const SourceConfig& src)
@@ -27,6 +31,46 @@ MacroLabels GetMacroLabels(const SourceConfig& src)
         return { "明るさ", nullptr, nullptr, "鳴り方" };
     }
     return { "明るさ", "荒さ", "揺れ", "鳴り方" };
+}
+
+const GUIPresetItem::MacroHint* FindPresetMacroHint(const GUIState& state, const char* id)
+{
+    if (id == nullptr || state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
+    {
+        return nullptr;
+    }
+    const auto& hints = state.presetItems[static_cast<size_t>(state.presetIndex)].macroHints;
+    const auto it = std::find_if(hints.begin(), hints.end(), [&](const GUIPresetItem::MacroHint& hint) {
+        return hint.id == id;
+    });
+    return (it != hints.end()) ? &*it : nullptr;
+}
+
+void ApplyPresetMacroHints(const GUIState& state, MacroLabels& labels)
+{
+    auto apply = [&](const char* id, const char*& label, const char*& help) {
+        if (label == nullptr)
+        {
+            return;
+        }
+        const GUIPresetItem::MacroHint* hint = FindPresetMacroHint(state, id);
+        if (hint == nullptr)
+        {
+            return;
+        }
+        if (!hint->label.empty())
+        {
+            label = hint->label.c_str();
+        }
+        if (!hint->description.empty())
+        {
+            help = hint->description.c_str();
+        }
+    };
+    apply("brightness", labels.brightness, labels.brightnessHelp);
+    apply("roughness", labels.roughness, labels.roughnessHelp);
+    apply("movement", labels.movement, labels.movementHelp);
+    apply("envelope", labels.envelope, labels.envelopeHelp);
 }
 
 // マクロスライダーをパラメータへ反映し、Auto Tone Preview を要求する。
@@ -76,7 +120,8 @@ void DrawLayer2Macros(GUIState& state)
     const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
     ChannelConfig& cfg = gui::MutableSoundSlot(state, ch);
     MacroSliderState& sliders = gui::MutableMacroSliders(state, ch);
-    const MacroLabels labels = GetMacroLabels(cfg.source);
+    MacroLabels labels = GetMacroLabels(cfg.source);
+    ApplyPresetMacroHints(state, labels);
 
     // --- Undo 用 before スナップショット（スライダーのドラッグ開始時にキャプチャ） ---
     static MacroSliderState undoBeforeSliders{};
@@ -85,7 +130,7 @@ void DrawLayer2Macros(GUIState& state)
 
     // --- マクロスライダー（2x2）---
     bool changed = false;
-    auto drawMacroSlider = [&](const char* id, const char* label, float& value, float* lastValue) {
+    auto drawMacroSlider = [&](const char* id, const char* label, const char* help, float& value, float* lastValue) {
         if (label == nullptr)
         {
             return;
@@ -129,20 +174,24 @@ void DrawLayer2Macros(GUIState& state)
         {
             PushSoundHistoryEntry(state, undoBeforeSlot, undoBeforeConfig, undoBeforeSliders);
         }
+        if (help != nullptr && help[0] != '\0' && ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("%s", help);
+        }
         ImGui::PopID();
     };
     if (ImGui::BeginTable("layer2_macro_grid", 2, ImGuiTableFlags_SizingStretchProp))
     {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        drawMacroSlider("brightness", labels.brightness, sliders.brightness, nullptr);
+        drawMacroSlider("brightness", labels.brightness, labels.brightnessHelp, sliders.brightness, nullptr);
         ImGui::TableSetColumnIndex(1);
-        drawMacroSlider("roughness", labels.roughness, sliders.roughness, &sliders.lastLayer2Roughness);
+        drawMacroSlider("roughness", labels.roughness, labels.roughnessHelp, sliders.roughness, &sliders.lastLayer2Roughness);
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        drawMacroSlider("movement", labels.movement, sliders.movement, &sliders.lastLayer2Movement);
+        drawMacroSlider("movement", labels.movement, labels.movementHelp, sliders.movement, &sliders.lastLayer2Movement);
         ImGui::TableSetColumnIndex(1);
-        drawMacroSlider("envelope", labels.envelope, sliders.envelope, &sliders.lastLayer2Envelope);
+        drawMacroSlider("envelope", labels.envelope, labels.envelopeHelp, sliders.envelope, &sliders.lastLayer2Envelope);
         ImGui::EndTable();
     }
     if (changed)

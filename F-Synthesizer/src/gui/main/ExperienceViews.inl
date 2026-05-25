@@ -97,11 +97,22 @@ static std::string SoundSourceLabel(const GUIState& state, int soundIndex)
     return config::SourceKindToDisplayName(sourceKind);
 }
 
+static std::string SoundSlotDisplayLabel(const GUIState& state, int soundIndex)
+{
+    soundIndex = std::clamp(soundIndex, 0, 15);
+    const std::string& name = state.soundSlotDisplayNames[static_cast<size_t>(soundIndex)];
+    if (!name.empty())
+    {
+        return name;
+    }
+    return "Slot " + std::to_string(soundIndex + 1) + " / " + SoundSourceLabel(state, soundIndex);
+}
+
 static std::string ChannelSoundLabel(const GUIState& state, int channel)
 {
     channel = std::clamp(channel, 0, 15);
     const int soundIndex = gui::AssignedSoundSlot(state, channel);
-    return SoundSourceLabel(state, soundIndex);
+    return SoundSlotDisplayLabel(state, soundIndex);
 }
 
 template <typename HelpFn>
@@ -119,7 +130,7 @@ static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
 
     if (ImGui::BeginPopup("use_sound_slot_in_compose"))
     {
-        ImGui::Text("使う音色: %s", SoundSourceLabel(state, soundIndex).c_str());
+        ImGui::Text("使う音色: %s", SoundSlotDisplayLabel(state, soundIndex).c_str());
         ImGui::TextDisabled("使うチャンネルを選択");
         ImGui::Separator();
         if (ImGui::BeginTable("use_sound_slot_channels", 4, ImGuiTableFlags_SizingStretchSame))
@@ -303,6 +314,11 @@ static void DrawPlayView(
                 ImGui::Separator();
                 if (ImGui::Button("試聴"))
                 {
+                    const auto& item = state.presetItems[static_cast<size_t>(state.presetIndex)];
+                    if (item.recommendedRange.available)
+                    {
+                        state.tonePreviewNoteNumber = item.recommendedRange.preview;
+                    }
                     StartGUIRun(state, true);
                 }
                 updateHoverHelp("選択中の音を試聴します。", "WAVを書き出さずに再生します。", nullptr);
@@ -312,6 +328,16 @@ static void DrawPlayView(
                     state.UIModeTab = 3;
                 }
                 updateHoverHelp("詳細編集へ移動します。", "専門的な音色パラメータを開きます。", nullptr);
+                const auto& item = state.presetItems[static_cast<size_t>(state.presetIndex)];
+                if (item.recommendedRange.available)
+                {
+                    ImGui::Separator();
+                    ImGui::TextDisabled(
+                        "推奨音域: %d-%d / Preview %d",
+                        item.recommendedRange.low,
+                        item.recommendedRange.high,
+                        item.recommendedRange.preview);
+                }
             }
             ImGui::EndChild();
         }
@@ -463,7 +489,7 @@ static void DrawComposeView(
     const int displayCh = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     ImGui::Text("表示チャンネル: %s", ChannelLabel(displayCh).c_str());
     int assigned = gui::AssignedSoundSlot(state, displayCh);
-    ImGui::Text("このチャンネルの音色: %s", SoundSourceLabel(state, assigned).c_str());
+    ImGui::Text("このチャンネルの音色: %s", SoundSlotDisplayLabel(state, assigned).c_str());
     int assignedSoundNumber = assigned + 1;
     ImGui::SetNextItemWidth(220.0f);
     if (ImGui::SliderInt("音色の選択", &assignedSoundNumber, 1, 16, "%d"))

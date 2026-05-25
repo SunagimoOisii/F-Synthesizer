@@ -155,6 +155,8 @@ auto preparePlayPresetTarget = [&]()
 
     gui::MutableSoundSlot(state, freeSound) = gui::ReadSoundSlot(state, currentSound);
     gui::MutableMacroSliders(state, freeSound) = gui::ReadMacroSliders(state, currentSound);
+    state.soundSlotDisplayNames[static_cast<size_t>(freeSound)] =
+        state.soundSlotDisplayNames[static_cast<size_t>(currentSound)];
     gui::SetChannelAssignment(state, targetCh, freeSound);
     state.selectedSoundSlot = freeSound;
     state.presetDirty = true;

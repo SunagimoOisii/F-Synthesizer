@@ -35,11 +35,28 @@ struct GUIStepSeqState
 
 struct GUIPresetItem
 {
+    struct RecommendedRange
+    {
+        int low = 48;
+        int high = 84;
+        int preview = 60;
+        bool available = false;
+    };
+
+    struct MacroHint
+    {
+        std::string id{};
+        std::string label{};
+        std::string description{};
+    };
+
     std::string name{};
     std::vector<std::string> tags{};
     std::string description{};
     std::string displayName{};
     std::string category{};
+    RecommendedRange recommendedRange{};
+    std::vector<MacroHint> macroHints{};
     bool internalOnly = false;
 };
 
@@ -115,6 +132,7 @@ struct GUITransientState
     bool playInspectorOpen = true;
     bool presetDirty = false;
     std::vector<GUIPresetItem> presetItems{};
+    std::array<std::string, 16> soundSlotDisplayNames{};
 };
 
 // 非同期Run/Preview再生に関係する状態。project/config 保存対象にはしない。
