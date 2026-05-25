@@ -14,7 +14,7 @@
 ## 設計境界
 
 - GUI は編集、表示、プレビュー操作を担当し、音生成アルゴリズムを直接実装しません。
-- App は CLI/GUI から `ProjectModel`、`RenderOptions`、runtime override を受け、`ProjectModel -> RenderConfig -> SynthEngine` の実行経路にそろえます。`AppConfig` は legacy 互換と一部補助処理に限定します。
+- App は CLI/GUI から `ProjectModel`、`RenderOptions`、runtime override を受け、`ProjectModel -> RenderConfig -> SynthEngine` の実行経路にそろえます。
 - Core は App から SynthEngine への薄い実行境界に保ちます。
 - SynthEngine は音生成、voice、modulation、filter、mix/effects の実行時処理に集中します。
 - Config は JSON load/save、preset merge、schema validation を担当します。

@@ -263,7 +263,7 @@
     <ClInclude Include="include\\midi\\MIDIPipeline.h" />
     <ClInclude Include="include\\project\\ProjectModel.h" />
     <ClInclude Include="include\\SynthEngine\\AnalogConfig.h" />
-    <ClInclude Include="include\\SynthEngine\\ChannelConfig.h" />
+    <ClInclude Include="include\\SynthEngine\\InstrumentSoundConfig.h" />
     <ClInclude Include="include\\SynthEngine\\DrumConfig.h" />
     <ClInclude Include="include\\SynthEngine\\DrumKitConfig.h" />
     <ClInclude Include="include\\SynthEngine\\EffectsConfig.h" />

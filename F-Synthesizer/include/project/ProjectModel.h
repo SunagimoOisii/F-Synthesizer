@@ -26,7 +26,7 @@ struct MacroHint
     std::string description;
 };
 
-// InstrumentConfig::sound は legacy ChannelConfig を内包し、Sound Card の音色本体として扱う。
+// InstrumentConfig::sound は Sound Card の音色本体として扱う。
 struct InstrumentConfig
 {
     std::string displayName;
@@ -36,10 +36,10 @@ struct InstrumentConfig
     std::string description;
     RecommendedRange recommendedRange;
     std::vector<MacroHint> macroHints;
-    ChannelConfig sound;
+    InstrumentSoundConfig sound;
 };
 
-struct ProjectChannelConfig
+struct ProjectChannelAssignment
 {
     bool enabled = false;
     std::string instrumentId;
@@ -57,16 +57,9 @@ struct ProjectModel
     double extraReleaseSec = 0.0;
     MasterEffectConfig masterEffects;
     std::shared_ptr<const std::map<std::string, InstrumentConfig>> instruments;
-    std::shared_ptr<const std::array<ProjectChannelConfig, 16>> projectChannels;
-    // Legacy render tables remain as migration/cache inputs while InstrumentConfig::sound is ChannelConfig-backed.
-    std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
-    std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
+    std::shared_ptr<const std::array<ProjectChannelAssignment, 16>> projectChannels;
 };
 
 ProjectModel DefaultProjectModel();
-// ProjectModel -> AppConfig: 永続 project を legacy 互換や移行補助で使う実行設定へ展開する。
-AppConfig ToAppConfig(const ProjectModel& model);
-// AppConfig -> ProjectModel: legacy 実行設定から、永続化可能な値だけを回収する。
-ProjectModel ProjectModelFromAppConfig(const AppConfig& config);
 bool LoadProjectModelFile(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
 bool SaveProjectModelFile(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);

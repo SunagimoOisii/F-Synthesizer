@@ -226,7 +226,7 @@ struct ExpressionMapConfig
 
 // 1チャンネル分の音色設定。
 // source + ADSR + amp を1セットで保持する。
-struct ChannelConfig
+struct InstrumentSoundConfig
 {
     // 1チャンネルの合成設定（音源 + ADSR + 振幅）
     // 音源

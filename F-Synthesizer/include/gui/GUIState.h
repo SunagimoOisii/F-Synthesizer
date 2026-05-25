@@ -86,7 +86,7 @@ struct GUIPersistentState
     char presetName[128]{ "custom" };
     std::string lastOutputPath{};
     std::string lastPresetPath{};
-    std::shared_ptr<std::array<ChannelConfig, 16>> channelConfigs{};
+    std::shared_ptr<std::array<InstrumentSoundConfig, 16>> soundSlots{};
     std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
     std::array<int, 16> channelAssignments{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     bool drumChannelSpecialHandling = true;

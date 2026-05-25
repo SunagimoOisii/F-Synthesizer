@@ -605,7 +605,7 @@ bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig
     return true;
 }
 
-bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, std::string& err)
+bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, InstrumentSoundConfig& cfg, std::string& err)
 {
     if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
     if (auto v = ReadJSONDouble(channelObjText, "attackSec")) cfg.attackSec = *v;
@@ -785,7 +785,7 @@ bool ParseChannelObject(const std::string& channelObjText, ChannelConfig& cfg, s
     return true;
 }
 
-bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
+bool ParseChannelMixObjectImpl(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
 {
     if (auto v = ReadJSONBool(mixObjText, "mute")) mix.mute = *v;
     if (auto v = ReadJSONBool(mixObjText, "solo")) mix.solo = *v;
@@ -812,107 +812,23 @@ bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, 
 }
 } // namespace
 
-bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err)
+bool ParseInstrumentSoundObject(const std::string& soundObjText, InstrumentSoundConfig& cfg, std::string& err)
 {
-    const auto root = ParseJSONObject(text);
+    const auto root = ParseJSONObject(soundObjText);
     if (!root)
     {
-        err = "project must be object";
+        err = "sound must be object";
         return false;
     }
-    const auto channelsIt = root->find("channels");
-    if (channelsIt == root->end())
+    if (!ValidateChannelObjectTypes(*root, "sound", err))
     {
-        return true;
-    }
-    if (!channelsIt->is_object())
-    {
-        err = "channels must be object";
         return false;
     }
-
-    // 既定値を基底に差分だけを適用し、preset互換を維持する。
-    auto table = MakeMutableChannelConfigs(cfg);
-    for (const auto& [k, value] : channelsIt->items())
-    {
-        int ch = -1;
-        try
-        {
-            ch = std::stoi(k);
-        }
-        catch (...)
-        {
-            err = "invalid channel key: " + k;
-            return false;
-        }
-        if (ch < 0 || ch > 15)
-        {
-            err = "channel key out of range: " + k;
-            return false;
-        }
-        const std::string channelPath = "channels." + k;
-        if (!ValidateChannelObjectTypes(value, channelPath, err))
-        {
-            return false;
-        }
-        ChannelConfig chCfg = (*table)[ch];
-        if (!ParseChannelObject(value.dump(), chCfg, err))
-        {
-            err = "channel " + k + ": " + err;
-            return false;
-        }
-        (*table)[ch] = chCfg;
-    }
-
-    cfg.channelConfigs = table;
-    return true;
+    return ParseInstrumentSoundObjectImpl(soundObjText, cfg, err);
 }
 
-bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& err)
+bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
 {
-    std::string mixObj;
-    bool found = false;
-    if (!ExtractObjectForKey(text, "channelMix", mixObj, found, err))
-    {
-        return false;
-    }
-    if (!found)
-    {
-        return true;
-    }
-
-    // channelMix も channels と同じく「差分マージ」を採用する。
-    auto table = MakeMutableChannelMixStates(cfg);
-    if (!ParseTopLevelObjectEntries(mixObj, [&](const std::string& k, const std::string& valueObj) {
-        int ch = -1;
-        try
-        {
-            ch = std::stoi(k);
-        }
-        catch (...)
-        {
-            err = "invalid channelMix key: " + k;
-            return false;
-        }
-        if (ch < 0 || ch > 15)
-        {
-            err = "channelMix key out of range: " + k;
-            return false;
-        }
-        ChannelMixState mix = (*table)[ch];
-        if (!ParseChannelMixObject(valueObj, mix, err))
-        {
-            err = "channelMix " + k + ": " + err;
-            return false;
-        }
-        (*table)[ch] = mix;
-        return true;
-        }, err))
-    {
-        return false;
-    }
-
-    cfg.channelMixStates = table;
-    return true;
+    return ParseChannelMixObjectImpl(mixObjText, mix, err);
 }
 } // namespace config::internal::load

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/InstrumentSoundConfig.h"
 
 struct GUIStateStorageData
 {

@@ -59,15 +59,15 @@ bool ParseTopLevelDoubleArrayElements(
     const std::function<bool(size_t, double)>& onElement,
     std::string& err);
 
-bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err);
-bool LoadChannelMixDiff(const std::string& text, AppConfig& cfg, std::string& err);
+bool ParseInstrumentSoundObject(const std::string& soundObjText, InstrumentSoundConfig& cfg, std::string& err);
+bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err);
 
-// 目的: 設定全文から AppConfig を構築する。
+// 目的: 設定全文から ProjectModel を構築する。
 // 前提: baseDir は相対パス解決の基準ディレクトリ。
-// 副作用: cfg を更新し、失敗時は err を設定する。
+// 副作用: model を更新し、失敗時は err を設定する。
 bool LoadConfigFromText(
     const std::string& text,
     const std::filesystem::path& baseDir,
-    AppConfig& cfg,
+    ProjectModel& model,
     std::string& err);
 } // namespace config::internal::load

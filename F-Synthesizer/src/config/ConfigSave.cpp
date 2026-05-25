@@ -12,10 +12,10 @@ namespace
 {
 using Json = nlohmann::json;
 
-Json ChannelSoundToJson(const ChannelConfig& config)
+Json ChannelSoundToJson(const InstrumentSoundConfig& config)
 {
     std::ostringstream tmp;
-    WriteChannelConfig(tmp, 0, config, false);
+    WriteInstrumentSoundConfig(tmp, 0, config, false);
     Json wrapped = Json::parse("{" + tmp.str() + "}", nullptr, false);
     if (wrapped.is_discarded() || !wrapped.contains("0") || !wrapped["0"].is_object())
     {
@@ -52,7 +52,7 @@ Json InstrumentToJson(const InstrumentConfig& instrument)
     };
 }
 
-Json ProjectChannelToJson(const ProjectChannelConfig& channel)
+Json ProjectChannelToJson(const ProjectChannelAssignment& channel)
 {
     return Json{
         {"instrumentId", channel.instrumentId},
@@ -117,9 +117,7 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
         std::filesystem::create_directories(configPath.parent_path(), ec);
     }
 
-    const ProjectModel saveModel = (model.instruments && model.projectChannels)
-        ? model
-        : ProjectModelFromAppConfig(ToAppConfig(model));
+    const ProjectModel saveModel = model;
 
     Json instruments = Json::object();
     if (saveModel.instruments)
@@ -135,7 +133,7 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
     {
         for (int ch = 0; ch < 16; ch++)
         {
-            const ProjectChannelConfig& channel = (*saveModel.projectChannels)[ch];
+            const ProjectChannelAssignment& channel = (*saveModel.projectChannels)[ch];
             if (!channel.enabled)
             {
                 continue;
@@ -172,9 +170,4 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
     return true;
 }
 
-bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppConfig& config, std::string& err)
-{
-    const ProjectModel model = ProjectModelFromAppConfig(config);
-    return SaveProjectModelFileInternal(configPath, model, err);
-}
 } // namespace config::internal

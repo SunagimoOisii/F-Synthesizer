@@ -4,7 +4,7 @@
 #include <functional>
 #include <vector>
 
-#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/InstrumentSoundConfig.h"
 #include "SynthEngine/EffectsConfig.h"
 #include "core/AudioBuffer.h"
 #include "midi/Sequencer.h"
@@ -12,7 +12,7 @@
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const MasterEffectConfig& effects = MasterEffectConfig{},
     const std::vector<TempoEvent>* tempoEvents = nullptr,
@@ -27,7 +27,7 @@ void RenderMIDIEventsWithFrameCallback(
     int length,
     int sampleRate,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const std::function<bool(int, double, double)>& onFrame,
     const MasterEffectConfig& effects = MasterEffectConfig{},
@@ -40,7 +40,7 @@ void RenderMIDIEventsWithFrameBlockCallback(
     int length,
     int sampleRate,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const std::function<bool(int, const double*, int)>& onFrames,
     const MasterEffectConfig& effects = {},

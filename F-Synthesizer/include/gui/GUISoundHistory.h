@@ -10,7 +10,7 @@ struct GUIState; // forward declaration (GUIState includes this header)
 struct SoundUndoEntry
 {
     int slot = 0;
-    ChannelConfig channelConfig;
+    InstrumentSoundConfig InstrumentSoundConfig;
     MacroSliderState macroSliders;
 };
 
@@ -20,7 +20,7 @@ constexpr int kSoundUndoMaxDepth = 50;
 void PushSoundHistoryEntry(
     GUIState& state,
     int slot,
-    const ChannelConfig& config,
+    const InstrumentSoundConfig& config,
     const MacroSliderState& sliders);
 
 // エントリを状態へ適用する（Undo/Redo 共通）。presetDirty = true をセット。

@@ -9,6 +9,7 @@
 #include "config/SourceRegistry.h"
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIMacroMapping.h"
+#include "gui/GUIProjectFacade.h"
 #include "gui/GUIStateModel.h"
 
 namespace
@@ -310,13 +311,13 @@ bool DrawChannelEditor(
     bool showSourceTypeSelector,
     const std::function<void(const char* what, const char* impact, const char* caution)>& updateHoverHelp)
 {
-    static ChannelConfig l3BeforeConfig{};
+    static InstrumentSoundConfig l3BeforeConfig{};
     static MacroSliderState l3BeforeSliders{};
     static int l3BeforeSlot = -1;
     static bool l3SessionChanged = false;
 
     bool changed = false;
-    EnsureChannelConfigs(state);
+    EnsureSoundSlots(state);
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
     // Layer3 Undo bracketing: IsAnyItemActive() の遷移を利用して before スナップショットを記録する。
     // 精度注記: IsAnyItemActive() はウィンドウ全体のフラグのため Layer2 の操作で誤アーム
@@ -356,7 +357,7 @@ bool DrawChannelEditor(
         ImGui::TextDisabled("この音色は %s で使用中", sharedChannels.c_str());
     }
     const int editSlot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const ChannelConfig frameConfig = (*state.channelConfigs)[editSlot];
+    const InstrumentSoundConfig frameConfig = ReadSoundSlot(state, editSlot);
     const MacroSliderState frameSliders = state.macroSliders[editSlot];
 
     auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
@@ -373,7 +374,7 @@ bool DrawChannelEditor(
     ImGui::TextDisabled("Advancedの音色詳細は音色定義のみ編集します（ミックス/割当はMixerで扱います）。");
 
     ImGui::Separator();
-    ChannelConfig& chCfg = (*state.channelConfigs)[state.selectedSoundSlot];
+    InstrumentSoundConfig& chCfg = MutableSoundSlot(state, state.selectedSoundSlot);
     ImGui::Text("編集中の音色番号: %d", state.selectedSoundSlot + 1);
     ImGui::TextDisabled("Tone Preview は編集中の音色を使用します。");
 
@@ -881,7 +882,7 @@ bool DrawChannelEditor(
     {
         // Layer2 マクロスライダーを Layer3 編集に追従させる。
         const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
-        state.macroSliders[ch] = ReadMacroSliders((*state.channelConfigs)[ch], state.macroSliders[ch]);
+        state.macroSliders[ch] = ReadMacroSliders(ReadSoundSlot(state, ch), state.macroSliders[ch]);
     }
 
     const bool anyItemActive = ImGui::IsAnyItemActive();

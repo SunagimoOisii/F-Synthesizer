@@ -170,7 +170,7 @@ static void DrawPlayView(
     {
         state.playCategoryIndex = 0;
     }
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
 
     ImGui::TextUnformatted("Sound Cards");
     const int editingChannel = std::clamp(state.playEditingChannel, -1, 15);
@@ -358,7 +358,7 @@ static void DrawComposeView(
     GUIState& state,
     HelpFn&& updateHoverHelp)
 {
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     gui::EnsureChannelMixStates(state);
     constexpr int drumMidiChannel = 9;
 
@@ -526,7 +526,7 @@ static void DrawComposeView(
     auto applyDrumCh10Setup = [&]()
     {
         gui::SetChannelAssignment(state, drumMidiChannel, drumMidiChannel);
-        ChannelConfig& drumCh = gui::MutableSoundSlot(state, drumMidiChannel);
+        InstrumentSoundConfig& drumCh = gui::MutableSoundSlot(state, drumMidiChannel);
         if (!config::SourceCapabilityOf(drumCh.source).isPercussion)
         {
             drumCh.source = config::DefaultSourceConfig(config::SourceKind::DrumKit);
@@ -558,7 +558,7 @@ static void DrawAdvancedView(
     HelpFn&& updateHoverHelp,
     PreviewFn&& requestAutoTonePreview)
 {
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     gui::EnsureChannelMixStates(state);
 
     ImGui::TextUnformatted("Advanced");

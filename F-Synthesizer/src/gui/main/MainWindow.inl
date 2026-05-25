@@ -1,4 +1,4 @@
-﻿void DrawMainWindowFrame(
+void DrawMainWindowFrame(
     GUIState& state,
     GLFWwindow* window,
     int& lastFrameTab,
@@ -116,7 +116,7 @@ auto preparePlayPresetTarget = [&]()
     {
         return;
     }
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     const int currentSound = gui::AssignedSoundSlot(state, targetCh);
     int users = 0;
     for (int ch = 0; ch < 16; ++ch)

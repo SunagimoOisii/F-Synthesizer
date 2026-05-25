@@ -22,24 +22,11 @@ bool LoadProjectModelFileInternal(const std::filesystem::path& configPath, Proje
     const std::filesystem::path baseDir = configPath.has_parent_path()
         ? configPath.parent_path()
         : std::filesystem::current_path();
-    AppConfig cfg = ToAppConfig(model);
-    if (!load::LoadConfigFromText(text, baseDir, cfg, err))
+    if (!load::LoadConfigFromText(text, baseDir, model, err))
     {
         return false;
     }
 
-    model = ProjectModelFromAppConfig(cfg);
-    return true;
-}
-
-bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err)
-{
-    ProjectModel model = ProjectModelFromAppConfig(cfg);
-    if (!LoadProjectModelFileInternal(configPath, model, err))
-    {
-        return false;
-    }
-    cfg = ToAppConfig(model);
     return true;
 }
 } // namespace config::internal

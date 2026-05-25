@@ -161,9 +161,9 @@ namespace
         }
     }
 
-    ChannelConfig ResolveRealtimeChannelConfig(const ChannelConfig& cfg, int channel, const RenderState& state)
+    InstrumentSoundConfig ResolveRealtimeInstrumentSound(const InstrumentSoundConfig& cfg, int channel, const RenderState& state)
     {
-        ChannelConfig resolved = cfg;
+        InstrumentSoundConfig resolved = cfg;
         const int ch = ClampChannel(channel);
         if (state.channelPortamentoOn[ch])
         {
@@ -179,7 +179,7 @@ namespace
 
 void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleIndex,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     int sampleRate,
     RenderState& state)
 {
@@ -222,7 +222,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
 
         if (e.isNoteOn)
         {
-            const ChannelConfig& cfg = channelConfigs[ClampChannel(e.channel)];
+            const InstrumentSoundConfig& cfg = soundSlots[ClampChannel(e.channel)];
             if (const auto* kit = std::get_if<DrumKitConfig>(&cfg.source))
             {
                 // DrumKit は note -> DrumConfig へ展開してから通常 Voice として投入する。
@@ -232,7 +232,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
                 const DrumConfig& drum = kit->map[note];
                 if (drum.type != DrumType::None)
                 {
-                    ChannelConfig drumCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
+                    InstrumentSoundConfig drumCfg = ResolveRealtimeInstrumentSound(cfg, e.channel, state);
                     drumCfg.source = drum;
                     drumCfg.drumBus = kit->drumBus;
                     MIDIEvent drumEvent = e;
@@ -250,7 +250,7 @@ void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
             }
             else
             {
-                const ChannelConfig resolvedCfg = ResolveRealtimeChannelConfig(cfg, e.channel, state);
+                const InstrumentSoundConfig resolvedCfg = ResolveRealtimeInstrumentSound(cfg, e.channel, state);
                 state.voices.AddVoice(resolvedCfg, e, sampleRate);
                 MarkActiveVoiceIndicesDirty(state);
             }

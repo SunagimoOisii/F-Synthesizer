@@ -11,11 +11,6 @@ std::filesystem::path FindProjectRootPath()
     return app::run::FindProjectRootInternal();
 }
 
-AppConfig DefaultConfig()
-{
-    return app::run::BuildDefaultConfig();
-}
-
 RenderOptions DefaultRenderOptions()
 {
     return RenderOptions{};

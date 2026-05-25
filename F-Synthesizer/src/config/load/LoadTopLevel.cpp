@@ -230,7 +230,7 @@ void RewriteChannelMixError(const std::string& channelKey, std::string& err)
     }
 }
 
-bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err)
+bool ParseEffectsObject(const Json& configRoot, ProjectModel& model, std::string& err)
 {
     const Json* effects = nullptr;
     auto effectsIt = configRoot.find("effects");
@@ -286,13 +286,13 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     if (obj != nullptr)
     {
         double v = 0.0;
-        if (!ReadOptionalBool(*obj, "enabled", "effects.reverb", cfg.masterEffects.reverb.enabled, err)) return false;
+        if (!ReadOptionalBool(*obj, "enabled", "effects.reverb", model.masterEffects.reverb.enabled, err)) return false;
         if (!ReadOptionalDouble(*obj, "mix", "effects.reverb", v, err)) return false;
-        if (obj->contains("mix")) cfg.masterEffects.reverb.mix = std::clamp(v, 0.0, 1.0);
+        if (obj->contains("mix")) model.masterEffects.reverb.mix = std::clamp(v, 0.0, 1.0);
         if (!ReadOptionalDouble(*obj, "roomSize", "effects.reverb", v, err)) return false;
-        if (obj->contains("roomSize")) cfg.masterEffects.reverb.roomSize = std::clamp(v, 0.1, 1.0);
+        if (obj->contains("roomSize")) model.masterEffects.reverb.roomSize = std::clamp(v, 0.1, 1.0);
         if (!ReadOptionalDouble(*obj, "damping", "effects.reverb", v, err)) return false;
-        if (obj->contains("damping")) cfg.masterEffects.reverb.damping = std::clamp(v, 0.0, 1.0);
+        if (obj->contains("damping")) model.masterEffects.reverb.damping = std::clamp(v, 0.0, 1.0);
     }
 
     if (!getEffectObject("delay", obj))
@@ -302,16 +302,16 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     if (obj != nullptr)
     {
         double v = 0.0;
-        if (!ReadOptionalBool(*obj, "enabled", "effects.delay", cfg.masterEffects.delay.enabled, err)) return false;
+        if (!ReadOptionalBool(*obj, "enabled", "effects.delay", model.masterEffects.delay.enabled, err)) return false;
         if (!ReadOptionalDouble(*obj, "mix", "effects.delay", v, err)) return false;
-        if (obj->contains("mix")) cfg.masterEffects.delay.mix = std::clamp(v, 0.0, 1.0);
+        if (obj->contains("mix")) model.masterEffects.delay.mix = std::clamp(v, 0.0, 1.0);
         if (!ReadOptionalDouble(*obj, "timeSec", "effects.delay", v, err)) return false;
-        if (obj->contains("timeSec")) cfg.masterEffects.delay.timeSec = std::clamp(v, 0.01, 2.0);
+        if (obj->contains("timeSec")) model.masterEffects.delay.timeSec = std::clamp(v, 0.01, 2.0);
         if (!ReadOptionalDouble(*obj, "feedback", "effects.delay", v, err)) return false;
-        if (obj->contains("feedback")) cfg.masterEffects.delay.feedback = std::clamp(v, 0.0, 0.95);
-        if (!ReadOptionalBool(*obj, "tempoSync", "effects.delay", cfg.masterEffects.delay.tempoSync, err)) return false;
+        if (obj->contains("feedback")) model.masterEffects.delay.feedback = std::clamp(v, 0.0, 0.95);
+        if (!ReadOptionalBool(*obj, "tempoSync", "effects.delay", model.masterEffects.delay.tempoSync, err)) return false;
         if (!ReadOptionalDouble(*obj, "syncBeats", "effects.delay", v, err)) return false;
-        if (obj->contains("syncBeats")) cfg.masterEffects.delay.syncBeats = std::clamp(v, 0.125, 4.0);
+        if (obj->contains("syncBeats")) model.masterEffects.delay.syncBeats = std::clamp(v, 0.125, 4.0);
     }
 
     if (!getEffectObject("chorus", obj))
@@ -321,17 +321,17 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     if (obj != nullptr)
     {
         double v = 0.0;
-        if (!ReadOptionalBool(*obj, "enabled", "effects.chorus", cfg.masterEffects.chorus.enabled, err)) return false;
+        if (!ReadOptionalBool(*obj, "enabled", "effects.chorus", model.masterEffects.chorus.enabled, err)) return false;
         if (!ReadOptionalDouble(*obj, "mix", "effects.chorus", v, err)) return false;
-        if (obj->contains("mix")) cfg.masterEffects.chorus.mix = std::clamp(v, 0.0, 1.0);
+        if (obj->contains("mix")) model.masterEffects.chorus.mix = std::clamp(v, 0.0, 1.0);
         if (!ReadOptionalDouble(*obj, "baseDelayMs", "effects.chorus", v, err)) return false;
-        if (obj->contains("baseDelayMs")) cfg.masterEffects.chorus.baseDelayMs = std::clamp(v, 2.0, 40.0);
+        if (obj->contains("baseDelayMs")) model.masterEffects.chorus.baseDelayMs = std::clamp(v, 2.0, 40.0);
         if (!ReadOptionalDouble(*obj, "depthMs", "effects.chorus", v, err)) return false;
-        if (obj->contains("depthMs")) cfg.masterEffects.chorus.depthMs = std::clamp(v, 0.0, 20.0);
+        if (obj->contains("depthMs")) model.masterEffects.chorus.depthMs = std::clamp(v, 0.0, 20.0);
         if (!ReadOptionalDouble(*obj, "rateHz", "effects.chorus", v, err)) return false;
-        if (obj->contains("rateHz")) cfg.masterEffects.chorus.rateHz = std::clamp(v, 0.05, 8.0);
+        if (obj->contains("rateHz")) model.masterEffects.chorus.rateHz = std::clamp(v, 0.05, 8.0);
         if (!ReadOptionalDouble(*obj, "feedback", "effects.chorus", v, err)) return false;
-        if (obj->contains("feedback")) cfg.masterEffects.chorus.feedback = std::clamp(v, 0.0, 0.9);
+        if (obj->contains("feedback")) model.masterEffects.chorus.feedback = std::clamp(v, 0.0, 0.9);
     }
 
     if (!getEffectObject("flanger", obj))
@@ -341,17 +341,17 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     if (obj != nullptr)
     {
         double v = 0.0;
-        if (!ReadOptionalBool(*obj, "enabled", "effects.flanger", cfg.masterEffects.flanger.enabled, err)) return false;
+        if (!ReadOptionalBool(*obj, "enabled", "effects.flanger", model.masterEffects.flanger.enabled, err)) return false;
         if (!ReadOptionalDouble(*obj, "mix", "effects.flanger", v, err)) return false;
-        if (obj->contains("mix")) cfg.masterEffects.flanger.mix = std::clamp(v, 0.0, 1.0);
+        if (obj->contains("mix")) model.masterEffects.flanger.mix = std::clamp(v, 0.0, 1.0);
         if (!ReadOptionalDouble(*obj, "baseDelayMs", "effects.flanger", v, err)) return false;
-        if (obj->contains("baseDelayMs")) cfg.masterEffects.flanger.baseDelayMs = std::clamp(v, 0.1, 8.0);
+        if (obj->contains("baseDelayMs")) model.masterEffects.flanger.baseDelayMs = std::clamp(v, 0.1, 8.0);
         if (!ReadOptionalDouble(*obj, "depthMs", "effects.flanger", v, err)) return false;
-        if (obj->contains("depthMs")) cfg.masterEffects.flanger.depthMs = std::clamp(v, 0.0, 5.0);
+        if (obj->contains("depthMs")) model.masterEffects.flanger.depthMs = std::clamp(v, 0.0, 5.0);
         if (!ReadOptionalDouble(*obj, "rateHz", "effects.flanger", v, err)) return false;
-        if (obj->contains("rateHz")) cfg.masterEffects.flanger.rateHz = std::clamp(v, 0.05, 8.0);
+        if (obj->contains("rateHz")) model.masterEffects.flanger.rateHz = std::clamp(v, 0.05, 8.0);
         if (!ReadOptionalDouble(*obj, "feedback", "effects.flanger", v, err)) return false;
-        if (obj->contains("feedback")) cfg.masterEffects.flanger.feedback = std::clamp(v, 0.0, 0.95);
+        if (obj->contains("feedback")) model.masterEffects.flanger.feedback = std::clamp(v, 0.0, 0.95);
     }
 
     if (!getEffectObject("bitCrusher", obj))
@@ -360,9 +360,9 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     }
     if (obj != nullptr)
     {
-        int bits = cfg.masterEffects.bitCrusher.bits;
+        int bits = model.masterEffects.bitCrusher.bits;
         if (!ReadOptionalInt(*obj, "bits", "effects.bitCrusher", bits, err)) return false;
-        cfg.masterEffects.bitCrusher.bits = std::clamp(bits, 1, 16);
+        model.masterEffects.bitCrusher.bits = std::clamp(bits, 1, 16);
     }
 
     if (!getEffectObject("sampleRateReducer", obj))
@@ -371,44 +371,88 @@ bool ParseEffectsObject(const Json& configRoot, AppConfig& cfg, std::string& err
     }
     if (obj != nullptr)
     {
-        double ratio = cfg.masterEffects.sampleRateReducer.ratio;
+        double ratio = model.masterEffects.sampleRateReducer.ratio;
         if (!ReadOptionalDouble(*obj, "ratio", "effects.sampleRateReducer", ratio, err)) return false;
-        cfg.masterEffects.sampleRateReducer.ratio = std::clamp(ratio, 0.0, 1.0);
+        model.masterEffects.sampleRateReducer.ratio = std::clamp(ratio, 0.0, 1.0);
     }
 
     return true;
 }
 
-bool ValidateInstrumentObject(const Json& instrument, const std::string& path, std::string& err)
+bool LoadInstrumentObject(const Json& instrumentJson, const std::string& id, InstrumentConfig& instrument, std::string& err)
 {
-    if (!instrument.is_object())
+    const std::string path = "project.instruments." + id;
+    if (!instrumentJson.is_object())
     {
         err = path + " must be object";
         return false;
     }
 
-    std::string unused;
-    bool unusedBool = false;
-    if (!ReadOptionalString(instrument, "displayName", path, unused, err)) return false;
-    if (!ReadOptionalString(instrument, "category", path, unused, err)) return false;
-    if (!ReadOptionalBool(instrument, "internal", path, unusedBool, err)) return false;
-    if (!ValidateOptionalStringArray(instrument, "tags", path, err)) return false;
-    if (!ReadOptionalString(instrument, "description", path, unused, err)) return false;
-    if (!ValidateOptionalRecommendedRange(instrument, path, err)) return false;
-    if (!ValidateOptionalMacroHints(instrument, path, err)) return false;
+    if (!ReadOptionalString(instrumentJson, "displayName", path, instrument.displayName, err)) return false;
+    if (!ReadOptionalString(instrumentJson, "category", path, instrument.category, err)) return false;
+    if (!ReadOptionalBool(instrumentJson, "internal", path, instrument.internal, err)) return false;
+    if (!ValidateOptionalStringArray(instrumentJson, "tags", path, err)) return false;
+    const auto tagsIt = instrumentJson.find("tags");
+    if (tagsIt != instrumentJson.end())
+    {
+        instrument.tags = tagsIt->get<std::vector<std::string>>();
+    }
+    if (!ReadOptionalString(instrumentJson, "description", path, instrument.description, err)) return false;
+    if (!ValidateOptionalRecommendedRange(instrumentJson, path, err)) return false;
+    const auto rangeIt = instrumentJson.find("recommendedRange");
+    if (rangeIt != instrumentJson.end())
+    {
+        if (!ReadOptionalInt(*rangeIt, "low", path + ".recommendedRange", instrument.recommendedRange.low, err)) return false;
+        if (!ReadOptionalInt(*rangeIt, "high", path + ".recommendedRange", instrument.recommendedRange.high, err)) return false;
+        if (!ReadOptionalInt(*rangeIt, "preview", path + ".recommendedRange", instrument.recommendedRange.preview, err)) return false;
+    }
+    if (!ValidateOptionalMacroHints(instrumentJson, path, err)) return false;
+    const auto hintsIt = instrumentJson.find("macroHints");
+    if (hintsIt != instrumentJson.end())
+    {
+        instrument.macroHints.clear();
+        for (const Json& hintJson : *hintsIt)
+        {
+            MacroHint hint;
+            if (!ReadOptionalString(hintJson, "id", path + ".macroHints", hint.id, err)) return false;
+            if (!ReadOptionalString(hintJson, "label", path + ".macroHints", hint.label, err)) return false;
+            if (!ReadOptionalString(hintJson, "description", path + ".macroHints", hint.description, err)) return false;
+            instrument.macroHints.push_back(std::move(hint));
+        }
+    }
 
-    const auto soundIt = instrument.find("sound");
-    if (soundIt != instrument.end() && !soundIt->is_object())
+    const auto soundIt = instrumentJson.find("sound");
+    if (soundIt == instrumentJson.end())
+    {
+        err = path + ".sound is required";
+        return false;
+    }
+    if (!soundIt->is_object())
     {
         err = path + ".sound must be object";
+        return false;
+    }
+    if (!ParseInstrumentSoundObject(soundIt->dump(), instrument.sound, err))
+    {
+        const std::string soundPrefix = "sound";
+        if (err.rfind(soundPrefix, 0) == 0)
+        {
+            err = path + ".sound" + err.substr(soundPrefix.size());
+        }
+        else
+        {
+            err = path + ".sound: " + err;
+        }
         return false;
     }
     return true;
 }
 
-bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::string& err)
+bool LoadV3InstrumentProject(const Json& projectRoot, ProjectModel& model, std::string& err)
 {
-    const Json* instruments = nullptr;
+    std::map<std::string, InstrumentConfig> instrumentMap =
+        model.instruments ? *model.instruments : std::map<std::string, InstrumentConfig>{};
+
     const auto instrumentsIt = projectRoot.find("instruments");
     if (instrumentsIt != projectRoot.end())
     {
@@ -417,19 +461,21 @@ bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::strin
             err = "project.instruments must be object";
             return false;
         }
-        instruments = &(*instrumentsIt);
-        for (const auto& [id, instrument] : instruments->items())
+        for (const auto& [id, instrumentJson] : instrumentsIt->items())
         {
             if (id.empty())
             {
                 err = "project.instruments key must not be empty";
                 return false;
             }
-            if (!ValidateInstrumentObject(instrument, "project.instruments." + id, err))
+            InstrumentConfig instrument = instrumentMap.count(id) ? instrumentMap[id] : InstrumentConfig{};
+            if (!LoadInstrumentObject(instrumentJson, id, instrument, err))
             {
                 return false;
             }
+            instrumentMap[id] = std::move(instrument);
         }
+        model.instruments = std::make_shared<const std::map<std::string, InstrumentConfig>>(std::move(instrumentMap));
     }
 
     const auto channelsIt = projectRoot.find("channels");
@@ -442,6 +488,16 @@ bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::strin
         err = "project.channels must be object";
         return false;
     }
+
+    if (!model.instruments)
+    {
+        err = "project.instruments is required when channels reference instruments";
+        return false;
+    }
+
+    std::array<ProjectChannelAssignment, 16> channels = model.projectChannels
+        ? *model.projectChannels
+        : std::array<ProjectChannelAssignment, 16>{};
 
     for (const auto& [channelKey, channelValue] : channelsIt->items())
     {
@@ -476,38 +532,16 @@ bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::strin
             err = "project.channels." + channelKey + ".instrumentId is required";
             return false;
         }
-        if (instruments == nullptr)
-        {
-            err = "project.instruments is required when channels reference instruments";
-            return false;
-        }
-        const auto instrumentIt = instruments->find(instrumentId);
-        if (instrumentIt == instruments->end())
+        const auto instrumentIt = model.instruments->find(instrumentId);
+        if (instrumentIt == model.instruments->end())
         {
             err = "project.channels." + channelKey + ".instrumentId references unknown instrument '" + instrumentId + "'";
             return false;
         }
-        const auto soundIt = instrumentIt->find("sound");
-        if (soundIt == instrumentIt->end())
-        {
-            err = "project.instruments." + instrumentId + ".sound is required";
-            return false;
-        }
-        if (!soundIt->is_object())
-        {
-            err = "project.instruments." + instrumentId + ".sound must be object";
-            return false;
-        }
 
-        Json syntheticSound = Json::object();
-        syntheticSound["channels"] = Json::object();
-        syntheticSound["channels"][channelKey] = *soundIt;
-        if (!LoadChannelsDiff(syntheticSound.dump(), cfg, err))
-        {
-            RewriteInstrumentSoundError(instrumentId, channelKey, err);
-            return false;
-        }
-
+        ProjectChannelAssignment channel = channels[static_cast<size_t>(ch)];
+        channel.enabled = true;
+        channel.instrumentId = instrumentId;
         const auto mixIt = channelValue.find("mix");
         if (mixIt != channelValue.end())
         {
@@ -516,16 +550,15 @@ bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::strin
                 err = "project.channels." + channelKey + ".mix must be object";
                 return false;
             }
-            Json syntheticMix = Json::object();
-            syntheticMix["channelMix"] = Json::object();
-            syntheticMix["channelMix"][channelKey] = *mixIt;
-            if (!LoadChannelMixDiff(syntheticMix.dump(), cfg, err))
+            if (!ParseChannelMixObject(mixIt->dump(), channel.mix, err))
             {
                 RewriteChannelMixError(channelKey, err);
                 return false;
             }
         }
+        channels[static_cast<size_t>(ch)] = channel;
     }
+    model.projectChannels = std::make_shared<const std::array<ProjectChannelAssignment, 16>>(std::move(channels));
     return true;
 }
 } // namespace
@@ -533,7 +566,7 @@ bool LoadV3InstrumentProject(const Json& projectRoot, AppConfig& cfg, std::strin
 bool LoadConfigFromText(
     const std::string& text,
     const std::filesystem::path& baseDir,
-    AppConfig& cfg,
+    ProjectModel& model,
     std::string& err)
 {
     Json root = Json::parse(text, nullptr, false);
@@ -563,44 +596,44 @@ bool LoadConfigFromText(
     if (!ReadOptionalString(configRootJson, "midiPath", "project", pathValue, err)) return false;
     if (configRootJson.contains("midiPath"))
     {
-        cfg.midiPath = ResolvePathFromBase(baseDir, pathValue);
+        model.midiPath = ResolvePathFromBase(baseDir, pathValue);
     }
     if (!ReadOptionalString(configRootJson, "wavPath", "project", pathValue, err)) return false;
     if (configRootJson.contains("wavPath"))
     {
-        cfg.wavPath = ResolvePathFromBase(baseDir, pathValue);
+        model.wavPath = ResolvePathFromBase(baseDir, pathValue);
     }
-    if (!ReadOptionalInt(configRootJson, "targetChannel", "project", cfg.targetChannel, err)) return false;
-    if (!ReadOptionalInt(configRootJson, "initialSeconds", "project", cfg.initialSeconds, err)) return false;
-    if (!ReadOptionalInt(configRootJson, "bits", "project", cfg.bits, err)) return false;
-    if (!ReadOptionalInt(configRootJson, "sampleRate", "project", cfg.sampleRate, err)) return false;
-    if (!ReadOptionalDouble(configRootJson, "extraReleaseSec", "project", cfg.extraReleaseSec, err)) return false;
-    if (cfg.targetChannel < -1 || cfg.targetChannel > 15)
+    if (!ReadOptionalInt(configRootJson, "targetChannel", "project", model.targetChannel, err)) return false;
+    if (!ReadOptionalInt(configRootJson, "initialSeconds", "project", model.initialSeconds, err)) return false;
+    if (!ReadOptionalInt(configRootJson, "bits", "project", model.bits, err)) return false;
+    if (!ReadOptionalInt(configRootJson, "sampleRate", "project", model.sampleRate, err)) return false;
+    if (!ReadOptionalDouble(configRootJson, "extraReleaseSec", "project", model.extraReleaseSec, err)) return false;
+    if (model.targetChannel < -1 || model.targetChannel > 15)
     {
         err = "targetChannel must be -1 or 0..15";
         return false;
     }
-    if (cfg.sampleRate <= 0)
+    if (model.sampleRate <= 0)
     {
         err = "sampleRate must be positive";
         return false;
     }
-    if (cfg.initialSeconds <= 0)
+    if (model.initialSeconds <= 0)
     {
         err = "initialSeconds must be positive";
         return false;
     }
-    if (cfg.bits != 16)
+    if (model.bits != 16)
     {
         // Writer実装の現行制約に合わせて早期に失敗させる。
         err = "bits must be 16";
         return false;
     }
-    if (!LoadV3InstrumentProject(configRootJson, cfg, err))
+    if (!LoadV3InstrumentProject(configRootJson, model, err))
     {
         return false;
     }
-    if (!ParseEffectsObject(configRootJson, cfg, err))
+    if (!ParseEffectsObject(configRootJson, model, err))
     {
         return false;
     }

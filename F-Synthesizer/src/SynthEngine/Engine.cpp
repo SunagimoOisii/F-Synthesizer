@@ -614,7 +614,7 @@ private:
 void RenderMIDIEventsToSink(
     RenderFrameSink& sink,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const MasterEffectConfig& effects,
     const std::vector<TempoEvent>* tempoEvents,
@@ -708,7 +708,7 @@ void RenderMIDIEventsToSink(
             cleanupCountdown = cleanupInterval;
         }
 
-        ProcessEventsAtSample(events, i, channelConfigs, sink.SampleRate(), state);
+        ProcessEventsAtSample(events, i, soundSlots, sink.SampleRate(), state);
         AdvanceTempoChanges(state, i);
 
         const int blockEnd = std::min(i + renderBlockSize, sink.Length());
@@ -778,7 +778,7 @@ void RenderMIDIEventsToSink(
 void RenderMIDIEvents(
     SoundData& sound,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const MasterEffectConfig& effects,
     const std::vector<TempoEvent>* tempoEvents,
@@ -791,7 +791,7 @@ void RenderMIDIEvents(
     RenderMIDIEventsToSink(
         sink,
         events,
-        channelConfigs,
+        soundSlots,
         channelMixStates,
         effects,
         tempoEvents,
@@ -805,7 +805,7 @@ void RenderMIDIEventsWithFrameCallback(
     int length,
     int sampleRate,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const std::function<bool(int, double, double)>& onFrame,
     const MasterEffectConfig& effects,
@@ -819,7 +819,7 @@ void RenderMIDIEventsWithFrameCallback(
     RenderMIDIEventsToSink(
         sink,
         events,
-        channelConfigs,
+        soundSlots,
         channelMixStates,
         effects,
         tempoEvents,
@@ -833,7 +833,7 @@ void RenderMIDIEventsWithFrameBlockCallback(
     int length,
     int sampleRate,
     const std::vector<MIDIEvent>& events,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     const std::array<ChannelMixState, 16>& channelMixStates,
     const std::function<bool(int, const double*, int)>& onFrames,
     const MasterEffectConfig& effects,
@@ -847,7 +847,7 @@ void RenderMIDIEventsWithFrameBlockCallback(
     RenderMIDIEventsToSink(
         sink,
         events,
-        channelConfigs,
+        soundSlots,
         channelMixStates,
         effects,
         tempoEvents,

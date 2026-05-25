@@ -1,13 +1,13 @@
 # 長期改変計画: Instrument Model から Preset 再編、GUI 再設計まで
 
 この文書は、F-Synthesizer の次の大きな構造変更を AI コンテキスト圧縮後も引き継げるようにするための長期計画です。
-現在は Phase 7-B により、`projectModel.v3` の save path を `ProjectModel` 正本へ寄せ、保存時に `AppConfig` 経路へ戻る依存を縮小しています。
+現在は Phase 7-C により、`ProjectModel` を保存、読み込み、実行境界の正本にし、旧実行 config API と legacy channel sound 名の cleanup を完了しています。
 
 ## 基本方針
 
 - `projectModel.v3` では Sound Card / Instrument を音色定義の正本にする。
 - `channel` は音色そのものではなく、Instrument の割当、音量、パン、演奏設定、必要最小限の override を持つ器に寄せる。
-- `ProjectModel`、`AppConfig`、`RenderConfig`、`GUIState`、`GUIProjectFacade` の責務を分け、保存形式、実行設定、GUI 一時状態、renderer 入力を混ぜない。
+- `ProjectModel`、`RenderConfig`、`GUIState`、`GUIProjectFacade` の責務を分け、保存形式、実行設定、GUI 一時状態、renderer 入力を混ぜない。
 - GUI の大枠は `Play / Compose / Export / Advanced` を維持するが、中身の責務とデータ接続は作り直す。
 - 破壊的変更は許容する。旧 format 互換読み込みは原則残さず、必要なら一時的な機械変換で次 format へ移す。
 - 実音の意味的な preset 再設計は Instrument Model 導入後に行う。
@@ -18,18 +18,18 @@
 このフェーズでは境界入口の固定に限定し、GUI `.inl` 群の大規模置換や `projectModel.v3` 導入には入りません。
 
 - `ProjectModel` は保存、preset、config の正本として扱う。
-- `AppConfig` は CLI / GUI 実行境界の設定に限定する。
+- 実行境界は最終的に `ProjectModel` へ一本化する。Phase 1 時点では旧実行 config を一時的に残す。
 - `RenderConfig` は SynthEngine へ渡す実行用モデルにし、App 層で既定 render table を解決してから組み立てる。
 - `GUIState` は互換用の集約型として扱い、永続 project 状態、画面一時状態、非同期実行状態、ログ状態へ分ける準備を進める。
 - `GUIProjectFacade` を GUI と `ProjectModel` の変換点として育て、GUI 表示コードが JSON shape や preset 差分仕様へ直接依存しないようにする。
-- 既存 `ChannelConfig` はすぐ捨てず、v3 への移行元として扱う。
+- 既存 `InstrumentSoundConfig` はすぐ捨てず、v3 への移行元として扱う。
 
 完了条件:
 
 - CLI / GUI / renderer が直接 JSON shape や preset 差分仕様に依存しない入口を持つ。
-- `ProjectModel -> AppConfig` と `ProjectModel -> RenderConfig` の責務が混ざらない。
+- `ProjectModel` と `RenderConfig` の責務が混ざらない。
 - 新規の保存項目を追加するときに `SynthEngine.h` や GUI `.inl` へ直足ししなくてよい判断基準がある。
-- Phase 1 時点では `AppConfig -> RenderConfig` 準備 helper までに留め、`ProjectModel -> RenderConfig` 直変換は Phase 3 で扱う。
+- Phase 1 時点では実行入力準備 helper までに留め、`ProjectModel -> RenderConfig` 直変換は Phase 3 で扱う。
 
 ## Phase 2: ProjectModel v3 + Instrument Model 導入
 
@@ -41,7 +41,7 @@
 - legacy `source`、`layers`、`expressionMap` は Instrument 内部へ移すか、Instrument 生成時の互換入力として畳む。
 - `projectModel.v2` は v3 loader の読み込み対象外にする。
 - 既存 config / preset / sample は v3 へ機械移行済みとし、意味的な preset 再設計は Phase 4 で行う。
-- Phase 2 の最小導入では `project.instruments.<id>.sound` に legacy `ChannelConfig` 相当を内包し、`project.channels.<ch>.instrumentId` から参照する。
+- Phase 2 の最小導入では `project.instruments.<id>.sound` に legacy `InstrumentSoundConfig` 相当を内包し、`project.channels.<ch>.instrumentId` から参照する。
 
 完了条件:
 
@@ -55,7 +55,7 @@
 目的は、保存形式と SynthEngine の実行入力を切り離すことです。Phase 3 実装後は、CLI と GUI preview / export が `ProjectModel -> RenderConfig -> SynthEngine` の経路を使います。
 
 - `ProjectModel v3 -> RenderConfig` の変換を正本にする。
-- `Run` 境界は `ProjectModel` を受け取り、`AppConfig` は実行経路の正本から外す。
+- `Run` 境界は `ProjectModel` を受け取り、実行経路の正本にする。
 - Piano-roll preview などの一時入力は `RenderRuntimeOverrides` として project 保存形式から分離する。
 - SynthEngine は Instrument、Sound Card、保存形式を直接知らない。
 - `source`、`layers`、`expressionMap`、`effects` は render 用 config に展開してから renderer へ渡す。
@@ -93,7 +93,7 @@
 - preset 読み込み、Sound Card 選択、macro 編集、channel 割当の責務を GUI `.inl` から外す。
 - GUI 状態保存は project 保存形式と混ぜない。
 - Phase 5 実装後は、Sound Card catalog を `GUIPresetItem` view model として扱い、Play / Compose の主要導線、Layer2 macro、preview / export project 構築を `GUIProjectFacade` 経由へ寄せている。
-- Advanced の詳細 Channel Editor には legacy `ChannelConfig` 直接編集が残る。これは Phase 7-B 以降の legacy cleanup で削る。
+- Advanced の詳細 editor も `GUIProjectFacade` 経由で sound slot を編集する。
 
 完了条件:
 
@@ -129,7 +129,7 @@
 - legacy `channel/layers` へ直足しする実装経路をなくす。
 - Phase 7-A 実装後は、CLI の自動 fallback は現行 Sound Card に統一し、GUI preset save は `project.instruments` / `project.channels` の v3 shape を JSON object 構築から出力する。
 - Phase 7-B 実装後は、`SaveProjectModelFileInternal` が `ProjectModel` から直接 v3 JSON object を構築し、`project.instruments` / `project.channels` / `effects` を出力する。
-- `AppConfig`、`ToAppConfig()`、`ProjectModelFromAppConfig()`、loader 側の AppConfig 補助、SynthEngine 入力としての `ChannelConfig`、Advanced Channel Editor の直接編集は 7-B では削らず、7-C 以降の対象に残す。
+- Phase 7-C 実装後は、旧実行 config API を削除し、音色構造名を `InstrumentSoundConfig` へ整理し、GUI の sound slot 編集を Facade 経由へそろえる。
 
 完了条件:
 
@@ -137,6 +137,7 @@
 - v3 の保存、読み込み、レンダー、GUI 操作、preset check が標準経路になっている。
 - 7-A の完了条件は、v2 互換を復活させず、旧 preset fallback と旧 docs 前提を消し、Play / Compose / preview / export が Phase 5/6 の Facade / view model 経由を維持すること。
 - 7-B の完了条件は、ProjectModel save path が旧 channel sound shape や `project.channelMix` を出さず、保存済み v3 JSON を再ロードして render できること。
+- 7-C の完了条件は、保存、読み込み、Run、GUI preset apply/save が `ProjectModel` と `InstrumentSoundConfig` 名でそろい、旧実行 config API と legacy 型名が残らないこと。
 
 ## 検証方針
 

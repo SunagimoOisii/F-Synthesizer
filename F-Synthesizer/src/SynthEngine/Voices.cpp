@@ -177,7 +177,7 @@ void InitWaveformLikeVoiceStateCommon(
 void InitializeVoiceAtIndex(
     Voice& voices,
     size_t i,
-    const ChannelConfig& cfg,
+    const InstrumentSoundConfig& cfg,
     const MIDIEvent& e,
     int sampleRate)
 {
@@ -402,7 +402,7 @@ void InitializeVoiceAtIndex(
     }
 }
 
-bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+bool TryRestartVoiceOnRetrigger(Voice& voices, const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     // 前提: source.lifecycle.retrigger=restart の場合のみ既存voiceを再初期化する。
     const config::SourceLifecyclePolicy policy = config::SourceLifecycleOf(cfg.source);
@@ -455,7 +455,7 @@ bool TryRestartVoiceOnRetrigger(Voice& voices, const ChannelConfig& cfg, const M
     return true;
 }
 
-bool TryHandleVoiceLimitAndSteal(Voice& voices, const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+bool TryHandleVoiceLimitAndSteal(Voice& voices, const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     if (voices.size() < kMaxVoices)
     {
@@ -699,7 +699,7 @@ void Voice::clear()
     sourceState.clear();
 }
 
-void Voice::AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate)
+void Voice::AddVoice(const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate)
 {
     if (TryRestartVoiceOnRetrigger(*this, cfg, e, sampleRate))
     {

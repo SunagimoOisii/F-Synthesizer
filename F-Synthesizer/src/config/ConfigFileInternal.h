@@ -48,19 +48,12 @@ bool ParseTopLevelObjectEntries(
     const std::function<bool(const std::string&, const std::string&)>& onEntry,
     std::string& err);
 
-// 目的: cfgの共有テーブルを可変コピーへ展開する。
-// 副作用: cfg自体は変更しない。
-std::shared_ptr<std::array<ChannelConfig, 16>> MakeMutableChannelConfigs(const AppConfig& cfg);
-std::shared_ptr<std::array<ChannelMixState, 16>> MakeMutableChannelMixStates(const AppConfig& cfg);
-
-bool LoadConfigFileInternal(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
-bool SaveConfigFileInternal(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
 bool LoadProjectModelFileInternal(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
 bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);
 
 void WriteIndent(std::ostream& out, int indent);
 void WriteDrumConfig(std::ostream& out, const DrumConfig& d, int indent);
 void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent);
-void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, bool withComma);
+void WriteInstrumentSoundConfig(std::ostream& out, int ch, const InstrumentSoundConfig& cfg, bool withComma);
 void WriteChannelMixState(std::ostream& out, int ch, const ChannelMixState& mix, bool withComma);
 } // namespace config::internal

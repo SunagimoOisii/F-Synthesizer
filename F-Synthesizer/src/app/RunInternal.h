@@ -13,9 +13,6 @@ namespace app::run
 // app層内部API:
 // 公開Run APIを支える実行/保存/統計の分割実装を束ねる。
 std::filesystem::path FindProjectRootInternal();
-AppConfig BuildDefaultConfig();
-std::shared_ptr<const std::array<ChannelConfig, 16>> BuildDefaultChannelConfigs();
-std::shared_ptr<const std::array<ChannelMixState, 16>> BuildDefaultChannelMixStates();
 
 void LogLine(IRunObserver* observer, const std::string& line);
 

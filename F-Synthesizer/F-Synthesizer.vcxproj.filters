@@ -356,7 +356,7 @@
     <ClInclude Include="include\\SynthEngine\\AnalogConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\SynthEngine\\ChannelConfig.h">
+    <ClInclude Include="include\\SynthEngine\\InstrumentSoundConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\SynthEngine\\DrumConfig.h">

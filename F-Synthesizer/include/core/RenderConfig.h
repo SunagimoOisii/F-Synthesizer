@@ -5,7 +5,7 @@
 
 #include "midi/MIDIParser.h"
 #include "midi/Sequencer.h"
-#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/InstrumentSoundConfig.h"
 #include "SynthEngine/EffectsConfig.h"
 
 // SynthEngine へ渡す実行用モデル。
@@ -16,7 +16,7 @@ struct RenderConfig
     const std::vector<TempoEvent>& tempoEvents;
     int ticksPerQuarter = 0;
     double renderStartSec = 0.0;
-    const std::array<ChannelConfig, 16>& channelConfigs;
+    const std::array<InstrumentSoundConfig, 16>& soundSlots;
     const std::array<ChannelMixState, 16>& channelMixStates;
     const MasterEffectConfig& effects;
 };

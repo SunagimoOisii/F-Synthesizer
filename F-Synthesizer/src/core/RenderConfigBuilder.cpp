@@ -2,37 +2,53 @@
 
 namespace
 {
-std::shared_ptr<const std::array<ChannelConfig, 16>> ResolveDefaultChannelConfigs()
+std::shared_ptr<const std::array<InstrumentSoundConfig, 16>> ResolveDefaultSoundSlots()
 {
     const ProjectModel defaults = DefaultProjectModel();
-    if (defaults.channelConfigs)
+    auto soundSlots = std::make_shared<std::array<InstrumentSoundConfig, 16>>();
+    if (defaults.instruments && defaults.projectChannels)
     {
-        return defaults.channelConfigs;
+        for (int ch = 0; ch < 16; ch++)
+        {
+            const ProjectChannelAssignment& channel = (*defaults.projectChannels)[ch];
+            const auto it = defaults.instruments->find(channel.instrumentId);
+            if (channel.enabled && it != defaults.instruments->end())
+            {
+                (*soundSlots)[ch] = it->second.sound;
+            }
+        }
     }
-    return std::make_shared<const std::array<ChannelConfig, 16>>();
+    return std::static_pointer_cast<const std::array<InstrumentSoundConfig, 16>>(soundSlots);
 }
 
 std::shared_ptr<const std::array<ChannelMixState, 16>> ResolveDefaultChannelMixStates()
 {
     const ProjectModel defaults = DefaultProjectModel();
-    if (defaults.channelMixStates)
+    auto channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>();
+    if (defaults.projectChannels)
     {
-        return defaults.channelMixStates;
+        for (int ch = 0; ch < 16; ch++)
+        {
+            if ((*defaults.projectChannels)[ch].enabled)
+            {
+                (*channelMixStates)[ch] = (*defaults.projectChannels)[ch].mix;
+            }
+        }
     }
-    return std::make_shared<const std::array<ChannelMixState, 16>>();
+    return std::static_pointer_cast<const std::array<ChannelMixState, 16>>(channelMixStates);
 }
 } // namespace
 
 ResolvedRenderConfigInputs ResolveRenderConfigInputs(const ProjectModel& project)
 {
-    auto channelConfigs = std::make_shared<std::array<ChannelConfig, 16>>(*ResolveDefaultChannelConfigs());
+    auto soundSlots = std::make_shared<std::array<InstrumentSoundConfig, 16>>(*ResolveDefaultSoundSlots());
     auto channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>(*ResolveDefaultChannelMixStates());
 
     if (project.instruments && project.projectChannels)
     {
         for (int ch = 0; ch < 16; ch++)
         {
-            const ProjectChannelConfig& projectChannel = (*project.projectChannels)[ch];
+            const ProjectChannelAssignment& projectChannel = (*project.projectChannels)[ch];
             if (!projectChannel.enabled)
             {
                 continue;
@@ -40,25 +56,14 @@ ResolvedRenderConfigInputs ResolveRenderConfigInputs(const ProjectModel& project
             const auto instrumentIt = project.instruments->find(projectChannel.instrumentId);
             if (instrumentIt != project.instruments->end())
             {
-                (*channelConfigs)[ch] = instrumentIt->second.sound;
+                (*soundSlots)[ch] = instrumentIt->second.sound;
             }
             (*channelMixStates)[ch] = projectChannel.mix;
         }
     }
-    else
-    {
-        if (project.channelConfigs)
-        {
-            *channelConfigs = *project.channelConfigs;
-        }
-        if (project.channelMixStates)
-        {
-            *channelMixStates = *project.channelMixStates;
-        }
-    }
 
     return ResolvedRenderConfigInputs{
-        std::static_pointer_cast<const std::array<ChannelConfig, 16>>(channelConfigs),
+        std::static_pointer_cast<const std::array<InstrumentSoundConfig, 16>>(soundSlots),
         std::static_pointer_cast<const std::array<ChannelMixState, 16>>(channelMixStates)
     };
 }
@@ -75,7 +80,7 @@ RenderConfig BuildRenderConfig(
         midiOut.tempoEvents,
         midiOut.ticksPerQuarter,
         options.startSec,
-        *inputs.channelConfigs,
+        *inputs.soundSlots,
         *inputs.channelMixStates,
         project.masterEffects
     };

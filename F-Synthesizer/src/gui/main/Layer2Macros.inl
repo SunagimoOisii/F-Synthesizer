@@ -78,15 +78,15 @@ void ApplyPresetMacroHints(const GUIState& state, MacroLabels& labels)
 // DrawLayer2Macros 内のスライダー変更と Randomize の両方から呼ばれる。
 void ApplyAndTriggerPreview(GUIState& state, int ch)
 {
-    gui::EnsureChannelConfigs(state);
-    ChannelConfig& cfg = gui::MutableSoundSlot(state, ch);
+    gui::EnsureSoundSlots(state);
+    InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     const MacroSliderState& sl = gui::ReadMacroSliders(state, ch);
 
     if (std::holds_alternative<DrumKitConfig>(cfg.source))
     {
         DrumKitConfig& drumKit = std::get<DrumKitConfig>(cfg.source);
         const int drumNote = std::clamp(state.selectedDrumNote, 0, 127);
-        ChannelConfig drumChannel = cfg;
+        InstrumentSoundConfig drumChannel = cfg;
         drumChannel.source = drumKit.map[drumNote];
         ApplyMacroSliders(drumChannel, sl);
         drumKit.map[drumNote] = std::get<DrumConfig>(drumChannel.source);
@@ -116,16 +116,16 @@ void DrawLayer2Macros(GUIState& state)
     }
     state.layer2Expanded = true;
 
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
-    ChannelConfig& cfg = gui::MutableSoundSlot(state, ch);
+    InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     MacroSliderState& sliders = gui::MutableMacroSliders(state, ch);
     MacroLabels labels = GetMacroLabels(cfg.source);
     ApplyPresetMacroHints(state, labels);
 
     // --- Undo 用 before スナップショット（スライダーのドラッグ開始時にキャプチャ） ---
     static MacroSliderState undoBeforeSliders{};
-    static ChannelConfig undoBeforeConfig{};
+    static InstrumentSoundConfig undoBeforeConfig{};
     static int undoBeforeSlot = -1;
 
     // --- マクロスライダー（2x2）---

@@ -11,35 +11,14 @@
 
 namespace gui
 {
-void EnsureChannelConfigs(GUIState& state)
+void EnsureSoundSlots(GUIState& state)
 {
-    (void)MutableChannelConfigs(state);
+    (void)MutableSoundSlots(state);
 }
 
 void EnsureChannelMixStates(GUIState& state)
 {
     (void)MutableChannelMixStates(state);
-}
-
-AppConfig BuildConfigFromGUI(const GUIState& state)
-{
-    // Phase 5 までの移行補助。Run境界ではなく、legacy AppConfig 互換が必要な処理で使う。
-    AppConfig cfg = ToAppConfig(BuildProjectModelFromGUI(state));
-    if (state.channelConfigs)
-    {
-        auto remapped = std::make_shared<std::array<ChannelConfig, 16>>(*state.channelConfigs);
-        for (int ch = 0; ch < 16; ch++)
-        {
-            const int src = AssignedSoundSlot(state, ch);
-            (*remapped)[ch] = (*state.channelConfigs)[src];
-        }
-        cfg.channelConfigs = std::static_pointer_cast<const std::array<ChannelConfig, 16>>(remapped);
-    }
-    if (state.channelMixStates)
-    {
-        cfg.channelMixStates = std::static_pointer_cast<const std::array<ChannelMixState, 16>>(state.channelMixStates);
-    }
-    return cfg;
 }
 
 void InitializeGUIState(
@@ -101,7 +80,7 @@ void RepairGUIStatePaths(
     const std::function<void(const std::string&)>& refreshPresetItems,
     const std::function<void(const std::string&)>& appendLog)
 {
-    const AppConfig def = DefaultConfig();
+    const ProjectModel def = DefaultProjectModel();
     const std::filesystem::path midi = Utf8ToPath(state.midiPath);
     const std::filesystem::path wav = Utf8ToPath(state.wavPath);
 

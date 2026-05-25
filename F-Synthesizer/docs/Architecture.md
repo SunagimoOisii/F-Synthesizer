@@ -46,7 +46,6 @@ GUI 状態に依存しません。
 保存、GUI、実行時レンダリングの境界は、次のモデルで分けます。
 
 - `ProjectModel`: 保存、preset、config の正本。JSON load/save はこのモデルを入出力し、save は `ProjectModel -> projectModel.v3 JSON` を直接構築する。
-- `AppConfig`: legacy 互換や一部補助処理に残る移行型。Run 境界の正本にはしない。
 - `RenderConfig`: SynthEngine へ渡す実行用モデル。`ProjectModel` と runtime override から作り、GUI や保存形式に依存しない render 入力にする。
 - `GUIProjectFacade`: 既存画面コードから `ProjectModel` へ接続する中間層。sound slot、channel assignment、mix、macro、preview/export project 構築の正規入口にする。
 - Preset view model: GUI の Sound Card 一覧は `GUIPresetItem` として扱い、表示コードは v3 JSON shape や metadata 配列を直接知らない。
@@ -75,7 +74,7 @@ GUI 状態に依存しません。
 - config / preset の保存形式は `format: "projectModel.v3"` と `project` object を持つ。
 - `project.instruments` は Sound Card / Instrument の音色定義を表す。
 - `project.channels` は MIDI チャンネルごとの `instrumentId` 参照と mix を表す。
-- v3 Phase 3 では実行経路を `ProjectModel -> RenderConfig -> SynthEngine` に一本化し、Instrument 内の `sound` を render 用 `ChannelConfig` へ展開してから SynthEngine へ渡す。
+- v3 Phase 3 では実行経路を `ProjectModel -> RenderConfig -> SynthEngine` に一本化し、Instrument 内の `sound` を render 用 `InstrumentSoundConfig` へ展開してから SynthEngine へ渡す。
 - `source.type` は音源契約を選ぶ。
   - `waveform`: 基本 oscillator、unison、sub oscillator、filter、smoothing、PWM、ring modulation、hard sync、arpeggio。
   - `analog`: waveform 系の減算的音源。drive と drift を持つ。

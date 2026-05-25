@@ -179,7 +179,7 @@ bool SourceToJson(const SourceConfig& source, Json& out, std::string& err)
     return true;
 }
 
-bool ChannelSoundToJson(const ChannelConfig& config, Json& out, std::string& err)
+bool ChannelSoundToJson(const InstrumentSoundConfig& config, Json& out, std::string& err)
 {
     out = Json{
         {"amp", config.amp},
@@ -539,18 +539,64 @@ bool PresetMatchesSourceKind(const std::string& presetName, config::SourceKind k
         return false;
     }
 }
+
+std::array<InstrumentSoundConfig, 16> SoundSlotsFromProject(const ProjectModel& project)
+{
+    std::array<InstrumentSoundConfig, 16> sounds{};
+    if (!project.instruments || !project.projectChannels)
+    {
+        return sounds;
+    }
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const auto& channel = (*project.projectChannels)[ch];
+        const auto it = project.instruments->find(channel.instrumentId);
+        if (it != project.instruments->end())
+        {
+            sounds[static_cast<size_t>(ch)] = it->second.sound;
+        }
+    }
+    return sounds;
+}
+
+bool LoadPresetProject(
+    const std::filesystem::path& projectRoot,
+    const std::string& presetName,
+    ProjectModel& project,
+    std::string& err)
+{
+    const std::filesystem::path basePath = projectRoot / "config" / "base.json";
+    const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (presetName + ".json");
+
+    project = DefaultProjectModel();
+    std::error_code existsEc;
+    if (std::filesystem::exists(basePath, existsEc))
+    {
+        if (!LoadProjectModelFile(basePath, project, err))
+        {
+            err = "failed to load base config: " + err;
+            return false;
+        }
+    }
+    else if (existsEc)
+    {
+        err = "failed to inspect base config: " + existsEc.message();
+        return false;
+    }
+    if (!LoadProjectModelFile(presetPath, project, err))
+    {
+        err = "failed to load preset config: " + err;
+        return false;
+    }
+    return true;
+}
 } // namespace
 
 namespace gui
 {
 bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem::path& presetPath, std::string& err)
 {
-    AppConfig base = DefaultConfig();
-    if (!base.channelConfigs)
-    {
-        err = "default channel configs are not initialized";
-        return false;
-    }
+    const std::array<InstrumentSoundConfig, 16> defaultSounds = SoundSlotsFromProject(DefaultProjectModel());
 
     std::error_code ec;
     std::filesystem::create_directories(presetPath.parent_path(), ec);
@@ -565,9 +611,9 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     Json channels = Json::object();
     for (int ch = 0; ch < 16; ch++)
     {
-        const ChannelConfig& cur = snapshot.channelConfigs[ch];
-        const ChannelConfig& def = (*base.channelConfigs)[ch];
-        if (ChannelConfigEquals(cur, def))
+        const InstrumentSoundConfig& cur = snapshot.soundSlots[ch];
+        const InstrumentSoundConfig& def = defaultSounds[static_cast<size_t>(ch)];
+        if (InstrumentSoundConfigEquals(cur, def))
         {
             continue;
         }
@@ -639,38 +685,6 @@ std::vector<std::string> CollectPresetItems(const std::filesystem::path& project
     return names;
 }
 
-bool LoadPresetConfig(
-    const std::filesystem::path& projectRoot,
-    const std::string& presetName,
-    AppConfig& cfg,
-    std::string& err)
-{
-    const std::filesystem::path basePath = projectRoot / "config" / "base.json";
-    const std::filesystem::path presetPath = projectRoot / "config" / "presets" / (presetName + ".json");
-
-    cfg = DefaultConfig();
-    std::error_code existsEc;
-    if (std::filesystem::exists(basePath, existsEc))
-    {
-        if (!LoadConfigFile(basePath, cfg, err))
-        {
-            err = "failed to load base config: " + err;
-            return false;
-        }
-    }
-    else if (existsEc)
-    {
-        err = "failed to inspect base config: " + existsEc.message();
-        return false;
-    }
-    if (!LoadConfigFile(presetPath, cfg, err))
-    {
-        err = "failed to load preset config: " + err;
-        return false;
-    }
-    return true;
-}
-
 void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
     const std::filesystem::path projectRoot = FindProjectRootPath();
@@ -683,7 +697,7 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
         metaByName.emplace(name, ReadPresetMeta(presetPath));
     }
 
-    EnsureChannelConfigs(state);
+    EnsureSoundSlots(state);
     const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
     const config::SourceKind kind = config::SourceConfigKind(ReadSoundSlot(state, slot).source);
     state.presetItems.clear();
@@ -776,25 +790,23 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
     {
         state.tonePreviewNoteNumber = selectedItem.recommendedRange.preview;
     }
-    AppConfig cfg{};
-    if (!LoadPresetConfig(FindProjectRootPath(), presetName, cfg, err))
+    ProjectModel presetProject{};
+    if (!LoadPresetProject(FindProjectRootPath(), presetName, presetProject, err))
     {
         return false;
     }
 
-    EnsureChannelConfigs(state);
-    if (cfg.channelConfigs)
+    EnsureSoundSlots(state);
+    const std::array<InstrumentSoundConfig, 16> presetSounds = SoundSlotsFromProject(presetProject);
+    const std::array<InstrumentSoundConfig, 16> defaultSounds = SoundSlotsFromProject(DefaultProjectModel());
+    if (presetProject.instruments && presetProject.projectChannels)
     {
-        AppConfig def = DefaultConfig();
         std::vector<int> changedChannels;
-        if (def.channelConfigs)
+        for (int ch = 0; ch < 16; ch++)
         {
-            for (int ch = 0; ch < 16; ch++)
+            if (!InstrumentSoundConfigEquals(presetSounds[static_cast<size_t>(ch)], defaultSounds[static_cast<size_t>(ch)]))
             {
-                if (!ChannelConfigEquals((*cfg.channelConfigs)[ch], (*def.channelConfigs)[ch]))
-                {
-                    changedChannels.push_back(ch);
-                }
+                changedChannels.push_back(ch);
             }
         }
 
@@ -802,7 +814,7 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
         {
             const int dstSlot = std::clamp(state.selectedSoundSlot, 0, 15);
             const int srcCh = changedChannels.front();
-            MutableSoundSlot(state, dstSlot) = (*cfg.channelConfigs)[srcCh];
+            MutableSoundSlot(state, dstSlot) = presetSounds[static_cast<size_t>(srcCh)];
             state.soundSlotDisplayNames[static_cast<size_t>(dstSlot)] =
                 selectedItem.displayName.empty() ? selectedItem.name : selectedItem.displayName;
             if (selectedItem.recommendedRange.available
@@ -813,7 +825,7 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
         }
         else
         {
-            MutableChannelConfigs(state) = *cfg.channelConfigs;
+            MutableSoundSlots(state) = presetSounds;
             const std::string label = selectedItem.displayName.empty() ? selectedItem.name : selectedItem.displayName;
             for (std::string& slotName : state.soundSlotDisplayNames)
             {
@@ -832,13 +844,11 @@ bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
 
 bool SavePresetDiffFromState(const GUIState& state, const std::filesystem::path& presetPath, std::string& err)
 {
-    if (!state.channelConfigs)
-    {
-        err = "channel configs are not initialized";
-        return false;
-    }
     GUIPresetSnapshot snapshot{};
-    snapshot.channelConfigs = *state.channelConfigs;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        snapshot.soundSlots[static_cast<size_t>(ch)] = ReadSoundSlot(state, ch);
+    }
     return SavePresetDiffFile(snapshot, presetPath, err);
 }
 } // namespace gui

@@ -8,7 +8,7 @@
 
 #include "core/AudioBuffer.h"
 #include "midi/MIDIParser.h"
-#include "SynthEngine/ChannelConfig.h"
+#include "SynthEngine/InstrumentSoundConfig.h"
 #include "SynthEngine/EffectsConfig.h"
 
 struct ProjectModel;
@@ -36,24 +36,6 @@ struct RenderRuntimeOverrides
 {
     std::shared_ptr<const std::vector<MIDIEventTick>> noteTicks;
     int ticksPerQuarter = 0;
-};
-
-// アプリ実行に必要な解決済み設定。
-// CLI/GUI/ConfigResolver で構築され、Run境界へ受け渡される。
-// 保存形式の正本ではなく、preview override など実行時だけの入力を含められる境界型。
-// channelConfigs/channelMixStates は共有所有で不変参照する前提。
-struct AppConfig
-{
-    std::filesystem::path midiPath;
-    std::filesystem::path wavPath;
-    int targetChannel;
-    int initialSeconds;
-    int bits;
-    int sampleRate;
-    double extraReleaseSec;
-    MasterEffectConfig masterEffects;
-    std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
-    std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
 };
 
 // Run実行の進捗通知と停止要求を受け持つ観測I/F。
@@ -89,9 +71,6 @@ struct IPreviewStreamSink
 };
 
 std::filesystem::path FindProjectRootPath();
-AppConfig DefaultConfig();
-bool LoadConfigFile(const std::filesystem::path& configPath, AppConfig& cfg, std::string& err);
-bool SaveConfigFile(const std::filesystem::path& configPath, const AppConfig& config, std::string& err);
 RenderOptions DefaultRenderOptions();
 RenderOptions DefaultPreviewRenderOptions();
 int Run(const ProjectModel& project);

@@ -1,4 +1,4 @@
-# チャンネル設定スキーマ（projectModel.v3 / Phase 7-A）
+# チャンネル設定スキーマ（projectModel.v3 / Phase 7-C）
 
 ## 目的
 
@@ -7,7 +7,7 @@
 - 実戦 Sound Card は `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` の8カテゴリに統一する。
 - Instrument は `source` / `layers` / `expressionMap` を含む `sound`、表示用 metadata、試聴の推奨音域を持つ。
 - 実行経路は `ProjectModel -> RenderConfig -> SynthEngine` を正本にする。
-- 保存経路は `ProjectModel -> projectModel.v3 JSON` を正本にし、旧 `AppConfig` shape へ戻してから出力しない。
+- 保存経路は `ProjectModel -> projectModel.v3 JSON` を正本にし、旧 shape へ戻してから出力しない。
 - `projectModel.v1` / `projectModel.v2` は読み込み対象外とする。
 
 ## 適用位置
@@ -358,7 +358,7 @@
 - 読み込み対象は `format: "projectModel.v3"` のみ。
 - `projectModel.v1` / `projectModel.v2` と、旧 `project.channels` 直下に sound を置く shape は復活させない。
 - 不正値（範囲外、未知 type、未定義 `instrumentId`、channel key 範囲外）は path 付き load error にする。
-- `AppConfig` と `ChannelConfig` は一部の移行補助や SynthEngine 向け render 入力として残るが、保存形式と Run 境界の正本にはしない。
+- `InstrumentSoundConfig` は Instrument の音色本体と SynthEngine 向け render 入力として使う。保存形式と Run 境界の正本は `ProjectModel` に一本化する。
 - GUI preset save は `project.instruments` と `project.channels` だけを出力し、旧 channel sound shape を書き戻さない。
 
 ## サンプル

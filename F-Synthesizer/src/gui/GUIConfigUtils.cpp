@@ -498,7 +498,7 @@ int SourceTypeIndex(const SourceConfig& src)
     return config::SourceKindToIndex(config::SourceConfigKind(src));
 }
 
-bool ChannelConfigEquals(const ChannelConfig& a, const ChannelConfig& b)
+bool InstrumentSoundConfigEquals(const InstrumentSoundConfig& a, const InstrumentSoundConfig& b)
 {
     return NearlyEq(a.amp, b.amp) &&
         NearlyEq(a.attackSec, b.attackSec) &&

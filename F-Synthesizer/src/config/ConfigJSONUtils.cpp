@@ -619,24 +619,6 @@ bool ParseTopLevelObjectEntries(
     return true;
 }
 
-std::shared_ptr<std::array<ChannelConfig, 16>> MakeMutableChannelConfigs(const AppConfig& cfg)
-{
-    auto table = std::make_shared<std::array<ChannelConfig, 16>>();
-    AppConfig base = DefaultConfig();
-    const auto& src = cfg.channelConfigs ? *cfg.channelConfigs : *base.channelConfigs;
-    *table = src;
-    return table;
-}
-
-std::shared_ptr<std::array<ChannelMixState, 16>> MakeMutableChannelMixStates(const AppConfig& cfg)
-{
-    auto table = std::make_shared<std::array<ChannelMixState, 16>>();
-    AppConfig base = DefaultConfig();
-    const auto& src = cfg.channelMixStates ? *cfg.channelMixStates : *base.channelMixStates;
-    *table = src;
-    return table;
-}
-
 void WriteIndent(std::ostream& out, int indent)
 {
     for (int i = 0; i < indent; i++)
@@ -896,7 +878,7 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
     WriteIndent(out, indent); out << "}";
 }
 
-void WriteChannelConfig(std::ostream& out, int ch, const ChannelConfig& cfg, bool withComma)
+void WriteInstrumentSoundConfig(std::ostream& out, int ch, const InstrumentSoundConfig& cfg, bool withComma)
 {
     WriteIndent(out, 4); out << "\"" << ch << "\": {\n";
     WriteIndent(out, 6); out << "\"amp\": " << cfg.amp << ",\n";

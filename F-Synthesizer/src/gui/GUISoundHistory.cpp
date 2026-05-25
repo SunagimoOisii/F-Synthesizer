@@ -4,12 +4,12 @@
 
 #include "gui/GUIState.h"
 #include "gui/GUIProjectFacade.h"
-#include "gui/GUIStateModel.h" // for EnsureChannelConfigs
+#include "gui/GUIStateModel.h" // for EnsureSoundSlots
 
 void PushSoundHistoryEntry(
     GUIState& state,
     int slot,
-    const ChannelConfig& config,
+    const InstrumentSoundConfig& config,
     const MacroSliderState& sliders)
 {
     // Redo スタックをクリア（新しい操作はやり直し履歴を破棄する）
@@ -17,7 +17,7 @@ void PushSoundHistoryEntry(
 
     SoundUndoEntry entry;
     entry.slot = slot;
-    entry.channelConfig = config;
+    entry.InstrumentSoundConfig = config;
     entry.macroSliders = sliders;
     state.soundUndoStack.push_back(std::move(entry));
 
@@ -30,9 +30,9 @@ void PushSoundHistoryEntry(
 
 void ApplySoundHistoryEntry(GUIState& state, const SoundUndoEntry& entry)
 {
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     const int slot = std::clamp(entry.slot, 0, 15);
-    gui::MutableSoundSlot(state, slot) = entry.channelConfig;
+    gui::MutableSoundSlot(state, slot) = entry.InstrumentSoundConfig;
     gui::MutableMacroSliders(state, slot) = entry.macroSliders;
     state.presetDirty = true;
 }
@@ -46,10 +46,10 @@ bool UndoSound(GUIState& state)
 
     // 現在の状態を Redo スタックに退避
     const int slot = std::clamp(state.soundUndoStack.back().slot, 0, 15);
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.channelConfig = gui::ReadSoundSlot(state, slot);
+    current.InstrumentSoundConfig = gui::ReadSoundSlot(state, slot);
     current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundRedoStack.push_back(std::move(current));
 
@@ -68,10 +68,10 @@ bool RedoSound(GUIState& state)
 
     // 現在の状態を Undo スタックに退避
     const int slot = std::clamp(state.soundRedoStack.back().slot, 0, 15);
-    gui::EnsureChannelConfigs(state);
+    gui::EnsureSoundSlots(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.channelConfig = gui::ReadSoundSlot(state, slot);
+    current.InstrumentSoundConfig = gui::ReadSoundSlot(state, slot);
     current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundUndoStack.push_back(std::move(current));
 

@@ -77,7 +77,7 @@ void ApplyDrumBrightnessRoughnessMovement(DrumConfig& src, const MacroSliderStat
 }
 } // namespace
 
-void ApplyMacroSliders(ChannelConfig& ch, const MacroSliderState& sliders)
+void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& sliders)
 {
     const float brightness = Clamp01(sliders.brightness);
     const float roughness = Clamp01(sliders.roughness);
@@ -129,7 +129,7 @@ void ApplyMacroSliders(ChannelConfig& ch, const MacroSliderState& sliders)
     ch.releaseSec = SliderToLogValue(envelope, kReleaseMinSec, kReleaseMaxSec);
 }
 
-MacroSliderState ReadMacroSliders(const ChannelConfig& ch, const MacroSliderState& current)
+MacroSliderState ReadMacroSliders(const InstrumentSoundConfig& ch, const MacroSliderState& current)
 {
     MacroSliderState out = current;
 

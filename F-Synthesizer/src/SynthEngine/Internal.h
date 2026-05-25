@@ -254,7 +254,7 @@ struct Voice
     bool empty() const;
     void reserve(size_t n);
     void clear();
-    void AddVoice(const ChannelConfig& cfg, const MIDIEvent& e, int sampleRate);
+    void AddVoice(const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate);
     void MarkNoteOff(int channel, int noteNumber, int noteInstanceID, bool holdBySustain);
     void ReleaseSustained(int channel);
     size_t CleanupPending(std::vector<uint8_t>& keepScratch);
@@ -522,7 +522,7 @@ inline void RecomputeChannelToneCache(RenderState& state, int ch)
 
 void ProcessEventsAtSample(const std::vector<MIDIEvent>& events,
     int sampleIndex,
-    const std::array<ChannelConfig, 16>& channelConfigs,
+    const std::array<InstrumentSoundConfig, 16>& soundSlots,
     int sampleRate,
     RenderState& state);
 

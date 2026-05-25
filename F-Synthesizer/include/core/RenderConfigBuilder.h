@@ -11,7 +11,7 @@
 
 struct ResolvedRenderConfigInputs
 {
-    std::shared_ptr<const std::array<ChannelConfig, 16>> channelConfigs;
+    std::shared_ptr<const std::array<InstrumentSoundConfig, 16>> soundSlots;
     std::shared_ptr<const std::array<ChannelMixState, 16>> channelMixStates;
 };
 
