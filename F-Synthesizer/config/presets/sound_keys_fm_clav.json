@@ -17,18 +17,22 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_fm_clav__ch0"
+      }
+    },
     "instruments": {
       "sound_keys_fm_clav__ch0": {
-        "displayName": "Keys FM Clav",
-        "category": "Piano/Keys",
+        "displayName": "Keys Fm Clav",
+        "category": "Keys",
         "internal": false,
         "tags": [
           "keys",
           "fm",
-          "clav",
-          "retro"
+          "clav"
         ],
-        "description": "硬めのFMクラビ。リズム刻みやファンク寄りの伴奏に使う。",
+        "description": "FMクラビ風のキー。刻むリフやファンク寄りの伴奏向け。",
         "sound": {
           "amp": 0.125,
           "attackSec": 0.002,
@@ -166,12 +170,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_keys_fm_clav__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

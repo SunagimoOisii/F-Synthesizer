@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_pad_wide__ch0"
+      }
+    },
     "instruments": {
       "sound_pad_wide__ch0": {
         "displayName": "Pad Wide",
@@ -9,8 +14,7 @@
         "tags": [
           "pad",
           "wide",
-          "background",
-          "thick"
+          "fm"
         ],
         "description": "横に広がる滑らかなパッド。明るさを足しすぎず、後ろで支えるコードに向く。",
         "sound": {
@@ -193,12 +197,34 @@
               "mode": "harmonic"
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_pad_wide__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

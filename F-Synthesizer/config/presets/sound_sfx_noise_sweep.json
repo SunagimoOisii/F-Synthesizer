@@ -1,16 +1,20 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_sfx_noise_sweep__ch0"
+      }
+    },
     "instruments": {
       "sound_sfx_noise_sweep__ch0": {
-        "displayName": "SFX Noise Sweep",
+        "displayName": "Sfx Noise Sweep",
         "category": "SFX",
         "internal": false,
         "tags": [
           "sfx",
           "noise",
-          "sweep",
-          "retro"
+          "sweep"
         ],
         "description": "レトロなノイズスイープ。短い上昇感やフィルイン前の動きに使う。",
         "sound": {
@@ -30,12 +34,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_sfx_noise_sweep__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 72
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Sweep",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

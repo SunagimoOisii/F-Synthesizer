@@ -189,6 +189,34 @@ function Assert-ProjectModelJsonShape {
             if (-not (Test-JsonProperty -Object $instrument -Name "sound")) {
                 throw "${Label}: project.instruments.$($instrumentProp.Name).sound is required."
             }
+            if ($Label.StartsWith("sound_")) {
+                foreach ($required in @("displayName", "category", "tags", "description", "recommendedRange", "macroHints")) {
+                    if (-not (Test-JsonProperty -Object $instrument -Name $required)) {
+                        throw "${Label}: project.instruments.$($instrumentProp.Name).${required} is required for practical Sound Card."
+                    }
+                }
+                if ($instrument.recommendedRange -isnot [pscustomobject]) {
+                    throw "${Label}: project.instruments.$($instrumentProp.Name).recommendedRange must be an object."
+                }
+                foreach ($rangeKey in @("low", "high", "preview")) {
+                    if (-not (Test-JsonProperty -Object $instrument.recommendedRange -Name $rangeKey)) {
+                        throw "${Label}: project.instruments.$($instrumentProp.Name).recommendedRange.${rangeKey} is required."
+                    }
+                    $rangeValue = [int]$instrument.recommendedRange.$rangeKey
+                    if ($rangeValue -lt 0 -or $rangeValue -gt 127) {
+                        throw "${Label}: project.instruments.$($instrumentProp.Name).recommendedRange.${rangeKey} must be in range 0..127."
+                    }
+                }
+                if (@($instrument.macroHints).Count -ne 4) {
+                    throw "${Label}: project.instruments.$($instrumentProp.Name).macroHints must contain 4 entries."
+                }
+                $macroIds = @($instrument.macroHints | ForEach-Object { [string]$_.id })
+                foreach ($macroId in @("brightness", "roughness", "movement", "envelope")) {
+                    if ($macroIds -notcontains $macroId) {
+                        throw "${Label}: project.instruments.$($instrumentProp.Name).macroHints missing '${macroId}'."
+                    }
+                }
+            }
         }
     }
     if ((Test-JsonProperty -Object $Config.project -Name "channels")) {
@@ -279,7 +307,7 @@ function Assert-PracticalPresetLayerPolicy {
             $category = [string]$instrument.category
         }
         if ($category -ne "") {
-            $allowedCategories = @("Lead", "Guitar", "Bass", "Strings", "Brass", "Reed", "Pipe", "Pad", "Piano/Keys", "Drums", "SFX", "Support")
+            $allowedCategories = @("Lead", "Guitar", "Bass", "Pad", "Keys", "Drums", "SFX", "Support")
             if ($allowedCategories -notcontains $category) {
                 throw "${Name}: invalid practical instrument category '${category}'."
             }
@@ -296,18 +324,18 @@ function Assert-PracticalPresetLayerPolicy {
             continue
         }
         $layers = $sound.layers
-        if ((Test-LayerEnabled -Layers $layers -Name "chord") -and ($category -ne "Pad" -and $category -ne "Strings")) {
-            throw "${Name}: chord layer is only allowed for practical Pad/Strings presets."
+        if ((Test-LayerEnabled -Layers $layers -Name "chord") -and $category -ne "Pad") {
+            throw "${Name}: chord layer is only allowed for practical Pad presets."
         }
-        if ((Test-LayerEnabled -Layers $layers -Name "string") -and ($category -ne "Pad" -and $category -ne "Strings")) {
-            throw "${Name}: string layer is only allowed for practical Pad/Strings presets."
+        if ((Test-LayerEnabled -Layers $layers -Name "string") -and $category -ne "Pad") {
+            throw "${Name}: string layer is only allowed for practical Pad presets."
         }
         foreach ($guitarLayer in @("powerChord", "chug")) {
             if ((Test-LayerEnabled -Layers $layers -Name $guitarLayer) -and $category -ne "Guitar") {
                 throw "${Name}: ${guitarLayer} layer is only allowed for practical Guitar presets."
             }
         }
-        if ($category -eq "Piano/Keys" -and $displayName -like "*Organ*") {
+        if ($category -eq "Keys" -and $displayName -like "*Organ*") {
             foreach ($forbidden in @("chord", "string", "body")) {
                 if (Test-LayerEnabled -Layers $layers -Name $forbidden) {
                     throw "${Name}: Keys Organ must use harmonic/source tone instead of ${forbidden} layer."
@@ -315,9 +343,11 @@ function Assert-PracticalPresetLayerPolicy {
             }
         }
         if (Test-LayerEnabled -Layers $layers -Name "body") {
-            $isAllowedBody = $category -eq "Pad" -or $category -eq "Strings" -or ($category -eq "Piano/Keys" -and $displayName -like "*Pluck*")
+            $isAllowedBody = $category -eq "Pad" -or
+                ($category -eq "Keys" -and $displayName -like "*Pluck*") -or
+                ($category -eq "Support" -and $displayName -like "*Pizzicato*")
             if (-not $isAllowedBody) {
-                throw "${Name}: body layer is only allowed for practical Pad/Strings presets or pluck keys."
+                throw "${Name}: body layer is only allowed for practical Pad presets, pluck keys, or pizzicato support."
             }
             $body = $layers.body
             if (-not (Test-JsonProperty -Object $body -Name "mode")) {
@@ -441,6 +471,11 @@ try {
     $presets = Get-ChildItem -Path $presetDir -Filter "*.json" | Sort-Object Name
     if ($presets.Count -eq 0) {
         throw "No preset JSON files found: $presetDir"
+    }
+    $legacySoundFiles = @(Get-ChildItem -Path $presetDir -Filter "*.json" |
+        Where-Object { $_.BaseName -match '^sound_(brass|reed|pipe|strings)_' })
+    if ($legacySoundFiles.Count -gt 0) {
+        throw "Legacy practical preset file names remain: $($legacySoundFiles.Name -join ', ')"
     }
 
     $checkDir = Join-Path $repoRoot "output/check/presets"

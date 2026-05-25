@@ -1,18 +1,22 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "9": {
+        "instrumentId": "sound_support_hat__ch9"
+      }
+    },
     "instruments": {
       "sound_support_hat__ch9": {
         "displayName": "Support Hat",
-        "category": "Drums",
+        "category": "Support",
         "internal": false,
         "tags": [
           "support",
           "hat",
-          "noise",
-          "thin"
+          "noise"
         ],
-        "description": "薄いハット補助。ドラムやリズムに、耳につきにくい高域の刻みを足す。",
+        "description": "耳につきにくい薄いハット補助。リズムの細かい刻みに使う。",
         "sound": {
           "amp": 0.055,
           "attackSec": 0.001,
@@ -30,12 +34,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "9": {
-        "instrumentId": "sound_support_hat__ch9"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

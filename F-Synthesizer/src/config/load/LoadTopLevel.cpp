@@ -124,6 +124,80 @@ bool ValidateOptionalStringArray(const Json& obj, const char* key, const std::st
     return true;
 }
 
+bool ValidateOptionalRecommendedRange(const Json& obj, const std::string& path, std::string& err)
+{
+    const auto it = obj.find("recommendedRange");
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_object())
+    {
+        err = path + ".recommendedRange must be object";
+        return false;
+    }
+    for (const char* key : { "low", "high", "preview" })
+    {
+        const auto valueIt = it->find(key);
+        if (valueIt == it->end())
+        {
+            continue;
+        }
+        if (!valueIt->is_number_integer())
+        {
+            err = path + ".recommendedRange." + key + " must be integer";
+            return false;
+        }
+        const int value = valueIt->get<int>();
+        if (value < 0 || value > 127)
+        {
+            err = path + ".recommendedRange." + key + " must be in range 0..127";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ValidateOptionalMacroHints(const Json& obj, const std::string& path, std::string& err)
+{
+    const auto it = obj.find("macroHints");
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_array())
+    {
+        err = path + ".macroHints must be array";
+        return false;
+    }
+    for (size_t i = 0; i < it->size(); i++)
+    {
+        const Json& hint = (*it)[i];
+        const std::string hintPath = path + ".macroHints[" + std::to_string(i) + "]";
+        if (!hint.is_object())
+        {
+            err = hintPath + " must be object";
+            return false;
+        }
+        std::string id;
+        std::string unused;
+        if (!ReadOptionalString(hint, "id", hintPath, id, err)) return false;
+        if (!ReadOptionalString(hint, "label", hintPath, unused, err)) return false;
+        if (!ReadOptionalString(hint, "description", hintPath, unused, err)) return false;
+        if (id.empty())
+        {
+            err = hintPath + ".id is required";
+            return false;
+        }
+        if (id != "brightness" && id != "roughness" && id != "movement" && id != "envelope")
+        {
+            err = hintPath + ".id must be one of brightness, roughness, movement, envelope";
+            return false;
+        }
+    }
+    return true;
+}
+
 void RewriteInstrumentSoundError(const std::string& instrumentId, const std::string& channelKey, std::string& err)
 {
     const std::string channelPrefix = "channels." + channelKey;
@@ -320,6 +394,8 @@ bool ValidateInstrumentObject(const Json& instrument, const std::string& path, s
     if (!ReadOptionalBool(instrument, "internal", path, unusedBool, err)) return false;
     if (!ValidateOptionalStringArray(instrument, "tags", path, err)) return false;
     if (!ReadOptionalString(instrument, "description", path, unused, err)) return false;
+    if (!ValidateOptionalRecommendedRange(instrument, path, err)) return false;
+    if (!ValidateOptionalMacroHints(instrument, path, err)) return false;
 
     const auto soundIt = instrument.find("sound");
     if (soundIt != instrument.end() && !soundIt->is_object())

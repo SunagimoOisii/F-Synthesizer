@@ -17,39 +17,44 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_bright_reed__ch0"
+      }
+    },
     "instruments": {
-      "sound_pipe_airy_lead__ch0": {
-        "displayName": "Pipe Airy Lead",
-        "category": "Pipe",
+      "sound_lead_bright_reed__ch0": {
+        "displayName": "Lead Bright Reed",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "pipe",
-          "airy",
           "lead",
-          "retro"
+          "bright",
+          "reed",
+          "analog"
         ],
-        "description": "息成分を足した笛系リード。抜ける高音フレーズに使う。",
+        "description": "明るいリード楽器風ソロ音。主旋律を前に出したい時に使う。",
         "sound": {
-          "amp": 0.105,
-          "attackSec": 0.008,
-          "decaySec": 0.22,
-          "sustainLevel": 0.64,
-          "releaseSec": 0.18,
+          "amp": 0.12,
+          "attackSec": 0.006,
+          "decaySec": 0.18,
+          "sustainLevel": 0.62,
+          "releaseSec": 0.14,
           "source": {
             "type": "analog",
-            "wave": "sine",
+            "wave": "square",
             "unisonVoices": 2,
-            "unisonDetuneCents": 1.8,
-            "unisonSpread": 0.18,
-            "subOscLevel": 0.0,
-            "pulseWidth": 0.5,
-            "drive": 0.005,
+            "unisonDetuneCents": 2.8,
+            "unisonSpread": 0.2,
+            "subOscLevel": 0.04,
+            "pulseWidth": 0.4,
+            "drive": 0.03,
             "driftDepthCents": 2.5,
             "driftRateHz": 0.18,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 4700.0,
-              "resonance": 0.66,
+              "cutoffHz": 4300.0,
+              "resonance": 0.74,
               "drive": 0.03
             }
           },
@@ -57,19 +62,19 @@
             "attack": {
               "enabled": true,
               "type": "pick",
-              "level": 0.045,
-              "decaySec": 0.018,
-              "brightness": 0.48,
-              "bodyMix": 0.24,
+              "level": 0.07,
+              "decaySec": 0.02,
+              "brightness": 0.58,
+              "bodyMix": 0.42,
               "pitchOffsetSemis": 0,
               "drive": 0.015
             },
             "lead": {
               "enabled": true,
               "type": "edge",
-              "level": 0.04,
-              "edgeLevel": 0.1,
-              "bodyLevel": 0.12,
+              "level": 0.11,
+              "edgeLevel": 0.3,
+              "bodyLevel": 0.22,
               "detuneCents": 3.5,
               "pitchBendSemis": 0.18,
               "bendDecaySec": 0.045,
@@ -77,7 +82,7 @@
               "attackDecaySec": 0.035,
               "drive": 0.035,
               "characterLevel": 0.08,
-              "characterTone": 0.54,
+              "characterTone": 0.64,
               "biteLevel": 0.035,
               "biteDecaySec": 0.026,
               "wobbleDepthCents": 1.8,
@@ -88,9 +93,9 @@
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.1,
+            "velocityToBrightness": 0.12,
             "velocityToFmIndex": 0.0,
-            "velocityToLead": 0.07,
+            "velocityToLead": 0.18,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -99,12 +104,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_pipe_airy_lead__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

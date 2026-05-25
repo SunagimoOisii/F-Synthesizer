@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_bass_drive__ch0"
+      }
+    },
     "instruments": {
       "sound_bass_drive__ch0": {
         "displayName": "Bass Drive",
@@ -8,7 +13,6 @@
         "internal": false,
         "tags": [
           "bass",
-          "heavy",
           "drive",
           "analog"
         ],
@@ -88,12 +92,34 @@
               "drive": 0.0274
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_bass_drive__ch0"
+        },
+        "recommendedRange": {
+          "low": 24,
+          "high": 60,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Drive",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

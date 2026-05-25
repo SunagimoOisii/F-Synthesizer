@@ -1,16 +1,20 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_sfx_laser__ch0"
+      }
+    },
     "instruments": {
       "sound_sfx_laser__ch0": {
-        "displayName": "SFX Laser",
+        "displayName": "Sfx Laser",
         "category": "SFX",
         "internal": false,
         "tags": [
           "sfx",
           "laser",
-          "fm",
-          "accent"
+          "fm"
         ],
         "description": "短いレーザー効果音。耳に刺さる高域を抑えた、アクセント向けのレトロSFX。",
         "sound": {
@@ -131,12 +135,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_sfx_laser__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 72
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Sweep",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

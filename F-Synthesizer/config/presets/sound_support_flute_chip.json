@@ -17,18 +17,23 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_flute_chip__ch0"
+      }
+    },
     "instruments": {
-      "sound_pipe_flute_chip__ch0": {
-        "displayName": "Pipe Flute Chip",
-        "category": "Pipe",
+      "sound_support_flute_chip__ch0": {
+        "displayName": "Support Flute Chip",
+        "category": "Support",
         "internal": false,
         "tags": [
-          "pipe",
+          "support",
           "flute",
           "chip",
-          "retro"
+          "psg"
         ],
-        "description": "チップフルート風の細い音。高音のメロディを軽く乗せる。",
+        "description": "チップフルート風の補助音。薄い旋律や隙間の飾りに使う。",
         "sound": {
           "amp": 0.1,
           "attackSec": 0.01,
@@ -64,12 +69,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_pipe_flute_chip__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

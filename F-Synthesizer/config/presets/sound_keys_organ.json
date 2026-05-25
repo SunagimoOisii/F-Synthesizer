@@ -1,18 +1,22 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_organ__ch0"
+      }
+    },
     "instruments": {
       "sound_keys_organ__ch0": {
         "displayName": "Keys Organ",
-        "category": "Piano/Keys",
+        "category": "Keys",
         "internal": false,
         "tags": [
           "keys",
           "organ",
-          "dark",
-          "sustain"
+          "fm"
         ],
-        "description": "太さを抑えて整えたオルガン。弦や胴鳴りの補助レイヤーを混ぜず、押した音だけで中域を支える。",
+        "description": "倍音で厚みを足したオルガン系キー。コードを支える用途向け。",
         "sound": {
           "amp": 0.115,
           "attackSec": 0.025,
@@ -157,12 +161,34 @@
               "stereo": 0.08
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_keys_organ__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

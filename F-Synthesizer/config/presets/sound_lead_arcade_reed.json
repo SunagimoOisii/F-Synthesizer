@@ -17,33 +17,38 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_arcade_reed__ch0"
+      }
+    },
     "instruments": {
-      "sound_brass_chip_stab__ch0": {
-        "displayName": "Brass Chip Stab",
-        "category": "Brass",
+      "sound_lead_arcade_reed__ch0": {
+        "displayName": "Lead Arcade Reed",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "brass",
-          "chip",
-          "stab",
-          "retro"
+          "lead",
+          "arcade",
+          "reed",
+          "psg"
         ],
-        "description": "短く刺さるチップブラス。GMのトランペット系をレトロに置き換えたい時に使う。",
+        "description": "レトロなリード楽器風のコール音。短いメロディや応答フレーズ向け。",
         "sound": {
           "amp": 0.13,
-          "attackSec": 0.003,
-          "decaySec": 0.18,
-          "sustainLevel": 0.46,
+          "attackSec": 0.004,
+          "decaySec": 0.16,
+          "sustainLevel": 0.5,
           "releaseSec": 0.12,
           "source": {
             "type": "psg",
             "wave": "pulse",
-            "duty": 2,
-            "volumeSteps": 10,
+            "duty": 3,
+            "volumeSteps": 9,
             "maxVoices": 3,
             "filter": {
               "mode": "lowpass",
-              "cutoffHz": 4200.0,
+              "cutoffHz": 5000.0,
               "resonance": 0.62,
               "drive": 0.0
             }
@@ -51,20 +56,20 @@
           "layers": {
             "attack": {
               "enabled": true,
-              "type": "brass",
-              "level": 0.11,
-              "decaySec": 0.035,
-              "brightness": 0.55,
-              "bodyMix": 0.58,
+              "type": "pick",
+              "level": 0.09,
+              "decaySec": 0.018,
+              "brightness": 0.62,
+              "bodyMix": 0.4,
               "pitchOffsetSemis": 0,
               "drive": 0.015
             },
             "lead": {
               "enabled": true,
-              "type": "brass",
+              "type": "edge",
               "level": 0.1,
-              "edgeLevel": 0.22,
-              "bodyLevel": 0.3,
+              "edgeLevel": 0.34,
+              "bodyLevel": 0.18,
               "detuneCents": 3.5,
               "pitchBendSemis": 0.18,
               "bendDecaySec": 0.045,
@@ -72,7 +77,7 @@
               "attackDecaySec": 0.035,
               "drive": 0.035,
               "characterLevel": 0.08,
-              "characterTone": 0.42,
+              "characterTone": 0.68,
               "biteLevel": 0.035,
               "biteDecaySec": 0.026,
               "wobbleDepthCents": 1.8,
@@ -83,9 +88,9 @@
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.1,
+            "velocityToBrightness": 0.13,
             "velocityToFmIndex": 0.0,
-            "velocityToLead": 0.16,
+            "velocityToLead": 0.2,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -94,12 +99,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_brass_chip_stab__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

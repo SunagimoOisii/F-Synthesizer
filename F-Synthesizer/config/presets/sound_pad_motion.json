@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_pad_motion__ch0"
+      }
+    },
     "instruments": {
       "sound_pad_motion__ch0": {
         "displayName": "Pad Motion",
@@ -9,8 +14,7 @@
         "tags": [
           "pad",
           "motion",
-          "pulse",
-          "rhythmic"
+          "analog"
         ],
         "description": "ゆっくり動く背景パッド。ノイズ感を抑えたまま、コードに変化を付けたい時に使う。",
         "sound": {
@@ -64,12 +68,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_pad_motion__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

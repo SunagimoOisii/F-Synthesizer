@@ -1,18 +1,22 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_pluck__ch0"
+      }
+    },
     "instruments": {
       "sound_keys_pluck__ch0": {
         "displayName": "Keys Pluck",
-        "category": "Piano/Keys",
+        "category": "Keys",
         "internal": false,
         "tags": [
           "keys",
           "pluck",
-          "attack",
-          "rhythm"
+          "fm"
         ],
-        "description": "短く切れるプラック。アタックを残しながら、耳に残るざらつきを抑えた伴奏向けの音。",
+        "description": "耳に残るざらつきを抑えた短いプラック音。",
         "sound": {
           "amp": 0.13,
           "attackSec": 0.004,
@@ -170,12 +174,34 @@
             "velocityToBody": 0.22,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_keys_pluck__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

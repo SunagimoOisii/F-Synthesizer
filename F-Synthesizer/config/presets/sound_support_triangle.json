@@ -17,18 +17,22 @@
         "damping": 0.6
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_triangle__ch0"
+      }
+    },
     "instruments": {
       "sound_support_triangle__ch0": {
         "displayName": "Support Triangle",
-        "category": "SFX",
+        "category": "Support",
         "internal": false,
         "tags": [
           "support",
           "triangle",
-          "psg",
-          "low"
+          "psg"
         ],
-        "description": "やわらかい三角波補助。低域やシンプルなフレーズに、目立ちすぎない芯を足す。",
+        "description": "目立ちすぎないPSG triangle補助。低域や薄いサブメロディ向け。",
         "sound": {
           "amp": 0.07,
           "attackSec": 0.006,
@@ -49,12 +53,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_support_triangle__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

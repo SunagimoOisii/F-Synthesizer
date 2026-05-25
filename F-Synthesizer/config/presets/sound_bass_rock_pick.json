@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_bass_rock_pick__ch0"
+      }
+    },
     "instruments": {
       "sound_bass_rock_pick__ch0": {
         "displayName": "Bass Rock Pick",
@@ -10,7 +15,7 @@
           "bass",
           "rock",
           "pick",
-          "drive"
+          "analog"
         ],
         "description": "ピックで弾いたロックベース風の音。ギターと重ねても輪郭を残したい時に使う。",
         "sound": {
@@ -77,12 +82,34 @@
               "output": 0.82
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_bass_rock_pick__ch0"
+        },
+        "recommendedRange": {
+          "low": 24,
+          "high": 60,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Drive",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

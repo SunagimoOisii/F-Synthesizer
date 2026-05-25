@@ -1,10 +1,11 @@
-# チャンネル設定スキーマ（projectModel.v3 / Instrument Phase 2）
+# チャンネル設定スキーマ（projectModel.v3 / Instrument Phase 4）
 
 ## 目的
 
 - ch0-15 の Instrument 割当と Instrument 内の legacy sound config を JSON で定義し、CLI/GUI で共通利用する。
 - `projectModel.v3` の C++ typed config を正本とし、この文書は利用者向けの同期メモとして扱う。
-- v3 Phase 2 では Instrument が legacy `source` / `layers` / `expressionMap` を `sound` として保持する。意味的な再設計は Phase 4 の preset / Sound Card 再編で行う。
+- v3 Phase 4 では実戦 Sound Card を `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` の8カテゴリへ整理する。
+- Instrument は legacy `source` / `layers` / `expressionMap` を `sound` として保持し、表示用 metadata と試聴の推奨音域を持つ。
 - `projectModel.v1` は読み込み対象外とする。
 - `projectModel.v2` は読み込み対象外とする。
 
@@ -25,6 +26,13 @@
         "internal": false,
         "tags": ["guitar", "clean"],
         "description": "...",
+        "recommendedRange": { "low": 40, "high": 76, "preview": 52 },
+        "macroHints": [
+          { "id": "brightness", "label": "Bright", "description": "明るさを調整する" },
+          { "id": "roughness", "label": "Drive", "description": "粗さや押し出しを調整する" },
+          { "id": "movement", "label": "Motion", "description": "揺れや動きを調整する" },
+          { "id": "envelope", "label": "Shape", "description": "アタックと余韻を調整する" }
+        ],
         "sound": { "... legacy channel sound config ...": true }
       }
     },
@@ -40,6 +48,16 @@
 
 - `channels` 未指定のチャンネルは `DefaultConfig()` の既定値を使用する。
 - 指定されたチャンネルは `instrumentId` で Instrument を参照し、`sound` を既存 `ChannelConfig` へ展開する。
+
+## Instrument metadata
+
+- `displayName`: Play / preset picker に出す短い英語名。
+- `category`: 実戦 `sound_*` は `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` のいずれか。`demo_*` は検証用なので例外を許容する。
+- `internal`: `false` は Play 用 Sound Card、`true` は Advanced / 検証用。
+- `tags`: lowercase 英語の用途・質感 tag。
+- `description`: 初心者が用途を判断できる日本語短文。
+- `recommendedRange`: `low` / `high` / `preview` を MIDI note number 0..127 で持つ任意 metadata。
+- `macroHints`: `brightness` / `roughness` / `movement` / `envelope` の表示名と説明。DSP の macro 挙動は既存 GUI macro mapping が担当する。
 
 ## Instrument sound オブジェクト
 

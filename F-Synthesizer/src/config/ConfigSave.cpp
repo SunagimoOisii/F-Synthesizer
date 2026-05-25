@@ -52,6 +52,31 @@ void WriteInstrument(std::ostream& out, const std::string& id, const InstrumentC
     }
     out << "],\n";
     WriteStringField(out, "description", instrument.description, 8, true);
+    WriteIndent(out, 8); out << "\"recommendedRange\": {\n";
+    WriteIndent(out, 10); out << "\"low\": " << instrument.recommendedRange.low << ",\n";
+    WriteIndent(out, 10); out << "\"high\": " << instrument.recommendedRange.high << ",\n";
+    WriteIndent(out, 10); out << "\"preview\": " << instrument.recommendedRange.preview << "\n";
+    WriteIndent(out, 8); out << "},\n";
+    WriteIndent(out, 8); out << "\"macroHints\": [";
+    if (!instrument.macroHints.empty())
+    {
+        out << "\n";
+        for (size_t i = 0; i < instrument.macroHints.size(); i++)
+        {
+            const MacroHint& hint = instrument.macroHints[i];
+            WriteIndent(out, 10); out << "{ ";
+            out << "\"id\": \"" << EscapeJSON(hint.id) << "\", ";
+            out << "\"label\": \"" << EscapeJSON(hint.label) << "\", ";
+            out << "\"description\": \"" << EscapeJSON(hint.description) << "\" }";
+            if (i + 1 < instrument.macroHints.size())
+            {
+                out << ",";
+            }
+            out << "\n";
+        }
+        WriteIndent(out, 8);
+    }
+    out << "],\n";
     WriteIndent(out, 8); out << "\"sound\": " << DumpChannelSound(instrument.sound) << "\n";
     WriteIndent(out, 6); out << "}";
     if (withComma)

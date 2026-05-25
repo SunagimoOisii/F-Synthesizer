@@ -17,18 +17,22 @@
         "damping": 0.55
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_pulse__ch0"
+      }
+    },
     "instruments": {
       "sound_support_pulse__ch0": {
         "displayName": "Support Pulse",
-        "category": "SFX",
+        "category": "Support",
         "internal": false,
         "tags": [
           "support",
           "pulse",
-          "psg",
-          "edge"
+          "psg"
         ],
-        "description": "控えめなパルス補助。メロディやベースに、レトロな細い線を重ねたい時に使う。",
+        "description": "控えめなPSG pulse補助。レトロな合いの手や薄い旋律向け。",
         "sound": {
           "amp": 0.065,
           "attackSec": 0.004,
@@ -49,12 +53,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_support_pulse__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

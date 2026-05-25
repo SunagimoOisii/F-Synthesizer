@@ -17,18 +17,23 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_chip_sax__ch0"
+      }
+    },
     "instruments": {
-      "sound_reed_chip_sax__ch0": {
-        "displayName": "Reed Chip Sax",
-        "category": "Reed",
+      "sound_lead_chip_sax__ch0": {
+        "displayName": "Lead Chip Sax",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "reed",
-          "sax",
+          "lead",
           "chip",
-          "retro"
+          "sax",
+          "psg"
         ],
-        "description": "矩形波寄りのサックス風リード。ソロをレトロに立たせる。",
+        "description": "チップサックス風のリード。軽いソロやコミカルなアクセント向け。",
         "sound": {
           "amp": 0.12,
           "attackSec": 0.008,
@@ -94,12 +99,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_reed_chip_sax__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

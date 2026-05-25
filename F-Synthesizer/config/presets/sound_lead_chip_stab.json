@@ -17,33 +17,38 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_chip_stab__ch0"
+      }
+    },
     "instruments": {
-      "sound_reed_arcade_call__ch0": {
-        "displayName": "Reed Arcade Call",
-        "category": "Reed",
+      "sound_lead_chip_stab__ch0": {
+        "displayName": "Lead Chip Stab",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "reed",
-          "arcade",
-          "call",
-          "retro"
+          "lead",
+          "chip",
+          "stab",
+          "psg"
         ],
-        "description": "アーケード風の呼びかけリード。短い合図や返しメロに使う。",
+        "description": "チップ音らしい短いスタブ。レトロな合いの手や反復フレーズ向け。",
         "sound": {
           "amp": 0.13,
-          "attackSec": 0.004,
-          "decaySec": 0.16,
-          "sustainLevel": 0.5,
+          "attackSec": 0.003,
+          "decaySec": 0.18,
+          "sustainLevel": 0.46,
           "releaseSec": 0.12,
           "source": {
             "type": "psg",
             "wave": "pulse",
-            "duty": 3,
-            "volumeSteps": 9,
+            "duty": 2,
+            "volumeSteps": 10,
             "maxVoices": 3,
             "filter": {
               "mode": "lowpass",
-              "cutoffHz": 5000.0,
+              "cutoffHz": 4200.0,
               "resonance": 0.62,
               "drive": 0.0
             }
@@ -51,20 +56,20 @@
           "layers": {
             "attack": {
               "enabled": true,
-              "type": "pick",
-              "level": 0.09,
-              "decaySec": 0.018,
-              "brightness": 0.62,
-              "bodyMix": 0.4,
+              "type": "brass",
+              "level": 0.11,
+              "decaySec": 0.035,
+              "brightness": 0.55,
+              "bodyMix": 0.58,
               "pitchOffsetSemis": 0,
               "drive": 0.015
             },
             "lead": {
               "enabled": true,
-              "type": "edge",
+              "type": "brass",
               "level": 0.1,
-              "edgeLevel": 0.34,
-              "bodyLevel": 0.18,
+              "edgeLevel": 0.22,
+              "bodyLevel": 0.3,
               "detuneCents": 3.5,
               "pitchBendSemis": 0.18,
               "bendDecaySec": 0.045,
@@ -72,7 +77,7 @@
               "attackDecaySec": 0.035,
               "drive": 0.035,
               "characterLevel": 0.08,
-              "characterTone": 0.68,
+              "characterTone": 0.42,
               "biteLevel": 0.035,
               "biteDecaySec": 0.026,
               "wobbleDepthCents": 1.8,
@@ -83,9 +88,9 @@
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.13,
+            "velocityToBrightness": 0.1,
             "velocityToFmIndex": 0.0,
-            "velocityToLead": 0.2,
+            "velocityToLead": 0.16,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -94,12 +99,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_reed_arcade_call__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

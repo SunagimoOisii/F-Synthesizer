@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "9": {
+        "instrumentId": "sound_drums_hard__ch9"
+      }
+    },
     "instruments": {
       "sound_drums_hard__ch9": {
         "displayName": "Drums Hard",
@@ -9,7 +14,7 @@
         "tags": [
           "drums",
           "hard",
-          "rock"
+          "drumkit"
         ],
         "description": "硬めのキックとスネアを持つロックドラム。重いギターリフの下で押し出しを作る。",
         "sound": {
@@ -148,12 +153,34 @@
               }
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "9": {
-        "instrumentId": "sound_drums_hard__ch9"
+        },
+        "recommendedRange": {
+          "low": 35,
+          "high": 81,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Hit",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

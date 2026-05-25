@@ -17,18 +17,23 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_pad_dark_strings__ch0"
+      }
+    },
     "instruments": {
-      "sound_strings_dark_ensemble__ch0": {
-        "displayName": "Strings Dark Ensemble",
-        "category": "Strings",
+      "sound_pad_dark_strings__ch0": {
+        "displayName": "Pad Dark Strings",
+        "category": "Pad",
         "internal": false,
         "tags": [
-          "strings",
+          "pad",
           "dark",
-          "ensemble",
-          "retro"
+          "strings",
+          "analog"
         ],
-        "description": "暗めの弦合奏。低中域の背景を重くしすぎず支える。",
+        "description": "暗めのストリングス風パッド。背景を濁らせずに支える。",
         "sound": {
           "amp": 0.105,
           "attackSec": 0.035,
@@ -93,12 +98,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_strings_dark_ensemble__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

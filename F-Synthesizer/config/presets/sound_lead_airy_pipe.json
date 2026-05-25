@@ -17,59 +17,64 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_airy_pipe__ch0"
+      }
+    },
     "instruments": {
-      "sound_brass_arcade_section__ch0": {
-        "displayName": "Brass Arcade Section",
-        "category": "Brass",
+      "sound_lead_airy_pipe__ch0": {
+        "displayName": "Lead Airy Pipe",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "brass",
-          "arcade",
-          "section",
-          "retro"
+          "lead",
+          "airy",
+          "pipe",
+          "analog"
         ],
-        "description": "ゲーム音源風の合奏ブラス。ファンファーレや合いの手に向く。",
+        "description": "息の軽さを持つパイプ風リード。高めのメロディや抜けるフレーズ向け。",
         "sound": {
-          "amp": 0.115,
-          "attackSec": 0.006,
+          "amp": 0.105,
+          "attackSec": 0.008,
           "decaySec": 0.22,
-          "sustainLevel": 0.68,
+          "sustainLevel": 0.64,
           "releaseSec": 0.18,
           "source": {
             "type": "analog",
-            "wave": "saw",
-            "unisonVoices": 3,
-            "unisonDetuneCents": 5.5,
-            "unisonSpread": 0.35,
-            "subOscLevel": 0.08,
-            "pulseWidth": 0.48,
-            "drive": 0.045,
+            "wave": "sine",
+            "unisonVoices": 2,
+            "unisonDetuneCents": 1.8,
+            "unisonSpread": 0.18,
+            "subOscLevel": 0.0,
+            "pulseWidth": 0.5,
+            "drive": 0.005,
             "driftDepthCents": 2.5,
             "driftRateHz": 0.18,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 3300.0,
-              "resonance": 0.7,
+              "cutoffHz": 4700.0,
+              "resonance": 0.66,
               "drive": 0.03
             }
           },
           "layers": {
             "attack": {
               "enabled": true,
-              "type": "brass",
-              "level": 0.09,
-              "decaySec": 0.045,
+              "type": "pick",
+              "level": 0.045,
+              "decaySec": 0.018,
               "brightness": 0.48,
-              "bodyMix": 0.62,
+              "bodyMix": 0.24,
               "pitchOffsetSemis": 0,
               "drive": 0.015
             },
             "lead": {
               "enabled": true,
-              "type": "brass",
-              "level": 0.11,
-              "edgeLevel": 0.18,
-              "bodyLevel": 0.36,
+              "type": "edge",
+              "level": 0.04,
+              "edgeLevel": 0.1,
+              "bodyLevel": 0.12,
               "detuneCents": 3.5,
               "pitchBendSemis": 0.18,
               "bendDecaySec": 0.045,
@@ -77,7 +82,7 @@
               "attackDecaySec": 0.035,
               "drive": 0.035,
               "characterLevel": 0.08,
-              "characterTone": 0.44,
+              "characterTone": 0.54,
               "biteLevel": 0.035,
               "biteDecaySec": 0.026,
               "wobbleDepthCents": 1.8,
@@ -88,9 +93,9 @@
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.09,
+            "velocityToBrightness": 0.1,
             "velocityToFmIndex": 0.0,
-            "velocityToLead": 0.18,
+            "velocityToLead": 0.07,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -99,12 +104,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_brass_arcade_section__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

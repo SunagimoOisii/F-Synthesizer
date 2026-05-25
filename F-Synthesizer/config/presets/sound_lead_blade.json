@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_blade__ch0"
+      }
+    },
     "instruments": {
       "sound_lead_blade__ch0": {
         "displayName": "Lead Blade",
@@ -8,9 +13,8 @@
         "internal": false,
         "tags": [
           "lead",
-          "heavy",
           "blade",
-          "sync"
+          "analog"
         ],
         "description": "鋭い芯を保ちながら、耳に刺さりにくく整えた主旋律リード。速いフレーズでも輪郭を残したい時に使う。",
         "sound": {
@@ -91,12 +95,34 @@
               "drive": 0.0216
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_lead_blade__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

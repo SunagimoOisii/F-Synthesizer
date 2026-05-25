@@ -1,25 +1,19 @@
 # PRESETS
 
-`config/presets/` 配下のプリセット一覧と用途メモです。現在の実戦 Sound Card は、Play で選んで短く試聴した時の気持ちよさを最優先にします。
+`config/presets/` 配下のプリセット一覧と用途メモです。Phase 4 以降、実戦用 `sound_*` は Sound Card として扱い、Play では8カテゴリに整理して表示します。
 
 ## 設計方針
 
 - 実戦用 Sound Card は `sound_<category>_<name>` の形式で管理します。
-- Play では `internal: false` の実戦 preset だけを表示します。
-- Advanced では `internal: true` の `demo_*` 検証 preset に到達できます。
 - 実戦カテゴリは `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` に固定します。
+- Play では `internal: false` の `sound_*` だけを表示します。
+- Advanced では `internal: true` の `demo_*` 検証 preset に到達できます。
 - 表示名は短い英語名、説明文は初心者が用途を判断できる日本語短文にします。
 - tags は用途と質感を表す英語 lowercase を基本にします。
-- 旧実戦 preset は廃止し、CLI でも新しい `sound_*` 名を使います。
-- 実戦 Sound Card は重厚なレトロ感を残しつつ、不要な hiss、耳につく aliasing、過剰な drive、用途不明な noise を避けます。
-- drive / FM feedback / hard sync / ring mod は主役にせず、質感付けに留めます。
-- noise は Drums / SFX / Support など用途が明確な preset で使い、Lead / Bass / Pad / Keys の主成分にはしません。
-- `layers.chord` は押した音以外の音程を内部で足すため、実戦 preset では Pad の背景厚み用途に限定します。Lead / Bass / Keys では、別音程が混ざる違和感を避けるため原則使いません。
-- `layers.pad`、`layers.string`、`layers.body` は音色の再現対象と合う場合だけ使います。Keys Organ では弦や胴鳴りの混入を避け、FM source だけで厚みを作ります。
-- layer 内部の saw / triangle / pulse / square は、実戦音源では anti-alias 処理された生成経路を使うことを前提にします。レイヤー追加でメイン音源の低ノイズ方針を迂回しないようにします。
-- `layers.body` は `mode` を必ず明示します。Pad では `harmonic` を基本にし、Pluck の箱鳴りでは `box`、金属的な検証音では `metal` を使います。
-- `layers.harmonic` は押した音の整数倍音だけを足す安全な補助レイヤーです。Keys Organ では Chord / String / Body を使わず、HarmonicLayer で中域の厚みを作ります。
-- `layers.powerChord` は Guitar 用に、押した音を基準に5度とオクターブだけを足す補助レイヤーです。`layers.chug` は短いミュート感、`layers.ampCab` はチャンネル単位の歪みと箱鳴り整理に使います。
+- `recommendedRange` は preview や将来の GUI 表示のための推奨音域 metadata です。
+- `macroHints` は既存4 macro の表示補助 metadata です。DSP 挙動は `GUIMacroMapping` が担当します。
+- 実戦 Sound Card は重厚なレトロ感を残しつつ、不要な hiss、耳につく aliasing、過剰 drive、用途不明な noise を避けます。
+- `demo_*` は完成音色ではなく機能差分を確認するための検証 preset です。
 
 ## 実戦 Sound Card
 
@@ -32,16 +26,24 @@
 | `sound_lead_sync` | Lead Sync | 同期感のあるレトロリード。反復フレーズやオブリ向け。 |
 | `sound_lead_wide` | Lead Wide | ノイズ感を抑えた、広がりのある太いリード。 |
 | `sound_lead_guitarish` | Lead Guitarish | ギター風の歪みを持つロック向けリード。 |
+| `sound_lead_arcade_brass` | Lead Arcade Brass | 明るいブラス風リード。短いファンファーレや主旋律のアクセント向け。 |
+| `sound_lead_chip_stab` | Lead Chip Stab | チップ音らしい短いスタブ。レトロな合いの手や反復フレーズ向け。 |
+| `sound_lead_pwm_fanfare` | Lead PWM Fanfare | PWMの押し出しを使ったファンファーレ系リード。 |
+| `sound_lead_sync_bite` | Lead Sync Bite | 同期感の噛みつきを抑えて残したリード。 |
+| `sound_lead_airy_pipe` | Lead Airy Pipe | 息の軽さを持つパイプ風リード。 |
+| `sound_lead_arcade_reed` | Lead Arcade Reed | レトロなリード楽器風のコール音。 |
+| `sound_lead_bright_reed` | Lead Bright Reed | 明るいリード楽器風ソロ音。 |
+| `sound_lead_chip_sax` | Lead Chip Sax | チップサックス風の軽いソロ音。 |
 
 ### Guitar
 
 | Preset | 表示名 | 用途メモ |
 |---|---|---|
 | `sound_guitar_clean` | Guitar Clean | クリーンギター風。アルペジオや軽いコード向け。 |
-| `sound_guitar_crunch` | Guitar Crunch | 軽く歪んだリズムギター風。伴奏や短いリフ向け。 |
+| `sound_guitar_crunch` | Guitar Crunch | 軽く歪んだリズムギター風。 |
 | `sound_guitar_drive` | Guitar Drive | 太く歪んだギター風。前に出るリフや単音向け。 |
-| `sound_guitar_power` | Guitar Power | 5度とオクターブを足すパワーコード風。太いリフ向け。 |
-| `sound_guitar_mute` | Guitar Mute | 短く刻むミュートギター風。チャグや低いリズム向け。 |
+| `sound_guitar_power` | Guitar Power | 5度とオクターブを足すパワーコード風。 |
+| `sound_guitar_mute` | Guitar Mute | 短く刻むミュートギター風。 |
 
 ### Bass
 
@@ -62,16 +64,24 @@
 | `sound_pad_dark` | Pad Dark | 高域のざらつきを避けた暗めの背景パッド。 |
 | `sound_pad_wide` | Pad Wide | 明るさを足しすぎない広がりのあるパッド。 |
 | `sound_pad_motion` | Pad Motion | ノイズ感を抑えた、ゆっくり動くパッド。 |
+| `sound_pad_dark_brass` | Pad Dark Brass | 暗めのブラス質感を背景に置くパッド。 |
+| `sound_pad_soft_brass` | Pad Soft Brass | 柔らかいブラス風パッド。 |
+| `sound_pad_soft_reed` | Pad Soft Reed | 柔らかいリード合奏風パッド。 |
+| `sound_pad_chip_strings` | Pad Chip Strings | チップストリングス風パッド。 |
+| `sound_pad_dark_strings` | Pad Dark Strings | 暗めのストリングス風パッド。 |
+| `sound_pad_string_motion` | Pad String Motion | ゆっくり動くストリングス風パッド。 |
 
 ### Keys
 
 | Preset | 表示名 | 用途メモ |
 |---|---|---|
 | `sound_keys_electric` | Keys Electric | 丸いエレクトリックキー。コードや短いリフ向け。 |
-| `sound_keys_organ` | Keys Organ | HarmonicLayerで倍音を足し、弦や胴鳴りを混ぜずに支えるオルガン系キー。 |
-| `sound_keys_rock_organ` | Keys Rock Organ | AmpCabで押し出しを足したロック向けオルガン。 |
-| `sound_keys_bell` | Keys Bell | 金属感を控えめにしたベルキー。高域アクセント向け。 |
+| `sound_keys_organ` | Keys Organ | 倍音で厚みを足したオルガン系キー。 |
+| `sound_keys_rock_organ` | Keys Rock Organ | 押し出しを足したロック向けオルガン。 |
+| `sound_keys_bell` | Keys Bell | 金属感を控えめにしたベルキー。 |
 | `sound_keys_pluck` | Keys Pluck | 耳に残るざらつきを抑えた短いプラック音。 |
+| `sound_keys_chip_piano` | Keys Chip Piano | チップピアノ風のキー。 |
+| `sound_keys_fm_clav` | Keys FM Clav | FMクラビ風のキー。 |
 
 ### Drums
 
@@ -89,6 +99,8 @@
 |---|---|---|
 | `sound_sfx_laser` | SFX Laser | 高域の刺さりを抑えた短いレーザー効果音。 |
 | `sound_sfx_riser` | SFX Riser | 目立ちすぎない場面転換用ノイズライザー。 |
+| `sound_sfx_hit_arcade` | SFX Hit Arcade | 短いアーケード風ヒット音。 |
+| `sound_sfx_noise_sweep` | SFX Noise Sweep | ノイズを使った短いスイープ効果音。 |
 
 ### Support
 
@@ -97,26 +109,16 @@
 | `sound_support_hat` | Support Hat | 耳につきにくい薄いハット補助。 |
 | `sound_support_pulse` | Support Pulse | 控えめな PSG pulse 補助。 |
 | `sound_support_triangle` | Support Triangle | 目立ちすぎない PSG triangle 補助。 |
+| `sound_support_bottle_fm` | Support Bottle FM | 瓶のようなFM質感の補助音。 |
+| `sound_support_flute_chip` | Support Flute Chip | チップフルート風の補助音。 |
+| `sound_support_recorder` | Support Recorder | 柔らかいリコーダー風補助音。 |
+| `sound_support_fm_clarinet` | Support FM Clarinet | FMクラリネット風の補助音。 |
+| `sound_support_nasal_reed` | Support Nasal Reed | 鼻にかかったリード風補助音。 |
+| `sound_support_pizzicato` | Support Pizzicato | 短いピチカート風補助音。 |
 
 ## 機能デモ
 
 `demo_*` は完成音色ではなく、機能差分を確認するための検証 preset です。Play には表示せず、Advanced から到達します。
-
-| Preset | 確認する機能 |
-|---|---|
-| `demo_fm_algorithm_stack` | FM stack algorithm |
-| `demo_fm_algorithm_parallel` | FM parallel algorithm |
-| `demo_fm_feedback_edge` | FM feedback |
-| `demo_fm_env_index` | FM index envelope |
-| `demo_filter_ladder_drive` | Ladder lowpass + drive |
-| `demo_filter_resonance_sweep` | Filter resonance |
-| `demo_pluck_body_layer` | Pluck + Body |
-| `demo_string_layer_motion` | String layer |
-| `demo_drum_bus_placement` | Drum Bus |
-| `demo_drumkit_models` | DrumKit models |
-| `demo_modulation_lfo_motion` | LFO modulation |
-| `demo_expression_velocity` | Expression map |
-| `demo_master_fx_chain` | Master effects |
 
 ## 使い方
 
@@ -132,13 +134,5 @@ F-Synthesizer.exe --cli --preset demo_filter_ladder_drive
 GUI:
 
 - Play で Sound Card を選び、Tone Preview や Drum Pad で短く試聴します。
-- 4 マクロで感覚的に調整し、`曲で使う` から Compose の MIDI チャンネルへ割り当てます。
 - Compose では曲中の音量と左右を調整します。
 - 詳細音色、Master FX、Mixer/割当、検証 preset は Advanced で扱います。
-
-## 補足
-
-- Preset は `config/base.json` の上に差分適用されます。
-- `config/default.json` は `sound_lead_blade` 相当を代表音として含みます。
-- ファイル名は CLI 指定しやすいように英数字と underscore で統一します。
-- 音源方式とレンダリング契約は `docs/Architecture.md` を正本とします。

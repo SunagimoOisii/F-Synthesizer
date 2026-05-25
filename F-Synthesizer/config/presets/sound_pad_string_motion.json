@@ -17,18 +17,23 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_pad_string_motion__ch0"
+      }
+    },
     "instruments": {
-      "sound_strings_sweep_motion__ch0": {
-        "displayName": "Strings Sweep Motion",
-        "category": "Strings",
+      "sound_pad_string_motion__ch0": {
+        "displayName": "Pad String Motion",
+        "category": "Pad",
         "internal": false,
         "tags": [
-          "strings",
-          "sweep",
+          "pad",
+          "string",
           "motion",
-          "retro"
+          "analog"
         ],
-        "description": "ゆっくり揺れるシンセ弦。長い音で動きと広がりを作る。",
+        "description": "ゆっくり動くストリングス風パッド。長いコードに揺れを足す。",
         "sound": {
           "amp": 0.105,
           "attackSec": 0.045,
@@ -106,12 +111,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_strings_sweep_motion__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "9": {
+        "instrumentId": "sound_drums_glue__ch9"
+      }
+    },
     "instruments": {
       "sound_drums_glue__ch9": {
         "displayName": "Drums Glue",
@@ -9,8 +14,7 @@
         "tags": [
           "drums",
           "glue",
-          "backbeat",
-          "room"
+          "drumkit"
         ],
         "description": "曲になじむドラムキット。派手すぎないビートを作り、他の音と重ねやすい。",
         "sound": {
@@ -457,12 +461,34 @@
             "cc74ToBrightness": 0.07
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "9": {
-        "instrumentId": "sound_drums_glue__ch9"
+        },
+        "recommendedRange": {
+          "low": 35,
+          "high": 81,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Hit",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

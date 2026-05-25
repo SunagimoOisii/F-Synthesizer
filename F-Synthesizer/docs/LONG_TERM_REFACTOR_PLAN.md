@@ -69,18 +69,18 @@
 
 ## Phase 4: Preset / Sound Card 再編
 
-目的は、既存 preset を legacy layer の寄せ集めではなく、Instrument / Sound Card として意味的に再設計することです。
+目的は、既存 preset を legacy layer の寄せ集めではなく、Instrument / Sound Card として意味的に再設計することです。Phase 4 実装後は実戦 `sound_*` を8カテゴリへ統合し、表示 metadata、推奨音域、macro hints を持つ Sound Card として扱います。
 
 - 既存 `sound_*` preset を v3 Instrument / Sound Card として再定義する。
-- カテゴリは当面 `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` を維持する。
+- カテゴリは `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` に固定する。
 - `demo_*` は完成音色ではなく機能検証用として残す。
-- 各 Instrument に用途、macro、source、補助レイヤー、推奨演奏域、表示名、説明、tag を持たせる。
+- 各 Instrument に用途、macro hints、source、補助レイヤー、推奨演奏域、表示名、説明、tag を持たせる。
 - Play 表示対象と Advanced / demo 対象を明確に分ける。
 - 品質基準は `docs/PRODUCT_POLICY.md` と `docs/PRESETS.md` に従う。
 
 完了条件:
 
-- 全実戦 Sound Card が v3 形式である。
+- 全実戦 Sound Card が v3 形式で、8カテゴリのいずれかに属している。
 - Play で選んで短く試聴した時に用途が分かり、不要な hiss、耳につく aliasing、過剰 drive、用途不明な noise が目立たない。
 - 代表カテゴリごとの CLI 短尺レンダーが非無音で、過大 peak がない。
 

@@ -17,6 +17,11 @@
         "damping": 0.6
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_bass_chip__ch0"
+      }
+    },
     "instruments": {
       "sound_bass_chip__ch0": {
         "displayName": "Bass Chip",
@@ -25,7 +30,6 @@
         "tags": [
           "bass",
           "chip",
-          "triangle",
           "psg"
         ],
         "description": "チップ音らしい短いベース。階段感を抑えたレトロな低音を足したい時に使う。",
@@ -49,12 +53,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_bass_chip__ch0"
+        },
+        "recommendedRange": {
+          "low": 24,
+          "high": 60,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Drive",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

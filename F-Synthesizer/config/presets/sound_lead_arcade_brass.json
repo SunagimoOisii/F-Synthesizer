@@ -17,59 +17,64 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_arcade_brass__ch0"
+      }
+    },
     "instruments": {
-      "sound_reed_bright_solo__ch0": {
-        "displayName": "Reed Bright Solo",
-        "category": "Reed",
+      "sound_lead_arcade_brass__ch0": {
+        "displayName": "Lead Arcade Brass",
+        "category": "Lead",
         "internal": false,
         "tags": [
-          "reed",
-          "solo",
-          "bright",
-          "retro"
+          "lead",
+          "arcade",
+          "brass",
+          "analog"
         ],
-        "description": "明るいリードソロ。アルトサックスやオーボエ系の代役に使う。",
+        "description": "明るいブラス風リード。短いファンファーレや主旋律のアクセント向け。",
         "sound": {
-          "amp": 0.12,
+          "amp": 0.115,
           "attackSec": 0.006,
-          "decaySec": 0.18,
-          "sustainLevel": 0.62,
-          "releaseSec": 0.14,
+          "decaySec": 0.22,
+          "sustainLevel": 0.68,
+          "releaseSec": 0.18,
           "source": {
             "type": "analog",
-            "wave": "square",
-            "unisonVoices": 2,
-            "unisonDetuneCents": 2.8,
-            "unisonSpread": 0.2,
-            "subOscLevel": 0.04,
-            "pulseWidth": 0.4,
-            "drive": 0.03,
+            "wave": "saw",
+            "unisonVoices": 3,
+            "unisonDetuneCents": 5.5,
+            "unisonSpread": 0.35,
+            "subOscLevel": 0.08,
+            "pulseWidth": 0.48,
+            "drive": 0.045,
             "driftDepthCents": 2.5,
             "driftRateHz": 0.18,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 4300.0,
-              "resonance": 0.74,
+              "cutoffHz": 3300.0,
+              "resonance": 0.7,
               "drive": 0.03
             }
           },
           "layers": {
             "attack": {
               "enabled": true,
-              "type": "pick",
-              "level": 0.07,
-              "decaySec": 0.02,
-              "brightness": 0.58,
-              "bodyMix": 0.42,
+              "type": "brass",
+              "level": 0.09,
+              "decaySec": 0.045,
+              "brightness": 0.48,
+              "bodyMix": 0.62,
               "pitchOffsetSemis": 0,
               "drive": 0.015
             },
             "lead": {
               "enabled": true,
-              "type": "edge",
+              "type": "brass",
               "level": 0.11,
-              "edgeLevel": 0.3,
-              "bodyLevel": 0.22,
+              "edgeLevel": 0.18,
+              "bodyLevel": 0.36,
               "detuneCents": 3.5,
               "pitchBendSemis": 0.18,
               "bendDecaySec": 0.045,
@@ -77,7 +82,7 @@
               "attackDecaySec": 0.035,
               "drive": 0.035,
               "characterLevel": 0.08,
-              "characterTone": 0.64,
+              "characterTone": 0.44,
               "biteLevel": 0.035,
               "biteDecaySec": 0.026,
               "wobbleDepthCents": 1.8,
@@ -88,7 +93,7 @@
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.12,
+            "velocityToBrightness": 0.09,
             "velocityToFmIndex": 0.0,
             "velocityToLead": 0.18,
             "velocityToString": 0.0,
@@ -99,12 +104,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_reed_bright_solo__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

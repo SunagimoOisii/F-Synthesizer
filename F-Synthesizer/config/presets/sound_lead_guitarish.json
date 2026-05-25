@@ -1,16 +1,20 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_guitarish__ch0"
+      }
+    },
     "instruments": {
       "sound_lead_guitarish__ch0": {
         "displayName": "Lead Guitarish",
-        "category": "Guitar",
+        "category": "Lead",
         "internal": false,
         "tags": [
           "lead",
-          "guitar",
-          "rock",
-          "solo"
+          "guitarish",
+          "analog"
         ],
         "description": "ギター風の歪みを持つ主旋律リード。ロックのソロや太いメロディに使う。",
         "sound": {
@@ -78,12 +82,34 @@
               "output": 0.76
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_lead_guitarish__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

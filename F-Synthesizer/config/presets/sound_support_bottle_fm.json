@@ -17,34 +17,38 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_bottle_fm__ch0"
+      }
+    },
     "instruments": {
-      "sound_brass_fm_dark__ch0": {
-        "displayName": "Brass FM Dark",
-        "category": "Brass",
+      "sound_support_bottle_fm__ch0": {
+        "displayName": "Support Bottle FM",
+        "category": "Support",
         "internal": false,
         "tags": [
-          "brass",
-          "fm",
-          "dark",
-          "retro"
+          "support",
+          "bottle",
+          "fm"
         ],
-        "description": "暗めのFMブラス。低めのコードや裏メロを厚く支える。",
+        "description": "瓶のようなFM質感の補助音。小さな装飾や高域アクセント向け。",
         "sound": {
-          "amp": 0.12,
-          "attackSec": 0.012,
+          "amp": 0.1,
+          "attackSec": 0.018,
           "decaySec": 0.26,
-          "sustainLevel": 0.72,
+          "sustainLevel": 0.62,
           "releaseSec": 0.22,
           "source": {
             "type": "fm",
-            "algorithm": 4,
-            "feedback": 0.06,
+            "algorithm": 5,
+            "feedback": 0.04,
             "ops": [
               {
                 "wave": "sine",
                 "ratio": 1.0,
-                "level": 0.58,
-                "index": 0.42,
+                "level": 0.48,
+                "index": 0.5,
                 "levelEnv": {
                   "attackSec": 0.0,
                   "decaySec": 0.2,
@@ -62,8 +66,8 @@
               },
               {
                 "wave": "sine",
-                "ratio": 2.0,
-                "level": 0.38,
+                "ratio": 2.5,
+                "level": 0.3,
                 "index": 0.22,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -82,8 +86,8 @@
               },
               {
                 "wave": "sine",
-                "ratio": 0.5,
-                "level": 0.28,
+                "ratio": 3.5,
+                "level": 0.18,
                 "index": 0.12,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -102,8 +106,8 @@
               },
               {
                 "wave": "sine",
-                "ratio": 3.0,
-                "level": 0.16,
+                "ratio": 0.5,
+                "level": 0.1,
                 "index": 0.0,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -124,39 +128,19 @@
             "drive": 0.015,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 2600.0,
-              "resonance": 0.76,
+              "cutoffHz": 3600.0,
+              "resonance": 0.8,
               "drive": 0.05
             }
           },
-          "layers": {
-            "lead": {
-              "enabled": true,
-              "type": "brass",
-              "level": 0.08,
-              "edgeLevel": 0.14,
-              "bodyLevel": 0.34,
-              "detuneCents": 3.5,
-              "pitchBendSemis": 0.18,
-              "bendDecaySec": 0.045,
-              "attackBoost": 0.07,
-              "attackDecaySec": 0.035,
-              "drive": 0.035,
-              "characterLevel": 0.08,
-              "characterTone": 0.36,
-              "biteLevel": 0.035,
-              "biteDecaySec": 0.026,
-              "wobbleDepthCents": 1.8,
-              "wobbleRateHz": 3.2
-            }
-          },
+          "layers": {},
           "expressionMap": {
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.08,
-            "velocityToFmIndex": 0.08,
-            "velocityToLead": 0.12,
+            "velocityToBrightness": 0.09,
+            "velocityToFmIndex": 0.1,
+            "velocityToLead": 0.0,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -165,12 +149,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_brass_fm_dark__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

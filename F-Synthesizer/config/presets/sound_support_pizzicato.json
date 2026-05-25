@@ -17,54 +17,38 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_pizzicato__ch0"
+      }
+    },
     "instruments": {
-      "sound_reed_fm_clarinet__ch0": {
-        "displayName": "Reed FM Clarinet",
-        "category": "Reed",
+      "sound_support_pizzicato__ch0": {
+        "displayName": "Support Pizzicato",
+        "category": "Support",
         "internal": false,
         "tags": [
-          "reed",
-          "clarinet",
-          "fm",
-          "retro"
+          "support",
+          "pizzicato",
+          "fm"
         ],
-        "description": "細めのFMクラリネット風。速いメロディでも濁りにくい。",
+        "description": "短いピチカート風補助音。跳ねるアクセントや小さなフレーズ向け。",
         "sound": {
-          "amp": 0.115,
-          "attackSec": 0.012,
-          "decaySec": 0.24,
-          "sustainLevel": 0.7,
-          "releaseSec": 0.18,
+          "amp": 0.13,
+          "attackSec": 0.003,
+          "decaySec": 0.14,
+          "sustainLevel": 0.2,
+          "releaseSec": 0.1,
           "source": {
             "type": "fm",
-            "algorithm": 3,
-            "feedback": 0.025,
+            "algorithm": 0,
+            "feedback": 0.02,
             "ops": [
               {
                 "wave": "sine",
                 "ratio": 1.0,
-                "level": 0.6,
-                "index": 0.34,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.2,
-                  "sustainLevel": 0.68,
-                  "releaseSec": 0.12,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.22,
-                  "releaseSec": 0.05,
-                  "curve": 0.72
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 3.0,
-                "level": 0.28,
-                "index": 0.12,
+                "level": 0.54,
+                "index": 0.36,
                 "levelEnv": {
                   "attackSec": 0.0,
                   "decaySec": 0.2,
@@ -83,7 +67,27 @@
               {
                 "wave": "sine",
                 "ratio": 2.0,
-                "level": 0.22,
+                "level": 0.28,
+                "index": 0.14,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3.0,
+                "level": 0.18,
                 "index": 0.08,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -103,7 +107,7 @@
               {
                 "wave": "sine",
                 "ratio": 0.5,
-                "level": 0.12,
+                "level": 0.1,
                 "index": 0.0,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -124,39 +128,50 @@
             "drive": 0.015,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 3000.0,
-              "resonance": 0.72,
+              "cutoffHz": 4200.0,
+              "resonance": 0.64,
               "drive": 0.05
             }
           },
           "layers": {
-            "lead": {
+            "attack": {
               "enabled": true,
-              "type": "edge",
-              "level": 0.05,
-              "edgeLevel": 0.12,
-              "bodyLevel": 0.18,
-              "detuneCents": 3.5,
-              "pitchBendSemis": 0.18,
-              "bendDecaySec": 0.045,
-              "attackBoost": 0.07,
-              "attackDecaySec": 0.035,
-              "drive": 0.035,
-              "characterLevel": 0.08,
-              "characterTone": 0.58,
-              "biteLevel": 0.035,
-              "biteDecaySec": 0.026,
-              "wobbleDepthCents": 1.8,
-              "wobbleRateHz": 3.2
+              "type": "pick",
+              "level": 0.08,
+              "decaySec": 0.018,
+              "brightness": 0.42,
+              "bodyMix": 0.46,
+              "pitchOffsetSemis": 0,
+              "drive": 0.015
+            },
+            "pluck": {
+              "enabled": true,
+              "level": 0.2,
+              "decaySec": 0.18,
+              "brightness": 0.44,
+              "noiseMix": 0.04,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0.35,
+              "drive": 0.018
+            },
+            "body": {
+              "enabled": true,
+              "mix": 0.16,
+              "size": 0.58,
+              "tone": 0.46,
+              "damping": 0.34,
+              "stereo": 0.32,
+              "drive": 0.022,
+              "mode": "box"
             }
           },
           "expressionMap": {
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.08,
-            "velocityToFmIndex": 0.06,
-            "velocityToLead": 0.08,
+            "velocityToBrightness": 0.07,
+            "velocityToFmIndex": 0.05,
+            "velocityToLead": 0.0,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -165,12 +180,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_reed_fm_clarinet__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

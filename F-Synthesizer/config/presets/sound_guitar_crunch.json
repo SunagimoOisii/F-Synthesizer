@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_guitar_crunch__ch0"
+      }
+    },
     "instruments": {
       "sound_guitar_crunch__ch0": {
         "displayName": "Guitar Crunch",
@@ -9,8 +14,7 @@
         "tags": [
           "guitar",
           "crunch",
-          "rock",
-          "drive"
+          "analog"
         ],
         "description": "軽く歪んだリズムギター風の音。ロックの伴奏や短いリフに使う。",
         "sound": {
@@ -69,12 +73,34 @@
               "output": 0.78
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_guitar_crunch__ch0"
+        },
+        "recommendedRange": {
+          "low": 40,
+          "high": 76,
+          "preview": 52
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Drive",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

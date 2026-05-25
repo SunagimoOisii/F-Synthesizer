@@ -17,34 +17,38 @@
         "damping": 0.58
       }
     },
+    "channels": {
+      "0": {
+        "instrumentId": "sound_support_fm_clarinet__ch0"
+      }
+    },
     "instruments": {
-      "sound_pipe_bottle_fm__ch0": {
-        "displayName": "Pipe Bottle FM",
-        "category": "Pipe",
+      "sound_support_fm_clarinet__ch0": {
+        "displayName": "Support FM Clarinet",
+        "category": "Support",
         "internal": false,
         "tags": [
-          "pipe",
-          "bottle",
+          "support",
           "fm",
-          "retro"
+          "clarinet"
         ],
-        "description": "瓶笛風のFM音色。少し不思議な旋律やSFX寄りのメロディに使う。",
+        "description": "FMクラリネット風の補助音。中域のサブメロディに使う。",
         "sound": {
-          "amp": 0.1,
-          "attackSec": 0.018,
-          "decaySec": 0.26,
-          "sustainLevel": 0.62,
-          "releaseSec": 0.22,
+          "amp": 0.115,
+          "attackSec": 0.012,
+          "decaySec": 0.24,
+          "sustainLevel": 0.7,
+          "releaseSec": 0.18,
           "source": {
             "type": "fm",
-            "algorithm": 5,
-            "feedback": 0.04,
+            "algorithm": 3,
+            "feedback": 0.025,
             "ops": [
               {
                 "wave": "sine",
                 "ratio": 1.0,
-                "level": 0.48,
-                "index": 0.5,
+                "level": 0.6,
+                "index": 0.34,
                 "levelEnv": {
                   "attackSec": 0.0,
                   "decaySec": 0.2,
@@ -62,28 +66,8 @@
               },
               {
                 "wave": "sine",
-                "ratio": 2.5,
-                "level": 0.3,
-                "index": 0.22,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.2,
-                  "sustainLevel": 0.68,
-                  "releaseSec": 0.12,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.22,
-                  "releaseSec": 0.05,
-                  "curve": 0.72
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 3.5,
-                "level": 0.18,
+                "ratio": 3.0,
+                "level": 0.28,
                 "index": 0.12,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -102,8 +86,28 @@
               },
               {
                 "wave": "sine",
+                "ratio": 2.0,
+                "level": 0.22,
+                "index": 0.08,
+                "levelEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.12,
+                  "curve": 0.55
+                },
+                "indexEnv": {
+                  "attackSec": 0.0,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.22,
+                  "releaseSec": 0.05,
+                  "curve": 0.72
+                }
+              },
+              {
+                "wave": "sine",
                 "ratio": 0.5,
-                "level": 0.1,
+                "level": 0.12,
                 "index": 0.0,
                 "levelEnv": {
                   "attackSec": 0.0,
@@ -124,19 +128,39 @@
             "drive": 0.015,
             "filter": {
               "mode": "ladderLowpass",
-              "cutoffHz": 3600.0,
-              "resonance": 0.8,
+              "cutoffHz": 3000.0,
+              "resonance": 0.72,
               "drive": 0.05
             }
           },
-          "layers": {},
+          "layers": {
+            "lead": {
+              "enabled": true,
+              "type": "edge",
+              "level": 0.05,
+              "edgeLevel": 0.12,
+              "bodyLevel": 0.18,
+              "detuneCents": 3.5,
+              "pitchBendSemis": 0.18,
+              "bendDecaySec": 0.045,
+              "attackBoost": 0.07,
+              "attackDecaySec": 0.035,
+              "drive": 0.035,
+              "characterLevel": 0.08,
+              "characterTone": 0.58,
+              "biteLevel": 0.035,
+              "biteDecaySec": 0.026,
+              "wobbleDepthCents": 1.8,
+              "wobbleRateHz": 3.2
+            }
+          },
           "expressionMap": {
             "enabled": true,
             "velocityCurve": 0.86,
             "velocityToAmp": 0.86,
-            "velocityToBrightness": 0.09,
-            "velocityToFmIndex": 0.1,
-            "velocityToLead": 0.0,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.06,
+            "velocityToLead": 0.08,
             "velocityToString": 0.0,
             "modWheelToBrightness": 0.08,
             "modWheelToString": 0.12,
@@ -145,12 +169,34 @@
             "cc74ToStringBrightness": 0.18,
             "pressureToFilterDrive": 0.04
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_pipe_bottle_fm__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

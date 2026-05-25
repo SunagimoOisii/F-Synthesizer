@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_bass_fuzz__ch0"
+      }
+    },
     "instruments": {
       "sound_bass_fuzz__ch0": {
         "displayName": "Bass Fuzz",
@@ -9,8 +14,7 @@
         "tags": [
           "bass",
           "fuzz",
-          "rock",
-          "heavy"
+          "analog"
         ],
         "description": "荒さを整理したファズベース風の音。ロックの厚みや重いリフの下支えに使う。",
         "sound": {
@@ -67,12 +71,34 @@
               "output": 0.76
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_bass_fuzz__ch0"
+        },
+        "recommendedRange": {
+          "low": 24,
+          "high": 60,
+          "preview": 36
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Drive",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

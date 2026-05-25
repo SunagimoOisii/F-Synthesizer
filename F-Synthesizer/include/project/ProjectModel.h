@@ -10,9 +10,23 @@
 #include "AppCore.h"
 
 // 保存、preset、config の正本モデル。
-// 実行時だけの差し替え入力や preview override は AppConfig 側に残し、
+// 実行時だけの差し替え入力や preview override は RenderRuntimeOverrides 側に分離し、
 // ここには projectModel.v3 として永続化する値だけを置く。
-// InstrumentConfig::sound は Phase 2 では legacy ChannelConfig を内包し、Phase 4 の意味的再設計まで保持する。
+struct RecommendedRange
+{
+    int low = 48;
+    int high = 84;
+    int preview = 60;
+};
+
+struct MacroHint
+{
+    std::string id;
+    std::string label;
+    std::string description;
+};
+
+// InstrumentConfig::sound は legacy ChannelConfig を内包し、Sound Card の音色本体として扱う。
 struct InstrumentConfig
 {
     std::string displayName;
@@ -20,6 +34,8 @@ struct InstrumentConfig
     bool internal = false;
     std::vector<std::string> tags;
     std::string description;
+    RecommendedRange recommendedRange;
+    std::vector<MacroHint> macroHints;
     ChannelConfig sound;
 };
 

@@ -1,6 +1,11 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_lead_wide__ch0"
+      }
+    },
     "instruments": {
       "sound_lead_wide__ch0": {
         "displayName": "Lead Wide",
@@ -9,8 +14,7 @@
         "tags": [
           "lead",
           "wide",
-          "pwm",
-          "bright"
+          "analog"
         ],
         "description": "広がりのある主旋律リード。厚みを出しながら、ノイズ感を抑えて前に出したい時に使う。",
         "sound": {
@@ -107,12 +111,34 @@
               "drive": 0.018
             }
           }
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_lead_wide__ch0"
+        },
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }

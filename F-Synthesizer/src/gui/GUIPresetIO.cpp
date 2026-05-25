@@ -503,6 +503,8 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         out << "        \"internal\": false,\n";
         out << "        \"tags\": [],\n";
         out << "        \"description\": \"\",\n";
+        out << "        \"recommendedRange\": { \"low\": 48, \"high\": 84, \"preview\": 60 },\n";
+        out << "        \"macroHints\": [],\n";
         out << "        \"sound\": {\n";
         out << "        \"amp\": " << cur.amp << ",\n";
         out << "        \"attackSec\": " << cur.attackSec << ",\n";

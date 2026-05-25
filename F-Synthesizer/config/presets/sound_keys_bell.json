@@ -1,18 +1,22 @@
 {
   "format": "projectModel.v3",
   "project": {
+    "channels": {
+      "0": {
+        "instrumentId": "sound_keys_bell__ch0"
+      }
+    },
     "instruments": {
       "sound_keys_bell__ch0": {
         "displayName": "Keys Bell",
-        "category": "Piano/Keys",
+        "category": "Keys",
         "internal": false,
         "tags": [
           "keys",
           "bell",
-          "glass",
-          "accent"
+          "waveform"
         ],
-        "description": "澄んだベル系キー。金属感を控えめにして、短い装飾音や高いフレーズに使う。",
+        "description": "金属感を控えめにしたベルキー。高域アクセント向け。",
         "sound": {
           "amp": 0.085,
           "attackSec": 0.008,
@@ -46,12 +50,34 @@
             }
           },
           "layers": {}
-        }
-      }
-    },
-    "channels": {
-      "0": {
-        "instrumentId": "sound_keys_bell__ch0"
+        },
+        "recommendedRange": {
+          "low": 36,
+          "high": 96,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "Bright",
+            "description": "明るさを調整する"
+          },
+          {
+            "id": "roughness",
+            "label": "Edge",
+            "description": "粗さや押し出しを調整する"
+          },
+          {
+            "id": "movement",
+            "label": "Motion",
+            "description": "揺れや動きを調整する"
+          },
+          {
+            "id": "envelope",
+            "label": "Shape",
+            "description": "アタックと余韻を調整する"
+          }
+        ]
       }
     }
   }
