@@ -11,7 +11,7 @@ namespace gui
 // 既存 GUIState の背後で ProjectModel へ接続する Facade。
 // GUI 表示コードが保存形式や preset 差分仕様を直接知らないようにする正規入口。
 // Play/Compose/preview/export の主要導線はこの入口経由にし、
-// Advanced の詳細 editor に残る legacy 直接編集は Phase 6/7 で削る。
+// Advanced の詳細 editor に残る legacy 直接編集は Phase 7-B 以降で削る。
 ProjectModel BuildProjectModelFromGUI(const GUIState& state);
 void ApplyProjectModelToGUI(GUIState& state, const ProjectModel& model);
 

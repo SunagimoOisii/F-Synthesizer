@@ -1,13 +1,13 @@
-# チャンネル設定スキーマ（projectModel.v3 / Instrument Phase 4）
+# チャンネル設定スキーマ（projectModel.v3 / Phase 7-A）
 
 ## 目的
 
-- ch0-15 の Instrument 割当と Instrument 内の legacy sound config を JSON で定義し、CLI/GUI で共通利用する。
-- `projectModel.v3` の C++ typed config を正本とし、この文書は利用者向けの同期メモとして扱う。
-- v3 Phase 4 では実戦 Sound Card を `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` の8カテゴリへ整理する。
-- Instrument は legacy `source` / `layers` / `expressionMap` を `sound` として保持し、表示用 metadata と試聴の推奨音域を持つ。
-- `projectModel.v1` は読み込み対象外とする。
-- `projectModel.v2` は読み込み対象外とする。
+- ch0-15 の Instrument 割当と Instrument の `sound` を JSON で定義し、CLI/GUI で共通利用する。
+- `projectModel.v3` の C++ typed `ProjectModel` を正本とし、この文書は利用者向けの同期メモとして扱う。
+- 実戦 Sound Card は `Lead / Guitar / Bass / Pad / Keys / Drums / SFX / Support` の8カテゴリに統一する。
+- Instrument は `source` / `layers` / `expressionMap` を含む `sound`、表示用 metadata、試聴の推奨音域を持つ。
+- 実行経路は `ProjectModel -> RenderConfig -> SynthEngine` を正本にする。
+- `projectModel.v1` / `projectModel.v2` は読み込み対象外とする。
 
 ## 適用位置
 
@@ -33,7 +33,14 @@
           { "id": "movement", "label": "Motion", "description": "揺れや動きを調整する" },
           { "id": "envelope", "label": "Shape", "description": "アタックと余韻を調整する" }
         ],
-        "sound": { "... legacy channel sound config ...": true }
+        "sound": {
+          "amp": 0.4,
+          "attackSec": 0.01,
+          "decaySec": 0.18,
+          "sustainLevel": 0.82,
+          "releaseSec": 0.18,
+          "source": { "type": "waveform", "wave": "saw" }
+        }
       }
     },
     "channels": {
@@ -46,8 +53,9 @@
 }
 ```
 
-- `channels` 未指定のチャンネルは `DefaultConfig()` の既定値を使用する。
-- 指定されたチャンネルは `instrumentId` で Instrument を参照し、`sound` を既存 `ChannelConfig` へ展開する。
+- `channels` 未指定のチャンネルは project の既定状態を使用する。
+- 指定されたチャンネルは `instrumentId` で Instrument を参照し、`ProjectModel -> RenderConfig` 変換で render 用入力へ展開する。
+- SynthEngine は保存形式や Instrument metadata を直接知らず、`RenderConfig` だけを受け取る。
 
 ## Instrument metadata
 
@@ -344,18 +352,13 @@
 - `unisonSpread`: `0.0..1.0`
 - `subOscLevel`: `0.0..2.0`
 
-## 後方互換ルール
+## 互換方針
 
-- v0.1 形式（`channels` なし）は有効。
-- v0.2 形式（`channels` あり）は、既存設定に対する差分上書きとして扱う。
-- 不明キーは警告ログのみ（実行継続）。
-- 不正値（範囲外・未知 type）はエラー扱い。
-
-## AppConfig 対応方針
-
-- `AppConfig::channelConfigs` を最終反映先として維持（実行時使用）。
-- ローダーで `channels` 差分を `channelConfigs` へマージして `Run(config)` に渡す。
-- GUIは内部状態を `channels` 相当で持ち、保存時に同形式で書き出す。
+- 読み込み対象は `format: "projectModel.v3"` のみ。
+- `projectModel.v1` / `projectModel.v2` と、旧 `project.channels` 直下に sound を置く shape は復活させない。
+- 不正値（範囲外、未知 type、未定義 `instrumentId`、channel key 範囲外）は path 付き load error にする。
+- `AppConfig` と `ChannelConfig` は一部の移行補助や SynthEngine 向け render 入力として残るが、保存形式と Run 境界の正本にはしない。
+- GUI preset save は `project.instruments` と `project.channels` だけを出力し、旧 channel sound shape を書き戻さない。
 
 ## サンプル
 

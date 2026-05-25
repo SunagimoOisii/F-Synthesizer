@@ -64,9 +64,9 @@ struct ProjectModel
 };
 
 ProjectModel DefaultProjectModel();
-// ProjectModel -> AppConfig: 永続 project を CLI/GUI Run 境界の実行設定へ展開する。
+// ProjectModel -> AppConfig: 永続 project を legacy 互換や移行補助で使う実行設定へ展開する。
 AppConfig ToAppConfig(const ProjectModel& model);
-// AppConfig -> ProjectModel: 実行時 override を落とし、永続化可能な値だけを回収する。
+// AppConfig -> ProjectModel: legacy 実行設定から、永続化可能な値だけを回収する。
 ProjectModel ProjectModelFromAppConfig(const AppConfig& config);
 bool LoadProjectModelFile(const std::filesystem::path& configPath, ProjectModel& model, std::string& err);
 bool SaveProjectModelFile(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err);

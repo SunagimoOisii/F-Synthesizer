@@ -1,7 +1,7 @@
 # 長期改変計画: Instrument Model から Preset 再編、GUI 再設計まで
 
 この文書は、F-Synthesizer の次の大きな構造変更を AI コンテキスト圧縮後も引き継げるようにするための長期計画です。
-現在は Phase 5 により、`projectModel.v3` の Sound Card / Instrument を GUI 主要導線から扱うための Facade / view model 境界を固定しています。
+現在は Phase 7-A により、`projectModel.v3` の標準経路を濁す古い fallback、古い docs 前提、GUI preset save の手書き legacy 依存を安全に整理しています。
 
 ## 基本方針
 
@@ -93,7 +93,7 @@
 - preset 読み込み、Sound Card 選択、macro 編集、channel 割当の責務を GUI `.inl` から外す。
 - GUI 状態保存は project 保存形式と混ぜない。
 - Phase 5 実装後は、Sound Card catalog を `GUIPresetItem` view model として扱い、Play / Compose の主要導線、Layer2 macro、preview / export project 構築を `GUIProjectFacade` 経由へ寄せている。
-- Advanced の詳細 Channel Editor には legacy `ChannelConfig` 直接編集が残る。これは Phase 6/7 の GUI 再設計と legacy cleanup で削る。
+- Advanced の詳細 Channel Editor には legacy `ChannelConfig` 直接編集が残る。これは Phase 7-B 以降の legacy cleanup で削る。
 
 完了条件:
 
@@ -123,14 +123,18 @@
 
 目的は、v3 移行後に残った古い契約を削除し、新規実装時に legacy 構造へ戻らない状態にすることです。
 
-- v2 専用の config shape、手書き JSON 出力、古い preset fallback、旧 GUI 状態の直接編集経路を削除する。
+- Phase 7-A では一括削除ではなく、安全に切れる範囲を先に整理する。
+- v2 専用の config shape、手書き JSON 出力、古い preset fallback、旧 GUI 状態の直接編集経路を段階的に削除する。
 - `Architecture.md`、`PRESETS.md`、`channel_schema.md`、`OPERATIONS.md` を v3 前提へ同期する。
 - legacy `channel/layers` へ直足しする実装経路をなくす。
+- Phase 7-A 実装後は、CLI の自動 fallback は現行 Sound Card に統一し、GUI preset save は `project.instruments` / `project.channels` の v3 shape を JSON object 構築から出力する。
+- `AppConfig`、`ToAppConfig()`、`ProjectModelFromAppConfig()`、SynthEngine 入力としての `ChannelConfig`、Advanced Channel Editor の直接編集は 7-A では削らず、7-B 以降の対象に残す。
 
 完了条件:
 
 - 新規 Instrument や GUI 操作を追加するとき、legacy channel / layers を直接編集しなくてよい。
 - v3 の保存、読み込み、レンダー、GUI 操作、preset check が標準経路になっている。
+- 7-A の完了条件は、v2 互換を復活させず、旧 preset fallback と旧 docs 前提を消し、Play / Compose / preview / export が Phase 5/6 の Facade / view model 経由を維持すること。
 
 ## 検証方針
 

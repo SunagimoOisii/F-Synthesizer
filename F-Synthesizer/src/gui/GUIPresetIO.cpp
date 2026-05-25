@@ -4,7 +4,9 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <unordered_map>
+#include <utility>
 
 #include "config/SourceJSON.h"
 #include "config/SourceRegistry.h"
@@ -52,127 +54,171 @@ const char* LeadLayerTypeToString(LeadLayerType type)
     return "blade";
 }
 
-void WriteAttackLayerJSON(std::ostream& out, const AttackLayerConfig& layer)
+Json AttackLayerToJson(const AttackLayerConfig& layer)
 {
-    out << "      \"attackLayer\": {\n";
-    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
-    out << "        \"type\": \"" << AttackLayerTypeToString(layer.type) << "\",\n";
-    out << "        \"level\": " << layer.level << ",\n";
-    out << "        \"decaySec\": " << layer.decaySec << ",\n";
-    out << "        \"brightness\": " << layer.brightness << ",\n";
-    out << "        \"bodyMix\": " << layer.bodyMix << ",\n";
-    out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-    out << "        \"drive\": " << layer.drive << "\n";
-    out << "      },\n";
+    return Json{
+        {"enabled", layer.enabled},
+        {"type", AttackLayerTypeToString(layer.type)},
+        {"level", layer.level},
+        {"decaySec", layer.decaySec},
+        {"brightness", layer.brightness},
+        {"bodyMix", layer.bodyMix},
+        {"pitchOffsetSemis", layer.pitchOffsetSemis},
+        {"drive", layer.drive},
+    };
 }
 
-void WriteBassLayerJSON(std::ostream& out, const BassLayerConfig& layer)
+Json BassLayerToJson(const BassLayerConfig& layer)
 {
-    out << "      \"bassLayer\": {\n";
-    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
-    out << "        \"type\": \"" << BassLayerTypeToString(layer.type) << "\",\n";
-    out << "        \"level\": " << layer.level << ",\n";
-    out << "        \"subLevel\": " << layer.subLevel << ",\n";
-    out << "        \"bodyLevel\": " << layer.bodyLevel << ",\n";
-    out << "        \"gritLevel\": " << layer.gritLevel << ",\n";
-    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
-    out << "        \"drive\": " << layer.drive << ",\n";
-    out << "        \"pitchOffsetSemis\": " << layer.pitchOffsetSemis << ",\n";
-    out << "        \"velocityToDrive\": " << layer.velocityToDrive << ",\n";
-    out << "        \"focusHz\": " << layer.focusHz << ",\n";
-    out << "        \"focusLevel\": " << layer.focusLevel << ",\n";
-    out << "        \"bodySaturation\": " << layer.bodySaturation << ",\n";
-    out << "        \"gritTone\": " << layer.gritTone << ",\n";
-    out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
-    out << "        \"attackDecaySec\": " << layer.attackDecaySec << "\n";
-    out << "      },\n";
+    return Json{
+        {"enabled", layer.enabled},
+        {"type", BassLayerTypeToString(layer.type)},
+        {"level", layer.level},
+        {"subLevel", layer.subLevel},
+        {"bodyLevel", layer.bodyLevel},
+        {"gritLevel", layer.gritLevel},
+        {"cutoffHz", layer.cutoffHz},
+        {"drive", layer.drive},
+        {"pitchOffsetSemis", layer.pitchOffsetSemis},
+        {"velocityToDrive", layer.velocityToDrive},
+        {"focusHz", layer.focusHz},
+        {"focusLevel", layer.focusLevel},
+        {"bodySaturation", layer.bodySaturation},
+        {"gritTone", layer.gritTone},
+        {"attackBoost", layer.attackBoost},
+        {"attackDecaySec", layer.attackDecaySec},
+    };
 }
 
-void WriteLeadLayerJSON(std::ostream& out, const LeadLayerConfig& layer)
+Json LeadLayerToJson(const LeadLayerConfig& layer)
 {
-    out << "      \"leadLayer\": {\n";
-    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
-    out << "        \"type\": \"" << LeadLayerTypeToString(layer.type) << "\",\n";
-    out << "        \"level\": " << layer.level << ",\n";
-    out << "        \"edgeLevel\": " << layer.edgeLevel << ",\n";
-    out << "        \"bodyLevel\": " << layer.bodyLevel << ",\n";
-    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
-    out << "        \"pitchBendSemis\": " << layer.pitchBendSemis << ",\n";
-    out << "        \"bendDecaySec\": " << layer.bendDecaySec << ",\n";
-    out << "        \"attackBoost\": " << layer.attackBoost << ",\n";
-    out << "        \"attackDecaySec\": " << layer.attackDecaySec << ",\n";
-    out << "        \"drive\": " << layer.drive << ",\n";
-    out << "        \"characterLevel\": " << layer.characterLevel << ",\n";
-    out << "        \"characterTone\": " << layer.characterTone << ",\n";
-    out << "        \"biteLevel\": " << layer.biteLevel << ",\n";
-    out << "        \"biteDecaySec\": " << layer.biteDecaySec << ",\n";
-    out << "        \"wobbleDepthCents\": " << layer.wobbleDepthCents << ",\n";
-    out << "        \"wobbleRateHz\": " << layer.wobbleRateHz << "\n";
-    out << "      },\n";
+    return Json{
+        {"enabled", layer.enabled},
+        {"type", LeadLayerTypeToString(layer.type)},
+        {"level", layer.level},
+        {"edgeLevel", layer.edgeLevel},
+        {"bodyLevel", layer.bodyLevel},
+        {"detuneCents", layer.detuneCents},
+        {"pitchBendSemis", layer.pitchBendSemis},
+        {"bendDecaySec", layer.bendDecaySec},
+        {"attackBoost", layer.attackBoost},
+        {"attackDecaySec", layer.attackDecaySec},
+        {"drive", layer.drive},
+        {"characterLevel", layer.characterLevel},
+        {"characterTone", layer.characterTone},
+        {"biteLevel", layer.biteLevel},
+        {"biteDecaySec", layer.biteDecaySec},
+        {"wobbleDepthCents", layer.wobbleDepthCents},
+        {"wobbleRateHz", layer.wobbleRateHz},
+    };
 }
 
-void WriteChordLayerJSON(std::ostream& out, const ChordLayerConfig& layer)
+Json ChordLayerToJson(const ChordLayerConfig& layer)
 {
-    out << "      \"chordLayer\": {\n";
-    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
-    out << "        \"level\": " << layer.level << ",\n";
-    out << "        \"intervalsSemis\": [";
-    for (size_t i = 0; i < layer.intervalsSemis.size(); i++)
+    return Json{
+        {"enabled", layer.enabled},
+        {"level", layer.level},
+        {"intervalsSemis", layer.intervalsSemis},
+        {"voiceLevels", layer.voiceLevels},
+        {"detuneCents", layer.detuneCents},
+        {"spread", layer.spread},
+        {"cutoffHz", layer.cutoffHz},
+        {"drive", layer.drive},
+    };
+}
+
+Json PadLayerToJson(const PadLayerConfig& layer)
+{
+    return Json{
+        {"enabled", layer.enabled},
+        {"level", layer.level},
+        {"octaveLevel", layer.octaveLevel},
+        {"detuneCents", layer.detuneCents},
+        {"spread", layer.spread},
+        {"fadeInSec", layer.fadeInSec},
+        {"brightness", layer.brightness},
+        {"motionDepth", layer.motionDepth},
+        {"motionRateHz", layer.motionRateHz},
+        {"cutoffHz", layer.cutoffHz},
+        {"drive", layer.drive},
+    };
+}
+
+Json ExpressionMapToJson(const ExpressionMapConfig& map)
+{
+    return Json{
+        {"enabled", map.enabled},
+        {"velocityCurve", map.velocityCurve},
+        {"velocityToAmp", map.velocityToAmp},
+        {"velocityToBrightness", map.velocityToBrightness},
+        {"velocityToFmIndex", map.velocityToFmIndex},
+        {"velocityToAttack", map.velocityToAttack},
+        {"velocityToBass", map.velocityToBass},
+        {"velocityToLead", map.velocityToLead},
+        {"velocityToChord", map.velocityToChord},
+        {"velocityToPad", map.velocityToPad},
+        {"modWheelToBrightness", map.modWheelToBrightness},
+        {"modWheelToPad", map.modWheelToPad},
+        {"pressureToDrive", map.pressureToDrive},
+        {"cc74ToBrightness", map.cc74ToBrightness},
+        {"cc74ToPadBrightness", map.cc74ToPadBrightness},
+    };
+}
+
+bool SourceToJson(const SourceConfig& source, Json& out, std::string& err)
+{
+    std::ostringstream serialized;
+    config::WriteSourceJSON(serialized, source, 0);
+    Json parsed = Json::parse("{" + serialized.str() + "}", nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_object() || !parsed.contains("source") || !parsed["source"].is_object())
     {
-        if (i > 0) out << ", ";
-        out << layer.intervalsSemis[i];
+        err = "failed to serialize source config";
+        return false;
     }
-    out << "],\n";
-    out << "        \"voiceLevels\": [";
-    for (size_t i = 0; i < layer.voiceLevels.size(); i++)
+    out = std::move(parsed["source"]);
+    return true;
+}
+
+bool ChannelSoundToJson(const ChannelConfig& config, Json& out, std::string& err)
+{
+    out = Json{
+        {"amp", config.amp},
+        {"attackSec", config.attackSec},
+        {"decaySec", config.decaySec},
+        {"sustainLevel", config.sustainLevel},
+        {"releaseSec", config.releaseSec},
+    };
+    if (config.attackLayer.enabled)
     {
-        if (i > 0) out << ", ";
-        out << layer.voiceLevels[i];
+        out["attackLayer"] = AttackLayerToJson(config.attackLayer);
     }
-    out << "],\n";
-    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
-    out << "        \"spread\": " << layer.spread << ",\n";
-    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
-    out << "        \"drive\": " << layer.drive << "\n";
-    out << "      },\n";
-}
-
-void WritePadLayerJSON(std::ostream& out, const PadLayerConfig& layer)
-{
-    out << "      \"padLayer\": {\n";
-    out << "        \"enabled\": " << (layer.enabled ? "true" : "false") << ",\n";
-    out << "        \"level\": " << layer.level << ",\n";
-    out << "        \"octaveLevel\": " << layer.octaveLevel << ",\n";
-    out << "        \"detuneCents\": " << layer.detuneCents << ",\n";
-    out << "        \"spread\": " << layer.spread << ",\n";
-    out << "        \"fadeInSec\": " << layer.fadeInSec << ",\n";
-    out << "        \"brightness\": " << layer.brightness << ",\n";
-    out << "        \"motionDepth\": " << layer.motionDepth << ",\n";
-    out << "        \"motionRateHz\": " << layer.motionRateHz << ",\n";
-    out << "        \"cutoffHz\": " << layer.cutoffHz << ",\n";
-    out << "        \"drive\": " << layer.drive << "\n";
-    out << "      },\n";
-}
-
-void WriteExpressionMapJSON(std::ostream& out, const ExpressionMapConfig& map)
-{
-    out << "      \"expressionMap\": {\n";
-    out << "        \"enabled\": " << (map.enabled ? "true" : "false") << ",\n";
-    out << "        \"velocityCurve\": " << map.velocityCurve << ",\n";
-    out << "        \"velocityToAmp\": " << map.velocityToAmp << ",\n";
-    out << "        \"velocityToBrightness\": " << map.velocityToBrightness << ",\n";
-    out << "        \"velocityToFmIndex\": " << map.velocityToFmIndex << ",\n";
-    out << "        \"velocityToAttack\": " << map.velocityToAttack << ",\n";
-    out << "        \"velocityToBass\": " << map.velocityToBass << ",\n";
-    out << "        \"velocityToLead\": " << map.velocityToLead << ",\n";
-    out << "        \"velocityToChord\": " << map.velocityToChord << ",\n";
-    out << "        \"velocityToPad\": " << map.velocityToPad << ",\n";
-    out << "        \"modWheelToBrightness\": " << map.modWheelToBrightness << ",\n";
-    out << "        \"modWheelToPad\": " << map.modWheelToPad << ",\n";
-    out << "        \"pressureToDrive\": " << map.pressureToDrive << ",\n";
-    out << "        \"cc74ToBrightness\": " << map.cc74ToBrightness << ",\n";
-    out << "        \"cc74ToPadBrightness\": " << map.cc74ToPadBrightness << "\n";
-    out << "      },\n";
+    if (config.bassLayer.enabled)
+    {
+        out["bassLayer"] = BassLayerToJson(config.bassLayer);
+    }
+    if (config.leadLayer.enabled)
+    {
+        out["leadLayer"] = LeadLayerToJson(config.leadLayer);
+    }
+    if (config.chordLayer.enabled)
+    {
+        out["chordLayer"] = ChordLayerToJson(config.chordLayer);
+    }
+    if (config.padLayer.enabled)
+    {
+        out["padLayer"] = PadLayerToJson(config.padLayer);
+    }
+    if (config.expressionMap.enabled)
+    {
+        out["expressionMap"] = ExpressionMapToJson(config.expressionMap);
+    }
+    Json source = Json::object();
+    if (!SourceToJson(config.source, source, err))
+    {
+        return false;
+    }
+    out["source"] = std::move(source);
+    return true;
 }
 
 struct PresetMeta
@@ -513,94 +559,54 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         err = "failed to create preset directory: " + ec.message();
         return false;
     }
+    const std::string stem = presetPath.stem().string();
+
+    Json instruments = Json::object();
+    Json channels = Json::object();
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const ChannelConfig& cur = snapshot.channelConfigs[ch];
+        const ChannelConfig& def = (*base.channelConfigs)[ch];
+        if (ChannelConfigEquals(cur, def))
+        {
+            continue;
+        }
+        Json sound = Json::object();
+        if (!ChannelSoundToJson(cur, sound, err))
+        {
+            return false;
+        }
+        const std::string instrumentId = stem + "__ch" + std::to_string(ch);
+        instruments[instrumentId] = Json{
+            {"displayName", ""},
+            {"category", ""},
+            {"internal", false},
+            {"tags", Json::array()},
+            {"description", ""},
+            {"recommendedRange", Json{{"low", 48}, {"high", 84}, {"preview", 60}}},
+            {"macroHints", Json::array()},
+            {"sound", std::move(sound)},
+        };
+        channels[std::to_string(ch)] = Json{
+            {"instrumentId", instrumentId},
+        };
+    }
+
+    Json root = Json{
+        {"format", "projectModel.v3"},
+        {"project", Json{
+            {"instruments", std::move(instruments)},
+            {"channels", std::move(channels)},
+        }},
+    };
+
     std::ofstream out(presetPath, std::ios::binary | std::ios::trunc);
     if (!out)
     {
         err = "failed to open preset file";
         return false;
     }
-
-    const std::string stem = presetPath.stem().string();
-
-    out << "{\n";
-    out << "  \"format\": \"projectModel.v3\",\n";
-    out << "  \"project\": {\n";
-    out << "    \"instruments\": {\n";
-
-    bool first = true;
-    for (int ch = 0; ch < 16; ch++)
-    {
-        const ChannelConfig& cur = snapshot.channelConfigs[ch];
-        const ChannelConfig& def = (*base.channelConfigs)[ch];
-        if (ChannelConfigEquals(cur, def))
-        {
-            continue;
-        }
-        if (!first) out << ",\n";
-        first = false;
-        out << "      \"" << stem << "__ch" << ch << "\": {\n";
-        out << "        \"displayName\": \"\",\n";
-        out << "        \"category\": \"\",\n";
-        out << "        \"internal\": false,\n";
-        out << "        \"tags\": [],\n";
-        out << "        \"description\": \"\",\n";
-        out << "        \"recommendedRange\": { \"low\": 48, \"high\": 84, \"preview\": 60 },\n";
-        out << "        \"macroHints\": [],\n";
-        out << "        \"sound\": {\n";
-        out << "        \"amp\": " << cur.amp << ",\n";
-        out << "        \"attackSec\": " << cur.attackSec << ",\n";
-        out << "        \"decaySec\": " << cur.decaySec << ",\n";
-        out << "        \"sustainLevel\": " << cur.sustainLevel << ",\n";
-        out << "        \"releaseSec\": " << cur.releaseSec << ",\n";
-        if (cur.attackLayer.enabled)
-        {
-            WriteAttackLayerJSON(out, cur.attackLayer);
-        }
-        if (cur.bassLayer.enabled)
-        {
-            WriteBassLayerJSON(out, cur.bassLayer);
-        }
-        if (cur.leadLayer.enabled)
-        {
-            WriteLeadLayerJSON(out, cur.leadLayer);
-        }
-        if (cur.chordLayer.enabled)
-        {
-            WriteChordLayerJSON(out, cur.chordLayer);
-        }
-        if (cur.padLayer.enabled)
-        {
-            WritePadLayerJSON(out, cur.padLayer);
-        }
-        if (cur.expressionMap.enabled)
-        {
-            WriteExpressionMapJSON(out, cur.expressionMap);
-        }
-        config::WriteSourceJSON(out, cur.source, 8);
-        out << "\n        }\n";
-        out << "      }";
-    }
-
-    out << "\n    },\n";
-    out << "    \"channels\": {\n";
-    first = true;
-    for (int ch = 0; ch < 16; ch++)
-    {
-        const ChannelConfig& cur = snapshot.channelConfigs[ch];
-        const ChannelConfig& def = (*base.channelConfigs)[ch];
-        if (ChannelConfigEquals(cur, def))
-        {
-            continue;
-        }
-        if (!first) out << ",\n";
-        first = false;
-        out << "      \"" << ch << "\": {\n";
-        out << "        \"instrumentId\": \"" << stem << "__ch" << ch << "\"\n";
-        out << "      }";
-    }
-    out << "\n    }\n";
-    out << "  }\n";
-    out << "}\n";
+    out << root.dump(2) << '\n';
     return true;
 }
 

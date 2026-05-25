@@ -98,7 +98,7 @@ GUI 状態に依存しません。
 - Piano-roll 編集と drum step-sequencer 編集は、preview と export の両方へ反映する。
 - GUI 状態は `config/gui_state.json` に保存する。Piano-roll project は `config/piano_roll_project.json` に保存する。
 - GUI code は sound synthesis を直接実装せず、`ProjectModel` を作って app/core のレンダリング経路を呼ぶ。
-- GUI の主要導線は `GUIProjectFacade` と `GUIPresetItem` を通して Sound Card、macro、channel assignment、mix を操作する。Advanced の詳細 Channel Editor は Phase 6/7 まで legacy direct edit を一部残す。
+- GUI の主要導線は `GUIProjectFacade` と `GUIPresetItem` を通して Sound Card、macro、channel assignment、mix を操作する。Advanced の詳細 Channel Editor は Phase 7-B 以降まで legacy direct edit を一部残す。
 
 ## 音とレンダリング契約
 
