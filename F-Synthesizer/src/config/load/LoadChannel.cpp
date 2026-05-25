@@ -4,10 +4,246 @@
 
 #include "../ConfigFileInternal.h"
 
+#include "third_party/nlohmann/json.hpp"
+
 namespace config::internal::load
 {
 namespace
 {
+using Json = nlohmann::json;
+
+std::optional<Json> ParseJSONObject(const std::string& text)
+{
+    Json parsed = Json::parse(text, nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_object())
+    {
+        return std::nullopt;
+    }
+    return parsed;
+}
+
+bool ValidateOptionalBool(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_boolean())
+    {
+        err = path + "." + key + " must be boolean";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateOptionalNumber(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_number())
+    {
+        err = path + "." + key + " must be number";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateOptionalInteger(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_number_integer())
+    {
+        err = path + "." + key + " must be integer";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateOptionalString(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_string())
+    {
+        err = path + "." + key + " must be string";
+        return false;
+    }
+    return true;
+}
+
+bool ValidateOptionalNumberArray(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_array())
+    {
+        err = path + "." + key + " must be array";
+        return false;
+    }
+    for (size_t i = 0; i < it->size(); i++)
+    {
+        if (!(*it)[i].is_number())
+        {
+            err = path + "." + key + "[" + std::to_string(i) + "] must be number";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ValidateOptionalIntegerArray(const Json& obj, const char* key, const std::string& path, std::string& err)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end())
+    {
+        return true;
+    }
+    if (!it->is_array())
+    {
+        err = path + "." + key + " must be array";
+        return false;
+    }
+    for (size_t i = 0; i < it->size(); i++)
+    {
+        if (!(*it)[i].is_number_integer())
+        {
+            err = path + "." + key + "[" + std::to_string(i) + "] must be integer";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ValidateLayerScalarTypes(const Json& layer, const std::string& path, std::string& err)
+{
+    if (!ValidateOptionalBool(layer, "enabled", path, err)) return false;
+    if (!ValidateOptionalString(layer, "type", path, err)) return false;
+    if (!ValidateOptionalString(layer, "mode", path, err)) return false;
+    for (const char* key : {
+        "level", "decaySec", "brightness", "bodyMix", "pitchOffsetSemis", "drive",
+        "subLevel", "bodyLevel", "gritLevel", "cutoffHz", "velocityToDrive",
+        "focusHz", "focusLevel", "bodySaturation", "gritTone", "attackBoost",
+        "attackDecaySec", "edgeLevel", "detuneCents", "pitchBendSemis",
+        "bendDecaySec", "characterLevel", "characterTone", "biteLevel",
+        "biteDecaySec", "wobbleDepthCents", "wobbleRateHz", "spread",
+        "octaveLevel", "fadeInSec", "motionDepth", "motionRateHz", "noiseMix",
+        "bodySend", "bowLevel", "mix", "size", "tone", "damping", "stereo",
+        "keyClick", "attackSec", "releaseDamp", "fifthLevel", "octaveLevel",
+        "lowPunch", "pick", "tightness", "cabLow", "cabHigh", "presence", "output"
+        })
+    {
+        if (!ValidateOptionalNumber(layer, key, path, err))
+        {
+            return false;
+        }
+    }
+    if (!ValidateOptionalIntegerArray(layer, "intervalsSemis", path, err)) return false;
+    if (!ValidateOptionalNumberArray(layer, "voiceLevels", path, err)) return false;
+    if (!ValidateOptionalNumberArray(layer, "harmonicLevels", path, err)) return false;
+    return true;
+}
+
+bool ValidateExpressionMapTypes(const Json& map, const std::string& path, std::string& err)
+{
+    if (!ValidateOptionalBool(map, "enabled", path, err)) return false;
+    for (const char* key : {
+        "velocityCurve", "velocityToAmp", "velocityToBrightness", "velocityToFmIndex",
+        "velocityToAttack", "velocityToBass", "velocityToLead", "velocityToChord",
+        "velocityToPad", "velocityToPluck", "velocityToString", "velocityToBody",
+        "modWheelToBrightness", "modWheelToPad", "modWheelToString",
+        "pressureToDrive", "pressureToFilterDrive", "cc74ToBrightness",
+        "cc74ToPadBrightness", "cc74ToStringBrightness"
+        })
+    {
+        if (!ValidateOptionalNumber(map, key, path, err))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ValidateChannelObjectTypes(const Json& channel, const std::string& path, std::string& err)
+{
+    if (!channel.is_object())
+    {
+        err = path + " must be object";
+        return false;
+    }
+    for (const char* key : { "amp", "attackSec", "decaySec", "sustainLevel", "releaseSec", "portamentoTimeSec" })
+    {
+        if (!ValidateOptionalNumber(channel, key, path, err))
+        {
+            return false;
+        }
+    }
+    const Json* layerRoot = &channel;
+    const auto layersIt = channel.find("layers");
+    if (layersIt != channel.end())
+    {
+        if (!layersIt->is_object())
+        {
+            err = path + ".layers must be object";
+            return false;
+        }
+        layerRoot = &(*layersIt);
+    }
+    for (const char* layerName : {
+        "attack", "bass", "lead", "chord", "pad", "pluck", "string", "body",
+        "harmonic", "powerChord", "chug", "ampCab"
+        })
+    {
+        const auto layerIt = layerRoot->find(layerName);
+        if (layerIt == layerRoot->end())
+        {
+            continue;
+        }
+        if (!layerIt->is_object())
+        {
+            err = path + ".layers." + layerName + " must be object";
+            return false;
+        }
+        if (!ValidateLayerScalarTypes(*layerIt, path + ".layers." + layerName, err))
+        {
+            return false;
+        }
+    }
+    const auto expressionIt = channel.find("expressionMap");
+    if (expressionIt != channel.end())
+    {
+        if (!expressionIt->is_object())
+        {
+            err = path + ".expressionMap must be object";
+            return false;
+        }
+        if (!ValidateExpressionMapTypes(*expressionIt, path + ".expressionMap", err))
+        {
+            return false;
+        }
+    }
+    const auto sourceIt = channel.find("source");
+    if (sourceIt != channel.end() && !sourceIt->is_object())
+    {
+        err = path + ".source must be object";
+        return false;
+    }
+    return true;
+}
+
 bool TryParseAttackLayerType(const std::string& name, AttackLayerType& outType)
 {
     if (name == "pick")
@@ -578,20 +814,27 @@ bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, 
 
 bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err)
 {
-    std::string channelsObj;
-    bool found = false;
-    if (!ExtractObjectForKey(text, "channels", channelsObj, found, err))
+    const auto root = ParseJSONObject(text);
+    if (!root)
     {
+        err = "project must be object";
         return false;
     }
-    if (!found)
+    const auto channelsIt = root->find("channels");
+    if (channelsIt == root->end())
     {
         return true;
+    }
+    if (!channelsIt->is_object())
+    {
+        err = "channels must be object";
+        return false;
     }
 
     // 既定値を基底に差分だけを適用し、preset互換を維持する。
     auto table = MakeMutableChannelConfigs(cfg);
-    if (!ParseTopLevelObjectEntries(channelsObj, [&](const std::string& k, const std::string& valueObj) {
+    for (const auto& [k, value] : channelsIt->items())
+    {
         int ch = -1;
         try
         {
@@ -607,17 +850,18 @@ bool LoadChannelsDiff(const std::string& text, AppConfig& cfg, std::string& err)
             err = "channel key out of range: " + k;
             return false;
         }
+        const std::string channelPath = "channels." + k;
+        if (!ValidateChannelObjectTypes(value, channelPath, err))
+        {
+            return false;
+        }
         ChannelConfig chCfg = (*table)[ch];
-        if (!ParseChannelObject(valueObj, chCfg, err))
+        if (!ParseChannelObject(value.dump(), chCfg, err))
         {
             err = "channel " + k + ": " + err;
             return false;
         }
         (*table)[ch] = chCfg;
-        return true;
-        }, err))
-    {
-        return false;
     }
 
     cfg.channelConfigs = table;

@@ -195,12 +195,12 @@ function Run-RuntimeSmoke {
 
     $json = @"
 {
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "midiPath": "$midiPath",
     "wavPath": "$wavPathNorm",
     "targetChannel": 0,
-    "initialSeconds": 0.25,
+    "initialSeconds": 1,
     "bits": 16,
     "sampleRate": 22050,
     "extraReleaseSec": 0.01

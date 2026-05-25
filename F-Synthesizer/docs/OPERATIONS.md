@@ -46,8 +46,8 @@ git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
 
 - 通常導線は `.\scripts\check.ps1`。
 - `-RunRuntimeSmoke` は毎回不要。render、audio、config、CLI、実行ファイル起動に影響する変更時だけ使う。
-- runtime smoke は `projectModel.v1` の最小 config と最小 MIDI を一時生成し、ProjectModel 読み込み、RenderConfig 変換、短い WAV、missing config の失敗を確認する。
-- config / preset を追加・変更・削除した場合は `.\scripts\check_presets.ps1` を使う。`config/base.json`、`config/default.json`、全 preset の `projectModel.v1` 構造、読み込み、短尺レンダー、無音でないことをまとめて見る。
+- runtime smoke は `projectModel.v2` の最小 config と最小 MIDI を一時生成し、ProjectModel 読み込み、RenderConfig 変換、短い WAV、missing config の失敗を確認する。
+- config / preset を追加・変更・削除した場合は `.\scripts\check_presets.ps1` を使う。`config/base.json`、`config/default.json`、全 preset の `projectModel.v2` 構造、読み込み、短尺レンダー、無音でないことをまとめて見る。
 - UX や音の気持ちよさに関わる変更では、GUI と音声の手動確認を行う。
 - 現在の作業で明示的に必要な場合を除き、長時間の回帰スイートは追加しない。
 

@@ -2,7 +2,7 @@
   "displayName": "Master fx chain",
   "category": "Piano/Keys",
   "internal": true,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "0": {

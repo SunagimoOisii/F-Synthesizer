@@ -170,7 +170,7 @@ function New-QuickPresetConfig {
     }
 
     $config = [ordered]@{
-        format = "projectModel.v1"
+        format = "projectModel.v2"
         project = $project
     }
     $config | ConvertTo-Json -Depth 100 | Set-Content -Path $ConfigPath -Encoding UTF8

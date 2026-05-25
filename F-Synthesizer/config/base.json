@@ -1,5 +1,5 @@
 {
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "wavPath": "../output/test.wav",
     "targetChannel": -1,

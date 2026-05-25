@@ -1,9 +1,11 @@
-# チャンネル設定スキーマ（v0.2 draft）
+# チャンネル設定スキーマ（projectModel.v2 / v0.2）
 
 ## 目的
 
 - ch0-15 の音設定を JSON で定義し、CLI/GUI で共通利用する。
-- 既存の `base.json` / `presets/*.json` 互換を維持したまま段階導入する。
+- `projectModel.v2` の C++ typed config を正本とし、この文書は利用者向けの同期メモとして扱う。
+- v2 第一段では既存の legacy `layers` 構造を保持する。次段の Instrument Model 移行で `layers` の直接編集契約を整理する。
+- `projectModel.v1` は読み込み対象外とする。
 
 ## 適用位置
 
@@ -12,9 +14,12 @@
 
 ```json
 {
-  "channels": {
-    "0": { "... channel config ..." },
-    "1": { "... channel config ..." }
+  "format": "projectModel.v2",
+  "project": {
+    "channels": {
+      "0": { "... channel config ..." },
+      "1": { "... channel config ..." }
+    }
   }
 }
 ```

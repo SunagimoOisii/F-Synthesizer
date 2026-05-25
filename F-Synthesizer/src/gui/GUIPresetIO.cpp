@@ -424,7 +424,9 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
     }
 
     out << "{\n";
-    out << "  \"channels\": {\n";
+    out << "  \"format\": \"projectModel.v2\",\n";
+    out << "  \"project\": {\n";
+    out << "    \"channels\": {\n";
 
     bool first = true;
     for (int ch = 0; ch < 16; ch++)
@@ -437,12 +439,12 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
         }
         if (!first) out << ",\n";
         first = false;
-        out << "    \"" << ch << "\": {\n";
-        out << "      \"amp\": " << cur.amp << ",\n";
-        out << "      \"attackSec\": " << cur.attackSec << ",\n";
-        out << "      \"decaySec\": " << cur.decaySec << ",\n";
-        out << "      \"sustainLevel\": " << cur.sustainLevel << ",\n";
-        out << "      \"releaseSec\": " << cur.releaseSec << ",\n";
+        out << "      \"" << ch << "\": {\n";
+        out << "        \"amp\": " << cur.amp << ",\n";
+        out << "        \"attackSec\": " << cur.attackSec << ",\n";
+        out << "        \"decaySec\": " << cur.decaySec << ",\n";
+        out << "        \"sustainLevel\": " << cur.sustainLevel << ",\n";
+        out << "        \"releaseSec\": " << cur.releaseSec << ",\n";
         if (cur.attackLayer.enabled)
         {
             WriteAttackLayerJSON(out, cur.attackLayer);
@@ -468,10 +470,11 @@ bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem
             WriteExpressionMapJSON(out, cur.expressionMap);
         }
         config::WriteSourceJSON(out, cur.source, 6);
-        out << "\n    }";
+        out << "\n      }";
     }
 
-    out << "\n  }\n";
+    out << "\n    }\n";
+    out << "  }\n";
     out << "}\n";
     return true;
 }

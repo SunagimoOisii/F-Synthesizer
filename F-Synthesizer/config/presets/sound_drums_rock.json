@@ -2,7 +2,7 @@
   "displayName": "Drums Rock",
   "category": "Drums",
   "internal": false,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "9": {

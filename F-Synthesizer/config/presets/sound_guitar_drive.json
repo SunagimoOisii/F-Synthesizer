@@ -2,7 +2,7 @@
   "displayName": "Guitar Drive",
   "category": "Guitar",
   "internal": false,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "0": {

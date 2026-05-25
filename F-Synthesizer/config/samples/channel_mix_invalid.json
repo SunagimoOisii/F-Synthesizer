@@ -1,19 +1,22 @@
 {
-  "midiPath": "../../assets/midi/solstice_intro.mid",
-  "wavPath": "../../output/mix_invalid.wav",
-  "targetChannel": -1,
-  "defaultWave": "saw",
-  "initialSeconds": 6,
-  "bits": 16,
-  "sampleRate": 44100,
-  "extraReleaseSec": 0.3,
-  "channelMix": {
-    "0": {
-      "mute": false,
-      "solo": false,
-      "level": 1.0,
-      "pan": 1.5,
-      "gain": 1.0
+  "format": "projectModel.v2",
+  "project": {
+    "midiPath": "../../assets/midi/solstice_intro.mid",
+    "wavPath": "../../output/mix_invalid.wav",
+    "targetChannel": -1,
+    "defaultWave": "saw",
+    "initialSeconds": 6,
+    "bits": 16,
+    "sampleRate": 44100,
+    "extraReleaseSec": 0.3,
+    "channelMix": {
+      "0": {
+        "mute": false,
+        "solo": false,
+        "level": 1.0,
+        "pan": 1.5,
+        "gain": 1.0
+      }
     }
   }
 }

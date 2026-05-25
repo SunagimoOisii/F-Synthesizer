@@ -24,7 +24,7 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
     const AppConfig config = ToAppConfig(model);
 
     out << "{\n";
-    out << "  \"format\": \"projectModel.v1\",\n";
+    out << "  \"format\": \"projectModel.v2\",\n";
     out << "  \"project\": {\n";
     out << "    \"midiPath\": \"" << EscapeJSON(PathToUtf8(config.midiPath)) << "\",\n";
     out << "    \"wavPath\": \"" << EscapeJSON(PathToUtf8(config.wavPath)) << "\",\n";

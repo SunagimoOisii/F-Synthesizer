@@ -2,7 +2,7 @@
   "displayName": "Strings Pizzicato",
   "category": "Strings",
   "internal": false,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "0": {

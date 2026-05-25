@@ -2,7 +2,7 @@
   "displayName": "Keys Rock Organ",
   "category": "Piano/Keys",
   "internal": false,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "0": {

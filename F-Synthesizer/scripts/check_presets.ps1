@@ -159,7 +159,7 @@ function Assert-ProjectModelJsonShape {
     if ($Config.PSObject.Properties.Name -notcontains "format") {
         throw "${Label}: missing format."
     }
-    if ($Config.format -ne "projectModel.v1") {
+    if ($Config.format -ne "projectModel.v2") {
         throw "${Label}: unsupported format '$($Config.format)'."
     }
     if ($Config.PSObject.Properties.Name -notcontains "project" -or $null -eq $Config.project) {
@@ -314,14 +314,14 @@ function Write-ShortPresetConfig {
             $project | Add-Member -NotePropertyName effects -NotePropertyValue $PresetConfig.effects -Force
             $PresetConfig.PSObject.Properties.Remove("effects")
         }
-        $PresetConfig | Add-Member -NotePropertyName format -NotePropertyValue "projectModel.v1" -Force
+        $PresetConfig | Add-Member -NotePropertyName format -NotePropertyValue "projectModel.v2" -Force
         $PresetConfig | Add-Member -NotePropertyName project -NotePropertyValue $project -Force
     }
 
     $PresetConfig.project | Add-Member -NotePropertyName midiPath -NotePropertyValue $MidiPath -Force
     $PresetConfig.project | Add-Member -NotePropertyName wavPath -NotePropertyValue $WavPath -Force
-    $PresetConfig.project | Add-Member -NotePropertyName targetChannel -NotePropertyValue -1 -Force
-    $PresetConfig.project | Add-Member -NotePropertyName initialSeconds -NotePropertyValue $InitialSeconds -Force
+    $PresetConfig.project | Add-Member -NotePropertyName targetChannel -NotePropertyValue ([int]-1) -Force
+    $PresetConfig.project | Add-Member -NotePropertyName initialSeconds -NotePropertyValue ([int][Math]::Max(1, [Math]::Ceiling($InitialSeconds))) -Force
     $PresetConfig.project | Add-Member -NotePropertyName bits -NotePropertyValue 16 -Force
     $PresetConfig.project | Add-Member -NotePropertyName sampleRate -NotePropertyValue $SampleRate -Force
     $PresetConfig.project | Add-Member -NotePropertyName extraReleaseSec -NotePropertyValue 0.02 -Force

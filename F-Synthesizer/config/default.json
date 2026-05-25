@@ -1,5 +1,5 @@
 {
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "midiPath": "../assets/midi/solstice_intro.mid",
     "wavPath": "../output/test.wav",

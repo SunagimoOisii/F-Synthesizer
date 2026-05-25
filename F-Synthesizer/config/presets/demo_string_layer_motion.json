@@ -2,7 +2,7 @@
   "displayName": "String layer motion",
   "category": "Strings",
   "internal": true,
-  "format": "projectModel.v1",
+  "format": "projectModel.v2",
   "project": {
     "channels": {
       "0": {
