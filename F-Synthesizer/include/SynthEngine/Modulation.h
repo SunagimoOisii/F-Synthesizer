@@ -15,6 +15,7 @@ enum class LfoWave
 
 struct LfoConfig
 {
+    bool operator==(const LfoConfig&) const = default;
     LfoWave wave = LfoWave::Sine;
     double rateHz = 5.0;
     double depth = 0.0;
@@ -48,6 +49,7 @@ enum class ModDestination
 
 struct ModRoute
 {
+    bool operator==(const ModRoute&) const = default;
     ModSource source = ModSource::None;
     ModDestination destination = ModDestination::None;
     double amount = 0.0;
@@ -56,11 +58,13 @@ struct ModRoute
 
 struct ModMatrix
 {
+    bool operator==(const ModMatrix&) const = default;
     std::array<ModRoute, 8> routes{};
 };
 
 struct ModEnvelopeConfig
 {
+    bool operator==(const ModEnvelopeConfig&) const = default;
     double attackSec = 0.01;
     double decaySec = 0.1;
     double sustainLevel = 1.0;
@@ -70,6 +74,7 @@ struct ModEnvelopeConfig
 
 struct ModulationConfig
 {
+    bool operator==(const ModulationConfig&) const = default;
     LfoConfig lfo1{};
     ModEnvelopeConfig env2{};
     ModMatrix matrix = []() {

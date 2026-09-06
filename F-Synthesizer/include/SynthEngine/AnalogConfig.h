@@ -7,10 +7,12 @@
 // smoothing は waveform と同一契約で適用する。
 struct AnalogConfig
 {
+    bool operator==(const AnalogConfig&) const = default;
     using ArpeggioConfig = WaveformConfig::ArpeggioConfig;
 
     struct SmoothingConfig
     {
+        bool operator==(const SmoothingConfig&) const = default;
         bool enabled = true;
         bool pitchEnabled = false;
         double ampTimeMs = 4.0;

@@ -52,7 +52,8 @@ void RenderWithEngineFrameBlocks(
     const RenderConfig& config,
     const std::function<bool(int, const double*, int)>& onFrames,
     const std::function<bool()>& shouldCancel,
-    bool* canceled)
+    bool* canceled,
+    const std::shared_ptr<LiveRenderMailbox>& liveSettings)
 {
     RenderMIDIEventsWithFrameBlockCallback(
         length,
@@ -66,5 +67,5 @@ void RenderWithEngineFrameBlocks(
         config.ticksPerQuarter,
         config.renderStartSec,
         shouldCancel,
-        canceled);
+        canceled, liveSettings);
 }

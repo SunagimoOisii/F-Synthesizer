@@ -10,8 +10,10 @@
 // ConfigLoad / GUI編集 / Renderer の共通入力として使う。
 struct WaveformConfig
 {
+    bool operator==(const WaveformConfig&) const = default;
     struct ArpeggioConfig
     {
+        bool operator==(const ArpeggioConfig&) const = default;
         bool enabled = false;
         double rateHz = 8.0;
         int steps = 1;
@@ -20,6 +22,7 @@ struct WaveformConfig
 
     struct SmoothingConfig
     {
+        bool operator==(const SmoothingConfig&) const = default;
         bool enabled = true;
         bool pitchEnabled = false;
         double ampTimeMs = 4.0;

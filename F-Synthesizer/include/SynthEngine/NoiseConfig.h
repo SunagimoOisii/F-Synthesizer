@@ -6,6 +6,7 @@
 // ノイズ発振方式の最小設定。
 struct NoiseConfig
 {
+    bool operator==(const NoiseConfig&) const = default;
     // ノイズ音源種別。
     // smoothing は非対応（契約上 waveform 専用）。
     NoiseType noise;

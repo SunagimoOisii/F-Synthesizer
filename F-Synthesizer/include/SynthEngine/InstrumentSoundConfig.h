@@ -13,6 +13,7 @@ enum class AttackLayerType
 
 struct AttackLayerConfig
 {
+    bool operator==(const AttackLayerConfig&) const = default;
     bool enabled = false;
     AttackLayerType type = AttackLayerType::Pick;
     double level = 0.0;
@@ -32,6 +33,7 @@ enum class BassLayerType
 
 struct BassLayerConfig
 {
+    bool operator==(const BassLayerConfig&) const = default;
     bool enabled = false;
     BassLayerType type = BassLayerType::Drive;
     double level = 0.0;
@@ -59,6 +61,7 @@ enum class LeadLayerType
 
 struct LeadLayerConfig
 {
+    bool operator==(const LeadLayerConfig&) const = default;
     bool enabled = false;
     LeadLayerType type = LeadLayerType::Blade;
     double level = 0.0;
@@ -80,6 +83,7 @@ struct LeadLayerConfig
 
 struct ChordLayerConfig
 {
+    bool operator==(const ChordLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     std::array<int, 4> intervalsSemis{ 0, 7, 12, 0 };
@@ -92,6 +96,7 @@ struct ChordLayerConfig
 
 struct PadLayerConfig
 {
+    bool operator==(const PadLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     double octaveLevel = 0.20;
@@ -107,6 +112,7 @@ struct PadLayerConfig
 
 struct PluckLayerConfig
 {
+    bool operator==(const PluckLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     double decaySec = 0.18;
@@ -119,6 +125,7 @@ struct PluckLayerConfig
 
 struct StringLayerConfig
 {
+    bool operator==(const StringLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     double bowLevel = 0.25;
@@ -134,6 +141,7 @@ struct StringLayerConfig
 
 struct BodyLayerConfig
 {
+    bool operator==(const BodyLayerConfig&) const = default;
     enum class Mode
     {
         Harmonic,
@@ -153,6 +161,7 @@ struct BodyLayerConfig
 
 struct HarmonicLayerConfig
 {
+    bool operator==(const HarmonicLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     std::array<double, 8> harmonicLevels{ 1.0, 0.55, 0.28, 0.18, 0.10, 0.06, 0.035, 0.02 };
@@ -166,6 +175,7 @@ struct HarmonicLayerConfig
 
 struct PowerChordLayerConfig
 {
+    bool operator==(const PowerChordLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     double fifthLevel = 0.72;
@@ -178,6 +188,7 @@ struct PowerChordLayerConfig
 
 struct ChugLayerConfig
 {
+    bool operator==(const ChugLayerConfig&) const = default;
     bool enabled = false;
     double level = 0.0;
     double decaySec = 0.12;
@@ -190,6 +201,7 @@ struct ChugLayerConfig
 
 struct AmpCabLayerConfig
 {
+    bool operator==(const AmpCabLayerConfig&) const = default;
     bool enabled = false;
     double drive = 0.0;
     double tone = 0.52;
@@ -201,6 +213,7 @@ struct AmpCabLayerConfig
 
 struct ExpressionMapConfig
 {
+    bool operator==(const ExpressionMapConfig&) const = default;
     bool enabled = false;
     double velocityCurve = 1.0;
     double velocityToAmp = 1.0;
@@ -228,6 +241,7 @@ struct ExpressionMapConfig
 // source + ADSR + amp を1セットで保持する。
 struct InstrumentSoundConfig
 {
+    bool operator==(const InstrumentSoundConfig&) const = default;
     // 1チャンネルの合成設定（音源 + ADSR + 振幅）
     // 音源
     SourceConfig source;
@@ -264,6 +278,7 @@ struct InstrumentSoundConfig
 
 struct ChannelMixState
 {
+    bool operator==(const ChannelMixState&) const = default;
     // GUI/CLI 共通のミックス状態。solo は hasAnySolo 判定と組み合わせて使う。
     bool mute = false;
     bool solo = false;

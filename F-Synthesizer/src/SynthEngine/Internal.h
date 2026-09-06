@@ -17,6 +17,7 @@
 #include "config/SourceRegistry.h"
 #include "SynthEngine/Filter.h"
 #include "SynthEngine/Smoothing.h"
+#include "synth/YmfmVoice.h"
 #include "SynthEngine/SynthEngine.h"
 
 struct WaveformVoiceState
@@ -68,10 +69,7 @@ struct AnalogVoiceState
 
 struct FmVoiceState
 {
-    std::array<double, 4> opPhase{};
-    std::array<ADSRState, 4> opLevelEnv{};
-    std::array<ADSRState, 4> opIndexEnv{};
-    double op0FeedbackSample = 0.0;
+    std::shared_ptr<YmfmVoice> chip;
     ModulationRuntimeState modulation;
     FilterInstance filter;
     double driveNorm = 1.0;
@@ -254,6 +252,7 @@ struct Voice
     bool empty() const;
     void reserve(size_t n);
     void clear();
+    void UpdateSound(size_t index, const InstrumentSoundConfig& cfg, int sampleRate);
     void AddVoice(const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate);
     void MarkNoteOff(int channel, int noteNumber, int noteInstanceID, bool holdBySustain);
     void ReleaseSustained(int channel);

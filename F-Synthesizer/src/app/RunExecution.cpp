@@ -1,6 +1,7 @@
 #include "RunInternal.h"
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 
 #include "core/RenderConfigBuilder.h"
@@ -237,6 +238,10 @@ int RunPreviewStreamingInternal(
         soundLength = neededSamples;
     }
 
+    // A selected loop spans exactly the selected beats, without a release gap.
+    if (loop && previewOptions.durationSec > 0.0)
+        soundLength = std::max(1, static_cast<int>(std::lround(previewOptions.durationSec * project.sampleRate)));
+
     if (!streamSink.Begin(project.sampleRate, 2, soundLength, loop))
     {
         LogLine(observer, "[Preview] streaming sink failed to start.");
@@ -256,13 +261,12 @@ int RunPreviewStreamingInternal(
         }
         return streamSink.WriteFrames(interleavedStereo, frameCount);
     };
-    RenderWithEngineFrameBlocks(
-        soundLength,
-        project.sampleRate,
-        renderConfig,
-        onFrames,
-        shouldCancelObserver,
-        &canceled);
+    do
+    {
+        RenderWithEngineFrameBlocks(
+            soundLength, project.sampleRate, renderConfig, onFrames,
+            shouldCancelObserver, &canceled, overrides.liveSettings);
+    } while (loop && !canceled && !shouldCancelObserver());
 
     streamSink.Complete(canceled);
     if (canceled)

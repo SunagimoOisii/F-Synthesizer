@@ -816,8 +816,10 @@ void WriteSourceConfig(std::ostream& out, const SourceConfig& src, int indent)
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
             WriteIndent(out, indent + 2); out << "\"type\": \"" << config::SourceKindToTypeName(config::SourceKind::Fm) << "\",\n";
+            WriteIndent(out, indent + 2); out << "\"chip\": " << v.chip << ",\n";
             WriteIndent(out, indent + 2); out << "\"algorithm\": " << v.algorithm << ",\n";
             WriteIndent(out, indent + 2); out << "\"feedback\": " << v.feedback << ",\n";
+            WriteIndent(out, indent + 2); out << "\"brightness\": " << v.brightness << ",\n";
             WriteIndent(out, indent + 2); out << "\"ops\": [\n";
             for (size_t i = 0; i < 4; i++)
             {

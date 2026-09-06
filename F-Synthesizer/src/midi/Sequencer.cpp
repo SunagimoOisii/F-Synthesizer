@@ -1,4 +1,7 @@
 #include <algorithm>
+#include <limits>
+#include <stdexcept>
+#include "MidiFile.h"
 
 #include "midi/Sequencer.h"
 
@@ -39,40 +42,7 @@ namespace
         return sortedTicks;
     }
 
-    struct TempoCursor
-    {
-        int currentTick = 0;
-        double currentBPM = 120.0;
-        double currentSample = 0.0;
-        size_t tempoIndex = 0;
-    };
 
-    void AdvanceToTick(TempoCursor& cursor,
-        int targetTick,
-        const std::vector<TempoEvent>& tempoEvents,
-        int ticksPerQuarter,
-        int sampleRate)
-    {
-        while (cursor.tempoIndex < tempoEvents.size() &&
-            tempoEvents[cursor.tempoIndex].tick <= targetTick)
-        {
-            int tempoTick = tempoEvents[cursor.tempoIndex].tick;
-            int deltaTicks = tempoTick - cursor.currentTick;
-            double secPerQuarter = 60.0 / cursor.currentBPM;
-            double samplesPerTick = (secPerQuarter * sampleRate) / ticksPerQuarter;
-
-            cursor.currentSample += deltaTicks * samplesPerTick;
-            cursor.currentTick = tempoTick;
-            cursor.currentBPM = tempoEvents[cursor.tempoIndex].bpm;
-            cursor.tempoIndex++;
-        }
-        int deltaTicks = targetTick - cursor.currentTick;
-        double secPerQuarter = 60.0 / cursor.currentBPM;
-        double samplesPerTick = (secPerQuarter * sampleRate) / ticksPerQuarter;
-
-        cursor.currentSample += deltaTicks * samplesPerTick;
-        cursor.currentTick = targetTick;
-    }
 }
 
 enum class TickPriority
@@ -197,16 +167,30 @@ void BuildSampleEvents(const std::vector<MIDIEventTick>& ticks,
     // tick -> sample の変換準備
     outEvents.clear();
     outEvents.reserve(sortedTicks.size());
-    TempoCursor cursor{};
-    cursor.currentBPM = sortedTempo.front().bpm;
-    cursor.tempoIndex = 1;
+    if (ticksPerQuarter <= 0 || sampleRate <= 0) return;
+    smf::MidiFile timing;
+    timing.setTicksPerQuarterNote(ticksPerQuarter);
+    for (const auto& tempo : sortedTempo)
+        timing.addTempo(0, tempo.tick, tempo.bpm > 0.0 ? tempo.bpm : 120.0);
+    // Include every requested tick: upstream sparse-map interpolation misses
+    // the latter half of a two-point map. Exact entries also avoid linear searches.
+    std::vector<unsigned char> marker{0xff, 0x7f, 0x00};
+    int previousTick = -1;
+    for (const auto& event : sortedTicks)
+    {
+        if (event.tick != previousTick) timing.addEvent(0, event.tick, marker);
+        previousTick = event.tick;
+    }
+    timing.sortTracks();
+    timing.doTimeAnalysis();
 
     // tick イベントを sample イベントへ変換
     for (const auto& t : sortedTicks)
     {
-        AdvanceToTick(cursor, t.tick, sortedTempo, ticksPerQuarter, sampleRate);
-        // レンダラ側は int sample で受けるため、この層で丸めて型をそろえる。
-        int sample = (int)(cursor.currentSample);
+        const double atSample = timing.getTimeInSeconds(t.tick) * sampleRate;
+        if (atSample < 0.0 || atSample >= (std::numeric_limits<int>::max)())
+            throw std::runtime_error("MIDI duration is outside the supported range");
+        const int sample = static_cast<int>(atSample + 1e-7);
         if (t.type == MIDIEventType::ControlChange)
         {
             outEvents.push_back(MakeControlChangeEvent(t, sample));

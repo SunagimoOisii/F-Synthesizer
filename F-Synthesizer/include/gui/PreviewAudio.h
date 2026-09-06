@@ -7,26 +7,17 @@
 #include <vector>
 
 #include "third_party/miniaudio.h"
-
-struct PreviewPCMBuffer
-{
-    std::vector<float> pcm{};
-    ma_uint32 channels = 2;
-    ma_uint32 sampleRate = 44100;
-    ma_uint64 frameCount = 0;
-    uint64_t session = 0;
-};
+#include "AppCore.h"
 
 // GUIプレビュー再生のデバイス/PCM状態を保持する。
-// コールバックは immutable PCM buffer の shared_ptr を掴んで読み出す。
+// 生成スレッドと出力コールバックの間を、小さなSPSCリングで接続する。
 struct PreviewPlaybackState
 {
     ma_device device{};
     bool deviceReady = false;
     std::mutex mutex{};
-    std::atomic<std::shared_ptr<const PreviewPCMBuffer>> pcmBuffer{};
     std::vector<float> streamRing{};
-    std::vector<float> streamArchive{};
+    std::atomic<uint64_t> streamLoopFrames{ 0 };
     std::atomic<uint64_t> streamReadFrame{ 0 };
     std::atomic<uint64_t> streamWriteFrame{ 0 };
     std::atomic<uint64_t> streamAvailableFrames{ 0 };
@@ -40,7 +31,6 @@ struct PreviewPlaybackState
     std::atomic<uint64_t> frameCursor{ 0 };
     std::atomic<int> playStartTick{ 0 };
     std::atomic<bool> playing{ false };
-    std::atomic<bool> loop{ false };
     std::atomic<uint64_t> sessionGeneration{ 0 };
     ma_uint32 channels = 2;
     ma_uint32 sampleRate = 44100;
@@ -67,3 +57,20 @@ bool WriteStreamingPreviewFrames(
     int frameCount);
 void CompleteStreamingPreviewAudio(PreviewPlaybackState& playback, uint64_t session, bool canceled);
 float GetPreviewPlaybackPeak(const PreviewPlaybackState& playback);
+
+class PreviewAudioStreamSink final : public IPreviewStreamSink
+{
+public:
+    PreviewAudioStreamSink(PreviewPlaybackState& playback, int startTick)
+        : playback_(playback), startTick_(startTick) {}
+    ~PreviewAudioStreamSink() override;
+    bool Begin(int sampleRate, int channels, int totalFrames, bool loop) override;
+    bool WriteFrame(double left, double right) override;
+    bool WriteFrames(const double* frames, int frameCount) override;
+    void Complete(bool canceled) override;
+private:
+    PreviewPlaybackState& playback_;
+    int startTick_;
+    uint64_t session_ = 0;
+    bool completed_ = false;
+};

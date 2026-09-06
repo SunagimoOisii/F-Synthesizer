@@ -1,168 +1,144 @@
 {
   "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "instrumentId": "sound_sfx_laser__ch0"
-      }
-    },
     "instruments": {
-      "sound_sfx_laser__ch0": {
-        "displayName": "Sfx Laser",
+      "sound": {
+        "displayName": "FM レーザー",
         "category": "SFX",
+        "description": "金属的に落ちる短い効果音。低めのノートから試してください。",
         "internal": false,
         "tags": [
           "sfx",
-          "laser",
           "fm"
         ],
-        "description": "短いレーザー効果音。耳に刺さる高域を抑えた、アクセント向けのレトロSFX。",
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
         "sound": {
-          "amp": 0.12,
+          "amp": 0.25,
           "attackSec": 0.001,
-          "decaySec": 0.2,
-          "sustainLevel": 0.0,
-          "releaseSec": 0.12,
+          "decaySec": 0.3,
+          "sustainLevel": 0,
+          "releaseSec": 0.15,
           "source": {
             "type": "fm",
+            "chip": 1,
             "algorithm": 0,
-            "feedback": 0.08,
+            "feedback": 0.57,
+            "brightness": 0.5,
             "ops": [
               {
                 "wave": "sine",
-                "ratio": 2,
-                "level": 0.6724,
-                "index": 1.056,
+                "ratio": 7,
+                "level": 0.4,
+                "index": 4,
                 "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.24,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.08,
-                  "curve": 0.8
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
+                  "attackSec": 0.001,
                   "decaySec": 0.09,
-                  "sustainLevel": 0.0,
-                  "releaseSec": 0.04,
-                  "curve": 0.95
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.4,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.1,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.6,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
                 }
               },
               {
                 "wave": "sine",
                 "ratio": 1,
-                "level": 0.3116,
-                "index": 0.384,
+                "level": 0.7,
+                "index": 4,
                 "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.24,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.08,
-                  "curve": 0.8
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.09,
-                  "sustainLevel": 0.0,
-                  "releaseSec": 0.04,
-                  "curve": 0.95
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 4,
-                "level": 0.2132,
-                "index": 0.168,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.24,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.08,
-                  "curve": 0.8
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.09,
-                  "sustainLevel": 0.0,
-                  "releaseSec": 0.04,
-                  "curve": 0.95
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 0.5,
-                "level": 0.123,
-                "index": 0.0,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.24,
-                  "sustainLevel": 0.0,
-                  "releaseSec": 0.08,
-                  "curve": 0.8
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.02,
-                  "sustainLevel": 1.0,
-                  "releaseSec": 0.05,
-                  "curve": 0.0
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
                 }
               }
             ],
-            "drive": 0.0,
             "modulation": {
-              "env2": {
-                "attackSec": 0.0,
-                "decaySec": 0.2,
-                "sustainLevel": 0.0,
-                "releaseSec": 0.04,
-                "curve": 0.75
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 120,
+                "fadeMs": 180
               },
               "routes": {
                 "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.035,
+                  "enabled": true
+                },
+                "1": {
                   "source": "env2",
-                  "destination": "fm.index",
-                  "amount": 0.5,
+                  "destination": "pitchMul",
+                  "amount": 1,
                   "enabled": true
                 }
+              },
+              "env2": {
+                "attackSec": 0,
+                "decaySec": 0.18,
+                "sustainLevel": 0,
+                "releaseSec": 0.1,
+                "curve": 0
               }
-            },
-            "filter": {
-              "mode": "lowpass",
-              "cutoffHz": 5600,
-              "resonance": 0.78,
-              "drive": 0.0
             }
-          },
-          "layers": {}
-        },
-        "recommendedRange": {
-          "low": 48,
-          "high": 96,
-          "preview": 72
-        },
-        "macroHints": [
-          {
-            "id": "brightness",
-            "label": "Bright",
-            "description": "明るさを調整する"
-          },
-          {
-            "id": "roughness",
-            "label": "Edge",
-            "description": "粗さや押し出しを調整する"
-          },
-          {
-            "id": "movement",
-            "label": "Sweep",
-            "description": "揺れや動きを調整する"
-          },
-          {
-            "id": "envelope",
-            "label": "Shape",
-            "description": "アタックと余韻を調整する"
           }
-        ]
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
       }
     }
   }

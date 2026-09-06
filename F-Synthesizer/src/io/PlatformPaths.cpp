@@ -48,6 +48,7 @@ std::filesystem::path NormalizePath(const std::filesystem::path& path)
 
 std::filesystem::path ResolvePathFromBase(const std::filesystem::path& baseDir, const std::string& value)
 {
+    if (value.empty()) return {};
     // Configの相対パスは「設定ファイル配置ディレクトリ基準」で解決する。
     const std::filesystem::path path = Utf8ToPath(value);
     if (path.is_absolute())

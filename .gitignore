@@ -106,3 +106,6 @@ Desktop.ini
 # Local workspace and personal sound presets
 F-Synthesizer/config/workspace.json
 F-Synthesizer/config/user_presets/
+
+F-Synthesizer/config/song_cache/
+*.fsynth

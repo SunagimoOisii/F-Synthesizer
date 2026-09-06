@@ -14,6 +14,7 @@ enum class PsgWaveType
 // smoothing は非対応（契約上 waveform 専用）。
 struct PsgConfig
 {
+    bool operator==(const PsgConfig&) const = default;
     PsgWaveType wave = PsgWaveType::Square;
     // パルス幅（0-7, 1/8刻み。0=12.5%, 4=50%, 7=87.5%）。wave=Pulse のみ有効。
     int duty = 4;

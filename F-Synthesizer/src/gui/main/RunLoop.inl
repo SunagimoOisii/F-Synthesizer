@@ -130,7 +130,10 @@ int RunGUIApp()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "F-Synthesizer", nullptr, nullptr);
+    const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    const int width = videoMode ? std::min(1440, videoMode->width - 80) : 1280;
+    const int height = videoMode ? std::min(900, videoMode->height - 100) : 720;
+    GLFWwindow* window = glfwCreateWindow(width, height, "F-Synthesizer", nullptr, nullptr);
     if (window == nullptr)
     {
         glfwTerminate();
@@ -186,6 +189,7 @@ int RunGUIApp()
         ApplyUIThemeStyle(state, defaultDarkStyle);
         ImGui::GetIO().FontGlobalScale = UIScaleFromIndex(state.UIScaleIndex);
         DrawMainWindowFrame(state, window, lastFrameTab);
+        if (state.running && state.runIsPreview) gui::PublishLiveRenderSettings(state);
 
         ImGui::Render();
         int displayW = 0;
@@ -201,6 +205,7 @@ int RunGUIApp()
     if (state.running && state.runFuture.valid())
     {
         state.stopRequested.store(true, std::memory_order_relaxed);
+        StopPreviewAudio(state.playback);
         try
         {
             state.lastRunExitCode = state.runFuture.get();

@@ -45,10 +45,8 @@ function Ensure-RuntimeDependencies {
     }
 
     $vcpkgRoot = "C:/vcpkg/installed/x64-windows"
-    $sourceCandidates = @(
-        (Join-Path $vcpkgRoot "debug/bin/glfw3.dll"),
-        (Join-Path $vcpkgRoot "bin/glfw3.dll")
-    )
+    $runtimeDirectory = if ($Configuration -eq "Debug") { "debug/bin" } else { "bin" }
+    $sourceCandidates = @((Join-Path $vcpkgRoot "$runtimeDirectory/glfw3.dll"))
     foreach ($src in $sourceCandidates) {
         if (Test-Path $src) {
             Copy-Item -Path $src -Destination $glfwPath -Force

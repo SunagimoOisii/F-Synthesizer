@@ -34,14 +34,19 @@ std::string Bytes(const std::filesystem::path& path)
 
 std::filesystem::path FindProjectRootPath() { return testRoot; }
 
+#include "audio_checks.h"
+#include "song_checks.h"
+
 int main()
 {
     try
     {
+        CheckAudioIntegration();
         const auto projectRoot = std::filesystem::current_path();
         testRoot = projectRoot / "output" / "check" /
             ("persistence-" + std::to_string(GetCurrentProcessId()));
         std::filesystem::create_directories(testRoot / "config" / "presets");
+        CheckSongIntegration();
         std::string err;
 
         auto state = std::make_unique<GUIState>();
@@ -125,11 +130,11 @@ int main()
             "personal preset metadata was lost");
         Require(savedInstrument.sound.pluckLayer.level == 0.21, "personal preset layers were lost");
 
-        const auto source = projectRoot / "config" / "presets" / "sound_lead_blade.json";
+        const auto source = projectRoot / "config" / "presets" / "sound_lead_arcade.json";
         const auto builtin = testRoot / "config" / "presets" / source.filename();
         std::filesystem::copy_file(source, builtin, std::filesystem::copy_options::overwrite_existing);
         const auto builtinBytes = Bytes(builtin);
-        gui::RefreshPresetItems(*state, "sound_lead_blade");
+        gui::RefreshPresetItems(*state, "sound_lead_arcade");
         state->selectedSoundSlot = 4;
         Require(gui::ApplySelectedPresetPaths(*state, err), err);
         const auto factorySound = state->instruments[4].sound.amp;
@@ -137,7 +142,7 @@ int main()
         Require(gui::SaveGUIStateFile(*state, err), err);
         Require(gui::SaveUserPresetFromState(*state, err), err);
         Require(Bytes(builtin) == builtinBytes, "factory preset was overwritten");
-        gui::RefreshPresetItems(*state, "sound_lead_blade");
+        gui::RefreshPresetItems(*state, "sound_lead_arcade");
         Require(gui::ApplySelectedPresetPaths(*state, err), err);
         Require(state->instruments[4].sound.amp == factorySound, "factory reload retained edits");
         Require(UndoSound(*state), "preset selection must be undoable");

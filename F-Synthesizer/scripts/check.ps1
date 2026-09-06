@@ -67,22 +67,21 @@ function Ensure-RuntimeDependencies {
 
     $exeDir = Split-Path -Parent $ExePath
     $glfwPath = Join-Path $exeDir "glfw3.dll"
-    if (Test-Path $glfwPath) {
+    if (Test-Path -LiteralPath $glfwPath -PathType Leaf) {
         return
     }
 
     $vcpkgRoot = "C:/vcpkg/installed/x64-windows"
-    $sourceCandidates = @(
-        (Join-Path $vcpkgRoot "debug/bin/glfw3.dll"),
-        (Join-Path $vcpkgRoot "bin/glfw3.dll")
-    )
+    $runtimeDirectory = if ($Configuration -eq "Debug") { "debug/bin" } else { "bin" }
+    $sourceCandidates = @((Join-Path $vcpkgRoot "$runtimeDirectory/glfw3.dll"))
     foreach ($src in $sourceCandidates) {
-        if (Test-Path $src) {
-            Copy-Item -Path $src -Destination $glfwPath -Force
+        if (Test-Path -LiteralPath $src -PathType Leaf) {
+            Copy-Item -LiteralPath $src -Destination $glfwPath -Force
             Write-Host "Runtime dependency restored: $glfwPath"
             return
         }
     }
+    throw "glfw3.dll is missing. Expected beside the executable: $glfwPath. Install glfw3:x64-windows in C:/vcpkg (source: $($sourceCandidates -join ', '))."
 }
 
 function Parse-RenderStats {
@@ -179,8 +178,6 @@ function Run-RuntimeSmoke {
         [int]$TimeoutSec
     )
 
-    Ensure-RuntimeDependencies -ExePath $ExePath
-
     $smokeDir = Join-Path $RepoRoot "output/check/smoke"
     New-Item -ItemType Directory -Path $smokeDir -Force | Out-Null
 
@@ -249,11 +246,15 @@ try {
         throw "Build failed with exit code $LASTEXITCODE."
     }
 
+    $exePath = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
+    if (-not (Test-Path -LiteralPath $exePath -PathType Leaf)) {
+        throw "Executable not found after build: $exePath"
+    }
+    # vcpkg skips app-local DLL deployment when linking is skipped on an incremental build.
+    # The normal start.cmd path must also repair a missing runtime DLL.
+    Ensure-RuntimeDependencies -ExePath $exePath
+
     if ($RunRuntimeSmoke) {
-        $exePath = Resolve-ExePath -RepoRoot $repoRoot -Platform $Platform -Configuration $Configuration
-        if (-not (Test-Path $exePath)) {
-            throw "Executable not found after build: $exePath"
-        }
         Run-RuntimeSmoke -RepoRoot $repoRoot -ExePath $exePath -TimeoutSec $RuntimeSmokeTimeoutSec
     }
     else {

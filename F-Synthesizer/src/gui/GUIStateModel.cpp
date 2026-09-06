@@ -17,7 +17,7 @@ void InitializeGUIState(
 {
     StopPreviewAudio(state.playback);
     ApplyProjectModelToGUI(state, DefaultProjectModel());
-    state.UIScaleIndex = 1;
+    state.UIScaleIndex = 0;
     state.UIModeTab = 1;
     state.UIThemeIndex = 0;
     state.logPanelHeight = 240.0f;
@@ -27,7 +27,7 @@ void InitializeGUIState(
     state.tonePreviewNoteNumber = 60;
     state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
-    strncpy_s(state.presetName, sizeof(state.presetName), "sound_lead_blade", _TRUNCATE);
+    strncpy_s(state.presetName, sizeof(state.presetName), "sound_lead_arcade", _TRUNCATE);
     state.running = false;
     state.stopRequested.store(false, std::memory_order_relaxed);
     state.hasRun = false;

@@ -46,133 +46,18 @@ std::string ChannelsUsingSoundLabel(const GUIState& state, int soundIndex)
     return result;
 }
 
-void SetFmOperatorEnv(ModEnvelopeConfig& env, double attack, double decay, double sustain, double release, double curve)
-{
-    env.attackSec = attack;
-    env.decaySec = decay;
-    env.sustainLevel = sustain;
-    env.releaseSec = release;
-    env.curve = curve;
-}
-
 void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
 {
+    const int chip = fm.chip;
+    fm = FmConfig{};
+    fm.chip = chip;
     fm.algorithm = std::clamp(algorithm, 0, 7);
-    fm.filterMode = FilterMode::Bypass;
-    fm.filterCutoffHz = 8000.0;
-    fm.filterResonance = 0.707;
-    fm.filterDrive = 0.0;
-    fm.feedback = 0.0;
-
-    for (auto& op : fm.ops)
+    constexpr int carriers[] = { 8, 8, 8, 8, 10, 14, 14, 15 };
+    for (int i = 0; i < 4; ++i)
     {
-        op.wave = WaveType::Sine;
-        op.ratio = 1.0;
-        op.level = 1.0;
-        op.index = 0.0;
-        SetFmOperatorEnv(op.levelEnv, 0.0, 0.02, 1.0, 0.05, 0.0);
-        SetFmOperatorEnv(op.indexEnv, 0.0, 0.02, 1.0, 0.05, 0.0);
+        fm.ops[i].level = (carriers[fm.algorithm] & (1 << i)) ? 0.6 : 0.25;
+        fm.ops[i].index = 4.0;
     }
-
-    switch (fm.algorithm)
-    {
-    case 1:
-        // [M->C] + [M->C]
-        fm.feedback = 0.14;
-        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.2;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.88; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.95; fm.ops[2].index = 1.6;
-        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.80; fm.ops[3].index = 0.0;
-        break;
-    case 2:
-        // M -> [C + C + C]
-        fm.feedback = 0.08;
-        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.8;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.84; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.72; fm.ops[2].index = 0.0;
-        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.66; fm.ops[3].index = 0.0;
-        break;
-    case 3:
-        // M -> M -> M -> C
-        fm.feedback = 0.22;
-        fm.filterMode = FilterMode::LowPass;
-        fm.filterCutoffHz = 3600.0;
-        fm.filterResonance = 0.85;
-        fm.filterDrive = 0.12;
-        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 3.2;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 1.0; fm.ops[1].index = 1.8;
-        fm.ops[2].ratio = 1.0; fm.ops[2].level = 0.9; fm.ops[2].index = 0.9;
-        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.82; fm.ops[3].index = 0.0;
-        break;
-    case 4:
-        // [M->C] + [M->C] (2ペア)
-        fm.feedback = 0.10;
-        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.0;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.85; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 2.0; fm.ops[2].level = 1.0; fm.ops[2].index = 1.6;
-        fm.ops[3].ratio = 1.0; fm.ops[3].level = 0.82; fm.ops[3].index = 0.0;
-        break;
-    case 5:
-        // M -> [C + C + C]
-        fm.feedback = 0.12;
-        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.4;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.80; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.74; fm.ops[2].index = 0.0;
-        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.68; fm.ops[3].index = 0.0;
-        break;
-    case 6:
-        // [M->C] + C + C
-        fm.feedback = 0.10;
-        fm.ops[0].ratio = 1.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.0;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.84; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 2.0; fm.ops[2].level = 0.72; fm.ops[2].index = 0.0;
-        fm.ops[3].ratio = 3.0; fm.ops[3].level = 0.66; fm.ops[3].index = 0.0;
-        break;
-    case 7:
-        // C + C + C + C
-        fm.feedback = 0.08;
-        fm.ops[0].ratio = 1.0; fm.ops[0].level = 0.82; fm.ops[0].index = 0.0;
-        fm.ops[1].ratio = 2.0; fm.ops[1].level = 0.76; fm.ops[1].index = 0.0;
-        fm.ops[2].ratio = 3.0; fm.ops[2].level = 0.70; fm.ops[2].index = 0.0;
-        fm.ops[3].ratio = 4.0; fm.ops[3].level = 0.64; fm.ops[3].index = 0.0;
-        break;
-    case 0:
-    default:
-        // M -> C
-        fm.feedback = 0.08;
-        fm.ops[0].ratio = 2.0; fm.ops[0].level = 1.0; fm.ops[0].index = 2.4;
-        fm.ops[1].ratio = 1.0; fm.ops[1].level = 0.88; fm.ops[1].index = 0.0;
-        fm.ops[2].level = 0.0;
-        fm.ops[3].level = 0.0;
-        break;
-    }
-
-    for (auto& op : fm.ops)
-    {
-        SetFmOperatorEnv(op.levelEnv, 0.0, 0.04, 0.88, 0.08, 0.2);
-        SetFmOperatorEnv(op.indexEnv, 0.0, 0.08, 0.65, 0.06, 0.45);
-    }
-    if (fm.algorithm == 3)
-    {
-        SetFmOperatorEnv(fm.ops[0].indexEnv, 0.0, 0.045, 0.35, 0.04, 0.7);
-        SetFmOperatorEnv(fm.ops[1].indexEnv, 0.0, 0.07, 0.55, 0.04, 0.55);
-    }
-
-    fm.modulation = ModulationConfig{};
-    fm.modulation.env2.attackSec = 0.0;
-    fm.modulation.env2.decaySec = 0.12;
-    fm.modulation.env2.sustainLevel = 0.0;
-    fm.modulation.env2.releaseSec = 0.08;
-    for (auto& route : fm.modulation.matrix.routes)
-    {
-        route = ModRoute{};
-    }
-    fm.modulation.matrix.routes[0] = ModRoute{
-        ModSource::Env2,
-        ModDestination::FmIndex,
-        0.8,
-        true
-    };
 }
 
 bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
@@ -301,7 +186,6 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
 }
 
 #include "channeleditor/EnvelopeView.inl"
-#include "channeleditor/FmAlgorithmDiagram.inl"
 } // namespace
 
 namespace gui

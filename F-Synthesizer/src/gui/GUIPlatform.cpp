@@ -72,9 +72,13 @@ std::string CompactPathForUI(const std::string& path, size_t maxChars)
         return path;
     }
     // 先頭と末尾を残して省略し、ファイル名側の視認性を優先する。
-    const size_t head = maxChars / 2 - 3;
-    const size_t tail = maxChars - head - 3;
-    return path.substr(0, head) + "..." + path.substr(path.size() - tail);
+    if (maxChars <= 3) return std::string(maxChars, '.');
+    size_t head = (maxChars - 3) / 2;
+    size_t tailStart = path.size() - (maxChars - head - 3);
+    // UTF-8 の途中で切らない。
+    while (head > 0 && (static_cast<unsigned char>(path[head]) & 0xc0) == 0x80) --head;
+    while (tailStart < path.size() && (static_cast<unsigned char>(path[tailStart]) & 0xc0) == 0x80) ++tailStart;
+    return path.substr(0, head) + "..." + path.substr(tailStart);
 }
 
 void CopyPath(char* dst, size_t dstSize, const std::filesystem::path& path)

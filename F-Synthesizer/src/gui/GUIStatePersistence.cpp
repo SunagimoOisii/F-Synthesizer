@@ -6,6 +6,7 @@
 #include "config/ProjectJSON.h"
 #include "gui/GUIProjectFacade.h"
 #include "io/PlatformPaths.h"
+#include "midi/MIDIReader.h"
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MacroSliderState,
     brightness, roughness, movement, envelope,
@@ -22,7 +23,7 @@ namespace
 using Json = nlohmann::json;
 
 #define WORKSPACE_FIELDS(X) \
-    X(UIScaleIndex) X(UIModeTab) X(UIThemeIndex) X(logPanelHeight) \
+    X(activeProjectPath) X(songMidiName) X(UIScaleIndex) X(UIModeTab) X(UIThemeIndex) X(logPanelHeight) \
     X(serialSave) X(selectedSoundSlot) X(selectedDrumNote) X(tonePreviewNoteNumber) \
     X(chordModeEnabled) X(chordType) X(drumChannelSpecialHandling) \
     X(previewLoop) X(autoTonePreviewEnabled) X(macroSliders) \
@@ -61,7 +62,7 @@ Json WorkspaceToJSON(const GUIState& state)
     const bool loaded = !piano.loadedMidiPath.empty();
     roll["midiPath"] = PathToUtf8(loaded ? piano.loadedMidiPath : piano.projectMidiPath);
     roll["ticksPerQuarter"] = loaded ? piano.ticksPerQuarter : piano.projectTicksPerQuarter;
-    roll["hasProjectData"] = piano.hasProjectData;
+    roll["hasProjectData"] = loaded || piano.hasProjectData;
     roll["notes"] = loaded ? piano.notes : piano.projectNotes;
     root["pianoRoll"] = std::move(roll);
     return root;
@@ -157,5 +158,81 @@ bool SaveGUIStateFile(const GUIState& state, std::string& err)
         err = ex.what();
         return false;
     }
+}
+bool SaveSongProjectFile(GUIState& state, const std::filesystem::path& path, std::string& err)
+{
+    try
+    {
+        if (path.extension() != ".fsynth") throw std::runtime_error("曲ファイルの拡張子は .fsynth です。");
+        Json root = WorkspaceToJSON(state);
+        const auto midiPath = Utf8ToPath(state.midiPath);
+        if (!midiPath.empty())
+        {
+            std::ifstream midi(midiPath, std::ios::binary);
+            if (!midi) throw std::runtime_error("保存する元の MIDI を読み込めません。");
+            std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(midi), std::istreambuf_iterator<char>()};
+            if (!ParseSMFFile(midiPath, -1).ok) throw std::runtime_error("保存する MIDI が不正です。");
+            root["midi"] = {{"name", state.songMidiName.empty() ? PathToUtf8(midiPath.filename()) : state.songMidiName}, {"bytes", bytes}};
+            if (!state.pianoRoll.loadedMidiPath.empty() && state.pianoRoll.loadedMidiPath != midiPath)
+            {
+                root["pianoRoll"]["notes"] = Json::array();
+                root["pianoRoll"]["hasProjectData"] = false;
+            }
+        }
+        root["songVersion"] = 1;
+        root["workspace"]["activeProjectPath"] = "";
+        if (!config::WriteJSONFile(path, root, err)) return false;
+        state.activeProjectPath = PathToUtf8(std::filesystem::absolute(path));
+        state.presetDirty = false;
+        state.skipWorkspaceAutosave = false;
+        return true;
+    }
+    catch (const std::exception& ex) { err = ex.what(); return false; }
+}
+
+bool LoadSongProjectFile(GUIState& state, const std::filesystem::path& path, std::string& err)
+{
+    try
+    {
+        if (state.running) throw std::runtime_error("再生・書き出しを停止してから曲を開いてください。");
+        std::ifstream input(path, std::ios::binary);
+        if (!input) throw std::runtime_error("曲ファイルを開けません。");
+        Json root = Json::parse(input);
+        if (root.value("songVersion", 0) != 1) throw std::runtime_error("対応していない曲ファイルです。");
+        ProjectModel project = DefaultProjectModel();
+        if (!config::ProjectFromJSON(root, path.parent_path(), project, err)) return false;
+        auto candidate = std::make_unique<GUIState>();
+        ApplyProjectModelToGUI(*candidate, project);
+        ApplyWorkspaceJSON(*candidate, root);
+        if (root.contains("midi"))
+        {
+            const auto bytes = root.at("midi").at("bytes").get<std::vector<uint8_t>>();
+            if (bytes.size() < 14) throw std::runtime_error("曲に含まれる MIDI が不正です。");
+            uint64_t hash = 14695981039346656037ull;
+            for (uint8_t value : bytes) { hash ^= value; hash *= 1099511628211ull; }
+            const auto directory = FindProjectRootPath() / "config" / "song_cache";
+            std::filesystem::create_directories(directory);
+            const auto cached = directory / (std::to_string(hash) + ".mid");
+            std::ofstream midi(cached, std::ios::binary | std::ios::trunc);
+            midi.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+            midi.close();
+            if (!midi || !ParseSMFFile(cached, -1).ok) throw std::runtime_error("曲の MIDI を復元できません。");
+            const std::string cachedPath = PathToUtf8(cached);
+            strncpy_s(candidate->midiPath, sizeof(candidate->midiPath), cachedPath.c_str(), _TRUNCATE);
+            candidate->pianoRoll.projectMidiPath = cached;
+            candidate->songMidiName = root.at("midi").value("name", std::string("song.mid"));
+        }
+        if (candidate->midiPath[0] != '\0' && !LoadPianoRollMIDI(candidate->pianoRoll, Utf8ToPath(candidate->midiPath)))
+            throw std::runtime_error(candidate->pianoRoll.lastError);
+        candidate->activeProjectPath = PathToUtf8(std::filesystem::absolute(path));
+        StopPreviewAudio(state.playback);
+        static_cast<GUIPersistentState&>(state) = std::move(static_cast<GUIPersistentState&>(*candidate));
+        strncpy_s(state.userPresetName, sizeof(state.userPresetName), candidate->userPresetName, _TRUNCATE);
+        state.soundUndoStack.clear(); state.soundRedoStack.clear();
+        state.presetDirty = false; state.skipWorkspaceAutosave = false;
+        state.playEditingChannel = state.pianoRoll.displayChannel;
+        return true;
+    }
+    catch (const std::exception& ex) { err = ex.what(); return false; }
 }
 } // namespace gui

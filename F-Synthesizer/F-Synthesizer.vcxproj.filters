@@ -15,6 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\\synth\\YmfmVoice.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_opm.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_opn.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_adpcm.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_pcm.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_ssg.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiFile.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiEvent.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiEventList.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiMessage.cpp"><Filter>ソース ファイル</Filter></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\Binasc.cpp"><Filter>ソース ファイル</Filter></ClCompile>
     <ClCompile Include="src\\core\\AudioBuffer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -191,6 +202,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\\synth\\YmfmVoice.h"><Filter>ヘッダー ファイル</Filter></ClInclude>
+    <ClInclude Include="include\\SynthEngine\\LiveRenderSettings.h"><Filter>ヘッダー ファイル</Filter></ClInclude>
     <ClInclude Include="include\\core\\AudioBuffer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -418,7 +431,3 @@
     </ClInclude>
   </ItemGroup>
 </Project>
-
-
-
-

@@ -1,162 +1,131 @@
 {
   "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "instrumentId": "sound_keys_electric__ch0"
-      }
-    },
     "instruments": {
-      "sound_keys_electric__ch0": {
-        "displayName": "Keys Electric",
+      "sound": {
+        "displayName": "FM エレピ",
         "category": "Keys",
+        "description": "弾き始めにきらめきがある鍵盤音。伴奏やアルペジオから試せます。",
         "internal": false,
         "tags": [
           "keys",
-          "electric",
           "fm"
         ],
-        "description": "丸いエレクトリックキー。コードや短いリフ向け。",
-        "sound": {
-          "amp": 0.125,
-          "attackSec": 0.004,
-          "decaySec": 0.36,
-          "sustainLevel": 0.0,
-          "releaseSec": 0.22,
-          "source": {
-            "type": "fm",
-            "algorithm": 2,
-            "feedback": 0.015,
-            "ops": [
-              {
-                "wave": "sine",
-                "ratio": 1,
-                "level": 0.5544,
-                "index": 0.36,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.42,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.28,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.18,
-                  "sustainLevel": 0.12,
-                  "releaseSec": 0.12,
-                  "curve": 0.8
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 2.01,
-                "level": 0.3192,
-                "index": 0.1575,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.42,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.28,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.18,
-                  "sustainLevel": 0.12,
-                  "releaseSec": 0.12,
-                  "curve": 0.8
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 3.02,
-                "level": 0.1848,
-                "index": 0.081,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.42,
-                  "sustainLevel": 0.08,
-                  "releaseSec": 0.28,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.18,
-                  "sustainLevel": 0.12,
-                  "releaseSec": 0.12,
-                  "curve": 0.8
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 0.5,
-                "level": 0.1344,
-                "index": 0.0,
-                "levelEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.42,
-                  "sustainLevel": 0.0,
-                  "releaseSec": 0.28,
-                  "curve": 0.55
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.02,
-                  "sustainLevel": 1.0,
-                  "releaseSec": 0.05,
-                  "curve": 0.0
-                }
-              }
-            ],
-            "drive": 0.0,
-            "filter": {
-              "mode": "lowpass",
-              "cutoffHz": 5600,
-              "resonance": 0.55,
-              "drive": 0.0
-            }
-          },
-          "layers": {
-            "attack": {
-              "enabled": true,
-              "type": "metal",
-              "level": 0.14,
-              "decaySec": 0.075,
-              "brightness": 0.7,
-              "bodyMix": 0.42,
-              "pitchOffsetSemis": 12,
-              "drive": 0.0192
-            }
-          }
-        },
         "recommendedRange": {
-          "low": 36,
+          "low": 48,
           "high": 96,
-          "preview": 60
+          "preview": 64
         },
         "macroHints": [
           {
             "id": "brightness",
-            "label": "Bright",
-            "description": "明るさを調整する"
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
           },
           {
             "id": "roughness",
-            "label": "Edge",
-            "description": "粗さや押し出しを調整する"
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
           },
           {
             "id": "movement",
-            "label": "Motion",
-            "description": "揺れや動きを調整する"
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
           },
           {
             "id": "envelope",
-            "label": "Shape",
-            "description": "アタックと余韻を調整する"
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
           }
-        ]
+        ],
+        "sound": {
+          "amp": 0.24,
+          "attackSec": 0.001,
+          "decaySec": 0.7,
+          "sustainLevel": 0.35,
+          "releaseSec": 0.45,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0,
+            "brightness": 0.5,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.27,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.4,
+                  "sustainLevel": 0.1,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.65,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.8,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 7,
+                "level": 0.12,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.28,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.8,
+                  "sustainLevel": 0.1,
+                  "releaseSec": 0.3
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 120,
+                "fadeMs": 180
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.035,
+                  "enabled": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
       }
     }
   }

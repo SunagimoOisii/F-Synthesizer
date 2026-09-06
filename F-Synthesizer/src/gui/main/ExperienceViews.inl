@@ -105,7 +105,7 @@ static std::string SoundSlotDisplayLabel(const GUIState& state, int soundIndex)
     {
         return name;
     }
-    return "Slot " + std::to_string(soundIndex + 1) + " / " + SoundSourceLabel(state, soundIndex);
+    return "音色 " + std::to_string(soundIndex + 1) + " / " + SoundSourceLabel(state, soundIndex);
 }
 
 static std::string ChannelSoundLabel(const GUIState& state, int channel)
@@ -167,7 +167,7 @@ static void DrawPlayView(
         state.playCategoryIndex = 0;
     }
 
-    ImGui::TextUnformatted("Sound Cards");
+    ImGui::TextUnformatted("プリセット");
     const int editingChannel = std::clamp(state.playEditingChannel, -1, 15);
     if (editingChannel >= 0)
     {
@@ -203,7 +203,7 @@ static void DrawPlayView(
             ImGui::PopStyleColor();
         }
     }
-    updateHoverHelp("Sound Cardの用途を選びます。", "表示する音色カードを絞り込みます。", nullptr);
+    updateHoverHelp("プリセットの用途を選びます。", "表示する音色カードを絞り込みます。", nullptr);
 
     ImGui::Separator();
     const bool showInspector = state.playInspectorOpen;
@@ -255,10 +255,10 @@ static void DrawPlayView(
         }
         if (!anyVisible)
         {
-            ImGui::TextDisabled("このカテゴリのSound Cardはありません。");
+            ImGui::TextDisabled("このカテゴリのプリセットはありません。");
         }
         ImGui::EndChild();
-        updateHoverHelp("Sound Cardを選びます。", "選択した音色を現在の編集対象へ読み込みます。", nullptr);
+        updateHoverHelp("プリセットを選びます。", "選択した音色を現在の編集対象へ読み込みます。", nullptr);
 
         DrawLayer2Macros(state);
         const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
@@ -303,7 +303,7 @@ static void DrawPlayView(
                 }
                 updateHoverHelp("選択中の音を試聴します。", "WAVを書き出さずに再生します。", nullptr);
                 ImGui::SameLine();
-                if (ImGui::Button("Advancedで編集"))
+                if (ImGui::Button("詳細を編集"))
                 {
                     state.UIModeTab = 3;
                 }
@@ -324,7 +324,7 @@ static void DrawPlayView(
     }
     if (!state.playInspectorOpen)
     {
-        if (ImGui::Button("Inspectorを開く"))
+        if (ImGui::Button("説明を開く"))
         {
             state.playInspectorOpen = true;
         }
@@ -332,199 +332,97 @@ static void DrawPlayView(
     }
 }
 
-template <typename HelpFn>
-static void DrawComposeView(
-    GUIState& state,
-    HelpFn&& updateHoverHelp)
+template <typename ApplyPresetFn, typename HelpFn>
+static void DrawComposeView(GUIState& state, ApplyPresetFn&& applyPresetByIndex, HelpFn&& updateHoverHelp)
 {
-    constexpr int drumMidiChannel = 9;
-
-    ImGui::TextUnformatted("Compose");
-    ImGui::TextDisabled("MIDIとノートを確認して、曲として鳴らします。");
-    ImGui::Separator();
-
-    const bool isShowingDrumCh =
-        (state.pianoRoll.displayChannel == drumMidiChannel) && state.drumChannelSpecialHandling;
-    const float composeAvailY = ImGui::GetContentRegionAvail().y;
-    const float spacingY = ImGui::GetStyle().ItemSpacing.y;
-    const float settingsMinHeight = 160.0f;
-    const float editorMaxHeight = (std::max)(220.0f, composeAvailY - settingsMinHeight - spacingY);
-    const float editorHeight = std::clamp(composeAvailY * 0.60f, 220.0f, editorMaxHeight);
-
-    ImGui::BeginChild(
-        "compose_editor_panel",
-        ImVec2(0.0f, editorHeight),
-        true,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    if (isShowingDrumCh)
+    if (state.midiPath[0] == '\0')
     {
-        if (ImGui::Button(state.stepSeq.viewActive ? "ピアノロール" : "ステップシーケンサー"))
+        ImGui::TextWrapped("「MIDIを開く」で曲を選んでください。左でチャンネルを選び、右で音色を変えます。");
+        return;
+    }
+    gui::LoadPianoRollMIDI(state.pianoRoll, Utf8ToPath(state.midiPath));
+    if (state.pianoRoll.hasLoadError)
+    {
+        ImGui::TextWrapped("%s", state.pianoRoll.lastError.c_str());
+        return;
+    }
+    const float height = ImGui::GetContentRegionAvail().y;
+    const float topHeight = std::clamp(height * 0.50f, 180.0f, 330.0f);
+    if (ImGui::BeginTable("song_layout", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp))
+    {
+        ImGui::TableSetupColumn("channels", ImGuiTableColumnFlags_WidthStretch, 0.36f);
+        ImGui::TableSetupColumn("sound", ImGuiTableColumnFlags_WidthStretch, 0.64f);
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::BeginChild("song_channels", ImVec2(0, topHeight), true);
+        ImGui::TextUnformatted("チャンネル");
+        for (int ch = 0; ch < 16; ++ch)
         {
-            if (state.stepSeq.viewActive)
+            ImGui::PushID(ch);
+            const std::string label = ChannelLabel(ch) + "  " + ChannelSoundLabel(state, ch) +
+                "  (" + std::to_string(state.pianoRoll.noteCountByChannel[ch]) + ")";
+            if (ImGui::Selectable(label.c_str(), state.pianoRoll.displayChannel == ch))
             {
-                state.stepSeq.viewActive = false;
+                state.pianoRoll.displayChannel = ch;
+                state.selectedSoundSlot = gui::AssignedSoundSlot(state, ch);
+                state.playEditingChannel = ch;
+                int total = 0, count = 0;
+                for (const auto& note : state.pianoRoll.notes) if (note.channel == ch) { total += note.note; ++count; }
+                if (count) state.pianoRoll.noteOffset = std::clamp(total / count - state.pianoRoll.visibleNoteCount / 2, 0, 115);
+                state.pianoRoll.visibleNoteIndexCacheValid = false;
             }
-            else
+            ImGui::PopID();
+        }
+        ImGui::EndChild();
+        ImGui::TableSetColumnIndex(1);
+        ImGui::BeginChild("song_sound", ImVec2(0, topHeight), true);
+        const int ch = std::clamp(state.pianoRoll.displayChannel, 0, 15);
+        state.selectedSoundSlot = gui::AssignedSoundSlot(state, ch);
+        state.playEditingChannel = ch;
+        ImGui::Text("%s の音色", ChannelLabel(ch).c_str());
+        if (state.pianoRoll.hasProgramByChannel[ch])
+            ImGui::TextDisabled("元の楽器: %s", GMProgramDisplayLabel(state.pianoRoll.programByChannel[ch]).c_str());
+        if (ImGui::BeginCombo("プリセット", ChannelSoundLabel(state, ch).c_str()))
+        {
+            for (int i = 0; i < static_cast<int>(state.presetItems.size()); ++i)
             {
-                LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll);
-                state.stepSeq.viewActive = true;
+                const auto& preset = state.presetItems[i];
+                if (ch == 9 && state.drumChannelSpecialHandling && preset.category != "Drums") continue;
+                const std::string label = preset.category + " / " + preset.displayName + "##" + preset.name;
+                if (ImGui::Selectable(label.c_str(), state.presetIndex == i)) applyPresetByIndex(i);
+                if (ImGui::IsItemHovered() && !preset.description.empty()) ImGui::SetTooltip("%s", preset.description.c_str());
             }
+            ImGui::EndCombo();
         }
-        updateHoverHelp("ドラム編集ビューを切り替えます。", "ピアノロールと16ステップを切り替えます。", nullptr);
-    }
-    if (isShowingDrumCh && state.stepSeq.viewActive)
-    {
-        DrawStepSeqPanel(state);
-    }
-    else
-    {
-        DrawPianoRollPanel(
-            state.pianoRoll,
-            state.midiPath,
-            &state.playback,
-            [&](const std::string& line) { AppendGUILog(state, line); },
-            [&]() { StartGUIRun(state, true); },
-            [&]() { StopGUIRunAndPreview(state); });
-    }
-    ImGui::EndChild();
-
-    ImGui::BeginChild("compose_settings_panel", ImVec2(0.0f, 0.0f), true);
-    ImGui::BeginDisabled(state.running);
-    state.presetDirty |= ImGui::InputText("MIDI", state.midiPath, IM_ARRAYSIZE(state.midiPath));
-    updateHoverHelp("MIDIファイルを指定します。", "Compose/Exportの入力になります。", nullptr);
-    ImGui::SameLine();
-    if (ImGui::Button("参照...##compose_midi"))
-    {
-        std::string selected;
-        const wchar_t* midiFilter = L"MIDI Files (*.mid;*.midi)\0*.mid;*.midi\0All Files (*.*)\0*.*\0";
-        if (BrowseOpenPath(state.midiPath, midiFilter, selected))
+        const auto& instrument = state.instruments[state.selectedSoundSlot];
+        if (!instrument.description.empty()) ImGui::TextWrapped("%s", instrument.description.c_str());
+        auto& mix = gui::MutableChannelMix(state, ch);
+        state.presetDirty |= ImGui::Checkbox("消音", &mix.mute);
+        ImGui::SameLine();
+        state.presetDirty |= ImGui::Checkbox("このchをソロ", &mix.solo);
+        auto slider = [&](const char* label, double& value, float low, float high)
         {
-            strncpy_s(state.midiPath, sizeof(state.midiPath), selected.c_str(), _TRUNCATE);
-            state.presetDirty = true;
-        }
+            float v = static_cast<float>(value);
+            if (ImGui::SliderFloat(label, &v, low, high, "%.2f")) { value = v; state.presetDirty = true; }
+        };
+        slider("音量", mix.level, 0, 2);
+        slider("左右", mix.pan, -1, 1);
+        DrawLayer2Macros(state);
+        ImGui::EndChild();
+        ImGui::EndTable();
     }
-    ImGui::SameLine();
-    if (ImGui::Button("コピー##compose_midi"))
-    {
-        ImGui::SetClipboardText(state.midiPath);
-    }
-
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Instrument Map", ImGuiTreeNodeFlags_DefaultOpen))
+    const bool drums = state.pianoRoll.displayChannel == 9 && state.drumChannelSpecialHandling;
+    if (drums)
     {
-        if (ImGui::BeginTable("compose_instrument_map", 2,
-            ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame))
-        {
-            ImGui::TableSetupColumn("ch1-8", ImGuiTableColumnFlags_WidthStretch, 0.5f);
-            ImGui::TableSetupColumn("ch9-16", ImGuiTableColumnFlags_WidthStretch, 0.5f);
-            for (int row = 0; row < 8; row++)
-            {
-                ImGui::TableNextRow();
-                for (int col = 0; col < 2; col++)
-                {
-                    const int ch = row + col * 8;
-                    ImGui::TableSetColumnIndex(col);
-                    ImGui::PushID(ch);
-                    const char* category = ComposeGMCategoryLabel(state, ch);
-                    ImGui::TextUnformatted(ChannelLabel(ch).c_str());
-                    ImGui::SameLine();
-                    ImGui::TextDisabled("notes %d", state.pianoRoll.noteCountByChannel[ch]);
-                    ImGui::SameLine();
-                    if (state.pianoRoll.hasProgramByChannel[ch])
-                    {
-                        ImGui::Text("MIDI: %s", GMProgramDisplayLabel(state.pianoRoll.programByChannel[ch]).c_str());
-                    }
-                    else
-                    {
-                        ImGui::TextUnformatted("MIDI: -");
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("推奨: %s", category);
-                    ImGui::SameLine();
-                    ImGui::Text("音色: %s", ChannelSoundLabel(state, ch).c_str());
-                    ImGui::SameLine();
-                    if (ImGui::Button("探す"))
-                    {
-                        state.pianoRoll.displayChannel = ch;
-                        state.selectedSoundSlot = gui::AssignedSoundSlot(state, ch);
-                        state.playEditingChannel = ch;
-                        state.playCategoryIndex = PlayCategoryIndexByName(category);
-                        state.UIModeTab = 0;
-                    }
-                    ImGui::PopID();
-                }
-            }
-            ImGui::EndTable();
-        }
-        updateHoverHelp(
-            "MIDIのProgram Changeを確認します。",
-            "各チャンネルのGM楽器情報と現在の音色を表示します。",
-            "Sound Cardは自動適用されません。");
+        if (ImGui::Checkbox("16ステップで入力", &state.stepSeq.viewActive) && state.stepSeq.viewActive)
+            LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll);
     }
-
-    ImGui::Separator();
-    const int displayCh = std::clamp(state.pianoRoll.displayChannel, 0, 15);
-    ImGui::Text("表示チャンネル: %s", ChannelLabel(displayCh).c_str());
-    int assigned = gui::AssignedSoundSlot(state, displayCh);
-    ImGui::Text("このチャンネルの音色: %s", SoundSlotDisplayLabel(state, assigned).c_str());
-    int assignedSoundNumber = assigned + 1;
-    ImGui::SetNextItemWidth(220.0f);
-    if (ImGui::SliderInt("音色の選択", &assignedSoundNumber, 1, 16, "%d"))
-    {
-        gui::SetChannelAssignment(state, displayCh, assignedSoundNumber - 1);
-        state.presetDirty = true;
-    }
-    updateHoverHelp("表示中チャンネルで鳴る音色を選びます。", "Playで作った音色を曲のチャンネルに使います。", nullptr);
-    ImGui::SameLine();
-    if (ImGui::Button("Advancedでミックス"))
-    {
-        state.UIModeTab = 3;
-    }
-    ChannelMixState& displayMix = gui::MutableChannelMix(state, displayCh);
-    auto sliderMixDouble = [&](const char* label, double& value, float minV, float maxV, const char* fmt) -> bool
-    {
-        float v = static_cast<float>(value);
-        const bool edited = ImGui::SliderFloat(label, &v, minV, maxV, fmt);
-        if (edited)
-        {
-            value = static_cast<double>(v);
-            state.presetDirty = true;
-        }
-        return edited;
-    };
-    ImGui::SetNextItemWidth(220.0f);
-    sliderMixDouble("曲での音量", displayMix.level, 0.0f, 2.0f, "%.2f");
-    updateHoverHelp("表示中チャンネルの音量を調整します。", "曲の中で前後のバランスを合わせます。", nullptr);
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(220.0f);
-    sliderMixDouble("左右", displayMix.pan, -1.0f, 1.0f, "%.2f");
-    updateHoverHelp("表示中チャンネルの左右位置を調整します。", "左/中央/右の配置を決めます。", nullptr);
-
-    auto applyDrumCh10Setup = [&]()
-    {
-        gui::SetChannelAssignment(state, drumMidiChannel, drumMidiChannel);
-        InstrumentSoundConfig& drumCh = gui::MutableSoundSlot(state, drumMidiChannel);
-        if (!config::SourceCapabilityOf(drumCh.source).isPercussion)
-        {
-            drumCh.source = config::DefaultSourceConfig(config::SourceKind::DrumKit);
-        }
-        state.presetDirty = true;
-    };
-    ImGui::Separator();
-    ImGui::TextUnformatted("Drums");
-    ImGui::Checkbox("ch10をドラムとして扱う", &state.drumChannelSpecialHandling);
-    ImGui::SameLine();
-    if (ImGui::Button("ch10を準備"))
-    {
-        applyDrumCh10Setup();
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("ch10を見る"))
-    {
-        state.pianoRoll.displayChannel = drumMidiChannel;
-    }
-    updateHoverHelp("ドラムの簡単設定です。", "ch10をDrumKit向けにそろえます。", nullptr);
-    ImGui::EndDisabled();
+    ImGui::BeginChild("song_notes", ImVec2(0, 0), true);
+    if (drums && state.stepSeq.viewActive) DrawStepSeqPanel(state);
+    else DrawPianoRollPanel(state.pianoRoll, state.midiPath, &state.playback,
+        [&](const std::string& line) { AppendGUILog(state, line); },
+        [&]() { StartGUIRun(state, true); }, [&]() { StopGUIRunAndPreview(state); });
     ImGui::EndChild();
 }
 

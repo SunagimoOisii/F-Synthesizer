@@ -12,6 +12,7 @@
 #include "AppCore.h"
 #include "gui/GUIActionsInternal.h"
 #include "gui/GUIConfigUtils.h"
+#include "gui/GUIPianoRoll.h"
 #include "gui/GUIProjectFacade.h"
 #include "gui/GUIRunHelpers.h"
 #include "gui/GUIStateModel.h"
@@ -101,7 +102,7 @@ std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksFromPian
 {
     outTicksPerQuarter = 0;
     const auto& pr = state.pianoRoll;
-    if (pr.hasLoadError || pr.notes.empty() || pr.ticksPerQuarter <= 0)
+    if (pr.hasLoadError || pr.ticksPerQuarter <= 0)
     {
         return nullptr;
     }
@@ -179,51 +180,6 @@ std::string FormatRunException(const std::exception& ex)
     return ex.what();
 }
 
-class GUIPreviewStreamSink final : public IPreviewStreamSink
-{
-public:
-    GUIPreviewStreamSink(PreviewPlaybackState& playback, bool loop, int startTick)
-        : playback_(playback)
-        , loop_(loop)
-        , startTick_(startTick)
-    {
-    }
-
-    bool Begin(int sampleRate, int channels, int, bool loop) override
-    {
-        std::string err;
-        session_ = StartStreamingPreviewAudio(
-            playback_,
-            sampleRate,
-            static_cast<ma_uint32>(channels),
-            loop_ || loop,
-            err);
-        playback_.playStartTick.store(startTick_, std::memory_order_relaxed);
-        return session_ != 0;
-    }
-
-    bool WriteFrame(double left, double right) override
-    {
-        return WriteStreamingPreviewFrame(playback_, session_, left, right);
-    }
-
-    bool WriteFrames(const double* interleavedStereo, int frameCount) override
-    {
-        return WriteStreamingPreviewFrames(playback_, session_, interleavedStereo, frameCount);
-    }
-
-    void Complete(bool canceled) override
-    {
-        CompleteStreamingPreviewAudio(playback_, session_, canceled);
-    }
-
-private:
-    PreviewPlaybackState& playback_;
-    bool loop_ = false;
-    int startTick_ = 0;
-    uint64_t session_ = 0;
-};
-
 int RunSafely(
     ProjectModel project,
     RenderOptions options,
@@ -234,7 +190,7 @@ int RunSafely(
     {
         if (options.mode == RunMode::Preview)
         {
-            GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
+            PreviewAudioStreamSink sink(state.playback, state.previewRequestedStartTick);
             return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
         }
         return Run(project, options, overrides, &state.observer, nullptr);
@@ -268,8 +224,9 @@ void MarkRunStartFailed(GUIState& state, const std::string& detail)
 
 namespace gui
 {
-void StartGUIRun(GUIState& state, bool previewSelected)
+void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly)
 {
+    if (state.running) return;
     std::string validationError;
     if (!ValidateBeforeRun(state, validationError))
     {
@@ -286,15 +243,18 @@ void StartGUIRun(GUIState& state, bool previewSelected)
         RaiseGUIError(state, BuildUserErrorMessage(summary, validationError), actionHint, true);
         return;
     }
+    // Workspace notes must be restored even when playback/export starts before
+    // the compose tab has drawn its piano roll.
+    if (!LoadPianoRollMIDI(state.pianoRoll, Utf8ToPath(state.midiPath)))
+    {
+        RaiseGUIError(state, "MIDI を読み込めません。" + state.pianoRoll.lastError, 1, true);
+        return;
+    }
     ClearGUIError(state);
 
     const int previewChannel = previewSelected
         ? std::clamp(state.pianoRoll.displayChannel, 0, 15)
         : std::clamp(state.selectedSoundSlot, 0, 15);
-    if (previewSelected)
-    {
-        ActivateSoloPreview(state, previewChannel);
-    }
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);
@@ -304,7 +264,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     ProjectModel project = BuildRuntimeProjectFromGUI(state, "gui_runtime__ch", true);
     if (previewSelected)
     {
-        project.targetChannel = previewChannel;
+        project.targetChannel = selectedChannelOnly ? previewChannel : -1;
     }
     if (previewSelected && state.UIModeTab == 0)
     {
@@ -314,6 +274,13 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     int overrideTicksPerQuarter = 0;
     RenderRuntimeOverrides overrides{};
+    if (previewSelected)
+    {
+        state.livePreviewChannel = state.UIModeTab == 0 ? previewChannel : -1;
+        state.livePreviewSlot = state.UIModeTab == 0 ? state.selectedSoundSlot : -1;
+        PublishLiveRenderSettings(state);
+        overrides.liveSettings = state.liveSettings;
+    }
     overrides.noteTicks = BuildOverrideNoteTicksFromPianoRoll(state, overrideTicksPerQuarter);
     overrides.ticksPerQuarter = overrideTicksPerQuarter;
     RenderOptions options = previewSelected ? DefaultPreviewRenderOptions() : DefaultRenderOptions();
@@ -323,7 +290,7 @@ void StartGUIRun(GUIState& state, bool previewSelected)
     }
     if (previewSelected)
     {
-        state.restorePreviewOnRunComplete = true;
+        state.restorePreviewOnRunComplete = false;
         options.writeWAV = false;
         const double rangeDurationSec = PreviewRangeDurationSec(state);
         if (state.pianoRoll.previewRangeEnabled && rangeDurationSec > 0.0)

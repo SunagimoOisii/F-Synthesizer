@@ -1,211 +1,131 @@
 {
   "format": "projectModel.v3",
   "project": {
-    "channels": {
-      "0": {
-        "instrumentId": "sound_lead_metal__ch0"
-      }
-    },
     "instruments": {
-      "sound_lead_metal__ch0": {
-        "displayName": "Lead Metal",
+      "sound": {
+        "displayName": "メタル・エッジ",
         "category": "Lead",
+        "description": "硬く金属的な主旋律。高めの音域で短く切っても使えます。",
         "internal": false,
         "tags": [
           "lead",
-          "metal",
           "fm"
         ],
-        "description": "金属的な倍音を控えめに整えた強いリード。ソロや決めフレーズを前に出したい時に使う。",
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
         "sound": {
-          "amp": 0.145,
+          "amp": 0.22,
           "attackSec": 0.004,
-          "decaySec": 0.15,
-          "sustainLevel": 0.72,
-          "releaseSec": 0.16,
+          "decaySec": 0.25,
+          "sustainLevel": 0.75,
+          "releaseSec": 0.25,
           "source": {
             "type": "fm",
-            "algorithm": 7,
-            "feedback": 0.08,
+            "chip": 0,
+            "algorithm": 0,
+            "feedback": 0.42,
+            "brightness": 0.5,
             "ops": [
               {
                 "wave": "sine",
-                "ratio": 1,
-                "level": 0.7568,
-                "index": 1.044,
+                "ratio": 3,
+                "level": 0.18,
+                "index": 4,
                 "levelEnv": {
-                  "attackSec": 0.002,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.82,
-                  "releaseSec": 0.12,
-                  "curve": 0.25
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.075,
-                  "sustainLevel": 0.48,
-                  "releaseSec": 0.05,
-                  "curve": 0.7
-                }
-              },
-              {
-                "wave": "sine",
-                "ratio": 1.5,
-                "level": 0.484,
-                "index": 0.406,
-                "levelEnv": {
-                  "attackSec": 0.002,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.82,
-                  "releaseSec": 0.12,
-                  "curve": 0.25
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.075,
-                  "sustainLevel": 0.48,
-                  "releaseSec": 0.05,
-                  "curve": 0.7
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
                 }
               },
               {
                 "wave": "sine",
                 "ratio": 2,
-                "level": 0.4048,
-                "index": 0.203,
+                "level": 0.23,
+                "index": 4,
                 "levelEnv": {
-                  "attackSec": 0.002,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.82,
-                  "releaseSec": 0.12,
-                  "curve": 0.25
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.075,
-                  "sustainLevel": 0.48,
-                  "releaseSec": 0.05,
-                  "curve": 0.7
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
                 }
               },
               {
                 "wave": "sine",
-                "ratio": 0.5,
-                "level": 0.3168,
-                "index": 0.0,
+                "ratio": 1,
+                "level": 0.32,
+                "index": 4,
                 "levelEnv": {
-                  "attackSec": 0.002,
-                  "decaySec": 0.12,
-                  "sustainLevel": 0.74,
-                  "releaseSec": 0.12,
-                  "curve": 0.25
-                },
-                "indexEnv": {
-                  "attackSec": 0.0,
-                  "decaySec": 0.02,
-                  "sustainLevel": 1.0,
-                  "releaseSec": 0.05,
-                  "curve": 0.0
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.8,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
                 }
               }
             ],
-            "drive": 0.02,
             "modulation": {
-              "env2": {
-                "attackSec": 0.0,
-                "decaySec": 0.14,
-                "sustainLevel": 0.0,
-                "releaseSec": 0.04,
-                "curve": 0.58
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 120,
+                "fadeMs": 180
               },
               "routes": {
                 "0": {
-                  "source": "env2",
-                  "destination": "fm.index",
-                  "amount": 0.28,
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.035,
                   "enabled": true
                 }
               }
-            },
-            "filter": {
-              "mode": "lowpass",
-              "cutoffHz": 5600,
-              "resonance": 0.78,
-              "drive": 0.0
-            }
-          },
-          "expressionMap": {
-            "enabled": true,
-            "velocityCurve": 0.9,
-            "velocityToAmp": 0.9,
-            "velocityToBrightness": 0.14,
-            "velocityToFmIndex": 0.099,
-            "velocityToAttack": 0.16,
-            "velocityToBass": 0.0,
-            "velocityToLead": 0.2,
-            "modWheelToBrightness": 0.14,
-            "pressureToDrive": 0.024,
-            "cc74ToBrightness": 0.175
-          },
-          "layers": {
-            "lead": {
-              "enabled": true,
-              "type": "blade",
-              "level": 0.13,
-              "edgeLevel": 0.3,
-              "bodyLevel": 0.26,
-              "detuneCents": 4.5,
-              "pitchBendSemis": 0.55,
-              "bendDecaySec": 0.04,
-              "attackBoost": 0.13,
-              "attackDecaySec": 0.035,
-              "drive": 0.0369,
-              "characterLevel": 0.1,
-              "characterTone": 0.68,
-              "biteLevel": 0.08,
-              "biteDecaySec": 0.022,
-              "wobbleDepthCents": 4.5,
-              "wobbleRateHz": 5.1
-            },
-            "attack": {
-              "enabled": true,
-              "type": "metal",
-              "level": 0.13,
-              "decaySec": 0.034,
-              "brightness": 0.62,
-              "bodyMix": 0.48,
-              "pitchOffsetSemis": 7,
-              "drive": 0.036
             }
           }
-        },
-        "recommendedRange": {
-          "low": 48,
-          "high": 84,
-          "preview": 60
-        },
-        "macroHints": [
-          {
-            "id": "brightness",
-            "label": "Bright",
-            "description": "明るさを調整する"
-          },
-          {
-            "id": "roughness",
-            "label": "Edge",
-            "description": "粗さや押し出しを調整する"
-          },
-          {
-            "id": "movement",
-            "label": "Motion",
-            "description": "揺れや動きを調整する"
-          },
-          {
-            "id": "envelope",
-            "label": "Shape",
-            "description": "アタックと余韻を調整する"
-          }
-        ]
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
       }
     }
   }

@@ -1,4 +1,6 @@
 #include <Windows.h>
+#include <iostream>
+#include <exception>
 
 #include "AppCore.h"
 #include "app/AppEntry.h"
@@ -73,6 +75,8 @@ int RunGUIApp();
 
 int main(int argc, char** argv)
 {
+    try
+    {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
@@ -92,4 +96,10 @@ int main(int argc, char** argv)
     }
 
     return RunCLIApplication(cli);
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "F-Synthesizer: " << ex.what() << std::endl;
+        return 1;
+    }
 }

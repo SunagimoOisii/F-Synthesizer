@@ -81,7 +81,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third_party\\ymfm\\src;third_party\\midifile\\include;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -96,7 +96,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third_party\\ymfm\\src;third_party\\midifile\\include;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -113,7 +113,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third_party\\ymfm\\src;third_party\\midifile\\include;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -129,7 +129,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third_party\\ymfm\\src;third_party\\midifile\\include;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -146,6 +146,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\\synth\\YmfmVoice.cpp" />
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_opm.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_opn.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_adpcm.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_pcm.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\ymfm\\src\\ymfm_ssg.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiFile.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiEvent.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiEventList.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\MidiMessage.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
+    <ClCompile Include="third_party\\midifile\\src\\Binasc.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
     <ClCompile Include="src\\core\\AudioBuffer.cpp" />
     <ClCompile Include="src\\core\\RenderConfigBuilder.cpp" />
     <ClCompile Include="src\\app\\AppEntry.cpp" />
@@ -208,6 +219,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\\synth\\YmfmVoice.h" />
+    <ClInclude Include="include\\SynthEngine\\LiveRenderSettings.h" />
     <ClInclude Include="include\\core\\AudioBuffer.h" />
     <ClInclude Include="include\\AppCore.h" />
     <ClInclude Include="include\\app\\AppEntry.h" />
@@ -288,7 +301,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
-
-
-

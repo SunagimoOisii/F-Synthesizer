@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "core/AudioBuffer.h"
+#include "SynthEngine/LiveRenderSettings.h"
 #include "midi/MIDIParser.h"
 #include "SynthEngine/InstrumentSoundConfig.h"
 #include "SynthEngine/EffectsConfig.h"
@@ -36,6 +37,7 @@ struct RenderRuntimeOverrides
 {
     std::shared_ptr<const std::vector<MIDIEventTick>> noteTicks;
     int ticksPerQuarter = 0;
+    std::shared_ptr<LiveRenderMailbox> liveSettings;
 };
 
 // Run実行の進捗通知と停止要求を受け持つ観測I/F。

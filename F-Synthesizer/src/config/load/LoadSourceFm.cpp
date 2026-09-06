@@ -22,6 +22,8 @@ bool ParseFmOperatorEnvObject(const std::string& text, ModEnvelopeConfig& env)
 bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     FmConfig fm{};
+    if (auto v = ReadJSONInt(sourceObjText, "chip")) fm.chip = std::clamp(*v, 0, 1);
+    if (auto v = ReadJSONDouble(sourceObjText, "brightness")) fm.brightness = std::clamp(*v, 0.0, 1.0);
     fm.algorithm = 0;
     fm.feedback = 0.0;
     for (int i = 0; i < 4; i++)
@@ -189,6 +191,12 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
     if (!ValidateModulation(fm.modulation, true, "fm.modulation", err))
     {
         return false;
+    }
+    // Old projects used different numbering for their four software algorithms.
+    if (!ReadJSONInt(sourceObjText, "chip"))
+    {
+        constexpr int legacyAlgorithms[] = { 4, 4, 5, 0, 4, 5, 6, 7 };
+        fm.algorithm = legacyAlgorithms[fm.algorithm];
     }
     outSource = fm;
     return true;

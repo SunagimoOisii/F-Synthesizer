@@ -1,0 +1,132 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "アーケード・リード",
+        "category": "Lead",
+        "description": "輪郭がはっきりした主旋律。まずこの音から。高音の速いフレーズにも。",
+        "internal": false,
+        "tags": [
+          "lead",
+          "fm"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.004,
+          "decaySec": 0.25,
+          "sustainLevel": 0.75,
+          "releaseSec": 0.25,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0.28,
+            "brightness": 0.5,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.28,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.75,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.09,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.38,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 120,
+                "fadeMs": 180
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.035,
+                  "enabled": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

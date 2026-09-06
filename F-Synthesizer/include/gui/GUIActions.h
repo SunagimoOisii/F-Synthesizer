@@ -17,7 +17,7 @@ void DeactivateSoloPreview(GUIState& state);
 void RaiseGUIError(GUIState& state, const std::string& message, int actionHint, bool showDialog);
 void ClearGUIError(GUIState& state);
 // 非同期Runを開始し、戻り値ではなく GUIState.runFuture / running へ状態を反映する。
-void StartGUIRun(GUIState& state, bool previewSelected);
+void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly = false);
 // Play/Advanced向けの単音プレビュー処理。midiPath を使わず runtime override note ticks を注入する。
 void StartGUISoundTonePreview(GUIState& state);
 // 実行中ならキャンセル要求を送る。完了待ちは行わない。

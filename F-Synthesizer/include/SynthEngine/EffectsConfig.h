@@ -2,6 +2,7 @@
 
 struct ReverbEffectConfig
 {
+    bool operator==(const ReverbEffectConfig&) const = default;
     bool enabled = false;
     double mix = 0.0;
     double roomSize = 0.45;
@@ -10,6 +11,7 @@ struct ReverbEffectConfig
 
 struct DelayEffectConfig
 {
+    bool operator==(const DelayEffectConfig&) const = default;
     bool enabled = false;
     double mix = 0.0;
     double timeSec = 0.25;
@@ -21,6 +23,7 @@ struct DelayEffectConfig
 
 struct ChorusEffectConfig
 {
+    bool operator==(const ChorusEffectConfig&) const = default;
     bool enabled = false;
     double mix = 0.0;
     double baseDelayMs = 14.0;
@@ -31,6 +34,7 @@ struct ChorusEffectConfig
 
 struct FlangerEffectConfig
 {
+    bool operator==(const FlangerEffectConfig&) const = default;
     bool enabled = false;
     double mix = 0.0;
     double baseDelayMs = 1.5;
@@ -41,18 +45,21 @@ struct FlangerEffectConfig
 
 struct BitCrusherEffectConfig
 {
+    bool operator==(const BitCrusherEffectConfig&) const = default;
     // 1..16（16でバイパス）
     int bits = 16;
 };
 
 struct SampleRateReducerEffectConfig
 {
+    bool operator==(const SampleRateReducerEffectConfig&) const = default;
     // 0..1（1.0でバイパス）
     double ratio = 1.0;
 };
 
 struct MasterEffectConfig
 {
+    bool operator==(const MasterEffectConfig&) const = default;
     ReverbEffectConfig reverb{};
     DelayEffectConfig delay{};
     ChorusEffectConfig chorus{};

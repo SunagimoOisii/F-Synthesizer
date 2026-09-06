@@ -104,6 +104,8 @@ struct PianoRollState
     std::string lastError{};
 };
 
+bool LoadPianoRollMIDI(PianoRollState& state, const std::filesystem::path& path);
+
 void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,

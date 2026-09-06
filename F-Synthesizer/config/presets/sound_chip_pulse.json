@@ -1,0 +1,63 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "ピコピコ・パルス",
+        "category": "Support",
+        "description": "FMに添える素朴な電子音。明るさで音の細さを変えられます。",
+        "internal": false,
+        "tags": [
+          "support",
+          "psg"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 96,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.13,
+          "attackSec": 0.003,
+          "decaySec": 0.15,
+          "sustainLevel": 0.8,
+          "releaseSec": 0.13,
+          "source": {
+            "type": "psg",
+            "wave": "pulse",
+            "duty": 2,
+            "volumeSteps": 15,
+            "maxVoices": 8
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

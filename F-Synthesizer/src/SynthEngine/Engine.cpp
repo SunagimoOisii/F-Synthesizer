@@ -621,7 +621,8 @@ void RenderMIDIEventsToSink(
     int ticksPerQuarter,
     double renderStartSec,
     const std::function<bool()>& shouldCancel,
-    bool* canceled)
+    bool* canceled,
+    const std::shared_ptr<LiveRenderMailbox>& liveSettings = {})
 {
     if (canceled != nullptr)
     {
@@ -629,6 +630,8 @@ void RenderMIDIEventsToSink(
     }
 
     RenderState state;
+    std::shared_ptr<const LiveRenderSettings> currentSettings;
+    const auto* activeSounds = &soundSlots;
     // 初期化時にチャンネル状態を展開して、サンプルループ中の分岐/参照を最小化する。
     state.voices.reserve(256);
     state.cleanupKeepScratch.reserve(256);
@@ -687,8 +690,8 @@ void RenderMIDIEventsToSink(
     // トレードオフ: 削除タイミングが最大 cleanupInterval サンプルぶん遅れる。
     const int cleanupInterval = 256;
     constexpr int renderBlockSize = 64;
-    const bool masterEffectsActive = HasActiveMasterEffects(state.effects);
-    const bool masterEffectsSkipUnsafe = HasMasterEffectTailOrState(state.effects);
+    bool masterEffectsActive = HasActiveMasterEffects(state.effects);
+    bool masterEffectsSkipUnsafe = HasMasterEffectTailOrState(state.effects);
     const SoundData renderContext(1, 16, sink.SampleRate(), 2);
     int cleanupCountdown = 0;
     for (int i = 0; i < sink.Length();)
@@ -708,7 +711,38 @@ void RenderMIDIEventsToSink(
             cleanupCountdown = cleanupInterval;
         }
 
-        ProcessEventsAtSample(events, i, soundSlots, sink.SampleRate(), state);
+        if (liveSettings)
+        {
+            auto latest = liveSettings->load(std::memory_order_acquire);
+            if (latest && latest != currentSettings)
+            {
+                for (size_t voice = 0; voice < state.voices.size(); ++voice)
+                {
+                    const int ch = state.voices.channelIndex[voice];
+                    if (state.voices.pendingRemove[voice] == 0 && latest->sounds[ch] != (*activeSounds)[ch])
+                        state.voices.UpdateSound(voice, latest->sounds[ch], sink.SampleRate());
+                }
+                state.effects = latest->effects;
+                state.hasAnySolo = std::any_of(latest->mixes.begin(), latest->mixes.end(), [](const auto& mix) { return mix.solo; });
+                for (int ch = 0; ch < 16; ++ch)
+                {
+                    const auto& mix = latest->mixes[ch];
+                    double left, right;
+                    PanToStereoGains(mix.pan, left, right);
+                    state.channelMixGainL[ch] = mix.level * mix.gain * left;
+                    state.channelMixGainR[ch] = mix.level * mix.gain * right;
+                    state.channelMute[ch] = mix.mute;
+                    state.channelSolo[ch] = mix.solo;
+                    state.channelRenderable[ch] = !mix.mute && (!state.hasAnySolo || mix.solo) && mix.level * mix.gain > 0;
+                }
+                MarkActiveVoiceIndicesDirty(state);
+                masterEffectsActive = HasActiveMasterEffects(state.effects);
+                masterEffectsSkipUnsafe = HasMasterEffectTailOrState(state.effects);
+                currentSettings = std::move(latest);
+                activeSounds = &currentSettings->sounds;
+            }
+        }
+        ProcessEventsAtSample(events, i, *activeSounds, sink.SampleRate(), state);
         AdvanceTempoChanges(state, i);
 
         const int blockEnd = std::min(i + renderBlockSize, sink.Length());
@@ -841,7 +875,8 @@ void RenderMIDIEventsWithFrameBlockCallback(
     int ticksPerQuarter,
     double renderStartSec,
     const std::function<bool()>& shouldCancel,
-    bool* canceled)
+    bool* canceled,
+    const std::shared_ptr<LiveRenderMailbox>& liveSettings)
 {
     CallbackFrameBlockSink sink(length, sampleRate, onFrames);
     RenderMIDIEventsToSink(
@@ -854,5 +889,5 @@ void RenderMIDIEventsWithFrameBlockCallback(
         ticksPerQuarter,
         renderStartSec,
         shouldCancel,
-        canceled);
+        canceled, liveSettings);
 }

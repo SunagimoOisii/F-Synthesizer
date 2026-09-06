@@ -184,51 +184,6 @@ std::string FormatPreviewException(const std::exception& ex)
     return ex.what();
 }
 
-class GUIPreviewStreamSink final : public IPreviewStreamSink
-{
-public:
-    GUIPreviewStreamSink(PreviewPlaybackState& playback, bool loop, int startTick)
-        : playback_(playback)
-        , loop_(loop)
-        , startTick_(startTick)
-    {
-    }
-
-    bool Begin(int sampleRate, int channels, int, bool loop) override
-    {
-        std::string err;
-        session_ = StartStreamingPreviewAudio(
-            playback_,
-            sampleRate,
-            static_cast<ma_uint32>(channels),
-            loop_ || loop,
-            err);
-        playback_.playStartTick.store(startTick_, std::memory_order_relaxed);
-        return session_ != 0;
-    }
-
-    bool WriteFrame(double left, double right) override
-    {
-        return WriteStreamingPreviewFrame(playback_, session_, left, right);
-    }
-
-    bool WriteFrames(const double* interleavedStereo, int frameCount) override
-    {
-        return WriteStreamingPreviewFrames(playback_, session_, interleavedStereo, frameCount);
-    }
-
-    void Complete(bool canceled) override
-    {
-        CompleteStreamingPreviewAudio(playback_, session_, canceled);
-    }
-
-private:
-    PreviewPlaybackState& playback_;
-    bool loop_ = false;
-    int startTick_ = 0;
-    uint64_t session_ = 0;
-};
-
 int RunPreviewSafely(
     ProjectModel project,
     RenderOptions options,
@@ -237,7 +192,7 @@ int RunPreviewSafely(
 {
     try
     {
-        GUIPreviewStreamSink sink(state.playback, state.previewLoop, state.previewRequestedStartTick);
+        PreviewAudioStreamSink sink(state.playback, state.previewRequestedStartTick);
         return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
     }
     catch (const std::exception& ex)
@@ -305,6 +260,7 @@ void DeactivateSoloPreview(GUIState& state)
 
 void StartGUISoundTonePreview(GUIState& state)
 {
+    if (state.running) return;
     std::string validationError;
     if (!ValidatePreviewOnlySettings(state, validationError))
     {
@@ -321,7 +277,6 @@ void StartGUISoundTonePreview(GUIState& state)
     ClearGUIError(state);
 
     const int previewChannel = std::clamp(state.selectedSoundSlot, 0, 15);
-    ActivateSoloPreview(state, previewChannel);
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);
@@ -334,6 +289,10 @@ void StartGUISoundTonePreview(GUIState& state)
     const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
     project.midiPath.clear();
     RenderRuntimeOverrides overrides{};
+    state.livePreviewChannel = previewChannel;
+    state.livePreviewSlot = state.selectedSoundSlot;
+    PublishLiveRenderSettings(state);
+    overrides.liveSettings = state.liveSettings;
     overrides.ticksPerQuarter = 480;
     if (state.chordModeEnabled)
     {
@@ -366,7 +325,7 @@ void StartGUISoundTonePreview(GUIState& state)
     options.startSec = 0.0;
     options.durationSec = 1.5;
 
-    state.restorePreviewOnRunComplete = true;
+    state.restorePreviewOnRunComplete = false;
     state.previewRequestedStartTick = 0;
     state.previewRequestedDurationSec = options.durationSec;
     state.lastOutputPath = "[memory preview]";
@@ -403,11 +362,7 @@ void StartGUISoundTonePreview(GUIState& state)
 
 void StopGUIRunAndPreview(GUIState& state)
 {
-    if (state.playback.playing.load(std::memory_order_relaxed))
-    {
-        StopPreviewAudio(state.playback);
-        AppendGUILog(state, "[GUI] Preview playback stopped");
-    }
+    StopPreviewAudio(state.playback);
     if (state.running)
     {
         state.stopRequested.store(true, std::memory_order_relaxed);

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "SynthEngine/InstrumentSoundConfig.h"
+#include "SynthEngine/LiveRenderSettings.h"
 #include "SynthEngine/EffectsConfig.h"
 #include "core/AudioBuffer.h"
 #include "midi/Sequencer.h"
@@ -48,4 +49,5 @@ void RenderMIDIEventsWithFrameBlockCallback(
     int ticksPerQuarter = 480,
     double renderStartSec = 0.0,
     const std::function<bool()>& shouldCancel = {},
-    bool* canceled = nullptr);
+    bool* canceled = nullptr,
+    const std::shared_ptr<LiveRenderMailbox>& liveSettings = {});

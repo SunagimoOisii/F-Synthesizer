@@ -65,6 +65,8 @@ struct GUIPresetItem
 // projectModel の保存形式そのものではなく、GUI の復元に必要な永続状態を表す。
 struct GUIPersistentState
 {
+    std::string activeProjectPath{};
+    std::string songMidiName{};
     char midiPath[1024]{};
     char wavPath[1024]{};
     int targetChannel = -1;
@@ -74,7 +76,7 @@ struct GUIPersistentState
     float extraReleaseSec = 0.3f;
     MasterEffectConfig masterEffects{};
     int UIScaleIndex = 1; // 0=100%, 1=125%, 2=150%
-    int UIModeTab = 0; // 0=Play, 1=Compose, 2=Export, 3=Advanced
+    int UIModeTab = 1; // 0=Play, 1=Compose, 2=Export, 3=Advanced
     int UIThemeIndex = 0; // 0=Blueprint Beat Light, 1=Blueprint Beat Dark
     float logPanelHeight = 240.0f;
     int presetIndex = 0;
@@ -108,6 +110,9 @@ struct GUIPersistentState
 // 画面表示中だけ意味を持つ一時状態。project/config 保存対象にはしない。
 struct GUITransientState
 {
+    std::string pendingOpenPath{};
+    bool pendingOpenIsSong = false;
+    uint64_t observedNotesVersion = 0;
     bool hasUIError = false;
     bool showErrorDialog = false;
     int UIErrorAction = 0; // 0=None, 1=BrowseMIDI, 2=BrowseOutput, 3=GoSound, 4=GoMusic
@@ -140,6 +145,9 @@ struct GUITransientState
 // 非同期Run/Preview再生に関係する状態。project/config 保存対象にはしない。
 struct GUIAsyncRunState
 {
+    std::shared_ptr<LiveRenderMailbox> liveSettings = std::make_shared<LiveRenderMailbox>();
+    int livePreviewChannel = -1;
+    int livePreviewSlot = -1;
     int lastRunExitCode = 0;
     bool hasRun = false;
     bool running = false;

@@ -8,6 +8,7 @@
 
 namespace gui
 {
+void PublishLiveRenderSettings(GUIState& state);
 // 既存 GUIState の背後で ProjectModel へ接続する Facade。
 // GUI 表示コードが保存形式や preset 差分仕様を直接知らないようにする正規入口。
 // Play/Compose/preview/export の主要導線はこの入口経由にし、

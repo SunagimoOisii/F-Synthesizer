@@ -38,7 +38,7 @@ bool ValidateRunSettings(
             err = "Output Path points to a directory, not a .wav file.";
             return false;
         }
-        if (isDirEc)
+        if (isDirEc && isDirEc != std::errc::no_such_file_or_directory)
         {
             err = "Output Path cannot be inspected: " + isDirEc.message();
             return false;
@@ -98,9 +98,9 @@ std::filesystem::path BuildSerialWAVPath(const std::filesystem::path& basePath)
     char stamp[32]{};
     std::strftime(stamp, sizeof(stamp), "%Y%m%d_%H%M%S", &tmLocal);
 
-    const std::string stem = basePath.stem().string();
-    const std::string ext = basePath.extension().string().empty() ? ".wav" : basePath.extension().string();
-    std::filesystem::path candidate = basePath.parent_path() / (stem + "_" + stamp + ext);
+    const std::string stem = PathToUtf8(basePath.stem());
+    const std::string ext = basePath.extension().empty() ? ".wav" : PathToUtf8(basePath.extension());
+    std::filesystem::path candidate = basePath.parent_path() / Utf8ToPath(stem + "_" + stamp + ext);
     for (int i = 1; i <= 99; i++)
     {
         std::error_code existsEc;
@@ -108,7 +108,7 @@ std::filesystem::path BuildSerialWAVPath(const std::filesystem::path& basePath)
         {
             break;
         }
-        candidate = basePath.parent_path() / (stem + "_" + stamp + "_" + std::to_string(i) + ext);
+        candidate = basePath.parent_path() / Utf8ToPath(stem + "_" + stamp + "_" + std::to_string(i) + ext);
     }
     return candidate;
 }

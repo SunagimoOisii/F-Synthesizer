@@ -28,7 +28,7 @@ MacroLabels GetMacroLabels(const SourceConfig& src)
     }
     if (std::holds_alternative<PsgConfig>(src))
     {
-        return { "明るさ", nullptr, nullptr, "鳴り方" };
+        return { std::get<PsgConfig>(src).wave == PsgWaveType::Pulse ? "明るさ" : nullptr, nullptr, nullptr, "鳴り方" };
     }
     return { "明るさ", "荒さ", "揺れ", "鳴り方" };
 }
@@ -74,29 +74,14 @@ void ApplyPresetMacroHints(const GUIState& state, MacroLabels& labels)
 }
 
 // マクロスライダーをパラメータへ反映し、Auto Tone Preview を要求する。
-// DrumKit の場合は selectedDrumNote の DrumConfig に適用する。
+// ドラムはセット全体を調整する。
 // DrawLayer2Macros 内のスライダー変更と Randomize の両方から呼ばれる。
-void ApplyAndTriggerPreview(GUIState& state, int ch)
+void ApplyAndTriggerPreview(GUIState& state, int ch, const MacroSliderState& previous)
 {
     InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     const MacroSliderState& sl = gui::ReadMacroSliders(state, ch);
 
-    if (std::holds_alternative<DrumKitConfig>(cfg.source))
-    {
-        DrumKitConfig& drumKit = std::get<DrumKitConfig>(cfg.source);
-        const int drumNote = std::clamp(state.selectedDrumNote, 0, 127);
-        InstrumentSoundConfig drumChannel = cfg;
-        drumChannel.source = drumKit.map[drumNote];
-        ApplyMacroSliders(drumChannel, sl);
-        drumKit.map[drumNote] = std::get<DrumConfig>(drumChannel.source);
-        cfg.attackSec = drumChannel.attackSec;
-        cfg.releaseSec = drumChannel.releaseSec;
-    }
-    else
-    {
-        ApplyMacroSliders(cfg, sl);
-    }
-
+    ApplyMacroSliders(cfg, sl, &previous);
     state.presetDirty = true;
     if (state.autoTonePreviewEnabled)
     {
@@ -118,6 +103,7 @@ void DrawLayer2Macros(GUIState& state)
     const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
     InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     MacroSliderState& sliders = gui::MutableMacroSliders(state, ch);
+    const MacroSliderState previous = sliders;
     MacroLabels labels = GetMacroLabels(cfg.source);
     ApplyPresetMacroHints(state, labels);
 
@@ -194,7 +180,7 @@ void DrawLayer2Macros(GUIState& state)
     }
     if (changed)
     {
-        ApplyAndTriggerPreview(state, ch);
+        ApplyAndTriggerPreview(state, ch, previous);
     }
 
     // --- Randomize ---
@@ -260,7 +246,7 @@ void DrawLayer2Macros(GUIState& state)
             sliders.lastLayer2Envelope = sliders.envelope;
         }
 
-        ApplyAndTriggerPreview(state, ch);
+        ApplyAndTriggerPreview(state, ch, previous);
     }
 
     // スナップショットがある場合のみ「元に戻す」を表示
@@ -271,7 +257,7 @@ void DrawLayer2Macros(GUIState& state)
         {
             sliders = state.macroRandomizeSnapshot[ch];
             state.macroRandomizeHasSnapshot[ch] = false;
-            ApplyAndTriggerPreview(state, ch);
+            ApplyAndTriggerPreview(state, ch, previous);
         }
     }
 }

@@ -30,8 +30,24 @@
 - 本文: `licenses/SPDX-MIT.txt`
 - URL: https://github.com/nlohmann/json
 
+6. ymfm
+- ライセンス: BSD-3-Clause
+- 著作権・原文: [third_party/ymfm/LICENSE](../third_party/ymfm/LICENSE)
+- 固定リビジョン: `81aec25ccbb98f4873a255f7551ac4dadac59b4a`
+- URL: https://github.com/aaronsgiles/ymfm
+- YM2151 / YM2612 の FM 発音に使用。ソースは変更せず同梱する。
+
+7. midifile
+- ライセンス: BSD-2-Clause
+- 著作権・原文: [third_party/midifile/LICENSE.txt](../third_party/midifile/LICENSE.txt)
+- 固定リビジョン: `98917df5b1bf0d6e8d4c0e5fff86d6b05343e793`
+- URL: https://github.com/craigsapp/midifile
+- MIDI の読込、音符の対応付け、テンポを含む時刻変換に使用。ソースは変更せず同梱する。
+
+付属音色は本プロジェクトで作成した設定データ。ゲームの音色バンク・ROM・録音素材は同梱しない。
+
 ## 運用
 
 1. 依存追加時はこの対応表を更新する
 2. ライセンス方式が複数ある依存は、採用した方式を明記する
-3. 配布物には `licenses/` フォルダごと同梱する
+3. 配布物には `licenses/` と、上記 ymfm / midifile のライセンス原文を同梱する

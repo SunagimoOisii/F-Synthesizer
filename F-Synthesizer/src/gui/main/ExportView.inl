@@ -117,10 +117,10 @@ static void DrawExportView(
     if (state.targetChannel >= 0)
     {
         ImGui::SetNextItemWidth(220.0f);
-        int singleTarget = std::clamp(state.targetChannel, 0, 15);
-        if (ImGui::SliderInt("対象ch##export", &singleTarget, 0, 15))
+        int singleTarget = std::clamp(state.targetChannel, 0, 15) + 1;
+        if (ImGui::SliderInt("対象ch##export", &singleTarget, 1, 16))
         {
-            state.targetChannel = singleTarget;
+            state.targetChannel = singleTarget - 1;
             state.presetDirty = true;
         }
         updateHoverHelp(

@@ -77,8 +77,12 @@ void ApplyDrumBrightnessRoughnessMovement(DrumConfig& src, const MacroSliderStat
 }
 } // namespace
 
-void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& sliders)
+void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& sliders, const MacroSliderState* previous)
 {
+    const bool b = !previous || previous->brightness != sliders.brightness;
+    const bool r = !previous || previous->roughness != sliders.roughness;
+    const bool m = !previous || previous->movement != sliders.movement;
+    const bool e = !previous || previous->envelope != sliders.envelope;
     const float brightness = Clamp01(sliders.brightness);
     const float roughness = Clamp01(sliders.roughness);
     const float movement = Clamp01(sliders.movement);
@@ -89,26 +93,30 @@ void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& slider
 
         if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, AnalogConfig>)
         {
-            src.filterCutoffHz = SliderToLogValue(brightness, kBrightnessMinHz, kBrightnessMaxHz);
-            src.filterResonance = SliderToLinear(roughness, 0.5, 6.0);
-            src.drive = static_cast<double>(roughness);
-            src.modulation.lfo1.depth = static_cast<double>(movement);
+            if (b) src.filterCutoffHz = SliderToLogValue(brightness, kBrightnessMinHz, kBrightnessMaxHz);
+            if (r) src.filterResonance = SliderToLinear(roughness, 0.5, 6.0);
+            if (r) src.drive = static_cast<double>(roughness);
+            if (m) src.modulation.lfo1.depth = static_cast<double>(movement);
             if constexpr (std::is_same_v<T, AnalogConfig>)
             {
                 // Analog は揺れを LFO + Drift に連動させる。
-                src.driftDepthCents = SliderToLinear(movement, 0.0, 20.0);
+                if (m) src.driftDepthCents = SliderToLinear(movement, 0.0, 20.0);
             }
         }
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
-            src.feedback = static_cast<double>(brightness);
-            src.ops[0].index = SliderToLinear(roughness, 0.0, 8.0);
-            src.modulation.lfo1.depth = static_cast<double>(movement);
+            if (b) src.brightness = brightness;
+            if (r) src.feedback = roughness;
+            if (m)
+            {
+                if (m) src.modulation.lfo1.depth = movement;
+                src.modulation.matrix.routes[0] = ModRoute{ModSource::Lfo1, ModDestination::Pitch, 0.035, true};
+            }
         }
         else if constexpr (std::is_same_v<T, NoiseConfig>)
         {
-            src.filterCutoffHz = SliderToLogValue(brightness, kBrightnessMinHz, kBrightnessMaxHz);
-            src.filterResonance = SliderToLinear(roughness, 0.5, 6.0);
+            if (b) src.filterCutoffHz = SliderToLogValue(brightness, kBrightnessMinHz, kBrightnessMaxHz);
+            if (r) src.filterResonance = SliderToLinear(roughness, 0.5, 6.0);
         }
         else if constexpr (std::is_same_v<T, DrumConfig>)
         {
@@ -116,17 +124,40 @@ void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& slider
         }
         else if constexpr (std::is_same_v<T, DrumKitConfig>)
         {
-            // selectedDrumNote の DrumConfig 適用は呼び出し元で行う契約。
+            const MacroSliderState baseline = previous ? *previous : MacroSliderState{};
+            const double toneScale = std::exp2((brightness - baseline.brightness) * 1.5);
+            const double lengthScale = std::exp2((envelope - baseline.envelope) * 3.0);
+            for (auto& drum : src.map)
+            {
+                if (drum.type == DrumType::None) continue;
+                if (b)
+                {
+                    if (drum.lpCut > 0) drum.lpCut = std::clamp(drum.lpCut * toneScale, 200.0, 18000.0);
+                    if (drum.hpCut > 0) drum.hpCut = std::clamp(drum.hpCut * toneScale, 20.0, 12000.0);
+                }
+                if (r) drum.drive = roughness * 0.6;
+                if (m)
+                {
+                    drum.humanizePitchCents = movement * 12;
+                    drum.humanizeDecayPct = movement * 0.15;
+                }
+                if (e)
+                {
+                    if (drum.decaySec > 0) drum.decaySec = std::clamp(drum.decaySec * lengthScale, 0.005, 4.0);
+                    if (drum.bodyDecaySec > 0) drum.bodyDecaySec = std::clamp(drum.bodyDecaySec * lengthScale, 0.005, 4.0);
+                    if (drum.snapDecaySec > 0) drum.snapDecaySec = std::clamp(drum.snapDecaySec * lengthScale, 0.005, 2.0);
+                }
+            }
         }
         else if constexpr (std::is_same_v<T, PsgConfig>)
         {
             const int duty = static_cast<int>(std::lround(SliderToLinear(brightness, 0.0, 7.0)));
-            src.duty = std::clamp(duty, 0, 7);
+            if (b) src.duty = std::clamp(duty, 0, 7);
         }
     }, ch.source);
 
-    ch.attackSec = SliderToLogValue(envelope, kAttackMinSec, kAttackMaxSec);
-    ch.releaseSec = SliderToLogValue(envelope, kReleaseMinSec, kReleaseMaxSec);
+    if (e) ch.attackSec = SliderToLogValue(envelope, kAttackMinSec, kAttackMaxSec);
+    if (e) ch.releaseSec = SliderToLogValue(envelope, kReleaseMinSec, kReleaseMaxSec);
 }
 
 MacroSliderState ReadMacroSliders(const InstrumentSoundConfig& ch, const MacroSliderState& current)
@@ -152,8 +183,8 @@ MacroSliderState ReadMacroSliders(const InstrumentSoundConfig& ch, const MacroSl
         }
         else if constexpr (std::is_same_v<T, FmConfig>)
         {
-            out.brightness = Clamp01(static_cast<float>(src.feedback));
-            out.roughness = LinearToSlider(src.ops[0].index, 0.0, 8.0);
+            out.brightness = Clamp01(static_cast<float>(src.brightness));
+            out.roughness = Clamp01(static_cast<float>(src.feedback));
             out.movement = Clamp01(static_cast<float>(src.modulation.lfo1.depth));
             out.envelope = current.lastLayer2Envelope;
         }

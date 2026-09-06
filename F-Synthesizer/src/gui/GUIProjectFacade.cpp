@@ -71,6 +71,29 @@ const MacroSliderState& ReadMacroSliders(const GUIState& state, int slot)
     return state.macroSliders[std::clamp(slot, 0, 15)];
 }
 
+void PublishLiveRenderSettings(GUIState& state)
+{
+    const auto previous = state.liveSettings->load(std::memory_order_acquire);
+    bool changed = !previous || previous->mixes != state.channelMixStates || previous->effects != state.masterEffects;
+    for (int ch = 0; ch < 16 && !changed; ++ch)
+    {
+        const int slot = ch == state.livePreviewChannel && state.livePreviewSlot >= 0
+            ? state.livePreviewSlot : AssignedSoundSlot(state, ch);
+        changed = previous->sounds[ch] != state.instruments[slot].sound;
+    }
+    if (!changed) return;
+    auto next = std::make_shared<LiveRenderSettings>();
+    for (int ch = 0; ch < 16; ++ch)
+    {
+        const int slot = ch == state.livePreviewChannel && state.livePreviewSlot >= 0
+            ? state.livePreviewSlot : AssignedSoundSlot(state, ch);
+        next->sounds[ch] = state.instruments[slot].sound;
+    }
+    next->mixes = state.channelMixStates;
+    next->effects = state.masterEffects;
+    state.liveSettings->store(std::move(next), std::memory_order_release);
+}
+
 ProjectModel BuildProjectModelFromGUI(const GUIState& state)
 {
     ProjectModel model{};

@@ -21,6 +21,22 @@ namespace
 #include "pianoroll/PianoRollRender.inl"
 #include "pianoroll/PianoRollInput.inl"
 } // namespace
+bool LoadPianoRollMIDI(PianoRollState& state, const std::filesystem::path& path)
+{
+    const bool firstLoad = state.loadedMidiPath != path && !state.hasProjectData;
+    EnsureModelLoaded(state, path, {});
+    if (firstLoad && !state.hasLoadError)
+    {
+        if (state.noteCountByChannel[state.displayChannel] == 0)
+            for (int ch = 0; ch < 16; ++ch) if (state.noteCountByChannel[ch] > 0) { state.displayChannel = ch; break; }
+        int total = 0, count = 0;
+        for (const auto& note : state.notes) if (note.channel == state.displayChannel) { total += note.note; ++count; }
+        if (count) state.noteOffset = std::clamp(total / count - 6, 0, 115);
+        InvalidateVisibleCache(state);
+    }
+    return !state.hasLoadError;
+}
+
 void DrawPianoRollPanel(
     PianoRollState& state,
     const char* midiPathUtf8,
@@ -33,88 +49,35 @@ void DrawPianoRollPanel(
     EnsureModelLoaded(state, midiPath, appendLog);
     EnsureSelectionSize(state);
 
-    ImGui::TextUnformatted("ピアノロール");
-    ImGui::SetNextItemWidth(140.0f);
-    int displayChannelOneBased = ClampChannel(state.displayChannel) + 1;
-    if (ImGui::SliderInt("表示チャンネル", &displayChannelOneBased, 1, 16, "ch%d"))
-    {
-        state.displayChannel = ClampChannel(displayChannelOneBased - 1);
-    }
+    ImGui::TextUnformatted("音符");
     ImGui::SameLine();
-    ImGui::Text("スナップ: %s", SnapLabel(state.snapIndex));
+    const char* snaps[] = { "自由", "4分音符", "8分音符", "16分音符", "32分音符" };
+    ImGui::SetNextItemWidth(130);
+    int snap = state.snapIndex;
+    if (ImGui::Combo("長さの単位", &snap, snaps, 5)) SetSnapIndex(state, snap, appendLog);
+    ImGui::SameLine(); ImGui::Checkbox("再生に追従", &state.followPreviewPlayback);
     ImGui::SameLine();
-    if (ImGui::SmallButton("OFF"))
-    {
-        SetSnapIndex(state, 0, appendLog);
-    }
+    ImGui::BeginDisabled(state.undoStack.empty());
+    if (ImGui::SmallButton("戻す")) ExecuteUndo(state);
+    ImGui::EndDisabled();
     ImGui::SameLine();
-    if (ImGui::SmallButton("1/4"))
-    {
-        SetSnapIndex(state, 1, appendLog);
-    }
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1/8"))
-    {
-        SetSnapIndex(state, 2, appendLog);
-    }
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1/16"))
-    {
-        SetSnapIndex(state, 3, appendLog);
-    }
-    ImGui::SameLine();
-    if (ImGui::SmallButton("1/32"))
-    {
-        SetSnapIndex(state, 4, appendLog);
-    }
-    ImGui::SameLine();
-    ImGui::Checkbox("再生位置に追従", &state.followPreviewPlayback);
-    ImGui::SameLine();
+    ImGui::BeginDisabled(state.redoStack.empty());
+    if (ImGui::SmallButton("やり直す")) ExecuteRedo(state);
+    ImGui::EndDisabled();
     if (state.previewRangeEnabled)
     {
-        ImGui::Text("Preview範囲=%d-%d", state.previewRangeStartTick, state.previewRangeEndTick);
-    }
-    else
-    {
-        ImGui::TextUnformatted("Preview対象=全体");
-    }
-    ImGui::TextDisabled("操作: 左ドラッグ=移動 / 端ドラッグ=長さ / 空白ドラッグ=追加 / Shift+空白=任意範囲Preview / Delete=削除 / ルーラD&D=Preview範囲 / Space=再生停止 / Q,1-4=スナップ");
-
-    if (state.hasLoadError)
-    {
-        ImGui::TextColored(ImVec4(0.95f, 0.35f, 0.35f, 1.0f), "ピアノロールの読み込みに失敗: %s", state.lastError.c_str());
-    }
-    else
-    {
-        const bool hasSelection = AnySelected(state);
-        ImGui::Text("ノート数=%zu, 選択=%s, 四分音符あたりTick=%d, 最大Tick=%d",
-            state.notes.size(),
-            hasSelection ? "あり" : "なし",
-            state.ticksPerQuarter,
-            state.maxTick);
         ImGui::SameLine();
-        ImGui::BeginDisabled(state.undoStack.empty());
-        if (ImGui::SmallButton("元に戻す"))
-        {
-            ExecuteUndo(state);
-        }
-        ImGui::EndDisabled();
-        ImGui::SameLine();
-        ImGui::BeginDisabled(state.redoStack.empty());
-        if (ImGui::SmallButton("やり直し"))
-        {
-            ExecuteRedo(state);
-        }
-        ImGui::EndDisabled();
+        if (ImGui::SmallButton("再生範囲を解除")) state.previewRangeEnabled = false;
     }
-
+    ImGui::TextDisabled("空白をドラッグ: 追加 / 音符をドラッグ: 移動 / 右端: 長さ / Delete: 削除");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("ホイール: 上下 / Shift+ホイール: 左右 / Ctrl+ホイール: 拡大縮小 / 上の目盛をドラッグ: 再生範囲 / Space: 再生・停止");
     const float rowHeight = (std::max)(12.0f, ImGui::GetTextLineHeight() + 4.0f);
     const float rulerHeight = (std::max)(14.0f, ImGui::GetTextLineHeight() + 2.0f);
     const float pianoWidth = (std::max)(56.0f, ImGui::CalcTextSize("127").x + 12.0f);
-    const float panelHeight = (std::max)(220.0f, ImGui::GetContentRegionAvail().y - 2.0f);
+    const float panelHeight = (std::max)(80.0f, ImGui::GetContentRegionAvail().y - 2.0f);
     const int autoVisibleCount = std::clamp(
         static_cast<int>(std::floor((panelHeight - rulerHeight - 2.0f) / rowHeight)),
-        12,
+        3,
         128);
     state.visibleNoteCount = autoVisibleCount;
     state.noteOffset = std::clamp(state.noteOffset, 0, MaxNoteOffset(state.visibleNoteCount));
@@ -133,7 +96,7 @@ void DrawPianoRollPanel(
     const int snapStep = SnapStepTicks(state.snapIndex, state.ticksPerQuarter);
     DrawPianoGrid(state, drawList, canvasMin, canvasMax, pianoWidth, rulerHeight, rowHeight, pxPerTick);
 
-    if (state.hasLoadError || state.notes.empty())
+    if (state.hasLoadError)
     {
         ResetInteractionState(state);
         return;

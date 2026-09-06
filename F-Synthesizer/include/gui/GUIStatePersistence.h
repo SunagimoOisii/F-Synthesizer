@@ -8,6 +8,8 @@
 namespace gui
 {
 std::filesystem::path GUIStatePath();
+bool SaveSongProjectFile(GUIState& state, const std::filesystem::path& path, std::string& err);
+bool LoadSongProjectFile(GUIState& state, const std::filesystem::path& path, std::string& err);
 // 音色、割当、ノート、画面状態を一つの workspace.json から復元する。
 // 読み込み失敗時は編集中の状態を変更しない。
 bool LoadGUIStateFile(GUIState& state, std::string& err);

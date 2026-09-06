@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "core/AudioBuffer.h"
+#include "SynthEngine/LiveRenderSettings.h"
 #include "core/RenderConfig.h"
 
 // app 層から core(SynthEngine) への実行境界。
@@ -30,4 +31,5 @@ void RenderWithEngineFrameBlocks(
     const RenderConfig& config,
     const std::function<bool(int, const double*, int)>& onFrames,
     const std::function<bool()>& shouldCancel,
-    bool* canceled);
+    bool* canceled,
+    const std::shared_ptr<LiveRenderMailbox>& liveSettings = {});

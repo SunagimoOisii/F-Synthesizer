@@ -35,17 +35,6 @@ void NoteOffVoiceModulation(PerSourceVoiceState& sourceState)
         {
             NoteOffModulation(st.modulation);
         }
-        if constexpr (requires { st.opLevelEnv; st.opIndexEnv; })
-        {
-            for (auto& env : st.opLevelEnv)
-            {
-                NoteOff(env);
-            }
-            for (auto& env : st.opIndexEnv)
-            {
-                NoteOff(env);
-            }
-        }
     }, sourceState);
 }
 
@@ -174,24 +163,8 @@ void InitWaveformLikeVoiceStateCommon(
     NoteOnModulation(state.modulation, src.modulation);
 }
 
-void InitializeVoiceAtIndex(
-    Voice& voices,
-    size_t i,
-    const InstrumentSoundConfig& cfg,
-    const MIDIEvent& e,
-    int sampleRate)
+void ApplyVoiceConfig(Voice& voices, size_t i, const InstrumentSoundConfig& cfg, int velocity)
 {
-    // 1 voice の実行状態を初期化し、retrigger=restart 時も同じ経路で再利用する。
-    voices.source[i] = cfg.source;
-    voices.noteNumber[i] = e.noteNumber;
-    voices.velocity[i] = e.velocity;
-    voices.channel[i] = e.channel;
-    voices.channelIndex[i] = ClampChannel(e.channel);
-    voices.noteInstanceID[i] = e.noteInstanceID;
-    voices.released[i] = 0;
-    voices.pendingRemove[i] = 0;
-    voices.sustainedPendingOff[i] = 0;
-
     voices.amp[i] = cfg.amp;
     voices.attackSec[i] = cfg.attackSec;
     voices.decaySec[i] = cfg.decaySec;
@@ -212,8 +185,8 @@ void InitializeVoiceAtIndex(
     voices.drumBus[i] = cfg.drumBus;
     voices.expressionMap[i] = cfg.expressionMap;
     voices.expressionDefaultVelocityNorm[i] =
-        std::clamp(static_cast<double>(std::clamp(e.velocity, 0, 127)) / 127.0, 0.0, 1.0);
-    voices.expressionDefaultAmpVelocity[i] = VelocityToGain(e.velocity);
+        std::clamp(static_cast<double>(std::clamp(velocity, 0, 127)) / 127.0, 0.0, 1.0);
+    voices.expressionDefaultAmpVelocity[i] = VelocityToGain(velocity);
     voices.runtimeAmp[i] = cfg.amp;
     voices.runtimeDefaultAmpVelocity[i] = voices.expressionDefaultAmpVelocity[i];
     voices.runtimeHasDrumBus[i] = cfg.drumBus.enabled ? 1 : 0;
@@ -240,6 +213,27 @@ void InitializeVoiceAtIndex(
     if (!cfg.expressionMap.enabled) fastPathMask |= kVoiceFastPathExpressionDisabled;
     if (cfg.portamentoTimeSec <= 0.0) fastPathMask |= kVoiceFastPathPortamentoDisabled;
     voices.fastPathMask[i] = fastPathMask;
+}
+
+void InitializeVoiceAtIndex(
+    Voice& voices,
+    size_t i,
+    const InstrumentSoundConfig& cfg,
+    const MIDIEvent& e,
+    int sampleRate)
+{
+    // 1 voice の実行状態を初期化し、retrigger=restart 時も同じ経路で再利用する。
+    voices.source[i] = cfg.source;
+    voices.noteNumber[i] = e.noteNumber;
+    voices.velocity[i] = e.velocity;
+    voices.channel[i] = e.channel;
+    voices.channelIndex[i] = ClampChannel(e.channel);
+    voices.noteInstanceID[i] = e.noteInstanceID;
+    voices.released[i] = 0;
+    voices.pendingRemove[i] = 0;
+    voices.sustainedPendingOff[i] = 0;
+
+    ApplyVoiceConfig(voices, i, cfg, e.velocity);
     ADSRState envState{};
     NoteOn(envState);
     voices.env[i] = envState;
@@ -330,13 +324,7 @@ void InitializeVoiceAtIndex(
     {
         voices.sourceState[i] = FmVoiceState{};
         auto& fs = std::get<FmVoiceState>(voices.sourceState[i]);
-        fs.op0FeedbackSample = 0.0;
-        for (int k = 0; k < 4; k++)
-        {
-            fs.opPhase[k] = 0.0;
-            NoteOn(fs.opLevelEnv[k]);
-            NoteOn(fs.opIndexEnv[k]);
-        }
+        fs.chip = std::make_shared<YmfmVoice>(sampleRate, fm->chip);
         ResetModulationState(fs.modulation);
         NoteOnModulation(fs.modulation, fm->modulation);
         SetFilterSampleRate(fs.filter, sampleRate);
@@ -697,6 +685,69 @@ void Voice::clear()
     portamentoTargetHz.clear();
     portamentoTimeSec.clear();
     sourceState.clear();
+}
+
+void Voice::UpdateSound(size_t i, const InstrumentSoundConfig& cfg, int sampleRate)
+{
+    // A drum hit keeps its body/decay; the next hit uses the edited kit.
+    if (std::holds_alternative<DrumKitConfig>(cfg.source))
+    {
+        amp[i] = runtimeAmp[i] = cfg.amp;
+        return;
+    }
+    const auto* oldFm = std::get_if<FmConfig>(&source[i]);
+    const auto* newFm = std::get_if<FmConfig>(&cfg.source);
+    const bool sameChip = oldFm && newFm && oldFm->chip == newFm->chip;
+    if (source[i].index() != cfg.source.index() || (newFm && !sameChip))
+    {
+        MIDIEvent event{};
+        event.channel = channel[i]; event.noteNumber = noteNumber[i];
+        event.velocity = velocity[i]; event.noteInstanceID = noteInstanceID[i]; event.isNoteOn = true;
+        const auto wasReleased = released[i];
+        const auto wasSustained = sustainedPendingOff[i];
+        InitializeVoiceAtIndex(*this, i, cfg, event, sampleRate);
+        released[i] = wasReleased;
+        sustainedPendingOff[i] = wasSustained;
+        if (wasReleased) { NoteOff(env[i]); NoteOffVoiceModulation(sourceState[i]); }
+        return;
+    }
+    source[i] = cfg.source;
+    ApplyVoiceConfig(*this, i, cfg, velocity[i]);
+    portamentoTimeSec[i] = cfg.portamentoTimeSec;
+    std::visit([&](const auto& src)
+    {
+        using Config = std::decay_t<decltype(src)>;
+        if constexpr (std::is_same_v<Config, FmConfig>)
+        {
+            auto& st = std::get<FmVoiceState>(sourceState[i]);
+            SetFilterMode(st.filter, src.filterMode);
+            SetFilterResonance(st.filter, src.filterResonance);
+            st.modulation.splitRatePrepared = false;
+        }
+        else if constexpr (std::is_same_v<Config, WaveformConfig> || std::is_same_v<Config, AnalogConfig>)
+        {
+            using State = std::conditional_t<std::is_same_v<Config, WaveformConfig>, WaveformVoiceState, AnalogVoiceState>;
+            auto& st = std::get<State>(sourceState[i]);
+            State cache{};
+            InitWaveformLikeVoiceStateCommon(src, cache, sampleRate, noteNumber[i]);
+            st.unisonDetuneRatio = cache.unisonDetuneRatio;
+            st.filterKeytrackRatio = cache.filterKeytrackRatio;
+            st.driveNorm = cache.driveNorm;
+            SetFilterMode(st.filter, src.filterMode);
+            SetFilterResonance(st.filter, src.filterResonance);
+            SetSmoothingTimeMs(st.ampSmoothing, src.smoothing.ampTimeMs);
+            SetSmoothingTimeMs(st.pitchSmoothing, src.smoothing.pitchTimeMs);
+            SetSmoothingTimeMs(st.filterCutoffSmoothing, src.smoothing.filterCutoffTimeMs);
+            st.modulation.splitRatePrepared = false;
+        }
+        else if constexpr (std::is_same_v<Config, NoiseConfig>)
+        {
+            auto& st = std::get<NoiseVoiceState>(sourceState[i]);
+            SetFilterMode(st.filter, src.filterMode);
+            SetFilterCutoffHz(st.filter, src.filterCutoffHz);
+            SetFilterResonance(st.filter, src.filterResonance);
+        }
+    }, cfg.source);
 }
 
 void Voice::AddVoice(const InstrumentSoundConfig& cfg, const MIDIEvent& e, int sampleRate)

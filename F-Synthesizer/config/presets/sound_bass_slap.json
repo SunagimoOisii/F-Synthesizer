@@ -1,0 +1,132 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "スラップ・ベース",
+        "category": "Bass",
+        "description": "弾き始めが硬く、その後は丸く落ち着くベース。リズムを立たせたい時に。",
+        "internal": false,
+        "tags": [
+          "bass",
+          "fm"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 60,
+          "preview": 40
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "音の倍音や明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "荒さ",
+            "description": "音のざらつきや鋭さを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "ビブラートの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.26,
+          "attackSec": 0.001,
+          "decaySec": 0.22,
+          "sustainLevel": 0.6,
+          "releaseSec": 0.09,
+          "source": {
+            "type": "fm",
+            "chip": 1,
+            "algorithm": 4,
+            "feedback": 0.14,
+            "brightness": 0.5,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.6,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.07,
+                  "sustainLevel": 0.04,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.72,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.26,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.09,
+                  "sustainLevel": 0.15,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 0.5,
+                "level": 0.35,
+                "index": 4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.2,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.3
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 120,
+                "fadeMs": 180
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.035,
+                  "enabled": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

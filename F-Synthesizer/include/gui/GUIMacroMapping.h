@@ -5,7 +5,7 @@
 
 // スライダー値 -> パラメータ書き込み。
 // sliders の brightness/roughness/movement/envelope (0..1) を ch のソース設定へ反映する。
-void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& sliders);
+void ApplyMacroSliders(InstrumentSoundConfig& ch, const MacroSliderState& sliders, const MacroSliderState* previous = nullptr);
 
 // パラメータ -> スライダー逆算。
 // 単一パラメータスライダーのみ逆算して返す。

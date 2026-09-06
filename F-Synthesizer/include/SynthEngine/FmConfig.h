@@ -7,13 +7,14 @@
 // FM オペレータ1個分の設定。
 struct FmOperator
 {
+    bool operator==(const FmOperator&) const = default;
     WaveType wave = WaveType::Sine;
-    // 基音に対する周波数比（0.0 < ratio <= 32.0）。
+    // 基音に対する周波数比（0.5 または整数 1..15）。
     double ratio = 1.0;
     // 出力レベル（0.0..1.0）。キャリアは音量、モジュレータは変調量への寄与。
     double level = 1.0;
     // 変調深さ（0.0..32.0）。モジュレータとして使われるときのみ有効。
-    double index = 0.0;
+    double index = 4.0;
     // オペレータ出力レベルに掛ける個別エンベロープ。
     ModEnvelopeConfig levelEnv{};
     // オペレータ変調深さに掛ける個別エンベロープ。
@@ -25,18 +26,15 @@ struct FmOperator
 // smoothing は非対応（契約上 waveform 専用）。
 struct FmConfig
 {
-    // 接続アルゴリズム（0-7）。
-    //   0: ops[0]→ops[1]（1変調→1キャリア。ops[2]/ops[3] は無視）
-    //   1: [ops[0]→ops[1]] + [ops[2]→ops[3]]（2ペア並列）
-    //   2: ops[0]→[ops[1]+ops[2]+ops[3]]（1変調→3キャリア）
-    //   3: ops[0]→ops[1]→ops[2]→ops[3]（チェーン）
-    //   4: [ops[0]→ops[1]] + [ops[2]→ops[3]]（2ペア並列キャリア）
-    //   5: ops[0]→[ops[1]+ops[2]+ops[3]]（3並列キャリア）
-    //   6: [ops[0]→ops[1]] + ops[2] + ops[3]（1ペア + 2独立）
-    //   7: ops[0] + ops[1] + ops[2] + ops[3]（全独立キャリア）
+    bool operator==(const FmConfig&) const = default;
+    // ymfm: 0 = YM2151 (X68000), 1 = YM2612 (Mega Drive).
+    int chip = 0;
+    // Hardware algorithm numbering, 0..7.
     int algorithm = 0;
     // ops[0] の自己フィードバック量（0.0=なし, 1.0=最大）。
     double feedback = 0.0;
+    // A musical macro scaling all modulator levels around their preset values.
+    double brightness = 0.5;
     FmOperator ops[4];
     FilterMode filterMode = FilterMode::Bypass;
     double filterCutoffHz = 8000.0;

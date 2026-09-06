@@ -13,129 +13,49 @@ std::vector<MIDIEvent> BuildWindowedEvents(
     int startSample,
     int endSample)
 {
-    // 目的: 部分レンダでも CC/Pitch の直前状態を失わないよう、window 開始時点の状態を補う。
-    // 前提: イベント列は sample 昇順に整列済み。
-    std::array<bool, 16> hasCc7{};
-    std::array<bool, 16> hasCc11{};
-    std::array<bool, 16> hasPitch{};
-    std::array<bool, 16> hasChannelPressure{};
-    std::array<int, 16 * 128> hasPolyPressure{};
-    std::array<int, 16> cc7{};
-    std::array<int, 16> cc11{};
-    std::array<int, 16> pitch{};
-    std::array<int, 16> channelPressure{};
-    std::array<int, 16 * 128> polyPressure{};
-    std::vector<MIDIEvent> out;
-    out.reserve(events.size());
-
-    for (const auto& e : events)
+    std::vector<MIDIEvent> prefix;
+    std::vector<MIDIEvent> active;
+    std::array<bool, 16> sustain{};
+    std::vector<int> releasedIds;
+    std::vector<MIDIEvent> result;
+    for (const auto& event : events)
     {
-        if (e.sample < startSample)
+        if (event.sample > endSample) break;
+        if (event.sample >= startSample)
         {
-            const int ch = (e.channel >= 0 && e.channel < 16) ? e.channel : 0;
-            if (e.type == MIDIEventType::ControlChange && e.controller == 7)
+            auto shifted = event; shifted.sample -= startSample;
+            result.push_back(shifted);
+            continue;
+        }
+        const int ch = std::clamp(event.channel, 0, 15);
+        if (event.type != MIDIEventType::Note)
+        {
+            // Preserve controller order, including RPN selection/data and sustain.
+            auto controller = event; controller.sample = 0; prefix.push_back(controller);
+            if (event.type == MIDIEventType::ControlChange && event.controller == 64)
             {
-                hasCc7[ch] = true;
-                cc7[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::ControlChange && e.controller == 11)
-            {
-                hasCc11[ch] = true;
-                cc11[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::PitchBend)
-            {
-                hasPitch[ch] = true;
-                pitch[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::ChannelPressure)
-            {
-                hasChannelPressure[ch] = true;
-                channelPressure[ch] = e.value;
-            }
-            else if (e.type == MIDIEventType::PolyPressure)
-            {
-                const int note = std::clamp(e.noteNumber, 0, 127);
-                const int idx = ch * 128 + note;
-                hasPolyPressure[idx] = 1;
-                polyPressure[idx] = e.value;
+                sustain[ch] = event.value >= 64;
+                if (!sustain[ch])
+                    std::erase_if(active, [&](const auto& note) {
+                        return note.channel == ch && std::find(releasedIds.begin(), releasedIds.end(), note.noteInstanceID) != releasedIds.end();
+                    });
             }
             continue;
         }
-        if (e.sample > endSample)
+        if (event.isNoteOn) active.push_back(event);
+        else
         {
-            break;
+            releasedIds.push_back(event.noteInstanceID);
+            if (!sustain[ch]) std::erase_if(active, [&](const auto& note) { return note.noteInstanceID == event.noteInstanceID; });
         }
-
-        MIDIEvent shifted = e;
-        shifted.sample -= startSample;
-        out.push_back(shifted);
     }
-
-    std::vector<MIDIEvent> prefix;
-    for (int ch = 0; ch < 16; ch++)
+    for (auto note : active)
     {
-        if (hasCc7[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::ControlChange;
-            e.channel = ch;
-            e.noteInstanceID = -1;
-            e.controller = 7;
-            e.value = cc7[ch];
-            prefix.push_back(e);
-        }
-        if (hasCc11[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::ControlChange;
-            e.channel = ch;
-            e.noteInstanceID = -1;
-            e.controller = 11;
-            e.value = cc11[ch];
-            prefix.push_back(e);
-        }
-        if (hasPitch[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::PitchBend;
-            e.channel = ch;
-            e.noteInstanceID = -1;
-            e.value = pitch[ch];
-            prefix.push_back(e);
-        }
-        if (hasChannelPressure[ch])
-        {
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::ChannelPressure;
-            e.channel = ch;
-            e.noteInstanceID = -1;
-            e.value = channelPressure[ch];
-            prefix.push_back(e);
-        }
-        for (int note = 0; note < 128; note++)
-        {
-            const int idx = ch * 128 + note;
-            if (hasPolyPressure[idx] == 0)
-            {
-                continue;
-            }
-            MIDIEvent e{};
-            e.sample = 0;
-            e.type = MIDIEventType::PolyPressure;
-            e.channel = ch;
-            e.noteNumber = note;
-            e.noteInstanceID = -1;
-            e.value = polyPressure[idx];
-            prefix.push_back(e);
-        }
+        note.sample = 0; prefix.push_back(note);
+        if (std::find(releasedIds.begin(), releasedIds.end(), note.noteInstanceID) != releasedIds.end())
+        { note.isNoteOn = false; prefix.push_back(note); }
     }
-
-    prefix.insert(prefix.end(), out.begin(), out.end());
+    prefix.insert(prefix.end(), result.begin(), result.end());
     return prefix;
 }
 
@@ -184,7 +104,7 @@ bool BuildMIDIPipeline(
 {
     // 失敗時に前回の出力が残らないよう、先頭で out を初期化する。
     out = MIDIBuildOutput{};
-    const bool hasOverrideNotes = (overrideNoteTicks != nullptr && !overrideNoteTicks->empty());
+    const bool hasOverrideNotes = (overrideNoteTicks != nullptr);
     bool loadedBaseMidi = false;
     if (!midiPath.empty())
     {
@@ -263,4 +183,3 @@ bool BuildMIDIPipeline(
 
     return true;
 }
-

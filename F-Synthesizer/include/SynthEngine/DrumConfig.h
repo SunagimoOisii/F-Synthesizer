@@ -17,6 +17,7 @@ enum class DrumType
 // type別に使う項目が異なり、0/負値は「内部既定値を使う」意味を持つ。
 struct DrumConfig
 {
+    bool operator==(const DrumConfig&) const = default;
     // DrumType ごとに参照する項目が異なるため、未使用値は 0/負値で未指定を表す。
     DrumType type = DrumType::None;
     double gain = 1.0;
@@ -46,6 +47,7 @@ struct DrumConfig
 
 struct DrumBusConfig
 {
+    bool operator==(const DrumBusConfig&) const = default;
     bool enabled = false;
     double level = 1.0;
     double attackTrim = 0.0;

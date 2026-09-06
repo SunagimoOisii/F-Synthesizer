@@ -8,6 +8,7 @@
 // 各ノートは DrumConfig を持ち、None で未割り当てを表す。
 struct DrumKitConfig
 {
+    bool operator==(const DrumKitConfig&) const = default;
     // GM想定の note(0..127) -> DrumConfig マップ。
     std::array<DrumConfig, 128> map;
     DrumBusConfig drumBus{};
