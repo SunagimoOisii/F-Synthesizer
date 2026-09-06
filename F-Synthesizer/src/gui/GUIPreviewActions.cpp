@@ -272,7 +272,6 @@ namespace gui
 {
 void ActivateSoloPreview(GUIState& state, int channel)
 {
-    EnsureChannelMixStates(state);
     channel = std::clamp(channel, 0, 15);
     if (!state.soloPreviewActive)
     {

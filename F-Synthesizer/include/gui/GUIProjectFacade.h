@@ -15,9 +15,7 @@ namespace gui
 ProjectModel BuildProjectModelFromGUI(const GUIState& state);
 void ApplyProjectModelToGUI(GUIState& state, const ProjectModel& model);
 
-std::array<InstrumentSoundConfig, 16>& MutableSoundSlots(GUIState& state);
 std::array<ChannelMixState, 16>& MutableChannelMixStates(GUIState& state);
-const std::array<InstrumentSoundConfig, 16>& ReadSoundSlots(GUIState& state);
 const std::array<ChannelMixState, 16>& ReadChannelMixStates(GUIState& state);
 
 const InstrumentSoundConfig& ReadSoundSlot(GUIState& state, int slot);

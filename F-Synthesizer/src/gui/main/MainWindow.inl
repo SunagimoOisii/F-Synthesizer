@@ -1,11 +1,7 @@
 void DrawMainWindowFrame(
     GUIState& state,
     GLFWwindow* window,
-    int& lastFrameTab,
-    int& pendingPresetIndex,
-    int& pendingPresetOriginalIndex,
-    bool& pendingCloseRequest,
-    bool& openUnsavedPopupNextFrame)
+    int& lastFrameTab)
 {
 ImGuiViewport* viewport = ImGui::GetMainViewport();
 ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -76,37 +72,9 @@ auto saveWorkspaceOnly = [&]() -> bool
         RaiseGUIError(state, "Save Project に失敗しました。設定を確認してください。(" + err + ")", 4, true);
         return false;
     }
-    AppendGUILog(state, "[GUI] Workspace saved.");
-    return true;
-};
-auto saveAll = [&]() -> bool
-{
-    if (!saveWorkspaceOnly())
-    {
-        return false;
-    }
-    if (state.presetDirty)
-    {
-        std::string err;
-        std::string presetName = state.presetName;
-        if (presetName.empty())
-        {
-            presetName = "custom";
-        }
-        const std::filesystem::path presetPath =
-            FindProjectRootPath() / "config" / "presets" / (presetName + ".json");
-        if (!SavePresetDiffFromState(state, presetPath, err))
-        {
-            AppendGUILog(state, "[GUI] Save preset failed: " + err);
-            RaiseGUIError(state, "Save All の SoundAsset 保存に失敗しました。(" + err + ")", 3, true);
-            return false;
-        }
-        state.lastPresetPath = PathToUtf8(presetPath);
-        RefreshPresetItems(state, presetName);
-        AppendGUILog(state, "[GUI] Preset saved by Save All: " + state.lastPresetPath);
-    }
     state.presetDirty = false;
-    AppendGUILog(state, "[GUI] Save All completed.");
+    state.skipWorkspaceAutosave = false;
+    AppendGUILog(state, "[GUI] Workspace saved.");
     return true;
 };
 auto preparePlayPresetTarget = [&]()
@@ -116,7 +84,6 @@ auto preparePlayPresetTarget = [&]()
     {
         return;
     }
-    gui::EnsureSoundSlots(state);
     const int currentSound = gui::AssignedSoundSlot(state, targetCh);
     int users = 0;
     for (int ch = 0; ch < 16; ++ch)
@@ -153,10 +120,8 @@ auto preparePlayPresetTarget = [&]()
         return;
     }
 
-    gui::MutableSoundSlot(state, freeSound) = gui::ReadSoundSlot(state, currentSound);
+    state.instruments[freeSound] = state.instruments[currentSound];
     gui::MutableMacroSliders(state, freeSound) = gui::ReadMacroSliders(state, currentSound);
-    state.soundSlotDisplayNames[static_cast<size_t>(freeSound)] =
-        state.soundSlotDisplayNames[static_cast<size_t>(currentSound)];
     gui::SetChannelAssignment(state, targetCh, freeSound);
     state.selectedSoundSlot = freeSound;
     state.presetDirty = true;
@@ -173,7 +138,7 @@ auto applyPresetByIndex = [&](int idx)
     std::string err;
     if (ApplySelectedPresetPaths(state, err))
     {
-        state.presetDirty = false;
+        state.presetDirty = true;
         requestAutoTonePreview();
         AppendGUILog(state, "[GUI] Preset applied: " + state.presetItems[static_cast<size_t>(idx)].name +
             " -> sound " + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15) + 1));
@@ -457,16 +422,37 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     }
     updateHoverHelp(
         "プロジェクト保存を実行します。",
-        "MusicProjectとWorkspaceを保存します。",
-        "SoundAsset(Preset)は保存対象に含みません。");
+        "音色、チャンネル割当、ノート、画面状態をまとめて保存します。");
     ImGui::SameLine();
-    if (ImGui::Button("すべて保存"))
+    if (ImGui::Button("音色を別名保存"))
     {
-        saveAll();
+        ImGui::OpenPopup("自分の音色を保存");
     }
     updateHoverHelp(
-        "すべて保存を実行します。",
-        "SoundAsset/MusicProject/Workspaceを保存します。");
+        "選択中の音色を保存します。",
+        "自分用の新しい音色として追加します。付属プリセットは変わりません。");
+    if (ImGui::BeginPopupModal("自分の音色を保存", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::InputText("音色名", state.userPresetName, IM_ARRAYSIZE(state.userPresetName));
+        ImGui::TextDisabled("同じ名前があっても新しいコピーを保存します。");
+        if (ImGui::Button("保存"))
+        {
+            std::string err;
+            if (SaveUserPresetFromState(state, err))
+            {
+                AppendGUILog(state, "[GUI] Personal sound saved: " + state.lastPresetPath);
+                ImGui::CloseCurrentPopup();
+            }
+            else
+            {
+                AppendGUILog(state, "[GUI] Personal sound save failed: " + err);
+                RaiseGUIError(state, err, 3, true);
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("キャンセル")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
     ImGui::EndDisabled();
 
     ImGui::TableSetColumnIndex(1);
@@ -567,7 +553,6 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     {
         if (state.presetDirty)
         {
-            pendingCloseRequest = true;
             ImGui::OpenPopup("未保存の変更");
         }
         else
@@ -582,72 +567,63 @@ if (ImGui::BeginTable("sound_action_bar", 3, ImGuiTableFlags_SizingStretchProp))
     ImGui::EndTable();
 }
 ImGui::Separator();
-if (openUnsavedPopupNextFrame)
-{
-    ImGui::OpenPopup("未保存の変更");
-    openUnsavedPopupNextFrame = false;
-}
 if (ImGui::BeginPopupModal("未保存の変更", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 {
     ImGui::TextUnformatted("変更が未保存です。どうしますか？");
-    if (ImGui::Button("保存して続行"))
+    if (ImGui::Button("保存して閉じる"))
     {
-        if (saveAll())
+        if (saveWorkspaceOnly())
         {
-            if (pendingCloseRequest)
-            {
-                glfwSetWindowShouldClose(window, GLFW_TRUE);
-            }
-            else if (pendingPresetIndex >= 0)
-            {
-                applyPresetByIndex(pendingPresetIndex);
-            }
-            pendingCloseRequest = false;
-            pendingPresetIndex = -1;
-            pendingPresetOriginalIndex = -1;
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
             ImGui::CloseCurrentPopup();
         }
     }
     updateHoverHelp(
-        "変更を保存して続行します。",
-        "保存後に保留操作を再開します。");
+        "変更を保存して閉じます。",
+        "作業内容を保存し、アプリを終了します。");
     ImGui::SameLine();
-    if (ImGui::Button("保存せず続行"))
+    if (ImGui::Button("保存せず閉じる"))
     {
-        if (pendingCloseRequest)
-        {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-        else if (pendingPresetIndex >= 0)
-        {
-            applyPresetByIndex(pendingPresetIndex);
-        }
-        pendingCloseRequest = false;
-        pendingPresetIndex = -1;
-        pendingPresetOriginalIndex = -1;
+        state.skipWorkspaceAutosave = true;
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
         ImGui::CloseCurrentPopup();
     }
     updateHoverHelp(
-        "保存せず続行します。",
-        "未保存変更を破棄して保留操作を再開します。",
+        "保存せず閉じます。",
+        "未保存変更を破棄し、アプリを終了します。",
         "保存していない変更は失われます。");
     ImGui::SameLine();
     if (ImGui::Button("キャンセル"))
     {
-        if (pendingPresetOriginalIndex >= 0)
-        {
-            state.presetIndex = pendingPresetOriginalIndex;
-        }
-        pendingCloseRequest = false;
-        pendingPresetIndex = -1;
-        pendingPresetOriginalIndex = -1;
-        openUnsavedPopupNextFrame = false;
         ImGui::CloseCurrentPopup();
     }
     updateHoverHelp(
         "保留操作をキャンセルします。",
         "未保存確認を閉じて現在画面に戻ります。");
     ImGui::EndPopup();
+}
+
+if (state.UIModeTab == 0 || state.UIModeTab == 3)
+{
+    const auto& io = ImGui::GetIO();
+    const bool shortcuts = !state.running && io.KeyCtrl && !io.WantTextInput &&
+        !ImGui::IsAnyItemActive() &&
+        !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel);
+    ImGui::BeginDisabled(state.running || state.soundUndoStack.empty());
+    const bool undo = ImGui::Button("音色を戻す (Ctrl+Z)");
+    ImGui::EndDisabled();
+    ImGui::SameLine();
+    ImGui::BeginDisabled(state.running || state.soundRedoStack.empty());
+    const bool redo = ImGui::Button("音色をやり直す (Ctrl+Y)");
+    ImGui::EndDisabled();
+    if (undo || (shortcuts && ImGui::IsKeyPressed(ImGuiKey_Z, false)))
+    {
+        if (UndoSound(state)) requestAutoTonePreview();
+    }
+    else if (redo || (shortcuts && ImGui::IsKeyPressed(ImGuiKey_Y, false)))
+    {
+        if (RedoSound(state)) requestAutoTonePreview();
+    }
 }
 
 static bool logPanelExpanded = false;
@@ -666,9 +642,6 @@ if (state.UIModeTab == 0)
 {
     DrawPlayView(
         state,
-        pendingPresetIndex,
-        pendingPresetOriginalIndex,
-        openUnsavedPopupNextFrame,
         applyPresetByIndex,
         [&](const char* what, const char* impact, const char* caution)
         {

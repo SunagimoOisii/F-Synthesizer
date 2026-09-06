@@ -6,8 +6,6 @@
 
 namespace gui
 {
-void EnsureSoundSlots(GUIState& state);
-void EnsureChannelMixStates(GUIState& state);
 void InitializeGUIState(
     GUIState& state,
     const std::function<void(const std::string&)>& refreshPresetItems);

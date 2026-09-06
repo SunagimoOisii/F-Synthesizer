@@ -100,7 +100,7 @@ static std::string SoundSourceLabel(const GUIState& state, int soundIndex)
 static std::string SoundSlotDisplayLabel(const GUIState& state, int soundIndex)
 {
     soundIndex = std::clamp(soundIndex, 0, 15);
-    const std::string& name = state.soundSlotDisplayNames[static_cast<size_t>(soundIndex)];
+    const std::string& name = state.instruments[static_cast<size_t>(soundIndex)].displayName;
     if (!name.empty())
     {
         return name;
@@ -158,19 +158,14 @@ static void DrawUseInComposeControl(GUIState& state, HelpFn&& updateHoverHelp)
 template <typename ApplyPresetFn, typename HelpFn>
 static void DrawPlayView(
     GUIState& state,
-    int& pendingPresetIndex,
-    int& pendingPresetOriginalIndex,
-    bool& openUnsavedPopupNextFrame,
     ApplyPresetFn&& applyPresetByIndex,
     HelpFn&& updateHoverHelp)
 {
-    (void)pendingPresetOriginalIndex;
     state.playCategoryIndex = std::clamp(state.playCategoryIndex, 0, static_cast<int>(IM_ARRAYSIZE(kPlayCategories)) - 1);
     if (state.playCategoryIndex > 0 && !CategoryHasPreset(state, kPlayCategories[state.playCategoryIndex]))
     {
         state.playCategoryIndex = 0;
     }
-    gui::EnsureSoundSlots(state);
 
     ImGui::TextUnformatted("Sound Cards");
     const int editingChannel = std::clamp(state.playEditingChannel, -1, 15);
@@ -241,17 +236,7 @@ static void DrawPlayView(
             }
             if (ImGui::Button(PresetDisplayName(state, i).c_str(), ImVec2(220.0f, 44.0f)))
             {
-                if (state.presetDirty)
-                {
-                    pendingPresetOriginalIndex = state.presetIndex;
-                    pendingPresetIndex = i;
-                    openUnsavedPopupNextFrame = true;
-                    state.presetIndex = i;
-                }
-                else
-                {
-                    applyPresetByIndex(i);
-                }
+                applyPresetByIndex(i);
             }
             if (selected)
             {
@@ -302,23 +287,18 @@ static void DrawPlayView(
             }
             updateHoverHelp("Inspectorを閉じます。", "カード一覧とマクロを広く使えます。", nullptr);
             ImGui::Separator();
-            if (state.presetIndex >= 0 && state.presetIndex < static_cast<int>(state.presetItems.size()))
             {
-                ImGui::TextWrapped("%s", PresetDisplayName(state, state.presetIndex).c_str());
-                ImGui::TextDisabled("%s", PresetCategory(state, state.presetIndex).c_str());
-                const std::string desc = PresetDescription(state, state.presetIndex);
-                if (!desc.empty())
+                const auto& instrument = state.instruments[std::clamp(state.selectedSoundSlot, 0, 15)];
+                ImGui::TextWrapped("%s", instrument.displayName.empty() ? "編集中の音色" : instrument.displayName.c_str());
+                ImGui::TextDisabled("%s", instrument.category.c_str());
+                if (!instrument.description.empty())
                 {
-                    ImGui::TextWrapped("%s", desc.c_str());
+                    ImGui::TextWrapped("%s", instrument.description.c_str());
                 }
                 ImGui::Separator();
                 if (ImGui::Button("試聴"))
                 {
-                    const auto& item = state.presetItems[static_cast<size_t>(state.presetIndex)];
-                    if (item.recommendedRange.available)
-                    {
-                        state.tonePreviewNoteNumber = item.recommendedRange.preview;
-                    }
+                    state.tonePreviewNoteNumber = instrument.recommendedRange.preview;
                     StartGUIRun(state, true);
                 }
                 updateHoverHelp("選択中の音を試聴します。", "WAVを書き出さずに再生します。", nullptr);
@@ -328,15 +308,14 @@ static void DrawPlayView(
                     state.UIModeTab = 3;
                 }
                 updateHoverHelp("詳細編集へ移動します。", "専門的な音色パラメータを開きます。", nullptr);
-                const auto& item = state.presetItems[static_cast<size_t>(state.presetIndex)];
-                if (item.recommendedRange.available)
+                if (!instrument.displayName.empty())
                 {
                     ImGui::Separator();
                     ImGui::TextDisabled(
                         "推奨音域: %d-%d / Preview %d",
-                        item.recommendedRange.low,
-                        item.recommendedRange.high,
-                        item.recommendedRange.preview);
+                        instrument.recommendedRange.low,
+                        instrument.recommendedRange.high,
+                        instrument.recommendedRange.preview);
                 }
             }
             ImGui::EndChild();
@@ -358,8 +337,6 @@ static void DrawComposeView(
     GUIState& state,
     HelpFn&& updateHoverHelp)
 {
-    gui::EnsureSoundSlots(state);
-    gui::EnsureChannelMixStates(state);
     constexpr int drumMidiChannel = 9;
 
     ImGui::TextUnformatted("Compose");
@@ -558,8 +535,6 @@ static void DrawAdvancedView(
     HelpFn&& updateHoverHelp,
     PreviewFn&& requestAutoTonePreview)
 {
-    gui::EnsureSoundSlots(state);
-    gui::EnsureChannelMixStates(state);
 
     ImGui::TextUnformatted("Advanced");
     ImGui::TextDisabled("専門的な音色、FX、ミックス設定をまとめて扱います。");

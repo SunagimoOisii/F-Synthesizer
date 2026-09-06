@@ -33,14 +33,14 @@ MacroLabels GetMacroLabels(const SourceConfig& src)
     return { "明るさ", "荒さ", "揺れ", "鳴り方" };
 }
 
-const GUIPresetItem::MacroHint* FindPresetMacroHint(const GUIState& state, const char* id)
+const MacroHint* FindPresetMacroHint(const GUIState& state, const char* id)
 {
-    if (id == nullptr || state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
+    if (id == nullptr)
     {
         return nullptr;
     }
-    const auto& hints = state.presetItems[static_cast<size_t>(state.presetIndex)].macroHints;
-    const auto it = std::find_if(hints.begin(), hints.end(), [&](const GUIPresetItem::MacroHint& hint) {
+    const auto& hints = state.instruments[std::clamp(state.selectedSoundSlot, 0, 15)].macroHints;
+    const auto it = std::find_if(hints.begin(), hints.end(), [&](const MacroHint& hint) {
         return hint.id == id;
     });
     return (it != hints.end()) ? &*it : nullptr;
@@ -53,7 +53,7 @@ void ApplyPresetMacroHints(const GUIState& state, MacroLabels& labels)
         {
             return;
         }
-        const GUIPresetItem::MacroHint* hint = FindPresetMacroHint(state, id);
+        const MacroHint* hint = FindPresetMacroHint(state, id);
         if (hint == nullptr)
         {
             return;
@@ -78,7 +78,6 @@ void ApplyPresetMacroHints(const GUIState& state, MacroLabels& labels)
 // DrawLayer2Macros 内のスライダー変更と Randomize の両方から呼ばれる。
 void ApplyAndTriggerPreview(GUIState& state, int ch)
 {
-    gui::EnsureSoundSlots(state);
     InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     const MacroSliderState& sl = gui::ReadMacroSliders(state, ch);
 
@@ -116,7 +115,6 @@ void DrawLayer2Macros(GUIState& state)
     }
     state.layer2Expanded = true;
 
-    gui::EnsureSoundSlots(state);
     const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
     InstrumentSoundConfig& cfg = gui::MutableSoundSlot(state, ch);
     MacroSliderState& sliders = gui::MutableMacroSliders(state, ch);

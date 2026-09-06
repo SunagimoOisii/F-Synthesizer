@@ -919,11 +919,10 @@ void WriteInstrumentSoundConfig(std::ostream& out, int ch, const InstrumentSound
     const auto& ampCab = cfg.ampCabLayer;
     WriteIndent(out, 8); out << "\"ampCab\": { \"enabled\": " << (ampCab.enabled ? "true" : "false") << ", \"drive\": " << ampCab.drive << ", \"tone\": " << ampCab.tone << ", \"cabLow\": " << ampCab.cabLow << ", \"cabHigh\": " << ampCab.cabHigh << ", \"presence\": " << ampCab.presence << ", \"output\": " << ampCab.output << " }\n";
     WriteIndent(out, 6); out << "},\n";
-    if (cfg.expressionMap.enabled)
     {
         const auto& map = cfg.expressionMap;
         WriteIndent(out, 6); out << "\"expressionMap\": {\n";
-        WriteIndent(out, 8); out << "\"enabled\": true,\n";
+        WriteIndent(out, 8); out << "\"enabled\": " << (map.enabled ? "true" : "false") << ",\n";
         WriteIndent(out, 8); out << "\"velocityCurve\": " << map.velocityCurve << ",\n";
         WriteIndent(out, 8); out << "\"velocityToAmp\": " << map.velocityToAmp << ",\n";
         WriteIndent(out, 8); out << "\"velocityToBrightness\": " << map.velocityToBrightness << ",\n";

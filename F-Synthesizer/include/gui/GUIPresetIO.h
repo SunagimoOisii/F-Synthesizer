@@ -1,19 +1,10 @@
 #pragma once
 
-#include <array>
-#include <filesystem>
-#include <string>
-#include <vector>
-
-#include "SynthEngine/InstrumentSoundConfig.h"
+#include "project/ProjectModel.h"
 
 namespace gui
 {
-struct GUIPresetSnapshot
-{
-    std::array<InstrumentSoundConfig, 16> soundSlots{};
-};
-
-bool SavePresetDiffFile(const GUIPresetSnapshot& snapshot, const std::filesystem::path& presetPath, std::string& err);
-std::vector<std::string> CollectPresetItems(const std::filesystem::path& projectRoot);
+// Always creates a new file in config/user_presets; existing sounds are never overwritten.
+bool SaveUserPresetFile(const std::filesystem::path& projectRoot, const InstrumentConfig& sound,
+    const std::string& name, std::filesystem::path& savedPath, std::string& err);
 } // namespace gui

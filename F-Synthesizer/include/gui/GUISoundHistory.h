@@ -3,6 +3,7 @@
 #include <deque>
 
 #include "AppCore.h"
+#include "project/ProjectModel.h"
 #include "gui/GUIMacroSliders.h"
 
 struct GUIState; // forward declaration (GUIState includes this header)
@@ -10,7 +11,7 @@ struct GUIState; // forward declaration (GUIState includes this header)
 struct SoundUndoEntry
 {
     int slot = 0;
-    InstrumentSoundConfig InstrumentSoundConfig;
+    InstrumentConfig instrument;
     MacroSliderState macroSliders;
 };
 

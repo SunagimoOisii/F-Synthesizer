@@ -238,7 +238,7 @@ void SyncProjectDataFromCurrentNotes(PianoRollState& state)
     state.projectMidiPath = state.loadedMidiPath;
     state.projectTicksPerQuarter = state.ticksPerQuarter;
     state.projectNotes = state.notes;
-    state.hasProjectData = !state.projectNotes.empty();
+    state.hasProjectData = true;
 }
 
 
@@ -390,7 +390,7 @@ void EnsureModelLoaded(
     BuildNotesFromTicks(ticks, ticksPerQuarter, state);
     state.tempoEvents = tempoEvents;
     bool appliedProjectData = false;
-    if (state.hasProjectData && state.projectMidiPath == midiPath && !state.projectNotes.empty())
+    if (state.hasProjectData && state.projectMidiPath == midiPath)
     {
         // 専用project JSONがある場合は、MIDI由来ノートより編集済みノートを優先する。
         state.notes = state.projectNotes;

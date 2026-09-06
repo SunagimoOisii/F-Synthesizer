@@ -4,7 +4,6 @@
 
 #include "gui/GUIState.h"
 #include "gui/GUIProjectFacade.h"
-#include "gui/GUIStateModel.h" // for EnsureSoundSlots
 
 void PushSoundHistoryEntry(
     GUIState& state,
@@ -17,7 +16,8 @@ void PushSoundHistoryEntry(
 
     SoundUndoEntry entry;
     entry.slot = slot;
-    entry.InstrumentSoundConfig = config;
+    entry.instrument = state.instruments[std::clamp(slot, 0, 15)];
+    entry.instrument.sound = config;
     entry.macroSliders = sliders;
     state.soundUndoStack.push_back(std::move(entry));
 
@@ -30,9 +30,11 @@ void PushSoundHistoryEntry(
 
 void ApplySoundHistoryEntry(GUIState& state, const SoundUndoEntry& entry)
 {
-    gui::EnsureSoundSlots(state);
     const int slot = std::clamp(entry.slot, 0, 15);
-    gui::MutableSoundSlot(state, slot) = entry.InstrumentSoundConfig;
+    state.instruments[slot] = entry.instrument;
+    state.selectedSoundSlot = slot;
+    if (state.playEditingChannel >= 0 && gui::AssignedSoundSlot(state, state.playEditingChannel) != slot)
+        state.playEditingChannel = -1;
     gui::MutableMacroSliders(state, slot) = entry.macroSliders;
     state.presetDirty = true;
 }
@@ -46,10 +48,9 @@ bool UndoSound(GUIState& state)
 
     // 現在の状態を Redo スタックに退避
     const int slot = std::clamp(state.soundUndoStack.back().slot, 0, 15);
-    gui::EnsureSoundSlots(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.InstrumentSoundConfig = gui::ReadSoundSlot(state, slot);
+    current.instrument = state.instruments[slot];
     current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundRedoStack.push_back(std::move(current));
 
@@ -68,10 +69,9 @@ bool RedoSound(GUIState& state)
 
     // 現在の状態を Undo スタックに退避
     const int slot = std::clamp(state.soundRedoStack.back().slot, 0, 15);
-    gui::EnsureSoundSlots(state);
     SoundUndoEntry current;
     current.slot = slot;
-    current.InstrumentSoundConfig = gui::ReadSoundSlot(state, slot);
+    current.instrument = state.instruments[slot];
     current.macroSliders = gui::ReadMacroSliders(state, slot);
     state.soundUndoStack.push_back(std::move(current));
 

@@ -10,110 +10,55 @@ namespace gui
 {
 namespace
 {
-std::array<InstrumentSoundConfig, 16> DefaultSoundSlots()
+std::string SlotId(int slot)
 {
-    std::array<InstrumentSoundConfig, 16> sounds{};
-    const ProjectModel defaults = DefaultProjectModel();
-    if (defaults.instruments && defaults.projectChannels)
-    {
-        for (int ch = 0; ch < 16; ch++)
-        {
-            const auto& channel = (*defaults.projectChannels)[ch];
-            const auto it = defaults.instruments->find(channel.instrumentId);
-            if (it != defaults.instruments->end())
-            {
-                sounds[static_cast<size_t>(ch)] = it->second.sound;
-            }
-        }
-    }
-    return sounds;
-}
-
-std::array<ChannelMixState, 16> DefaultChannelMixStates()
-{
-    std::array<ChannelMixState, 16> mixes{};
-    const ProjectModel defaults = DefaultProjectModel();
-    if (defaults.projectChannels)
-    {
-        for (int ch = 0; ch < 16; ch++)
-        {
-            mixes[static_cast<size_t>(ch)] = (*defaults.projectChannels)[ch].mix;
-        }
-    }
-    return mixes;
+    return "slot_" + std::to_string(slot);
 }
 } // namespace
 
-std::array<InstrumentSoundConfig, 16>& MutableSoundSlots(GUIState& state)
-{
-    if (!state.soundSlots)
-    {
-        state.soundSlots = std::make_shared<std::array<InstrumentSoundConfig, 16>>(DefaultSoundSlots());
-    }
-    return *state.soundSlots;
-}
-
 std::array<ChannelMixState, 16>& MutableChannelMixStates(GUIState& state)
 {
-    if (!state.channelMixStates)
-    {
-        state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>(DefaultChannelMixStates());
-    }
-    return *state.channelMixStates;
-}
-
-const std::array<InstrumentSoundConfig, 16>& ReadSoundSlots(GUIState& state)
-{
-    return MutableSoundSlots(state);
+    return state.channelMixStates;
 }
 
 const std::array<ChannelMixState, 16>& ReadChannelMixStates(GUIState& state)
 {
-    return MutableChannelMixStates(state);
+    return state.channelMixStates;
 }
 
 const InstrumentSoundConfig& ReadSoundSlot(GUIState& state, int slot)
 {
-    return MutableSoundSlots(state)[std::clamp(slot, 0, 15)];
+    return state.instruments[std::clamp(slot, 0, 15)].sound;
 }
 
 const InstrumentSoundConfig& ReadSoundSlot(const GUIState& state, int slot)
 {
-    slot = std::clamp(slot, 0, 15);
-    if (state.soundSlots)
-    {
-        return (*state.soundSlots)[slot];
-    }
-
-    static const std::array<InstrumentSoundConfig, 16> fallback = DefaultSoundSlots();
-    return fallback[static_cast<size_t>(slot)];
+    return state.instruments[std::clamp(slot, 0, 15)].sound;
 }
 
 InstrumentSoundConfig& MutableSoundSlot(GUIState& state, int slot)
 {
-    return MutableSoundSlots(state)[std::clamp(slot, 0, 15)];
+    return state.instruments[std::clamp(slot, 0, 15)].sound;
 }
 
 const ChannelMixState& ReadChannelMix(GUIState& state, int channel)
 {
-    return MutableChannelMixStates(state)[std::clamp(channel, 0, 15)];
+    return state.channelMixStates[std::clamp(channel, 0, 15)];
 }
 
 ChannelMixState& MutableChannelMix(GUIState& state, int channel)
 {
-    return MutableChannelMixStates(state)[std::clamp(channel, 0, 15)];
+    return state.channelMixStates[std::clamp(channel, 0, 15)];
 }
 
 int AssignedSoundSlot(const GUIState& state, int channel)
 {
-    channel = std::clamp(channel, 0, 15);
-    return std::clamp(state.channelAssignments[channel], 0, 15);
+    return std::clamp(state.channelAssignments[std::clamp(channel, 0, 15)], 0, 15);
 }
 
 void SetChannelAssignment(GUIState& state, int channel, int slot)
 {
-    channel = std::clamp(channel, 0, 15);
-    state.channelAssignments[channel] = std::clamp(slot, 0, 15);
+    state.channelAssignments[std::clamp(channel, 0, 15)] = std::clamp(slot, 0, 15);
 }
 
 MacroSliderState& MutableMacroSliders(GUIState& state, int slot)
@@ -128,7 +73,7 @@ const MacroSliderState& ReadMacroSliders(const GUIState& state, int slot)
 
 ProjectModel BuildProjectModelFromGUI(const GUIState& state)
 {
-    ProjectModel model = DefaultProjectModel();
+    ProjectModel model{};
     model.midiPath = Utf8ToPath(state.midiPath);
     model.wavPath = Utf8ToPath(state.wavPath);
     model.targetChannel = state.targetChannel;
@@ -138,24 +83,17 @@ ProjectModel BuildProjectModelFromGUI(const GUIState& state)
     model.extraReleaseSec = state.extraReleaseSec;
     model.masterEffects = state.masterEffects;
     auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>();
-    auto projectChannels = std::make_shared<std::array<ProjectChannelAssignment, 16>>();
-    const auto soundSlots = state.soundSlots ? *state.soundSlots : DefaultSoundSlots();
-    const auto mixStates = state.channelMixStates ? *state.channelMixStates : DefaultChannelMixStates();
+    auto channels = std::make_shared<std::array<ProjectChannelAssignment, 16>>();
     for (int ch = 0; ch < 16; ch++)
     {
-        const std::string id = "gui_project__ch" + std::to_string(ch);
-        InstrumentConfig instrument{};
-        instrument.sound = soundSlots[static_cast<size_t>(ch)];
-        instruments->emplace(id, instrument);
-
-        ProjectChannelAssignment channel{};
+        instruments->emplace(SlotId(ch), state.instruments[ch]);
+        auto& channel = (*channels)[ch];
         channel.enabled = true;
-        channel.instrumentId = id;
-        channel.mix = mixStates[static_cast<size_t>(ch)];
-        (*projectChannels)[static_cast<size_t>(ch)] = channel;
+        channel.instrumentId = SlotId(AssignedSoundSlot(state, ch));
+        channel.mix = state.channelMixStates[ch];
     }
     model.instruments = instruments;
-    model.projectChannels = projectChannels;
+    model.projectChannels = channels;
     return model;
 }
 
@@ -169,71 +107,71 @@ void ApplyProjectModelToGUI(GUIState& state, const ProjectModel& model)
     state.bits = model.bits;
     state.extraReleaseSec = static_cast<float>(model.extraReleaseSec);
     state.masterEffects = model.masterEffects;
-
-    state.soundSlots = std::make_shared<std::array<InstrumentSoundConfig, 16>>(DefaultSoundSlots());
-    state.channelMixStates = std::make_shared<std::array<ChannelMixState, 16>>(DefaultChannelMixStates());
-    if (model.instruments && model.projectChannels)
+    state.channelMixStates = {};
+    std::map<std::string, int> slots;
+    if (model.instruments)
     {
-        for (int ch = 0; ch < 16; ch++)
+        // Workspace IDs preserve unused sounds as well as channel assignments.
+        for (int slot = 0; slot < 16; slot++)
         {
-            const auto& channel = (*model.projectChannels)[ch];
-            const auto it = model.instruments->find(channel.instrumentId);
+            const auto it = model.instruments->find(SlotId(slot));
             if (it != model.instruments->end())
             {
-                (*state.soundSlots)[static_cast<size_t>(ch)] = it->second.sound;
+                state.instruments[slot] = it->second;
+                slots.emplace(it->first, slot);
             }
-            (*state.channelMixStates)[static_cast<size_t>(ch)] = channel.mix;
         }
+    }
+    if (!model.instruments || !model.projectChannels) return;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        const auto& channel = (*model.projectChannels)[ch];
+        const auto it = model.instruments->find(channel.instrumentId);
+        if (it == model.instruments->end()) continue;
+        const auto known = slots.find(channel.instrumentId);
+        int slot = ch;
+        if (known != slots.end())
+        {
+            slot = known->second;
+        }
+        else
+        {
+            for (slot = 0; slot < 16; slot++)
+            {
+                const bool used = std::any_of(slots.begin(), slots.end(),
+                    [slot](const auto& entry) { return entry.second == slot; });
+                if (!used) break;
+            }
+            if (slot == 16) continue;
+            state.instruments[slot] = it->second;
+            slots.emplace(channel.instrumentId, slot);
+        }
+        state.channelAssignments[ch] = slot;
+        state.channelMixStates[ch] = channel.mix;
     }
 }
 
-ProjectModel BuildRuntimeProjectFromGUI(GUIState& state, const char* instrumentPrefix, bool applyChannelAssignments)
+ProjectModel BuildRuntimeProjectFromGUI(GUIState& state, const char*, bool applyChannelAssignments)
 {
     ProjectModel project = BuildProjectModelFromGUI(state);
-    auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>();
-    auto projectChannels = std::make_shared<std::array<ProjectChannelAssignment, 16>>();
-
-    const char* prefix = (instrumentPrefix != nullptr && instrumentPrefix[0] != '\0')
-        ? instrumentPrefix
-        : "gui_runtime__ch";
-    const auto& soundSlots = ReadSoundSlots(state);
-    const auto& channelMixStates = ReadChannelMixStates(state);
-
-    for (int ch = 0; ch < 16; ch++)
+    if (!applyChannelAssignments)
     {
-        const int src = applyChannelAssignments ? AssignedSoundSlot(state, ch) : ch;
-        const std::string id = std::string(prefix) + std::to_string(ch);
-        InstrumentConfig instrument{};
-        instrument.sound = soundSlots[src];
-        instruments->emplace(id, instrument);
-
-        ProjectChannelAssignment projectChannel{};
-        projectChannel.enabled = true;
-        projectChannel.instrumentId = id;
-        projectChannel.mix = channelMixStates[ch];
-        (*projectChannels)[ch] = projectChannel;
+        auto channels = std::make_shared<std::array<ProjectChannelAssignment, 16>>(*project.projectChannels);
+        for (int ch = 0; ch < 16; ch++) (*channels)[ch].instrumentId = SlotId(ch);
+        project.projectChannels = channels;
     }
-
-    project.instruments = instruments;
-    project.projectChannels = projectChannels;
     return project;
 }
 
 void OverrideProjectChannelWithSoundSlot(GUIState& state, int previewChannel, int soundSlot, ProjectModel& project)
 {
-    if (!project.instruments || !project.projectChannels)
-    {
-        return;
-    }
-
-    previewChannel = std::clamp(previewChannel, 0, 15);
-    const std::string instrumentId = (*project.projectChannels)[previewChannel].instrumentId;
-    auto mutableInstruments = std::make_shared<std::map<std::string, InstrumentConfig>>(*project.instruments);
-    auto it = mutableInstruments->find(instrumentId);
-    if (it != mutableInstruments->end())
-    {
-        it->second.sound = ReadSoundSlot(state, soundSlot);
-    }
-    project.instruments = mutableInstruments;
+    if (!project.instruments || !project.projectChannels) return;
+    auto instruments = std::make_shared<std::map<std::string, InstrumentConfig>>(*project.instruments);
+    auto channels = std::make_shared<std::array<ProjectChannelAssignment, 16>>(*project.projectChannels);
+    const std::string id = "preview_override";
+    (*instruments)[id] = state.instruments[std::clamp(soundSlot, 0, 15)];
+    (*channels)[std::clamp(previewChannel, 0, 15)].instrumentId = id;
+    project.instruments = instruments;
+    project.projectChannels = channels;
 }
 } // namespace gui

@@ -150,7 +150,8 @@ int RunGUIApp()
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
-    GUIState state{};
+    auto stateOwner = std::make_unique<GUIState>();
+    GUIState& state = *stateOwner;
     // 起動時に「既定値 -> 保存状態の復元 -> 不正値修復」の順で状態を確定する。
     InitializeGUIState(state, [&](const std::string& preferName) { RefreshPresetItems(state, preferName); });
 
@@ -158,22 +159,20 @@ int RunGUIApp()
         std::string err;
         if (!LoadGUIStateFile(state, err))
         {
-            AppendGUILog(state, "[GUI] gui_state load failed: " + err);
+            state.skipWorkspaceAutosave = true;
+            AppendGUILog(state, "[GUI] Workspace load failed: " + err);
         }
         else
         {
-            AppendGUILog(state, "[GUI] gui_state loaded: " + PathToUtf8(GUIStatePath()));
+            AppendGUILog(state, "[GUI] Workspace restored: " + PathToUtf8(GUIStatePath()));
         }
         RepairGUIStatePaths(
             state,
             [&](const std::string& preferName) { RefreshPresetItems(state, preferName); },
             [&](const std::string& line) { AppendGUILog(state, line); });
     }
+    RefreshPresetItems(state, state.presetName);
     int lastFrameTab = state.UIModeTab;
-    int pendingPresetIndex = -1;
-    int pendingPresetOriginalIndex = -1;
-    bool pendingCloseRequest = false;
-    bool openUnsavedPopupNextFrame = false;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -186,7 +185,7 @@ int RunGUIApp()
         ImGui::NewFrame();
         ApplyUIThemeStyle(state, defaultDarkStyle);
         ImGui::GetIO().FontGlobalScale = UIScaleFromIndex(state.UIScaleIndex);
-        DrawMainWindowFrame(state, window, lastFrameTab, pendingPresetIndex, pendingPresetOriginalIndex, pendingCloseRequest, openUnsavedPopupNextFrame);
+        DrawMainWindowFrame(state, window, lastFrameTab);
 
         ImGui::Render();
         int displayW = 0;
@@ -222,9 +221,9 @@ int RunGUIApp()
 
     {
         std::string err;
-        if (!SaveGUIStateFile(state, err))
+        if (!state.skipWorkspaceAutosave && !SaveGUIStateFile(state, err))
         {
-            AppendGUILog(state, "[GUI] gui_state save failed: " + err);
+            AppendGUILog(state, "[GUI] Workspace save failed: " + err);
         }
     }
 

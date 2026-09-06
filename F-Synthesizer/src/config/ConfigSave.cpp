@@ -1,8 +1,12 @@
 #include "ConfigFileInternal.h"
 
 #include <fstream>
+#include <limits>
 #include <sstream>
+#define NOMINMAX
+#include <Windows.h>
 
+#include "config/ProjectJSON.h"
 #include "io/PlatformPaths.h"
 #include "third_party/nlohmann/json.hpp"
 
@@ -15,11 +19,12 @@ using Json = nlohmann::json;
 Json ChannelSoundToJson(const InstrumentSoundConfig& config)
 {
     std::ostringstream tmp;
+    tmp.precision(std::numeric_limits<double>::max_digits10);
     WriteInstrumentSoundConfig(tmp, 0, config, false);
     Json wrapped = Json::parse("{" + tmp.str() + "}", nullptr, false);
     if (wrapped.is_discarded() || !wrapped.contains("0") || !wrapped["0"].is_object())
     {
-        return Json::object();
+        throw std::runtime_error("failed to serialize instrument sound");
     }
     return wrapped["0"];
 }
@@ -111,12 +116,24 @@ Json MasterEffectsToJson(const MasterEffectConfig& effects)
 
 bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const ProjectModel& model, std::string& err)
 {
-    std::error_code ec;
-    if (configPath.has_parent_path())
+    try
     {
-        std::filesystem::create_directories(configPath.parent_path(), ec);
+        return config::WriteJSONFile(configPath, config::ProjectToJSON(model), err);
     }
+    catch (const std::exception& ex)
+    {
+        err = ex.what();
+        return false;
+    }
+}
+} // namespace config::internal
 
+namespace config
+{
+nlohmann::json ProjectToJSON(const ProjectModel& model)
+{
+    using namespace internal;
+    using Json = nlohmann::json;
     const ProjectModel saveModel = model;
 
     Json instruments = Json::object();
@@ -158,16 +175,44 @@ bool SaveProjectModelFileInternal(const std::filesystem::path& configPath, const
         }},
     };
 
-    std::ofstream out(configPath, std::ios::binary | std::ios::trunc);
-    if (!out)
-    {
-        err = "failed to open output file";
-        return false;
-    }
-
-    out << root.dump(2) << '\n';
-
-    return true;
+    return root;
 }
 
-} // namespace config::internal
+bool WriteJSONFile(const std::filesystem::path& path, const nlohmann::json& json,
+    std::string& err, bool overwrite)
+{
+    const std::string text = json.dump(2);
+    std::error_code ec;
+    if (path.has_parent_path()) std::filesystem::create_directories(path.parent_path(), ec);
+    if (ec)
+    {
+        err = "failed to create output directory: " + ec.message();
+        return false;
+    }
+    std::filesystem::path temporary = path;
+    temporary += L".tmp";
+    {
+        std::ofstream out(temporary, std::ios::binary | std::ios::trunc);
+        if (!out)
+        {
+            err = "failed to open temporary output file";
+            return false;
+        }
+        out << text << '\n';
+        out.close();
+        if (!out)
+        {
+            err = "failed to write output file";
+            std::filesystem::remove(temporary, ec);
+            return false;
+        }
+    }
+    if (!MoveFileExW(temporary.c_str(), path.c_str(), overwrite ? MOVEFILE_REPLACE_EXISTING : 0))
+    {
+        err = "failed to save output file (Windows error " + std::to_string(GetLastError()) + ")";
+        std::filesystem::remove(temporary, ec);
+        return false;
+    }
+    return true;
+}
+} // namespace config

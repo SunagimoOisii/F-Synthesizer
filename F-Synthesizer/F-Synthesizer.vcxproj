@@ -186,7 +186,6 @@
     <ClCompile Include="src\\gui\\GUISoundHistory.cpp" />
     <ClCompile Include="src\\gui\\GUIStateModel.cpp" />
     <ClCompile Include="src\\gui\\GUIStatePersistence.cpp" />
-    <ClCompile Include="src\\gui\\GUIStateStorage.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
     <ClCompile Include="src\\io\\PlatformPaths.cpp" />
     <ClCompile Include="src\\midi\\MIDIReader.cpp" />
@@ -218,6 +217,7 @@
     <ClInclude Include="include\\core\\RenderConfigBuilder.h" />
     <ClInclude Include="include\\core\\RenderGateway.h" />
     <ClInclude Include="include\\config\\ConfigResolver.h" />
+    <ClInclude Include="include\\config\\ProjectJSON.h" />
     <ClInclude Include="include\\config\\SourceJSON.h" />
     <ClInclude Include="include\\config\\SourceRegistry.h" />
     <ClInclude Include="src\\config\\ConfigFileInternal.h" />
@@ -238,7 +238,6 @@
     <ClInclude Include="include\\gui\\GUIState.h" />
     <ClInclude Include="include\\gui\\GUIStateModel.h" />
     <ClInclude Include="include\\gui\\GUIStatePersistence.h" />
-    <ClInclude Include="include\\gui\\GUIStateStorage.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
     <ClInclude Include="src\\gui\\main\\MainWindow.inl" />
     <ClInclude Include="src\\gui\\main\\ExperienceViews.inl" />

@@ -8,9 +8,9 @@
 namespace gui
 {
 std::filesystem::path GUIStatePath();
-// GUI状態 + PianoRollプロジェクトを読込み、失敗時は err に原因を返す。
-// 不足キーは呼び出し前 state の値を保持する。
+// 音色、割当、ノート、画面状態を一つの workspace.json から復元する。
+// 読み込み失敗時は編集中の状態を変更しない。
 bool LoadGUIStateFile(GUIState& state, std::string& err);
-// GUI状態 + PianoRollプロジェクトを保存する。片方でも失敗した場合は false。
+// プリセット原本には書き込まない。
 bool SaveGUIStateFile(const GUIState& state, std::string& err);
 } // namespace gui

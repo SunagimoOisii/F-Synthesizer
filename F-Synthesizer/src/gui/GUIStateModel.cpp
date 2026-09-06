@@ -11,16 +11,6 @@
 
 namespace gui
 {
-void EnsureSoundSlots(GUIState& state)
-{
-    (void)MutableSoundSlots(state);
-}
-
-void EnsureChannelMixStates(GUIState& state)
-{
-    (void)MutableChannelMixStates(state);
-}
-
 void InitializeGUIState(
     GUIState& state,
     const std::function<void(const std::string&)>& refreshPresetItems)
@@ -322,7 +312,6 @@ void RepairGUIStatePaths(
         }
     }
 
-    EnsureChannelMixStates(state);
     for (int ch = 0; ch < 16; ch++)
     {
         ChannelMixState& mix = MutableChannelMix(state, ch);

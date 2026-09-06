@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "AppCore.h"
+#include "project/ProjectModel.h"
 #include "gui/GUIMacroSliders.h"
 #include "gui/GUISoundHistory.h"
 #include "gui/GUIPianoRoll.h"
@@ -86,8 +87,8 @@ struct GUIPersistentState
     char presetName[128]{ "custom" };
     std::string lastOutputPath{};
     std::string lastPresetPath{};
-    std::shared_ptr<std::array<InstrumentSoundConfig, 16>> soundSlots{};
-    std::shared_ptr<std::array<ChannelMixState, 16>> channelMixStates{};
+    std::array<InstrumentConfig, 16> instruments{};
+    std::array<ChannelMixState, 16> channelMixStates{};
     std::array<int, 16> channelAssignments{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     bool drumChannelSpecialHandling = true;
     bool previewLoop = false;
@@ -131,8 +132,9 @@ struct GUITransientState
     int playEditingChannel = -1;
     bool playInspectorOpen = true;
     bool presetDirty = false;
+    bool skipWorkspaceAutosave = false;
     std::vector<GUIPresetItem> presetItems{};
-    std::array<std::string, 16> soundSlotDisplayNames{};
+    char userPresetName[128]{ "My Sound" };
 };
 
 // 非同期Run/Preview再生に関係する状態。project/config 保存対象にはしない。

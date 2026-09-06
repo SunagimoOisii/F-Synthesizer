@@ -317,7 +317,6 @@ bool DrawChannelEditor(
     static bool l3SessionChanged = false;
 
     bool changed = false;
-    EnsureSoundSlots(state);
     state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
     // Layer3 Undo bracketing: IsAnyItemActive() の遷移を利用して before スナップショットを記録する。
     // 精度注記: IsAnyItemActive() はウィンドウ全体のフラグのため Layer2 の操作で誤アーム

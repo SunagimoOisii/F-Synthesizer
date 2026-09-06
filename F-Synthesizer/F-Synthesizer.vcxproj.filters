@@ -138,9 +138,6 @@
     <ClCompile Include="src\\gui\\GUIStatePersistence.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\gui\\GUIStateStorage.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\\gui\\PreviewAudio.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -224,6 +221,9 @@
     <ClInclude Include="include\\config\\SourceJSON.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\\config\\ProjectJSON.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="include\\config\\SourceRegistry.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -279,9 +279,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\GUIStatePersistence.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\\gui\\GUIStateStorage.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\PreviewAudio.h">

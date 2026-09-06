@@ -43,7 +43,7 @@ using gui::RepairGUIStatePaths;
 using gui::AppendGUILog;
 using gui::RefreshPresetItems;
 using gui::ApplySelectedPresetPaths;
-using gui::SavePresetDiffFromState;
+using gui::SaveUserPresetFromState;
 using gui::AnalyzeRenderPeakFromLogs;
 using gui::StartGUIRun;
 using gui::StartGUISoundTonePreview;

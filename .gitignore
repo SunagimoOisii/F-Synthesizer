@@ -102,3 +102,7 @@ Desktop.ini
 *.tmp
 *.bak
 *.old
+
+# Local workspace and personal sound presets
+F-Synthesizer/config/workspace.json
+F-Synthesizer/config/user_presets/
