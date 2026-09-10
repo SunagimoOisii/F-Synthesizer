@@ -389,6 +389,9 @@ bool LoadInstrumentObject(const Json& instrumentJson, const std::string& id, Ins
     }
 
     if (!ReadOptionalString(instrumentJson, "displayName", path, instrument.displayName, err)) return false;
+    if (!ReadOptionalDouble(instrumentJson, "comparisonGain", path, instrument.comparisonGain, err)) return false;
+    if (!std::isfinite(instrument.comparisonGain) || instrument.comparisonGain < .1 || instrument.comparisonGain > 4)
+    { err = path + ".comparisonGain must be between 0.1 and 4"; return false; }
     if (!ReadOptionalString(instrumentJson, "category", path, instrument.category, err)) return false;
     if (!ReadOptionalBool(instrumentJson, "internal", path, instrument.internal, err)) return false;
     if (!ValidateOptionalStringArray(instrumentJson, "tags", path, err)) return false;

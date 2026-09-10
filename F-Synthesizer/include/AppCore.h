@@ -30,6 +30,7 @@ struct RenderOptions
     double durationSec = -1.0; // < 0 means full length
     bool writeWAV = true;
     bool allowCancel = true;
+    double previewSkipSec = 0.0; // first pass only, for resuming within a loop
 };
 
 // Project保存形式に入れない、1回の実行だけの差し替え入力。

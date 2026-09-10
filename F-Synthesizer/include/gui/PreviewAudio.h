@@ -29,6 +29,7 @@ struct PreviewPlaybackState
     ma_uint64 streamCapacityFrames = 0;
     ma_uint64 streamStartupFrames = 0;
     std::atomic<uint64_t> frameCursor{ 0 };
+    std::atomic<uint64_t> streamFrameOffset{ 0 };
     std::atomic<int> playStartTick{ 0 };
     std::atomic<bool> playing{ false };
     std::atomic<uint64_t> sessionGeneration{ 0 };
@@ -61,8 +62,8 @@ float GetPreviewPlaybackPeak(const PreviewPlaybackState& playback);
 class PreviewAudioStreamSink final : public IPreviewStreamSink
 {
 public:
-    PreviewAudioStreamSink(PreviewPlaybackState& playback, int startTick)
-        : playback_(playback), startTick_(startTick) {}
+    PreviewAudioStreamSink(PreviewPlaybackState& playback, int startTick, uint64_t frameOffset = 0)
+        : playback_(playback), startTick_(startTick), frameOffset_(frameOffset) {}
     ~PreviewAudioStreamSink() override;
     bool Begin(int sampleRate, int channels, int totalFrames, bool loop) override;
     bool WriteFrame(double left, double right) override;
@@ -71,6 +72,7 @@ public:
 private:
     PreviewPlaybackState& playback_;
     int startTick_;
+    uint64_t frameOffset_ = 0;
     uint64_t session_ = 0;
     bool completed_ = false;
 };

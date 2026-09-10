@@ -61,6 +61,7 @@ struct PianoRollState
     int ticksPerQuarter = 480;
     int maxTick = 0;
     std::vector<TempoEvent> tempoEvents{};
+    std::vector<TimeSignatureEvent> timeSignatures{};
     std::vector<PianoRollNote> notes{};
     std::array<int, 16> noteCountByChannel{};
     std::array<int, 16> programByChannel{};
@@ -105,6 +106,7 @@ struct PianoRollState
 };
 
 bool LoadPianoRollMIDI(PianoRollState& state, const std::filesystem::path& path);
+void UndoPianoRollEdit(PianoRollState& state, bool redo = false);
 
 void DrawPianoRollPanel(
     PianoRollState& state,

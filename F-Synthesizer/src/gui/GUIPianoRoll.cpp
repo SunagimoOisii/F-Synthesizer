@@ -457,8 +457,14 @@ void DrawPianoRollPanel(
     }
 }
 
+void UndoPianoRollEdit(PianoRollState& state, bool redo)
+{
+    if (redo) ExecuteRedo(state); else ExecuteUndo(state);
+}
+
 void ApplyStepSeqNotes(PianoRollState& state, const std::vector<PianoRollNote>& ch9Notes)
 {
+    const auto before = state.notes;
     state.notes.erase(
         std::remove_if(state.notes.begin(), state.notes.end(),
             [](const PianoRollNote& n) { return n.channel == 9; }),
@@ -479,6 +485,7 @@ void ApplyStepSeqNotes(PianoRollState& state, const std::vector<PianoRollNote>& 
         });
 
     RecomputeMaxTick(state);
+    PushUndoCommand(state, before, state.notes);
     SyncProjectDataFromCurrentNotes(state);
     TouchNotesVersion(state);
 }

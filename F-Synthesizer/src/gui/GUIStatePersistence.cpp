@@ -22,12 +22,47 @@ namespace
 {
 using Json = nlohmann::json;
 
+Json ToneToJSON(const gui::ToneVersion& tone)
+{
+    ProjectModel model = DefaultProjectModel();
+    model.instruments = std::make_shared<const std::map<std::string, InstrumentConfig>>(
+        std::map<std::string, InstrumentConfig>{{"tone", tone.base}});
+    model.projectChannels.reset();
+    Json result = config::ProjectToJSON(model);
+    result["key"] = tone.key;
+    result["values"] = tone.values;
+    result["customizedBase"] = tone.customizedBase;
+    return result;
+}
+
+gui::ToneVersion ToneFromJSON(const Json& json)
+{
+    ProjectModel model = DefaultProjectModel();
+    model.instruments.reset(); model.projectChannels.reset();
+    std::string error;
+    if (!config::ProjectFromJSON(json, {}, model, error) || !model.instruments || !model.instruments->contains("tone"))
+        throw std::runtime_error("保存した試聴音色を読み込めません。" + error);
+    gui::ToneVersion tone;
+    tone.key = json.at("key").get<std::string>();
+    tone.customizedBase = json.value("customizedBase", false);
+    tone.values = json.at("values").get<std::array<float, 6>>();
+    for (auto& value : tone.values)
+    {
+        if (!std::isfinite(value)) throw std::runtime_error("invalid tone control");
+        value = std::clamp(value, -1.f, 1.f);
+    }
+    tone.base = model.instruments->at("tone");
+    gui::ApplyToneValues(tone);
+    return tone;
+}
+
 #define WORKSPACE_FIELDS(X) \
     X(activeProjectPath) X(songMidiName) X(UIScaleIndex) X(UIModeTab) X(UIThemeIndex) X(logPanelHeight) \
     X(serialSave) X(selectedSoundSlot) X(selectedDrumNote) X(tonePreviewNoteNumber) \
     X(chordModeEnabled) X(chordType) X(drumChannelSpecialHandling) \
     X(previewLoop) X(autoTonePreviewEnabled) X(macroSliders) \
-    X(macroRandomizeStrength) X(layer1Expanded) X(layer2Expanded)
+    X(macroRandomizeStrength) X(layer1Expanded) X(layer2Expanded) \
+    X(auditionLengthSec) X(toneExtraOpen) X(toneNotesOpen) X(scopeWholeMix)
 
 #define PIANO_VIEW_FIELDS(X) \
     X(displayChannel) X(snapIndex) X(pixelsPerQuarter) X(tickOffset) X(noteOffset) \
@@ -52,6 +87,18 @@ Json WorkspaceToJSON(const GUIState& state)
         ui["stepSeq"].push_back(Json{{"steps", steps}, {"velocity", state.stepSeq.velocity[row]}});
     }
     ui["stepSeqViewActive"] = state.stepSeq.viewActive;
+    ui["stepSeqStartTick"] = state.stepSeq.startTick;
+    if (state.toneWorkspaceReady)
+    {
+        ui["tones"] = Json::array();
+        for (const auto& part : state.tones)
+        {
+            Json cached = Json::array();
+            for (const auto& [key, tone] : part.cache) cached.push_back(ToneToJSON(tone));
+            ui["tones"].push_back({{"adopted", ToneToJSON(part.adopted)}, {"draft", ToneToJSON(part.draft)},
+                {"cache", std::move(cached)}, {"category", part.category}, {"auditionNote", part.auditionNote}});
+        }
+    }
     root["workspace"] = std::move(ui);
 
     const auto& piano = state.pianoRoll;
@@ -92,6 +139,29 @@ void ApplyWorkspaceJSON(GUIState& state, const Json& root)
         }
     }
     state.stepSeq.viewActive = ui.value("stepSeqViewActive", false);
+    state.stepSeq.startTick = std::max(0, ui.value("stepSeqStartTick", 0));
+    state.auditionLengthSec = std::clamp(state.auditionLengthSec, .2f, 3.f);
+    if (ui.contains("tones"))
+    {
+        if (!ui.at("tones").is_array() || ui.at("tones").size() != 16) throw std::runtime_error("invalid part count");
+        for (int ch = 0; ch < 16; ++ch)
+        {
+            auto& part = state.tones[ch];
+            const auto& json = ui.at("tones").at(ch);
+            part.adopted = ToneFromJSON(json.at("adopted"));
+            part.draft = ToneFromJSON(json.at("draft"));
+            part.category = json.value("category", std::string("Keys"));
+            part.auditionNote = std::clamp(json.value("auditionNote", -1), -1, 127);
+            for (const auto& cached : json.at("cache"))
+            {
+                auto tone = ToneFromJSON(cached);
+                part.cache.emplace(tone.key, std::move(tone));
+            }
+            state.instruments[ch] = part.draft.instrument;
+            state.channelAssignments[ch] = ch;
+        }
+        state.toneWorkspaceReady = true;
+    }
     auto& piano = state.pianoRoll;
     const Json roll = root.value("pianoRoll", Json::object());
 #define LOAD_PIANO(name) if (roll.contains(#name)) roll.at(#name).get_to(piano.name);
@@ -164,7 +234,10 @@ bool SaveSongProjectFile(GUIState& state, const std::filesystem::path& path, std
     try
     {
         if (path.extension() != ".fsynth") throw std::runtime_error("曲ファイルの拡張子は .fsynth です。");
+        if (PendingToneCount(state)) throw std::runtime_error("音色の変更を採用してから保存してください。");
         Json root = WorkspaceToJSON(state);
+        // Exploration belongs to workspace recovery, not the named song.
+        root["workspace"].erase("tones");
         const auto midiPath = Utf8ToPath(state.midiPath);
         if (!midiPath.empty())
         {

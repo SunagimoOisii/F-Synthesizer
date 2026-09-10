@@ -74,12 +74,15 @@ const MacroSliderState& ReadMacroSliders(const GUIState& state, int slot)
 void PublishLiveRenderSettings(GUIState& state)
 {
     const auto previous = state.liveSettings->load(std::memory_order_acquire);
-    bool changed = !previous || previous->mixes != state.channelMixStates || previous->effects != state.masterEffects;
+    auto mixes = state.channelMixStates;
+    if (state.toneAuditionActive)
+        for (auto& mix : mixes) { mix.mute = false; mix.solo = false; }
+    bool changed = !previous || previous->mixes != mixes || previous->effects != state.masterEffects;
     for (int ch = 0; ch < 16 && !changed; ++ch)
     {
         const int slot = ch == state.livePreviewChannel && state.livePreviewSlot >= 0
             ? state.livePreviewSlot : AssignedSoundSlot(state, ch);
-        changed = previous->sounds[ch] != state.instruments[slot].sound;
+        changed = previous->sounds[ch] != RenderSound(state.toneWorkspaceReady ? AudibleInstrument(state, ch) : state.instruments[slot]);
     }
     if (!changed) return;
     auto next = std::make_shared<LiveRenderSettings>();
@@ -87,10 +90,11 @@ void PublishLiveRenderSettings(GUIState& state)
     {
         const int slot = ch == state.livePreviewChannel && state.livePreviewSlot >= 0
             ? state.livePreviewSlot : AssignedSoundSlot(state, ch);
-        next->sounds[ch] = state.instruments[slot].sound;
+        next->sounds[ch] = RenderSound(state.toneWorkspaceReady ? AudibleInstrument(state, ch) : state.instruments[slot]);
     }
-    next->mixes = state.channelMixStates;
+    next->mixes = mixes;
     next->effects = state.masterEffects;
+    next->scope = state.audioScope;
     state.liveSettings->store(std::move(next), std::memory_order_release);
 }
 

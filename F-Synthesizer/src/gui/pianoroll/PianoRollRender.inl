@@ -18,12 +18,12 @@ void DrawPianoGrid(
 
     const float gridMinX = canvasMin.x + pianoWidth;
     const float noteAreaMinY = canvasMin.y + rulerHeight;
-    const ImU32 laneDark = IM_COL32(30, 30, 34, 255);
-    const ImU32 laneLight = IM_COL32(36, 36, 40, 255);
-    const ImU32 laneC = IM_COL32(42, 46, 56, 255);
-    const ImU32 keyDark = IM_COL32(24, 24, 28, 255);
-    const ImU32 keyLight = IM_COL32(44, 44, 48, 255);
-    const ImU32 rulerBg = IM_COL32(22, 24, 30, 255);
+    const ImU32 laneDark = IM_COL32(17, 28, 36, 255);
+    const ImU32 laneLight = IM_COL32(22, 34, 42, 255);
+    const ImU32 laneC = IM_COL32(32, 47, 55, 255);
+    const ImU32 keyDark = IM_COL32(17, 28, 36, 255);
+    const ImU32 keyLight = IM_COL32(53, 67, 76, 255);
+    const ImU32 rulerBg = IM_COL32(26, 37, 44, 255);
 
     drawList->AddRectFilled(
         ImVec2(gridMinX, canvasMin.y),
@@ -49,7 +49,8 @@ void DrawPianoGrid(
             ImVec2(canvasMin.x, y0),
             ImVec2(gridMinX, y1),
             IsBlackKey(note) ? keyDark : keyLight);
-        const std::string noteText = std::to_string(note);
+        const char* pitchNames[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+        const std::string noteText = std::string(pitchNames[note % 12]) + std::to_string(note / 12 - 1);
         const ImVec2 textSize = ImGui::CalcTextSize(noteText.c_str());
         const float textY = y0 + (std::max)(0.0f, (rowHeight - textSize.y) * 0.5f);
         drawList->AddText(ImVec2(canvasMin.x + 4.0f, textY), IM_COL32(210, 210, 215, 255), noteText.c_str());
@@ -216,8 +217,8 @@ void DrawCreatingNotePreview(
     const float y0 = canvasMin.y + row * rowHeight;
     const float y1 = y0 + rowHeight;
 
-    drawList->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(130, 220, 255, 100), 2.0f);
-    drawList->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(120, 220, 255, 220), 2.0f);
+    drawList->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(175, 217, 208, 100), 2.0f);
+    drawList->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(175, 217, 208, 220), 2.0f);
 }
 
 void DrawNotes(
@@ -225,10 +226,10 @@ void DrawNotes(
     ImDrawList* drawList,
     const std::vector<DrawNoteInfo>& visibleNotes)
 {
-    const ImU32 noteColor = IM_COL32(120, 200, 255, 210);
-    const ImU32 noteBorder = IM_COL32(50, 120, 170, 255);
-    const ImU32 selectedColor = IM_COL32(255, 206, 120, 235);
-    const ImU32 selectedBorder = IM_COL32(235, 150, 32, 255);
+    const ImU32 noteColor = IM_COL32(175, 217, 208, 210);
+    const ImU32 noteBorder = IM_COL32(106, 150, 146, 255);
+    const ImU32 selectedColor = IM_COL32(225, 173, 117, 235);
+    const ImU32 selectedBorder = IM_COL32(201, 141, 82, 255);
 
     for (const auto& dn : visibleNotes)
     {

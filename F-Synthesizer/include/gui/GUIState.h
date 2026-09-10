@@ -15,10 +15,12 @@
 #include "gui/GUISoundHistory.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/PreviewAudio.h"
+#include "gui/GUIToneWorkspace.h"
 
 // ステップシーケンサー状態 (ch10 / drumChannel 専用)
 struct GUIStepSeqState
 {
+    int startTick = 0;
     static constexpr int kRows = 7;
     static constexpr int kSteps = 16;
     bool steps[kRows][kSteps]{};
@@ -36,6 +38,7 @@ struct GUIStepSeqState
 
 struct GUIPresetItem
 {
+    double comparisonGain = 1;
     struct RecommendedRange
     {
         int low = 48;
@@ -65,6 +68,12 @@ struct GUIPresetItem
 // projectModel の保存形式そのものではなく、GUI の復元に必要な永続状態を表す。
 struct GUIPersistentState
 {
+    bool toneWorkspaceReady = false;
+    std::array<gui::ChannelToneWorkspace, 16> tones;
+    float auditionLengthSec = 0.8f;
+    bool toneExtraOpen = false;
+    bool toneNotesOpen = false;
+    bool scopeWholeMix = false;
     std::string activeProjectPath{};
     std::string songMidiName{};
     char midiPath[1024]{};
@@ -110,6 +119,15 @@ struct GUIPersistentState
 // 画面表示中だけ意味を持つ一時状態。project/config 保存対象にはしない。
 struct GUITransientState
 {
+    std::unique_ptr<gui::ToneVersion> toneEditBefore;
+    int toneEditChannel = -1;
+    int transportAction = 0; // 0: none, 1: song, 2: one note/beat
+    bool toneAuditionActive = false;
+    bool resumeAfterAudition = false;
+    int resumeSongTick = 0;
+    int songCursorTick = 0;
+    uint64_t previewFrameOffset = 0;
+    std::shared_ptr<AudioScope> audioScope = std::make_shared<AudioScope>();
     std::string pendingOpenPath{};
     bool pendingOpenIsSong = false;
     uint64_t observedNotesVersion = 0;

@@ -35,6 +35,13 @@ MIDIRawOutput ParseSMFFile(const std::filesystem::path& path, int targetChannel)
                 if (bpm > 0.0) result.tempoEvents.push_back({event.tick, bpm});
                 continue;
             }
+            if (event.isTimeSignature())
+            {
+                const auto data = event.getMetaContent();
+                if (data.size() >= 2 && static_cast<unsigned char>(data[0]) > 0 && static_cast<unsigned char>(data[1]) < 8)
+                    result.timeSignatures.push_back({event.tick, static_cast<unsigned char>(data[0]), 1 << static_cast<unsigned char>(data[1])});
+                continue;
+            }
             if (event.empty() || event[0] >= 0xf0) continue;
             const int channel = event.getChannel();
             if (targetChannel >= 0 && channel != targetChannel) continue;

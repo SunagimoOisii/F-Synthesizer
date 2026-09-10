@@ -38,6 +38,13 @@ struct TempoEvent
     double bpm;
 };
 
+struct TimeSignatureEvent
+{
+    int tick = 0;
+    int numerator = 4;
+    int denominator = 4;
+};
+
 struct MIDIParseStatus
 {
     // パース時のメタ情報（診断/ログ向け）。
@@ -48,7 +55,8 @@ struct MIDIParseStatus
 
 bool LoadMIDIBasic(const std::filesystem::path& path, int targetChannel,
     std::vector<MIDIEventTick>& outEvents, std::vector<TempoEvent>& tempoEvents,
-    int& ticksPerQuarter, MIDIParseStatus& outStats);
+    int& ticksPerQuarter, MIDIParseStatus& outStats,
+    std::vector<TimeSignatureEvent>* timeSignatures = nullptr);
 
 inline const char* GMProgramName(int program)
 {

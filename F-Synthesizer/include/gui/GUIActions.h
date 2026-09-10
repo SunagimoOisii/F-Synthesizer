@@ -7,6 +7,15 @@
 
 namespace gui
 {
+double SongSecondsAtTick(const GUIState& state, int tick);
+std::vector<int> SongBarTicks(const GUIState& state);
+int SongTickAtSeconds(const GUIState& state, double seconds);
+bool SongIsPlaying(const GUIState& state);
+void PauseSongPlayback(GUIState& state);
+void RequestSongPlayback(GUIState& state);
+void SeekSong(GUIState& state, int tick);
+void RequestToneAudition(GUIState& state);
+void UpdateGUITransport(GUIState& state);
 void AppendGUILog(GUIState& state, const std::string& line);
 void RefreshPresetItems(GUIState& state, const std::string& preferName);
 bool ApplySelectedPresetPaths(GUIState& state, std::string& err);

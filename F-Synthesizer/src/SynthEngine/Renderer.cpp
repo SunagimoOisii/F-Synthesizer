@@ -667,6 +667,7 @@ size_t MixChannelBlockToOutput(
         StereoFrame& out = outFrames[static_cast<size_t>(offset)];
         const double left = channelSum.left * ctx.mixGainL;
         const double right = channelSum.right * ctx.mixGainR;
+        if (ch == state.scopeChannel) state.scopeFrames[offset] = (left + right) * .5;
         if (replaceOutput)
         {
             out = StereoFrame{ left, right };
@@ -715,6 +716,8 @@ size_t RenderChannelBlockToBuffer(
             channelSum.left * ctx.mixGainL,
             channelSum.right * ctx.mixGainR
         };
+        if (ch == state.scopeChannel)
+            state.scopeFrames[offset] = (channelFrames[offset].left + channelFrames[offset].right) * .5;
     }
     return removedCount;
 }

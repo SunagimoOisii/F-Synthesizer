@@ -254,12 +254,15 @@ int RunPreviewStreamingInternal(
     auto shouldCancelObserver = [&]() -> bool {
         return previewOptions.allowCancel && observer != nullptr && observer->ShouldCancel();
     };
+    int skipFrames = static_cast<int>(std::max(0.0, previewOptions.previewSkipSec) * project.sampleRate);
     auto onFrames = [&](int, const double* interleavedStereo, int frameCount) -> bool {
         if (shouldCancelObserver())
         {
             return false;
         }
-        return streamSink.WriteFrames(interleavedStereo, frameCount);
+        const int skip = std::min(skipFrames, frameCount);
+        skipFrames -= skip;
+        return skip == frameCount || streamSink.WriteFrames(interleavedStereo + skip * 2, frameCount - skip);
     };
     do
     {

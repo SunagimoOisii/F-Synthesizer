@@ -192,8 +192,8 @@ int RunPreviewSafely(
 {
     try
     {
-        PreviewAudioStreamSink sink(state.playback, state.previewRequestedStartTick);
-        return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
+        PreviewAudioStreamSink sink(state.playback, 0);
+        return RunPreviewStreaming(project, options, overrides, &state.observer, sink, false);
     }
     catch (const std::exception& ex)
     {
@@ -276,7 +276,7 @@ void StartGUISoundTonePreview(GUIState& state)
     }
     ClearGUIError(state);
 
-    const int previewChannel = std::clamp(state.selectedSoundSlot, 0, 15);
+    const int previewChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);
@@ -286,7 +286,7 @@ void StartGUISoundTonePreview(GUIState& state)
     ProjectModel project = BuildRuntimeProjectFromGUI(state, "gui_tone_preview__ch", false);
     project.targetChannel = previewChannel;
     OverrideProjectChannelWithSoundSlot(state, previewChannel, state.selectedSoundSlot, project);
-    const int previewNote = ResolveSoundTonePreviewNote(state, previewChannel);
+    const int previewNote = ChooseAuditionNote(state, previewChannel);
     project.midiPath.clear();
     RenderRuntimeOverrides overrides{};
     state.livePreviewChannel = previewChannel;
@@ -294,36 +294,36 @@ void StartGUISoundTonePreview(GUIState& state)
     PublishLiveRenderSettings(state);
     overrides.liveSettings = state.liveSettings;
     overrides.ticksPerQuarter = 480;
-    if (state.chordModeEnabled)
+    auto notes = std::make_shared<std::vector<MIDIEventTick>>();
+    auto addNote = [&](int tick, int pitch, int length, int velocity) {
+        MIDIEventTick on{}, off{};
+        on.type = off.type = MIDIEventType::Note;
+        on.tick = tick; off.tick = tick + length;
+        on.channel = off.channel = previewChannel;
+        on.noteNumber = off.noteNumber = pitch;
+        on.velocity = velocity; on.isNoteOn = true;
+        on.noteInstanceID = off.noteInstanceID = static_cast<int>(notes->size() / 2 + 1);
+        on.order = static_cast<int>(notes->size()); off.order = on.order + 1;
+        notes->push_back(on); notes->push_back(off);
+    };
+    const bool drums = std::holds_alternative<DrumKitConfig>(AudibleInstrument(state, previewChannel).sound.source);
+    if (drums)
     {
-        constexpr int kChordOffsets[5][4] = {
-            { 0,  4,  7, -1 }, // Major
-            { 0,  3,  7, -1 }, // Minor
-            { 0,  4,  7, 10 }, // 7th
-            { 0,  3,  7, 10 }, // Minor7th
-            { 0,  5,  7, -1 }, // Sus4
-        };
-        constexpr int kChordSizes[5] = { 3, 3, 4, 4, 3 };
-        const int ct = std::clamp(state.chordType, 0, 4);
-        const int sz = kChordSizes[ct];
-        std::array<int, 4> notes{};
-        for (int i = 0; i < sz; ++i)
+        for (int step = 0; step < 16; ++step)
         {
-            notes[i] = previewNote + kChordOffsets[ct][i];
+            addNote(step * 240, 42, 100, step % 2 ? 65 : 90);
+            if (step % 4 == 0) addNote(step * 240, 36, 140, 110);
+            if (step % 4 == 2) addNote(step * 240, 38, 140, 105);
         }
-        overrides.noteTicks = BuildOverrideNoteTicksForChord(
-            previewChannel, notes, sz, 110, overrides.ticksPerQuarter);
     }
-    else
-    {
-        overrides.noteTicks = BuildOverrideNoteTicksForSoundTone(
-            previewChannel, previewNote, 110, overrides.ticksPerQuarter);
-    }
+    else addNote(0, previewNote, static_cast<int>(std::clamp(state.auditionLengthSec, .2f, 3.f) * 960), 100);
+    overrides.noteTicks = notes;
 
     RenderOptions options = DefaultPreviewRenderOptions();
     options.writeWAV = false;
     options.startSec = 0.0;
-    options.durationSec = 1.5;
+    options.durationSec = drums ? 4.0 : state.auditionLengthSec + .5;
+    project.extraReleaseSec = .5;
 
     state.restorePreviewOnRunComplete = false;
     state.previewRequestedStartTick = 0;

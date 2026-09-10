@@ -184,14 +184,14 @@ int RunSafely(
     ProjectModel project,
     RenderOptions options,
     RenderRuntimeOverrides overrides,
-    GUIState& state)
+    GUIState& state, int startTick, uint64_t frameOffset, bool loop)
 {
     try
     {
         if (options.mode == RunMode::Preview)
         {
-            PreviewAudioStreamSink sink(state.playback, state.previewRequestedStartTick);
-            return RunPreviewStreaming(project, options, overrides, &state.observer, sink, state.previewLoop);
+            PreviewAudioStreamSink sink(state.playback, startTick, frameOffset);
+            return RunPreviewStreaming(project, options, overrides, &state.observer, sink, loop);
         }
         return Run(project, options, overrides, &state.observer, nullptr);
     }
@@ -227,6 +227,8 @@ namespace gui
 void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly)
 {
     if (state.running) return;
+    if (!previewSelected && PendingToneCount(state))
+    { RaiseGUIError(state, "音色の変更を採用してから書き出してください。", 0, true); return; }
     std::string validationError;
     if (!ValidateBeforeRun(state, validationError))
     {
@@ -302,10 +304,17 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
             options.startSec = 0.0;
             options.durationSec = -1.0;
         }
-        int startTick = 0;
+        int startTick = state.songCursorTick;
         if (state.pianoRoll.previewRangeEnabled)
         {
             startTick = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
+        }
+        state.previewFrameOffset = 0;
+        if (state.pianoRoll.previewRangeEnabled && state.songCursorTick > startTick && state.songCursorTick < state.pianoRoll.previewRangeEndTick)
+        {
+            options.previewSkipSec = SecondsAtTickForPreview(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter, state.songCursorTick)
+                - SecondsAtTickForPreview(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter, startTick);
+            state.previewFrameOffset = static_cast<uint64_t>(options.previewSkipSec * state.sampleRate);
         }
         if (startTick > 0 && state.pianoRoll.ticksPerQuarter > 0)
         {
@@ -360,8 +369,11 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
     state.running = true;
     try
     {
-        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state]() {
-            return RunSafely(project, options, overrides, state);
+        const int startTick = state.previewRequestedStartTick;
+        const uint64_t frameOffset = state.previewFrameOffset;
+        const bool loop = state.previewLoop;
+        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state, startTick, frameOffset, loop]() {
+            return RunSafely(project, options, overrides, state, startTick, frameOffset, loop);
             });
     }
     catch (const std::exception& ex)
@@ -409,6 +421,9 @@ bool TryFinalizeCompletedRun(GUIState& state)
     }
     state.hasRun = true;
     state.running = false;
+    if (state.lastRunExitCode == 1 && !state.hasUIError)
+        RaiseGUIError(state, state.runIsPreview ? "再生を開始できませんでした。MIDIと音声出力を確認してください。" :
+            "WAVを書き出せませんでした。MIDIと出力先を確認してください。", 0, true);
     detail::AppendGUILogToTab(state, state.runLogTab, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
     const bool finishedPreview = state.runIsPreview;
     if (state.runIsPreview)

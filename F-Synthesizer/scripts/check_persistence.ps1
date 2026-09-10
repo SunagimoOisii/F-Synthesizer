@@ -1,3 +1,4 @@
+param([switch]$RunAudioDeviceSmoke, [switch]$CalibratePresetLevels)
 # Run after scripts/check.ps1. Reuses the application objects; no separate test framework.
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -5,7 +6,8 @@ Push-Location $repoRoot
 try {
     $vswhere = "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
     $vsRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-    & (Join-Path $vsRoot "Common7/Tools/Launch-VsDevShell.ps1") -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+    Import-Module (Join-Path $vsRoot "Common7/Tools/Microsoft.VisualStudio.DevShell.dll")
+    Enter-VsDevShell -VsInstallPath $vsRoot -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
     $checkDir = Join-Path $repoRoot "output/check/persistence"
     New-Item -ItemType Directory -Path $checkDir -Force | Out-Null
     [xml]$project = Get-Content -Raw -Encoding UTF8 F-Synthesizer.vcxproj
@@ -30,6 +32,14 @@ try {
     Copy-Item -LiteralPath "./build/x64/Debug/glfw3.dll" -Destination $checkDir -Force
     & $exe
     if ($LASTEXITCODE -ne 0) { throw "Persistence checks failed." }
+    if ($RunAudioDeviceSmoke) {
+        & $exe --check-transport
+        if ($LASTEXITCODE -ne 0) { throw "Audio device transport check failed." }
+    }
+    if ($CalibratePresetLevels) {
+        & $exe --calibrate-presets
+        if ($LASTEXITCODE -ne 0) { throw "Preset level calibration failed." }
+    }
 }
 finally {
     Pop-Location

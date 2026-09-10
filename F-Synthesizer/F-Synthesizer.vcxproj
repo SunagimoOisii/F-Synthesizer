@@ -191,6 +191,8 @@
     <ClCompile Include="src\\gui\\GUIConfigUtils.cpp" />
     <ClCompile Include="src\\gui\\GUIPlatform.cpp" />
     <ClCompile Include="src\\gui\\GUIPresetIO.cpp" />
+    <ClCompile Include="src\\gui\\GUIToneWorkspace.cpp" />
+    <ClCompile Include="src\\gui\\GUITransport.cpp" />
     <ClCompile Include="src\\gui\\GUIProjectFacade.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
     <ClCompile Include="src\\gui\\GUIMacroMapping.cpp" />
@@ -252,11 +254,12 @@
     <ClInclude Include="include\\gui\\GUIStateModel.h" />
     <ClInclude Include="include\\gui\\GUIStatePersistence.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
-    <ClInclude Include="src\\gui\\main\\MainWindow.inl" />
-    <ClInclude Include="src\\gui\\main\\ExperienceViews.inl" />
-    <ClInclude Include="src\\gui\\main\\Layer2Macros.inl" />
+    <ClInclude Include="src\\gui\\main\\StudioWidgets.inl" />
+    <ClInclude Include="src\\gui\\main\\StudioPanels.inl" />
+    <ClInclude Include="src\\gui\\main\\StudioFiles.inl" />
+    <ClInclude Include="src\\gui\\main\\StudioWindow.inl" />
+    <ClInclude Include="src\\gui\\main\\StepSequencer.inl" />
     <ClInclude Include="src\\gui\\main\\RunLoop.inl" />
-    <ClInclude Include="src\\gui\\main\\TopBar.inl" />
     <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl" />
     <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorCommon.inl" />
     <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorWaveform.inl" />

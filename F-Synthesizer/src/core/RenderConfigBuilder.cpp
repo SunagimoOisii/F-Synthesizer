@@ -14,7 +14,7 @@ std::shared_ptr<const std::array<InstrumentSoundConfig, 16>> ResolveDefaultSound
             const auto it = defaults.instruments->find(channel.instrumentId);
             if (channel.enabled && it != defaults.instruments->end())
             {
-                (*soundSlots)[ch] = it->second.sound;
+                (*soundSlots)[ch] = RenderSound(it->second);
             }
         }
     }
@@ -56,7 +56,7 @@ ResolvedRenderConfigInputs ResolveRenderConfigInputs(const ProjectModel& project
             const auto instrumentIt = project.instruments->find(projectChannel.instrumentId);
             if (instrumentIt != project.instruments->end())
             {
-                (*soundSlots)[ch] = instrumentIt->second.sound;
+                (*soundSlots)[ch] = RenderSound(instrumentIt->second);
             }
             (*channelMixStates)[ch] = projectChannel.mix;
         }

@@ -29,6 +29,7 @@ struct MacroHint
 // InstrumentConfig::sound は Sound Card の音色本体として扱う。
 struct InstrumentConfig
 {
+    double comparisonGain = 1.0;
     std::string displayName;
     std::string category;
     bool internal = false;
@@ -38,6 +39,13 @@ struct InstrumentConfig
     std::vector<MacroHint> macroHints;
     InstrumentSoundConfig sound;
 };
+
+inline InstrumentSoundConfig RenderSound(const InstrumentConfig& instrument)
+{
+    auto sound = instrument.sound;
+    sound.amp *= instrument.comparisonGain;
+    return sound;
+}
 
 struct ProjectChannelAssignment
 {

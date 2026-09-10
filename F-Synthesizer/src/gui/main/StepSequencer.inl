@@ -47,8 +47,8 @@ static void LoadStepSeqFromPianoRoll(GUIStepSeqState& ss, const gui::PianoRollSt
             {
                 continue;
             }
-            const int step = n.startTick / stepLen;
-            if (step >= 0 && step < GUIStepSeqState::kSteps)
+            const int step = (n.startTick - ss.startTick) / stepLen;
+            if (n.startTick >= ss.startTick && step >= 0 && step < GUIStepSeqState::kSteps)
             {
                 ss.steps[r][step] = true;
                 ss.velocity[r] = std::clamp(n.velocity, 1, 127);
@@ -69,6 +69,13 @@ static void FlushStepSeqToPianoRoll(const GUIStepSeqState& ss, gui::PianoRollSta
 
     std::vector<gui::PianoRollNote> ch9Notes;
     ch9Notes.reserve(static_cast<size_t>(GUIStepSeqState::kRows * GUIStepSeqState::kSteps));
+    for (const auto& note : pr.notes)
+    {
+        const bool supported = std::any_of(std::begin(kStepSeqRows), std::end(kStepSeqRows),
+            [&](const auto& row) { return row.midiNote == note.note; });
+        if (note.channel == 9 && (note.startTick < ss.startTick || note.startTick >= ss.startTick + stepLen * GUIStepSeqState::kSteps || !supported))
+            ch9Notes.push_back(note);
+    }
     for (int r = 0; r < GUIStepSeqState::kRows; ++r)
     {
         for (int s = 0; s < GUIStepSeqState::kSteps; ++s)
@@ -81,7 +88,7 @@ static void FlushStepSeqToPianoRoll(const GUIStepSeqState& ss, gui::PianoRollSta
             n.channel = 9;
             n.note = kStepSeqRows[r].midiNote;
             n.velocity = std::clamp(ss.velocity[r], 1, 127);
-            n.startTick = s * stepLen;
+            n.startTick = ss.startTick + s * stepLen;
             n.endTick = n.startTick + stepLen - 1;
             ch9Notes.push_back(n);
         }
@@ -99,24 +106,32 @@ static void DrawStepSeqPanel(GUIState& state)
         ImGui::TextDisabled("MIDI ファイルをロードするとステップが反映されます。");
     }
 
-    constexpr float kRowH = 22.0f;
-    constexpr float kLabelW = 52.0f;
-    constexpr float kStepW = 22.0f;
-    constexpr float kVelW = 48.0f;
+    if (ImGui::Button("前の4拍")) { ss.startTick = std::max(0, ss.startTick - pr.ticksPerQuarter * 4); LoadStepSeqFromPianoRoll(ss, pr); }
+    ImGui::SameLine(); ImGui::Text("%d 拍目から", ss.startTick / std::max(1, pr.ticksPerQuarter) + 1);
+    ImGui::SameLine(); if (ImGui::Button("次の4拍")) { ss.startTick += pr.ticksPerQuarter * 4; LoadStepSeqFromPianoRoll(ss, pr); }
+    ImGui::SameLine(); ImGui::BeginDisabled(pr.undoStack.empty());
+    if (ImGui::Button("戻す")) { gui::UndoPianoRollEdit(pr); LoadStepSeqFromPianoRoll(ss, pr); } ImGui::EndDisabled();
+    ImGui::SameLine(); ImGui::BeginDisabled(pr.redoStack.empty());
+    if (ImGui::Button("やり直す")) { gui::UndoPianoRollEdit(pr, true); LoadStepSeqFromPianoRoll(ss, pr); } ImGui::EndDisabled();
+    if (!ImGui::GetIO().WantTextInput && ImGui::GetIO().KeyCtrl)
+    {
+        if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) { gui::UndoPianoRollEdit(pr); LoadStepSeqFromPianoRoll(ss, pr); }
+        if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) { gui::UndoPianoRollEdit(pr, true); LoadStepSeqFromPianoRoll(ss, pr); }
+    }
+    constexpr float kRowH = 26.0f;
+    constexpr float kLabelW = 110.0f;
+    const float kStepW = std::max(20.f, (ImGui::GetContentRegionAvail().x - kLabelW - 122) / 16);
+    constexpr float kVelW = 60.0f;
 
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + kLabelW + 4.0f);
+    const ImVec2 numberOrigin = ImGui::GetCursorScreenPos();
     for (int s = 0; s < GUIStepSeqState::kSteps; ++s)
     {
-        if (s > 0)
-        {
-            ImGui::SameLine(0.0f, 2.0f);
-        }
-        if (s % 4 == 0 && s > 0)
-        {
-            ImGui::SameLine(0.0f, 6.0f);
-        }
-        ImGui::TextDisabled("%d", s + 1);
+        const std::string label = std::to_string(s + 1);
+        const float x = numberOrigin.x + kLabelW + 4 + s * (kStepW + 2) + (s / 4) * 4;
+        ImGui::GetWindowDrawList()->AddText({x + (kStepW - ImGui::CalcTextSize(label.c_str()).x) / 2, numberOrigin.y},
+            IM_COL32(159, 178, 187, 255), label.c_str());
     }
+    ImGui::Dummy({1, ImGui::GetTextLineHeight()});
 
     for (int r = 0; r < GUIStepSeqState::kRows; ++r)
     {
@@ -140,15 +155,15 @@ static void DrawStepSeqPanel(GUIState& state)
             const bool on = ss.steps[r][s];
             if (on)
             {
-                ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(180, 120, 40, 255));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(210, 150, 60, 255));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(150, 90, 20, 255));
+                ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(115, 159, 154, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(175, 217, 208, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(106, 150, 146, 255));
             }
             else
             {
-                ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(55, 55, 55, 255));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(90, 90, 90, 255));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(35, 35, 35, 255));
+                ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(32, 47, 55, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(53, 67, 76, 255));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(17, 28, 36, 255));
             }
             if (ImGui::Button("##step", ImVec2(kStepW, kRowH)))
             {
@@ -174,7 +189,7 @@ static void DrawStepSeqPanel(GUIState& state)
     }
 
     ImGui::Spacing();
-    if (ImGui::Button("すべてクリア"))
+    if (ImGui::Button("この4拍をクリア"))
     {
         for (int r = 0; r < GUIStepSeqState::kRows; ++r)
         {
@@ -187,6 +202,6 @@ static void DrawStepSeqPanel(GUIState& state)
     }
     if (ImGui::IsItemHovered())
     {
-        ImGui::SetTooltip("全ステップをクリアします。");
+        ImGui::SetTooltip("表示中の4拍だけをクリアします。");
     }
 }

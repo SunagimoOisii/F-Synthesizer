@@ -40,6 +40,7 @@ inline void CheckAudioIntegration()
     }
     auto mailbox = std::make_shared<LiveRenderMailbox>();
     auto settings = std::make_shared<LiveRenderSettings>();
+    settings->scope = std::make_shared<AudioScope>();
     fm.chip = 0;
     auto& sound = settings->sounds[0];
     sound.source = fm; sound.amp = 0.2;
@@ -81,6 +82,7 @@ inline void CheckAudioIntegration()
     Require(!canceled && changedSound && changedMix, "live render failed");
     Require(std::abs(ratio - 0.1) < 0.01, "held note did not receive the sound change");
     Require(energy(0.75, 0.9) == 0, "live mute did not reach audio output");
+    Require(settings->scope->cursor.load() == rate, "scope skipped rendered or silent frames");
     const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
     std::cout << "Live held-note update + mute passed; 1 second rendered in " << elapsed << " seconds\n";
 }

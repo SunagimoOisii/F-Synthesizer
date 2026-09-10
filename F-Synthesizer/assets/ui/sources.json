@@ -1,0 +1,96 @@
+[
+  {
+    "file": "lucide-chevron-down.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/chevron-down.svg",
+    "sha256": "66EA878E72ED3488BB3B464C39DFDCCEE8D1F78E560DCCEA40E5E12DA0E87E87"
+  },
+  {
+    "file": "lucide-cpu.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/cpu.svg",
+    "sha256": "EC83BB69EC029D367D749AFC445B39C8E95891EBF99B0400652677C2B149B99C"
+  },
+  {
+    "file": "lucide-drum.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/drum.svg",
+    "sha256": "BD334F14DD0489E22EBD3B531605DA25B39C54C0E16FB00A8DCAEDA2201053E9",
+    "fetched": "2026-09-07T14:36:44.7726096Z"
+  },
+  {
+    "file": "lucide-guitar.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/guitar.svg",
+    "sha256": "CA2026598763FF4C8991912524F8050326E24307EA241EA2A0735AF529F7E67F",
+    "fetched": "2026-09-07T14:36:44.1472009Z"
+  },
+  {
+    "file": "lucide-layers.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/layers.svg",
+    "sha256": "CE16D0A955E3581CDA17F6B2FD5C5BC2034B405F9CECC31C8EBB8495B4AFC1BB",
+    "fetched": "2026-09-07T14:36:44.3848884Z"
+  },
+  {
+    "file": "lucide-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/LICENSE",
+    "sha256": "B495047BD93A9B06913511076F504DABA17D5BBEB3E0650F3BB53A4220329C57",
+    "fetched": "2026-09-07T14:36:42.8131552Z"
+  },
+  {
+    "file": "lucide-music.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/music.svg",
+    "sha256": "8721B8A3594219C1313C4083049E5A5C049F49C47B1CD93FDB61D52A0803E42B",
+    "fetched": "2026-09-07T14:36:43.5424199Z"
+  },
+  {
+    "file": "lucide-pause.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/pause.svg",
+    "sha256": "F122EC4EA7F5693A0B1BAAFA9C708B53980DC87B4AACB297C6E6F71C1A4C115C"
+  },
+  {
+    "file": "lucide-piano.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/piano.svg",
+    "sha256": "ACDB781A29F075C0AFB4ABF48B6CA46420E22684FF5C98E3E05838A6D586C2D4",
+    "fetched": "2026-09-07T14:36:43.8070301Z"
+  },
+  {
+    "file": "lucide-play.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/play.svg",
+    "sha256": "D7C34786135922A92B6896F6C2384CEEB0346AFBF6041DC79982011411409833",
+    "fetched": "2026-09-07T14:36:45.3423967Z"
+  },
+  {
+    "file": "lucide-save.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/save.svg",
+    "sha256": "EE9D56A7FEC4B20DD6689546D41F68219EA8CBD67F99BD17A1BDAFF5BE6EDB53",
+    "fetched": "2026-09-07T14:36:45.5800906Z"
+  },
+  {
+    "file": "lucide-search.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/search.svg",
+    "sha256": "283D371C2E433817BB9C0C8310CAA6C77FA4177C0F4F1168D9C83B97AF7389DC"
+  },
+  {
+    "file": "lucide-sparkles.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg",
+    "sha256": "F5499F33F09D7158151E9BD2EC0FAF79FF8FB57292F84FDD7286D96D0F0424D8"
+  },
+  {
+    "file": "lucide-star.svg",
+    "url": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/star.svg",
+    "sha256": "C59DA86B889569387DB28E69AD00A89F96AF22863AD9EEA9AA12C4876A14338C",
+    "fetched": "2026-09-07T14:36:45.1007701Z"
+  },
+  {
+    "file": "MPLUS1-Medium.ttf",
+    "url": "https://raw.githubusercontent.com/coz-m/MPLUS_FONTS/master/fonts/MPLUS1/ttf/MPLUS1-Medium.ttf",
+    "sha256": "37D5564918F912BBA32108C5645B5D86F544C6B06F17924EDFA0229B087ECA45"
+  },
+  {
+    "file": "MPLUS1-OFL.txt",
+    "url": "https://raw.githubusercontent.com/coz-m/MPLUS_FONTS/master/OFL.txt",
+    "sha256": "04971E3FCEE60B247395150D93B3616F6A0B092572332C96187B472976553ABC"
+  },
+  {
+    "file": "MPLUS1-Regular.ttf",
+    "url": "https://raw.githubusercontent.com/coz-m/MPLUS_FONTS/master/fonts/MPLUS1/ttf/MPLUS1-Regular.ttf",
+    "sha256": "6403485C9B4BCBE4CD2859B283D2DF8416C2B9A663D40ABC7DA07676BF547678"
+  }
+]

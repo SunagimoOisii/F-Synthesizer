@@ -43,6 +43,7 @@ Json InstrumentToJson(const InstrumentConfig& instrument)
 
     return Json{
         {"displayName", instrument.displayName},
+        {"comparisonGain", instrument.comparisonGain},
         {"category", instrument.category},
         {"internal", instrument.internal},
         {"tags", instrument.tags},

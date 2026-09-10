@@ -761,7 +761,7 @@ void RenderMIDIEventsToSink(
             chunkEnd = i + 1;
         }
 
-        if (!masterEffectsSkipUnsafe &&
+        if (!(currentSettings && currentSettings->scope) && !masterEffectsSkipUnsafe &&
             (state.eventIndex >= events.size() || events[state.eventIndex].sample >= chunkEnd))
         {
             if (state.activeVoiceIndicesDirty)
@@ -786,6 +786,9 @@ void RenderMIDIEventsToSink(
         }
 
         const int frameCount = chunkEnd - i;
+        state.scopeChannel = currentSettings && currentSettings->scope
+            ? currentSettings->scope->channel.load(std::memory_order_relaxed) : -1;
+        if (state.scopeChannel >= 0) state.scopeFrames.assign(frameCount, 0.0);
         RenderVoicesBlock(state, renderContext, frameCount, state.renderBlockFrames);
         if (masterEffectsActive)
         {
@@ -795,6 +798,13 @@ void RenderMIDIEventsToSink(
                     ApplyMasterEffects(state, sink.SampleRate(), state.renderBlockFrames[static_cast<size_t>(offset)]);
             }
         }
+        if (currentSettings && currentSettings->scope)
+            for (int offset = 0; offset < frameCount; ++offset)
+            {
+                const auto frame = state.renderBlockFrames[offset];
+                currentSettings->scope->Push(static_cast<float>(state.scopeFrames[offset]),
+                    static_cast<float>((frame.left + frame.right) * .5));
+            }
         if (!sink.WriteFrames(i, state.renderBlockFrames.data(), frameCount))
         {
             if (canceled != nullptr)

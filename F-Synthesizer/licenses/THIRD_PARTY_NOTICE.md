@@ -44,6 +44,18 @@
 - URL: https://github.com/craigsapp/midifile
 - MIDI の読込、音符の対応付け、テンポを含む時刻変換に使用。ソースは変更せず同梱する。
 
+8. M PLUS 1 Regular / Medium
+- ライセンス: SIL Open Font License 1.1
+- 著作権・原文: [MPLUS1-OFL.txt](MPLUS1-OFL.txt)
+- URL: https://github.com/coz-m/MPLUS_FONTS
+- `assets/ui/` に静的 TTF を同梱する。取得元・SHA-256 は同ディレクトリの `sources.json` を参照。
+
+9. Lucide
+- ライセンス: ISC。一部 Feather 由来の素材は MIT。
+- 著作権・原文: [lucide-LICENSE.txt](lucide-LICENSE.txt)
+- URL: https://github.com/lucide-icons/lucide
+- 選定した13アイコンを白一色の画像アトラスへ変換して同梱する。描画時に色と大きさを指定する。
+
 付属音色は本プロジェクトで作成した設定データ。ゲームの音色バンク・ROM・録音素材は同梱しない。
 
 ## 運用

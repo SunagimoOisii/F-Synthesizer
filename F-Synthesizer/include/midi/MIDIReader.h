@@ -9,6 +9,7 @@ struct MIDIRawOutput
 {
     std::vector<MIDIEventTick> rawEvents;
     std::vector<TempoEvent> tempoEvents;
+    std::vector<TimeSignatureEvent> timeSignatures;
     MIDIParseStatus stats{};
     int ticksPerQuarter = 480;
     bool ok = false;

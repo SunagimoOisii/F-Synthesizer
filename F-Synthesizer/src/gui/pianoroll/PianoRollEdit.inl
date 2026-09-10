@@ -246,6 +246,7 @@ void ClearModel(PianoRollState& state)
 {
     state.notes.clear();
     state.tempoEvents.clear();
+    state.timeSignatures.clear();
     state.noteCountByChannel.fill(0);
     state.programByChannel.fill(0);
     state.hasProgramByChannel.fill(false);
@@ -379,7 +380,7 @@ void EnsureModelLoaded(
     std::vector<TempoEvent> tempoEvents;
     int ticksPerQuarter = 0;
     MIDIParseStatus stats{};
-    if (!LoadMIDIBasic(midiPath, -1, ticks, tempoEvents, ticksPerQuarter, stats))
+    if (!LoadMIDIBasic(midiPath, -1, ticks, tempoEvents, ticksPerQuarter, stats, &state.timeSignatures))
     {
         state.hasLoadError = true;
         state.lastError = "failed to parse MIDI: " + PathToUtf8(midiPath);

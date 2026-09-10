@@ -25,6 +25,12 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
     }
 
     const ma_uint32 channels = (playback->channels > 0) ? playback->channels : 1;
+    if (!playback->streamMode.load(std::memory_order_acquire))
+    {
+        playback->playing.store(false, std::memory_order_relaxed);
+        std::fill(out, out + static_cast<size_t>(frameCount) * channels, 0.0f);
+        return;
+    }
     if (!playback->playing.load(std::memory_order_relaxed))
     {
         std::fill(out, out + static_cast<size_t>(frameCount) * channels, 0.0f);
@@ -81,7 +87,8 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
             }
             playback->streamReadFrame.store(readFrame + chunk, std::memory_order_relaxed);
             const uint64_t loopFrames = playback->streamLoopFrames.load(std::memory_order_relaxed);
-            playback->frameCursor.store(loopFrames ? (readFrame + chunk) % loopFrames : readFrame + chunk, std::memory_order_relaxed);
+            const uint64_t songFrame = playback->streamFrameOffset.load(std::memory_order_relaxed) + readFrame + chunk;
+            playback->frameCursor.store(loopFrames ? songFrame % loopFrames : songFrame, std::memory_order_relaxed);
             playback->streamAvailableFrames.fetch_sub(chunk, std::memory_order_release);
             written += chunk;
         }
@@ -140,8 +147,8 @@ bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, st
 
 void StopPreviewAudio(PreviewPlaybackState& playback)
 {
-    playback.playing.store(false, std::memory_order_relaxed);
     playback.streamMode.store(false, std::memory_order_release);
+    playback.playing.store(false, std::memory_order_relaxed);
     playback.streamCompleted.store(false, std::memory_order_release);
     playback.streamUnderrun.store(false, std::memory_order_relaxed);
     playback.frameCursor.store(0, std::memory_order_relaxed);
@@ -181,6 +188,7 @@ uint64_t StartStreamingPreviewAudio(
     playback.streamStartupFrames = (std::max<ma_uint64>)(static_cast<ma_uint64>(sampleRate) / 100, 128);
     playback.streamRing.assign(static_cast<size_t>(playback.streamCapacityFrames * playback.channels), 0.0f);
     playback.streamLoopFrames.store(0, std::memory_order_relaxed);
+    playback.streamFrameOffset.store(0, std::memory_order_relaxed);
     playback.streamReadFrame.store(0, std::memory_order_relaxed);
     playback.streamWriteFrame.store(0, std::memory_order_relaxed);
     playback.streamAvailableFrames.store(0, std::memory_order_release);
@@ -309,6 +317,8 @@ bool PreviewAudioStreamSink::Begin(int sampleRate, int channels, int totalFrames
     if (!session_) throw std::runtime_error(error);
     playback_.streamLoopFrames.store(loop ? totalFrames : 0, std::memory_order_relaxed);
     playback_.playStartTick.store(startTick_, std::memory_order_relaxed);
+    playback_.frameCursor.store(frameOffset_, std::memory_order_relaxed);
+    playback_.streamFrameOffset.store(frameOffset_, std::memory_order_relaxed);
     return true;
 }
 bool PreviewAudioStreamSink::WriteFrame(double left, double right)

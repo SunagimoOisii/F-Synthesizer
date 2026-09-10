@@ -34,6 +34,7 @@ GUIPresetItem ReadPresetItem(const std::filesystem::path& path, const std::strin
     if (instruments == project.end() || instruments->empty()) return item;
     const auto& instrument = instruments->begin().value();
     item.displayName = instrument.value("displayName", item.displayName);
+    item.comparisonGain = instrument.value("comparisonGain", 1.0);
     item.category = instrument.value("category", std::string{});
     item.description = instrument.value("description", std::string{});
     item.tags = instrument.value("tags", std::vector<std::string>{});
@@ -108,6 +109,9 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
 {
     state.presetItems.clear();
     const auto root = FindProjectRootPath();
+    Json levels;
+    try { std::ifstream input(root / "assets" / "ui" / "preset-levels.json"); if (input) levels = Json::parse(input); }
+    catch (const std::exception&) { }
     for (const bool user : {false, true})
     {
         const auto directory = root / "config" / (user ? "user_presets" : "presets");
@@ -121,6 +125,7 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
             {
                 const std::string key = (user ? "user/" : "") + PathToUtf8(it->path().stem());
                 auto item = ReadPresetItem(it->path(), key);
+                if (!user && levels.contains(key)) item.comparisonGain = std::clamp(levels.at(key).value("gain", 1.0), .1, 4.0);
                 if (state.UIModeTab != 3 && item.internalOnly) continue;
                 state.presetItems.push_back(std::move(item));
             }

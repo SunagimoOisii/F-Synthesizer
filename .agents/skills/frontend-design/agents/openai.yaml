@@ -1,0 +1,7 @@
+interface:
+  display_name: "Frontend Design"
+  short_description: "Design intentional, usable interfaces"
+  default_prompt: "Use $frontend-design to review this UI and propose improvements within the requested scope."
+
+policy:
+  allow_implicit_invocation: false

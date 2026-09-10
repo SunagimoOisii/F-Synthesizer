@@ -359,6 +359,8 @@ private:
 
 struct RenderState
 {
+    int scopeChannel = -1;
+    std::vector<double> scopeFrames;
     // RenderMIDIEvents の 1 実行スコープで共有される可変状態。
     Voice voices;
     size_t eventIndex = 0;

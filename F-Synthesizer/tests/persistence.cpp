@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -36,17 +37,23 @@ std::filesystem::path FindProjectRootPath() { return testRoot; }
 
 #include "audio_checks.h"
 #include "song_checks.h"
+#include "tone_checks.h"
 
-int main()
+int main(int argc, char** argv)
 {
     try
     {
+        if (argc > 1 && std::string(argv[1]) == "--calibrate-presets")
+        { testRoot = std::filesystem::current_path(); CalibratePresetLevels(testRoot); return 0; }
+        if (argc > 1 && std::string(argv[1]) == "--check-transport")
+        { testRoot = std::filesystem::current_path() / "output" / "check" / "transport"; CheckTransportDevice(); return 0; }
         CheckAudioIntegration();
         const auto projectRoot = std::filesystem::current_path();
         testRoot = projectRoot / "output" / "check" /
             ("persistence-" + std::to_string(GetCurrentProcessId()));
         std::filesystem::create_directories(testRoot / "config" / "presets");
         CheckSongIntegration();
+        CheckToneWorkspace();
         std::string err;
 
         auto state = std::make_unique<GUIState>();
