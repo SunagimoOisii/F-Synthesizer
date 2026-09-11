@@ -1,0 +1,114 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Bellows",
+        "category": "Keys",
+        "description": "重ねたリードが細かくうなる、明るい蛇腹の響き。押している間、厚みが続く。",
+        "internal": false,
+        "tags": [
+          "keys",
+          "waveform",
+          "reed",
+          "detuned"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "リードの明るさを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "リードの輪郭を調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "主音に加えるビブラートを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.17,
+          "attackSec": 0.018,
+          "decaySec": 0.25,
+          "sustainLevel": 0.94,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "waveform",
+            "wave": "square",
+            "pulseWidth": 0.32,
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "drive": 0.015,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 3400,
+              "resonance": 0.72,
+              "keytrack": 0.3,
+              "drive": 0
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 4.6,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 160,
+                "fadeMs": 140
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.012,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "pad": {
+              "enabled": true,
+              "level": 0.95,
+              "octaveLevel": 0,
+              "detuneCents": 17,
+              "spread": 0.48,
+              "fadeInSec": 0.018,
+              "brightness": 0.95,
+              "motionDepth": 0.12,
+              "motionRateHz": 0.43,
+              "cutoffHz": 4800,
+              "drive": 0.015
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.12,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

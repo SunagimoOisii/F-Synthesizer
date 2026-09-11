@@ -1,0 +1,148 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Gravel",
+        "category": "Bass",
+        "description": "太い低音の上で、粗い粒がザラザラと動く。音程の芯はまっすぐ残る。",
+        "internal": false,
+        "tags": [
+          "bass",
+          "fm",
+          "grain",
+          "steady-fundamental"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 62,
+          "preview": 40
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "低音の上に重なる倍音を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "上側の粒が動く深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.012,
+          "decaySec": 0.5,
+          "sustainLevel": 0.92,
+          "releaseSec": 0.17,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.62,
+                "index": 1.2,
+                "levelEnv": {
+                  "attackSec": 0.002,
+                  "decaySec": 0.45,
+                  "sustainLevel": 0.75,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 9,
+                "level": 0.42,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.018,
+                  "decaySec": 0.65,
+                  "sustainLevel": 0.8,
+                  "releaseSec": 0.5
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.035,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.6,
+                  "sustainLevel": 0.7,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.9,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.002,
+                  "decaySec": 0.7,
+                  "sustainLevel": 1,
+                  "releaseSec": 0.4
+                }
+              }
+            ],
+            "feedback": 0.57,
+            "brightness": 0.5,
+            "drive": 0.005,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 23.7,
+                "depth": 0.92,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 35
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "fm.index",
+                  "amount": 0.85,
+                  "enabled": true
+                }
+              }
+            },
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 4800,
+              "resonance": 0.72,
+              "drive": 0
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.07,
+            "velocityToFmIndex": 0.12
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

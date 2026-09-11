@@ -1,0 +1,142 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Orbit",
+        "category": "Keys",
+        "description": "丸い打音から、脈打ちながら消える金属の余韻。ゆったりした和音に。",
+        "internal": false,
+        "tags": [
+          "keys",
+          "fm",
+          "mallet",
+          "tremolo"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 88,
+          "preview": 67
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "打音の硬さと高い響きを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "余韻が脈打つ深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.004,
+          "decaySec": 2.7,
+          "sustainLevel": 0,
+          "releaseSec": 0.7,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0,
+            "brightness": 0.5,
+            "drive": 0.015,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.26,
+                "index": 1.6,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.8,
+                  "sustainLevel": 0,
+                  "releaseSec": 1.1
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.85,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.002,
+                  "decaySec": 3.4,
+                  "sustainLevel": 0,
+                  "releaseSec": 1.2
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 5,
+                "level": 0.52,
+                "index": 1.4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.11,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 4,
+                "level": 0.3,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.3,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.5
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 3.8,
+                "depth": 0.82,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 80,
+                "fadeMs": 150
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "amp",
+                  "amount": 0.78,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.2
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

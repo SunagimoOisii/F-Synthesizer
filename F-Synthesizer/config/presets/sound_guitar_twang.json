@@ -1,0 +1,177 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Twang",
+        "category": "Guitar",
+        "description": "はじいた弦に、ビリリッと細かな共鳴が絡む。ざらつきがほどけるシタール風。",
+        "internal": false,
+        "tags": [
+          "guitar",
+          "fm",
+          "plucked",
+          "buzz"
+        ],
+        "recommendedRange": {
+          "low": 45,
+          "high": 84,
+          "preview": 62
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "弦の共鳴と高い倍音を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "細かなビリつきの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.002,
+          "decaySec": 1.7,
+          "sustainLevel": 0,
+          "releaseSec": 0.2,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 0,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.4,
+                "index": 1.0,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.38,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.5,
+                "index": 1.0,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 1.0,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.78,
+                "index": 1.0,
+                "levelEnv": {
+                  "attackSec": 0.013,
+                  "decaySec": 0.95,
+                  "sustainLevel": 0.25,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.8,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 2.2,
+                  "sustainLevel": 0.03,
+                  "releaseSec": 0.6
+                }
+              }
+            ],
+            "feedback": 0.43,
+            "brightness": 0.5,
+            "drive": 0.015,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 61.3,
+                "depth": 0.72,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 10,
+                "fadeMs": 25
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "fm.index",
+                  "amount": 0.78,
+                  "enabled": true
+                }
+              }
+            },
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 6500,
+              "resonance": 0.75,
+              "drive": 0
+            }
+          },
+          "layers": {
+            "pluck": {
+              "enabled": true,
+              "level": 0.34,
+              "decaySec": 0.09,
+              "brightness": 0.72,
+              "noiseMix": 0.42,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0
+            },
+            "harmonic": {
+              "enabled": true,
+              "level": 0.16,
+              "harmonicLevels": [
+                1,
+                0.04,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brightness": 0.25,
+              "stereo": 0,
+              "attackSec": 0.004
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.1,
+            "velocityToFmIndex": 0.2,
+            "velocityToPluck": 0.3
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

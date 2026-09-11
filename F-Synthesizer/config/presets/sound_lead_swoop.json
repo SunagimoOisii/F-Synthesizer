@@ -1,0 +1,155 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Swoop",
+        "category": "Lead",
+        "description": "下からキュッとしゃくる太い鼻声。伸ばすとビブラートが乗る。",
+        "internal": false,
+        "tags": [
+          "lead",
+          "fm",
+          "scoop",
+          "vibrato"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 88,
+          "preview": 69
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "鼻にかかった倍音を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "伸ばした音のビブラートを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.003,
+          "decaySec": 0.42,
+          "sustainLevel": 0.9,
+          "releaseSec": 0.16,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0.14,
+            "brightness": 0.5,
+            "drive": 0.025,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.7,
+                "index": 1.45,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.3,
+                  "sustainLevel": 0.72,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.74,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.65,
+                  "sustainLevel": 1,
+                  "releaseSec": 0.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.28,
+                "index": 1.3,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0.1,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.18,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.5,
+                  "sustainLevel": 0.15,
+                  "releaseSec": 0.3
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5.6,
+                "depth": 0.38,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 180,
+                "fadeMs": 200
+              },
+              "env2": {
+                "attackSec": 0.001,
+                "decaySec": 0.075,
+                "sustainLevel": 0,
+                "releaseSec": 0.025,
+                "curve": 0
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.027,
+                  "enabled": true
+                },
+                "1": {
+                  "source": "env2",
+                  "destination": "pitchMul",
+                  "amount": -0.085,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.13,
+            "velocityToFmIndex": 0.22
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

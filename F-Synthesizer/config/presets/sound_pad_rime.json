@@ -1,0 +1,160 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Rime",
+        "category": "Pad",
+        "description": "ガラスを擦るような頭から、細く透明な共鳴へ。伸ばすと澄んだ響きが残る。",
+        "internal": false,
+        "tags": [
+          "pad",
+          "fm",
+          "rubbed-glass",
+          "clear"
+        ],
+        "recommendedRange": {
+          "low": 60,
+          "high": 88,
+          "preview": 76
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "擦れの高い響きを調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "擦れる頭の細かな震えを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.04,
+          "decaySec": 0.9,
+          "sustainLevel": 0.88,
+          "releaseSec": 0.8,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 5,
+                "level": 0.46,
+                "index": 1.4,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.3,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.25,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.018,
+                  "decaySec": 0.35,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.35
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.1,
+                "index": 1.2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.6,
+                  "sustainLevel": 0.15,
+                  "releaseSec": 0.8
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.7,
+                "index": 1,
+                "levelEnv": {
+                  "attackSec": 0.14,
+                  "decaySec": 0.8,
+                  "sustainLevel": 1,
+                  "releaseSec": 1.0
+                }
+              }
+            ],
+            "feedback": 0,
+            "brightness": 0.5,
+            "drive": 0.005,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 27.3,
+                "depth": 0.63,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 10
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "fm.index",
+                  "amount": 0.6,
+                  "enabled": true
+                }
+              }
+            },
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 6500,
+              "resonance": 0.72,
+              "drive": 0
+            }
+          },
+          "layers": {
+            "attack": {
+              "enabled": true,
+              "type": "pick",
+              "level": 0.8,
+              "decaySec": 0.25,
+              "brightness": 0.6,
+              "bodyMix": 0,
+              "drive": 0.22
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.06,
+            "velocityToFmIndex": 0.1,
+            "velocityToAttack": 0.2
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}
