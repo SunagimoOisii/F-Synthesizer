@@ -1,0 +1,160 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Static",
+        "category": "SFX",
+        "description": "細かく震える電気的なざらつき。芯の音程は残る。",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "fm",
+          "buzz",
+          "fast-modulation"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.006,
+          "decaySec": 0.35,
+          "sustainLevel": 0.7,
+          "releaseSec": 0.18,
+          "source": {
+            "type": "fm",
+            "chip": 1,
+            "algorithm": 0,
+            "feedback": 0.57,
+            "brightness": 0.5,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.64,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.18,
+                  "sustainLevel": 0.52,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.52,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.45,
+                  "sustainLevel": 0.62,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.48,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.5,
+                  "sustainLevel": 0.68,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.72,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.6,
+                  "sustainLevel": 0.9,
+                  "releaseSec": 0.6
+                }
+              }
+            ],
+            "drive": 0.085,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 37.7,
+                "depth": 0.7,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 120
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "fm.index",
+                  "amount": 0.8,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "harmonic": {
+              "enabled": true,
+              "level": 0.16,
+              "harmonicLevels": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brightness": 0.2,
+              "stereo": 0
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.12
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

@@ -137,11 +137,11 @@ int main(int argc, char** argv)
             "personal preset metadata was lost");
         Require(savedInstrument.sound.pluckLayer.level == 0.21, "personal preset layers were lost");
 
-        const auto source = projectRoot / "config" / "presets" / "sound_lead_arcade.json";
+        const auto source = projectRoot / "config" / "presets" / "sound_lead_razor.json";
         const auto builtin = testRoot / "config" / "presets" / source.filename();
         std::filesystem::copy_file(source, builtin, std::filesystem::copy_options::overwrite_existing);
         const auto builtinBytes = Bytes(builtin);
-        gui::RefreshPresetItems(*state, "sound_lead_arcade");
+        gui::RefreshPresetItems(*state, "sound_lead_razor");
         state->selectedSoundSlot = 4;
         Require(gui::ApplySelectedPresetPaths(*state, err), err);
         const auto factorySound = state->instruments[4].sound.amp;
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
         Require(gui::SaveGUIStateFile(*state, err), err);
         Require(gui::SaveUserPresetFromState(*state, err), err);
         Require(Bytes(builtin) == builtinBytes, "factory preset was overwritten");
-        gui::RefreshPresetItems(*state, "sound_lead_arcade");
+        gui::RefreshPresetItems(*state, "sound_lead_razor");
         Require(gui::ApplySelectedPresetPaths(*state, err), err);
         Require(state->instruments[4].sound.amp == factorySound, "factory reload retained edits");
         Require(UndoSound(*state), "preset selection must be undoable");
@@ -175,6 +175,10 @@ int main(int argc, char** argv)
             ProjectModel reloaded = DefaultProjectModel();
             Require(config::ProjectFromJSON(json, testRoot, reloaded, err), err);
             Require(config::ProjectToJSON(reloaded) == json, entry.path().string() + ": round trip changed");
+            // Only the factory instrument; ProjectModel also contains default slots.
+            const auto factory = reloaded.instruments->find("sound");
+            if (factory != reloaded.instruments->end())
+                CheckPercussionCoverage(factory->second.sound, entry.path().filename().string());
             checked++;
         }
         std::cout << "Persistence checks: OK (" << checked

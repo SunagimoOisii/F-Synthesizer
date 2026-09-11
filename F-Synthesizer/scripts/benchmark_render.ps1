@@ -1,7 +1,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Platform = "x64",
-    [string]$Preset = "sound_lead_blade",
+    [string]$Preset = "sound_lead_razor",
     [string]$ConfigPath = "",
     [int]$Iterations = 3,
     [int]$TimeoutSec = 60,
@@ -123,7 +123,7 @@ function Invoke-Render {
 if ($Iterations -le 0) {
     throw "Iterations must be positive."
 }
-if ($ConfigPath -and $Preset -ne "sound_lead_blade") {
+if ($ConfigPath -and $Preset -ne "sound_lead_razor") {
     throw "Use either -ConfigPath or -Preset, not both."
 }
 

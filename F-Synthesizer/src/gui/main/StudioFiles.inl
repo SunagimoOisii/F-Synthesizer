@@ -187,7 +187,7 @@ void dialogs(GUIState& s)
             auto& part = s.tones[s.pianoRoll.displayChannel];
             part.draft.base = part.draft.instrument = s.instruments[s.selectedSoundSlot]; part.draft.values.fill(0);
             part.draft.customizedBase = true;
-            part.cache[part.draft.key] = part.draft; s.presetDirty = true;
+            part.cache[gui::ToneCacheKey(part.draft)] = part.draft; s.presetDirty = true;
         }
         if (!ImGui::IsAnyItemActive()) gui::FinishToneEdit(s);
         if (!ImGui::GetIO().WantTextInput && !ImGui::IsAnyItemActive() && ImGui::GetIO().KeyCtrl)

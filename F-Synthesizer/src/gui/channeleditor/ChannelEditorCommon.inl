@@ -99,7 +99,7 @@
                 if (updateHoverHelp) updateHoverHelp("Arpeggio Note を調整します。", "基音からの半音オフセットが変わります。0=ユニゾン、12=1オクターブ上。", nullptr);
             }
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass", "vocal" };
             int filterModeIdx = 0;
             switch (src.filterMode)
             {
@@ -108,6 +108,7 @@
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
             case FilterMode::LadderLowPass: filterModeIdx = 4; break;
+            case FilterMode::Vocal: filterModeIdx = 5; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("フィルタモード", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -119,6 +120,7 @@
                 case 2: src.filterMode = FilterMode::HighPass; break;
                 case 3: src.filterMode = FilterMode::BandPass; break;
                 case 4: src.filterMode = FilterMode::LadderLowPass; break;
+                case 5: src.filterMode = FilterMode::Vocal; break;
                 default: src.filterMode = FilterMode::Bypass; break;
                 }
                 localChanged = true;

@@ -1,0 +1,138 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Bristle",
+        "category": "Pad",
+        "description": "細い弦束をざらりと掻く。擦れる頭と、短く切れる和音。",
+        "internal": false,
+        "tags": [
+          "pad",
+          "waveform",
+          "strings",
+          "short-bow",
+          "staccato"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 84,
+          "preview": 62
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.003,
+          "decaySec": 0.23,
+          "sustainLevel": 0,
+          "releaseSec": 0.065,
+          "source": {
+            "type": "waveform",
+            "wave": "square",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "drive": 0.06,
+            "filter": {
+              "mode": "bandpass",
+              "cutoffHz": 1600,
+              "resonance": 1.2,
+              "keytrack": 0,
+              "drive": 0
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 1,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 70
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                },
+                "1": {
+                  "source": "env2",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.75,
+                  "enabled": true
+                }
+              },
+              "env2": {
+                "attackSec": 0.001,
+                "decaySec": 0.12,
+                "sustainLevel": 0,
+                "releaseSec": 0.035,
+                "curve": 0
+              }
+            }
+          },
+          "layers": {
+            "string": {
+              "enabled": true,
+              "level": 0.8,
+              "bowLevel": 1,
+              "detuneCents": 12,
+              "spread": 0.38,
+              "fadeInSec": 0.005,
+              "brightness": 0.76,
+              "motionDepth": 0.08,
+              "motionRateHz": 0.8,
+              "bodySend": 0,
+              "drive": 0.08
+            },
+            "pluck": {
+              "enabled": true,
+              "level": 0.16,
+              "decaySec": 0.028,
+              "brightness": 0.76,
+              "noiseMix": 0.8,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.12,
+            "velocityToFmIndex": 0,
+            "velocityToString": 0.6,
+            "velocityToPluck": 0.35
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

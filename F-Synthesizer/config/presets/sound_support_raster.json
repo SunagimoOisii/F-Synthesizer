@@ -1,0 +1,64 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Raster",
+        "category": "Support",
+        "description": "階段状の波形が作る、角ばったブーンという音。",
+        "internal": false,
+        "tags": [
+          "support",
+          "psg",
+          "stepped",
+          "buzzy"
+        ],
+        "recommendedRange": {
+          "low": 43,
+          "high": 88,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "この音色では鳴り方を調整できます"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "この音色では鳴り方を調整できます"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "この音色では鳴り方を調整できます"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.003,
+          "decaySec": 0.3,
+          "sustainLevel": 0.72,
+          "releaseSec": 0.12,
+          "source": {
+            "type": "psg",
+            "wave": "triangle",
+            "volumeSteps": 3,
+            "maxVoices": 8
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

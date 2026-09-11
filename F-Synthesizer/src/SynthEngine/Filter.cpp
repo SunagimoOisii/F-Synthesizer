@@ -97,6 +97,7 @@ void SetFilterDrive(FilterInstance& filter, double drive)
 void ResetFilterState(FilterInstance& filter)
 {
     filter.state = BiquadState{};
+    filter.vocalState = {};
     for (double& stage : filter.ladderStage)
     {
         stage = 0.0;
@@ -112,6 +113,26 @@ void UpdateFilterCoefficients(FilterInstance& filter)
 
     const FilterParams p = ClampFilterParams(filter.params, filter.sampleRate);
     filter.params = p;
+
+    if (p.mode == FilterMode::Vocal)
+    {
+        // Three parallel resonances preserve the harmonic excitation while
+        // shaping a synthetic vowel. Cutoff moves the first resonance in Hz;
+        // the other two track it, independently of the MIDI note's pitch.
+        constexpr double ratios[] = { 1.0, 1.6, 3.6 };
+        for (size_t band = 0; band < filter.vocalCoeffs.size(); ++band)
+        {
+            const double hz = ClampCutoffHz(p.cutoffHz * ratios[band], filter.sampleRate);
+            const double w = 2.0 * kPi * hz / filter.sampleRate;
+            const double q = std::clamp(p.resonance * (band == 2 ? 0.7 : 1.0), 1.0, 12.0);
+            const double alpha = std::sin(w) / (2.0 * q);
+            const double norm = 1.0 / (1.0 + alpha);
+            filter.vocalCoeffs[band] = {alpha * norm, 0.0, -alpha * norm,
+                -2.0 * std::cos(w) * norm, (1.0 - alpha) * norm};
+        }
+        filter.dirty = false;
+        return;
+    }
 
     if (p.mode == FilterMode::Bypass || p.mode == FilterMode::LadderLowPass)
     {
@@ -174,6 +195,21 @@ double ProcessFilterSample(FilterInstance& filter, double input)
     if (filter.params.mode == FilterMode::Bypass)
     {
         return input;
+    }
+    if (filter.params.mode == FilterMode::Vocal)
+    {
+        constexpr double weights[] = { 1.0, 0.85, 0.5 };
+        double result = 0.0;
+        for (size_t band = 0; band < filter.vocalState.size(); ++band)
+        {
+            const auto& c = filter.vocalCoeffs[band];
+            auto& s = filter.vocalState[band];
+            const double y = c.b0 * input + s.z1;
+            s.z1 = c.b1 * input - c.a1 * y + s.z2;
+            s.z2 = c.b2 * input - c.a2 * y;
+            result += weights[band] * y;
+        }
+        return result;
     }
     if (filter.params.mode == FilterMode::LadderLowPass)
     {

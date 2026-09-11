@@ -64,7 +64,8 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
 {
     bool changed = false;
     int drumType = static_cast<int>(d.type);
-    const char* drumTypes[] = { "none", "kick", "snare", "hat", "tom", "rim", "clap", "crash", "ride" };
+    const char* drumTypes[] = { "none", "kick", "snare", "hat", "tom", "rim", "clap", "crash", "ride",
+        "bell", "shaker", "scrape", "whistle", "woodblock", "cuica" };
     std::string key = std::string("Drum Type##") + IDPrefix;
     changed |= ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
     if (updateHoverHelp)
@@ -99,7 +100,43 @@ bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn
             "上げすぎるとクリップしやすくなります。");
     }
 
-    if (d.type == DrumType::Kick)
+    if (d.type >= DrumType::Bell)
+    {
+        key = std::string("Body Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyFreq, 10.0, 100.0, "%.2f");
+        if (d.type != DrumType::Shaker)
+        {
+            key = std::string("Body Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyLevel, 0.01, 0.1, "%.3f");
+        }
+        if (d.type == DrumType::Bell || d.type == DrumType::Woodblock)
+        {
+            key = std::string("Body Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyDecaySec, 0.01, 0.1, "%.3f");
+        }
+        if (d.type == DrumType::Bell || d.type == DrumType::Shaker)
+        {
+            key = std::string("Metal Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.metalLevel, 0.01, 0.1, "%.3f");
+        }
+        if (d.type == DrumType::Whistle || d.type == DrumType::Cuica)
+        {
+            key = std::string("Pitch Start##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchStart, 0.01, 0.1, "%.3f");
+            key = std::string("Pitch Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.001, 0.01, "%.3f");
+        }
+        if (d.type == DrumType::Shaker || d.type == DrumType::Scrape)
+        {
+            key = std::string("Pulse Interval##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.001, 0.01, "%.3f");
+        }
+        if (d.type != DrumType::Bell && d.type != DrumType::Woodblock)
+        {
+            key = std::string("Noise Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
+        }
+        key = std::string("Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.decaySec, 0.001, 0.01, "%.3f");
+        key = std::string("Transient Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientLevel, 0.01, 0.1, "%.3f");
+        key = std::string("Transient Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientDecaySec, 0.001, 0.01, "%.3f");
+        key = std::string("HP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
+        key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
+        key = std::string("Drive##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.drive, 0.01, 0.1, "%.3f");
+        d.drive = std::clamp(d.drive, 0.0, 1.0);
+    }
+    else if (d.type == DrumType::Kick)
     {
         key = std::string("Body Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyFreq, 1.0, 10.0, "%.2f");
         if (updateHoverHelp) updateHoverHelp("Body Freq を調整します。", "キックの低域の芯が変わります。", nullptr);

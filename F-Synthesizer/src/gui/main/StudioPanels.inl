@@ -210,7 +210,8 @@ void presetList(GUIState& s, float x, float y, float w, float h)
         if (category >= 0 && categoryIndex(preset.category) != category) continue;
         if (!matches(preset.displayName + " " + preset.description, query)) continue;
         ++count; const auto p = ImGui::GetCursorScreenPos(); const float rw = ImGui::GetContentRegionAvail().x;
-        const bool selected = preset.name == part.draft.key, adopted = preset.name == part.adopted.key;
+        const bool selected = preset.name == part.draft.key && preset.revision == part.draft.presetRevision;
+        const bool adopted = preset.name == part.adopted.key && preset.revision == part.adopted.presetRevision;
         ImGui::PushID(i);
         if (ImGui::InvisibleButton("preset", {rw, 78}))
         { std::string error; if (!gui::SelectTonePreset(s, i, error)) RaiseGUIError(s, error, 0, true); }
@@ -220,7 +221,7 @@ void presetList(GUIState& s, float x, float y, float w, float h)
         icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? accent : muted);
         const char* status = selected ? (part.compare ? "保持中" : gui::TonePending(s, ch) ? "試聴中" : "採用済み") : adopted ? "採用済み" : "";
         if (!selected && !adopted)
-            if (auto it = part.cache.find(preset.name); it != part.cache.end())
+            if (auto it = part.cache.find(gui::ToneCacheKey(preset.name, preset.revision)); it != part.cache.end())
                 if (it->second.customizedBase || it->second.instrument.sound != it->second.base.sound) status = "調整済み";
         clipped(p.x + 60, p.y + 9, rw - 152, preset.displayName.c_str(), fg, body);
         text(p.x + rw - 83, p.y + 11, status, selected && !part.compare ? pendingColor : muted, fontSmall);

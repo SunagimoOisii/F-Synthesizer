@@ -10,7 +10,7 @@
             if (updateHoverHelp) updateHoverHelp("Noise を選択します。", "ノイズ種別（色）が変わります。", nullptr);
             nz->noise = NoiseFromIndex(idx);
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass", "vocal" };
             int filterModeIdx = 0;
             switch (nz->filterMode)
             {
@@ -19,6 +19,7 @@
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
             case FilterMode::LadderLowPass: filterModeIdx = 4; break;
+            case FilterMode::Vocal: filterModeIdx = 5; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -30,6 +31,7 @@
                 case 2: nz->filterMode = FilterMode::HighPass; break;
                 case 3: nz->filterMode = FilterMode::BandPass; break;
                 case 4: nz->filterMode = FilterMode::LadderLowPass; break;
+                case 5: nz->filterMode = FilterMode::Vocal; break;
                 default: nz->filterMode = FilterMode::Bypass; break;
                 }
                 changed = true;
@@ -136,7 +138,7 @@
                 }
             }
 
-            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass" };
+            const char* filterModes[] = { "bypass", "lowpass", "highpass", "bandpass", "ladderLowpass", "vocal" };
             int filterModeIdx = 0;
             switch (fm->filterMode)
             {
@@ -145,6 +147,7 @@
             case FilterMode::HighPass: filterModeIdx = 2; break;
             case FilterMode::BandPass: filterModeIdx = 3; break;
             case FilterMode::LadderLowPass: filterModeIdx = 4; break;
+            case FilterMode::Vocal: filterModeIdx = 5; break;
             }
             ImGui::SetNextItemWidth(220.0f);
             if (ImGui::Combo("Filter Mode", &filterModeIdx, filterModes, IM_ARRAYSIZE(filterModes)))
@@ -156,6 +159,7 @@
                 case 2: fm->filterMode = FilterMode::HighPass; break;
                 case 3: fm->filterMode = FilterMode::BandPass; break;
                 case 4: fm->filterMode = FilterMode::LadderLowPass; break;
+                case 5: fm->filterMode = FilterMode::Vocal; break;
                 default: fm->filterMode = FilterMode::Bypass; break;
                 }
                 changed = true;

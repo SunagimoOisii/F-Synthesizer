@@ -1,0 +1,156 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Razor",
+        "category": "Lead",
+        "description": "鋭い金属の輪郭。伸ばすと薄いうなりが重なる。",
+        "internal": false,
+        "tags": [
+          "lead",
+          "fm",
+          "sharp",
+          "metal"
+        ],
+        "recommendedRange": {
+          "low": 52,
+          "high": 88,
+          "preview": 72
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.003,
+          "decaySec": 0.4,
+          "sustainLevel": 0.88,
+          "releaseSec": 0.2,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0.43,
+            "brightness": 0.5,
+            "drive": 0.06,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 3,
+                "level": 0.7,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.13,
+                  "sustainLevel": 0.3,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.6,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.6,
+                  "sustainLevel": 0.9,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.5,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.6,
+                  "sustainLevel": 0.65,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.32,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.7,
+                  "sustainLevel": 0.9,
+                  "releaseSec": 0.6
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5.2,
+                "depth": 0.17,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 260,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "lead": {
+              "enabled": true,
+              "type": "blade",
+              "level": 0.2,
+              "pitchBendSemis": 0,
+              "edgeLevel": 0.45,
+              "bodyLevel": 0.6,
+              "detuneCents": 7,
+              "characterLevel": 0.18,
+              "biteLevel": 0.1,
+              "biteDecaySec": 0.025
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.12,
+            "velocityToFmIndex": 0.18
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

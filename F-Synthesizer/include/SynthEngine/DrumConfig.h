@@ -10,7 +10,13 @@ enum class DrumType
     Rim,
     Clap,
     Crash,
-    Ride
+    Ride,
+    Bell,
+    Shaker,
+    Scrape,
+    Whistle,
+    Woodblock,
+    Cuica
 };
 
 // 単発ドラム音源の設定。

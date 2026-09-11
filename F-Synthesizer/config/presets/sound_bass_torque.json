@@ -1,0 +1,125 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Torque",
+        "category": "Bass",
+        "description": "グォンと粘るうなりが巡る。伸ばすほど動きが分かる低音。",
+        "internal": false,
+        "tags": [
+          "bass",
+          "waveform",
+          "growl",
+          "resonant"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 60,
+          "preview": 40
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.005,
+          "decaySec": 0.5,
+          "sustainLevel": 0.92,
+          "releaseSec": 0.17,
+          "source": {
+            "type": "waveform",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 580,
+              "resonance": 3.1,
+              "keytrack": 0.35,
+              "drive": 0
+            },
+            "drive": 0.15,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 0.85,
+                "depth": 0.9,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.92,
+                  "enabled": true
+                },
+                "1": {
+                  "source": "env2",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.9,
+                  "enabled": true
+                }
+              },
+              "env2": {
+                "attackSec": 0.001,
+                "decaySec": 0.22,
+                "sustainLevel": 0,
+                "releaseSec": 0.2,
+                "curve": 0
+              }
+            }
+          },
+          "layers": {
+            "bass": {
+              "enabled": true,
+              "type": "drive",
+              "level": 0.18,
+              "subLevel": 0.85,
+              "bodyLevel": 0.15,
+              "gritLevel": 0,
+              "pitchOffsetSemis": 0,
+              "focusLevel": 0,
+              "cutoffHz": 1300,
+              "drive": 0.02
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.15,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Silica",
+        "category": "Pad",
+        "description": "冷たい金属の層がゆっくり開く。揺れる長い余韻。",
+        "internal": false,
+        "tags": [
+          "pad",
+          "fm",
+          "metal",
+          "evolving"
+        ],
+        "recommendedRange": {
+          "low": 43,
+          "high": 84,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.13,
+          "decaySec": 1,
+          "sustainLevel": 0.9,
+          "releaseSec": 1.2,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0,
+            "brightness": 0.5,
+            "drive": 0.02,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 5,
+                "level": 0.34,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.09,
+                  "decaySec": 1.1,
+                  "sustainLevel": 0.2,
+                  "releaseSec": 1.4
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.48,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 1,
+                  "sustainLevel": 0.95,
+                  "releaseSec": 1.5
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.35,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.2,
+                  "decaySec": 0.8,
+                  "sustainLevel": 0.6,
+                  "releaseSec": 1.3
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.3,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 1,
+                  "sustainLevel": 0.95,
+                  "releaseSec": 1.5
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 0.37,
+                "depth": 0.65,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "fm.index",
+                  "amount": 0.6,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "pad": {
+              "enabled": true,
+              "level": 0.26,
+              "octaveLevel": 0.08,
+              "detuneCents": 9,
+              "spread": 0.85,
+              "fadeInSec": 0.2,
+              "brightness": 0.32,
+              "motionDepth": 0.25,
+              "motionRateHz": 0.27,
+              "cutoffHz": 2800
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.1
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

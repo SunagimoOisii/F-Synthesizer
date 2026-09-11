@@ -1,0 +1,119 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Cork",
+        "category": "Guitar",
+        "description": "弦を押さえた短い低音。コツッと切れる刻みに。",
+        "internal": false,
+        "tags": [
+          "guitar",
+          "waveform",
+          "muted",
+          "short"
+        ],
+        "recommendedRange": {
+          "low": 40,
+          "high": 79,
+          "preview": 52
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.001,
+          "decaySec": 0.16,
+          "sustainLevel": 0.006,
+          "releaseSec": 0.055,
+          "source": {
+            "type": "waveform",
+            "wave": "triangle",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "drive": 0.02,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 2400,
+              "resonance": 0.8,
+              "keytrack": 0.35,
+              "drive": 0
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 150,
+                "fadeMs": 120
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "chug": {
+              "enabled": true,
+              "level": 0.38,
+              "decaySec": 0.055,
+              "lowPunch": 0.7,
+              "pick": 0.36,
+              "tone": 0.35,
+              "tightness": 0.9,
+              "drive": 0.06
+            },
+            "ampCab": {
+              "enabled": true,
+              "drive": 0.1,
+              "tone": 0.35,
+              "cabLow": 0.12,
+              "cabHigh": 0.65,
+              "presence": 0.1,
+              "output": 0.92
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.1,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

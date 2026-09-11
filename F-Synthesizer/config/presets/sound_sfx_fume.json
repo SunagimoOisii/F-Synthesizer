@@ -1,0 +1,94 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Fume",
+        "category": "SFX",
+        "description": "ざあっと流れる息。その底に細い音程が浮かぶ。",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "noise",
+          "breath",
+          "noise"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 81,
+          "preview": 64
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "この音色では揺れの調整はありません"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.22,
+          "decaySec": 1.2,
+          "sustainLevel": 0.66,
+          "releaseSec": 0.85,
+          "source": {
+            "type": "noise",
+            "noise": "white",
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 2900,
+              "resonance": 0.9,
+              "drive": 0.035
+            }
+          },
+          "layers": {
+            "harmonic": {
+              "enabled": true,
+              "level": 0.32,
+              "harmonicLevels": [
+                1,
+                0.1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brightness": 0.3,
+              "stereo": 0.2,
+              "attackSec": 0.1
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

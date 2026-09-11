@@ -137,7 +137,7 @@ constexpr std::array<SourceParameterSchemaEntry, 21> kFmParameterSchema{ {
 } };
 
 constexpr std::array<SourceParameterSchemaEntry, 23> kDrumParameterSchema{ {
-    { "drumType", SourceParameterType::Int, 0.0, 8.0, 0.0 },
+    { "drumType", SourceParameterType::Int, 0.0, 14.0, 0.0 },
     { "gain", SourceParameterType::Float, 0.0, 4.0, 1.0 },
     { "bodyFreq", SourceParameterType::Float, 20.0, 20000.0, 60.0 },
     { "bodyLevel", SourceParameterType::Float, 0.0, 2.0, 0.8 },

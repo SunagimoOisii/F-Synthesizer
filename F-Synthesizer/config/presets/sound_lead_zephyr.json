@@ -1,0 +1,95 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Zephyr",
+        "category": "Lead",
+        "description": "フッと息が突き抜ける笛。太い芯に、吹きすぎたようなざらつき。",
+        "internal": false,
+        "tags": [
+          "lead",
+          "noise",
+          "flute",
+          "overblown"
+        ],
+        "recommendedRange": {
+          "low": 60,
+          "high": 91,
+          "preview": 76
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "この音色では揺れの調整はありません"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.006,
+          "decaySec": 0.23,
+          "sustainLevel": 0.76,
+          "releaseSec": 0.1,
+          "source": {
+            "type": "noise",
+            "noise": "white",
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 4200,
+              "resonance": 0.75,
+              "drive": 0
+            }
+          },
+          "layers": {
+            "harmonic": {
+              "enabled": true,
+              "level": 0.92,
+              "harmonicLevels": [
+                1,
+                0.09,
+                0.24,
+                0.015,
+                0.035,
+                0,
+                0,
+                0
+              ],
+              "brightness": 0.3,
+              "stereo": 0.035,
+              "attackSec": 0.008
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.62,
+            "velocityToFmIndex": 0,
+            "velocityToAttack": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

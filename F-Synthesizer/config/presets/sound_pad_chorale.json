@@ -1,0 +1,131 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Chorale",
+        "category": "Pad",
+        "description": "喉に響く人工コーラス。伸ばすと口が開くように母音が動く。",
+        "internal": false,
+        "tags": [
+          "pad",
+          "waveform",
+          "synthetic-voice",
+          "formants"
+        ],
+        "recommendedRange": {
+          "low": 48,
+          "high": 76,
+          "preview": 60
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.055,
+          "decaySec": 0.5,
+          "sustainLevel": 0.8,
+          "releaseSec": 0.48,
+          "source": {
+            "type": "waveform",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "drive": 0.02,
+            "filter": {
+              "mode": "vocal",
+              "cutoffHz": 600,
+              "resonance": 4.7,
+              "keytrack": 0,
+              "drive": 0
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 0.8,
+                "depth": 0.55,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 70
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.48,
+                  "enabled": true
+                },
+                "1": {
+                  "source": "env2",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.7,
+                  "enabled": true
+                },
+                "2": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.005,
+                  "enabled": true
+                }
+              },
+              "env2": {
+                "attackSec": 0.32,
+                "decaySec": 0.65,
+                "sustainLevel": 0.3,
+                "releaseSec": 0.3,
+                "curve": 0
+              }
+            }
+          },
+          "layers": {
+            "pad": {
+              "enabled": true,
+              "level": 0.06,
+              "octaveLevel": 0,
+              "detuneCents": 9,
+              "spread": 0.65,
+              "fadeInSec": 0.09,
+              "brightness": 0.15,
+              "motionDepth": 0.1,
+              "motionRateHz": 0.47,
+              "cutoffHz": 1400
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.06,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

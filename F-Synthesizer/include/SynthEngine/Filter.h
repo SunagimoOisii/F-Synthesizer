@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 
 enum class FilterMode
 {
@@ -6,7 +7,8 @@ enum class FilterMode
     LowPass,
     HighPass,
     BandPass,
-    LadderLowPass
+    LadderLowPass,
+    Vocal
 };
 
 struct FilterParams
@@ -38,6 +40,8 @@ struct FilterInstance
     int sampleRate = 44100;
     BiquadCoefficients coeffs{};
     BiquadState state{};
+    std::array<BiquadCoefficients, 3> vocalCoeffs{};
+    std::array<BiquadState, 3> vocalState{};
     double ladderStage[4]{};
     bool dirty = true;
 };

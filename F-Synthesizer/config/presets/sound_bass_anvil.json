@@ -1,0 +1,164 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Anvil",
+        "category": "Bass",
+        "description": "硬い金属の頭から、ざらついた低音が残る。",
+        "internal": false,
+        "tags": [
+          "bass",
+          "fm",
+          "metal",
+          "strike"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 62,
+          "preview": 40
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.002,
+          "decaySec": 0.35,
+          "sustainLevel": 0.83,
+          "releaseSec": 0.13,
+          "source": {
+            "type": "fm",
+            "chip": 1,
+            "algorithm": 3,
+            "feedback": 0.43,
+            "brightness": 0.5,
+            "drive": 0.065,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 5,
+                "level": 0.65,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.08,
+                  "sustainLevel": 0.02,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.5,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.19,
+                  "sustainLevel": 0.12,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.68,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.35,
+                  "sustainLevel": 0.4,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.88,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.7,
+                  "sustainLevel": 0.9,
+                  "releaseSec": 0.6
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 150,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "layers": {
+            "bass": {
+              "enabled": true,
+              "type": "drive",
+              "level": 0.23,
+              "subLevel": 0.65,
+              "bodyLevel": 0.3,
+              "gritLevel": 0.05,
+              "pitchOffsetSemis": 0,
+              "focusLevel": 0,
+              "cutoffHz": 1300,
+              "drive": 0.08
+            },
+            "attack": {
+              "enabled": true,
+              "type": "metal",
+              "level": 0.07,
+              "decaySec": 0.017,
+              "brightness": 0.6,
+              "bodyMix": 0.15
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.12,
+            "velocityToFmIndex": 0.2
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

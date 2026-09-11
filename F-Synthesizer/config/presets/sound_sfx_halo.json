@@ -1,0 +1,142 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Halo",
+        "category": "SFX",
+        "description": "丸い打音から、遅れて淡い高い響きが立ち上がる。",
+        "internal": false,
+        "tags": [
+          "sfx",
+          "fm",
+          "delayed-bloom",
+          "chime"
+        ],
+        "recommendedRange": {
+          "low": 55,
+          "high": 88,
+          "preview": 72
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.002,
+          "decaySec": 2.5,
+          "sustainLevel": 0.1,
+          "releaseSec": 0.8,
+          "source": {
+            "type": "fm",
+            "chip": 0,
+            "algorithm": 4,
+            "feedback": 0,
+            "brightness": 0.5,
+            "drive": 0.015,
+            "ops": [
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.3,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.12,
+                  "sustainLevel": 0,
+                  "releaseSec": 0.25
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 1,
+                "level": 0.68,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.001,
+                  "decaySec": 0.85,
+                  "sustainLevel": 0.08,
+                  "releaseSec": 0.6
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 5,
+                "level": 0.52,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.22,
+                  "decaySec": 0.8,
+                  "sustainLevel": 0.1,
+                  "releaseSec": 1.1
+                }
+              },
+              {
+                "wave": "sine",
+                "ratio": 2,
+                "level": 0.27,
+                "index": 2,
+                "levelEnv": {
+                  "attackSec": 0.12,
+                  "decaySec": 1.6,
+                  "sustainLevel": 0.05,
+                  "releaseSec": 1.1
+                }
+              }
+            ],
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 150,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.08,
+            "velocityToFmIndex": 0.15
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

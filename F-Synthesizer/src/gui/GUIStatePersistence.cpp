@@ -30,6 +30,7 @@ Json ToneToJSON(const gui::ToneVersion& tone)
     model.projectChannels.reset();
     Json result = config::ProjectToJSON(model);
     result["key"] = tone.key;
+    result["presetRevision"] = tone.presetRevision;
     result["values"] = tone.values;
     result["customizedBase"] = tone.customizedBase;
     return result;
@@ -44,6 +45,7 @@ gui::ToneVersion ToneFromJSON(const Json& json)
         throw std::runtime_error("保存した試聴音色を読み込めません。" + error);
     gui::ToneVersion tone;
     tone.key = json.at("key").get<std::string>();
+    tone.presetRevision = json.value("presetRevision", std::string{});
     tone.customizedBase = json.value("customizedBase", false);
     tone.values = json.at("values").get<std::array<float, 6>>();
     for (auto& value : tone.values)
@@ -155,7 +157,8 @@ void ApplyWorkspaceJSON(GUIState& state, const Json& root)
             for (const auto& cached : json.at("cache"))
             {
                 auto tone = ToneFromJSON(cached);
-                part.cache.emplace(tone.key, std::move(tone));
+                const auto cacheKey = gui::ToneCacheKey(tone);
+                part.cache.emplace(cacheKey, std::move(tone));
             }
             state.instruments[ch] = part.draft.instrument;
             state.channelAssignments[ch] = ch;

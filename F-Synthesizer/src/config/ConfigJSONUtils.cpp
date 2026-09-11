@@ -202,6 +202,12 @@ bool TryParseDrumType(const std::string& name, DrumType& outType)
         outType = DrumType::Ride;
         return true;
     }
+    if (name == "bell") { outType = DrumType::Bell; return true; }
+    if (name == "shaker") { outType = DrumType::Shaker; return true; }
+    if (name == "scrape") { outType = DrumType::Scrape; return true; }
+    if (name == "whistle") { outType = DrumType::Whistle; return true; }
+    if (name == "woodblock") { outType = DrumType::Woodblock; return true; }
+    if (name == "cuica") { outType = DrumType::Cuica; return true; }
     return false;
 }
 
@@ -230,6 +236,11 @@ bool TryParseFilterMode(const std::string& name, FilterMode& outMode)
     if (name == "ladderLowpass")
     {
         outMode = FilterMode::LadderLowPass;
+        return true;
+    }
+    if (name == "vocal")
+    {
+        outMode = FilterMode::Vocal;
         return true;
     }
     return false;
@@ -394,6 +405,12 @@ std::string DrumTypeToString(DrumType d)
     case DrumType::Clap: return "clap";
     case DrumType::Crash: return "crash";
     case DrumType::Ride: return "ride";
+    case DrumType::Bell: return "bell";
+    case DrumType::Shaker: return "shaker";
+    case DrumType::Scrape: return "scrape";
+    case DrumType::Whistle: return "whistle";
+    case DrumType::Woodblock: return "woodblock";
+    case DrumType::Cuica: return "cuica";
     }
     return "none";
 }
@@ -451,6 +468,7 @@ std::string FilterModeToString(FilterMode mode)
     case FilterMode::HighPass: return "highpass";
     case FilterMode::BandPass: return "bandpass";
     case FilterMode::LadderLowPass: return "ladderLowpass";
+    case FilterMode::Vocal: return "vocal";
     }
     return "bypass";
 }

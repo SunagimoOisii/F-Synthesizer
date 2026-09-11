@@ -5,8 +5,113 @@
 #include "SynthEngine/SynthEngine.h"
 #include "midi/MIDIReader.h"
 
+inline void CheckVocalFilterAndFmSweep()
+{
+    for (int rate : {22050, 44100})
+    {
+        auto filteredEnergy = [&](double hz)
+        {
+            FilterInstance filter{};
+            SetFilterSampleRate(filter, rate); SetFilterMode(filter, FilterMode::Vocal);
+            SetFilterCutoffHz(filter, 700); SetFilterResonance(filter, 5);
+            double energy = 0;
+            for (int n = 0; n < rate / 5; ++n)
+            {
+                const double sample = ProcessFilterSample(filter, std::sin(6.283185307179586 * hz * n / rate));
+                Require(std::isfinite(sample), "vocal filter produced a non-finite sample");
+                if (n > rate / 10) energy += sample * sample;
+            }
+            ResetFilterState(filter);
+            Require(ProcessFilterSample(filter, 0) == 0, "vocal filter reset retained ringing");
+            return energy;
+        };
+        const double outside = filteredEnergy(7000);
+        for (double resonance : {700.0, 1120.0, 2520.0})
+            Require(filteredEnergy(resonance) > outside * 8, "vocal resonance is missing");
+    }
+    // The filter-cutoff route was previously evaluated, then discarded by FM rendering.
+    std::array<InstrumentSoundConfig, 16> sounds{};
+    auto& sound = sounds[0];
+    sound.amp = .2; sound.attackSec = .001; sound.decaySec = .01;
+    sound.sustainLevel = 1; sound.releaseSec = .02;
+    FmConfig fm{}; fm.algorithm = 7; fm.filterMode = FilterMode::LowPass; fm.filterCutoffHz = 400;
+    for (auto& op : fm.ops) { op.level = 0; op.levelEnv.attackSec = .001; op.levelEnv.sustainLevel = 1; }
+    fm.ops[3].level = 1;
+    fm.modulation.lfo1 = {LfoWave::Square, 2, .8, true, true, 0, 0};
+    fm.modulation.matrix.routes[0] = {ModSource::Lfo1, ModDestination::FilterCutoff, .9, true};
+    sound.source = fm;
+    MIDIEvent note{}; note.type = MIDIEventType::Note; note.isNoteOn = true;
+    note.channel = 0; note.noteNumber = 69; note.velocity = 100; note.noteInstanceID = 1;
+    double open = 0, closed = 0;
+    constexpr int rate = 44100;
+    auto measureWindows = [&] {
+        open = closed = 0;
+        RenderMIDIEventsWithFrameBlockCallback(rate / 2, rate, {note}, sounds, {},
+        [&](int sample, const double* frames, int count)
+        {
+            for (int n = 0; n < count; ++n)
+            {
+                const double energy = frames[n * 2] * frames[n * 2];
+                if (sample + n > rate * .08 && sample + n < rate * .18) open += energy;
+                if (sample + n > rate * .33 && sample + n < rate * .43) closed += energy;
+            }
+            return true;
+        });
+    };
+    measureWindows();
+    Require(open > closed * 4 && closed > 0, "FM cutoff modulation did not reach the audio filter");
+    // Even a layer-only FM instrument must receive its amplitude modulation.
+    fm.ops[3].level = 0; fm.filterMode = FilterMode::Bypass;
+    fm.modulation.matrix.routes[0].destination = ModDestination::Amp;
+    sound.source = fm;
+    sound.harmonicLayer.enabled = true; sound.harmonicLayer.level = .4;
+    sound.harmonicLayer.harmonicLevels = {1, 0, 0, 0, 0, 0, 0, 0};
+    sound.harmonicLayer.stereo = 0;
+    measureWindows();
+    Require(open > closed * 10 && closed > 0, "FM tremolo did not reach auxiliary layers");
+    std::cout << "Vocal resonances, reset, FM cutoff and layer tremolo OK\n";
+}
+
+inline void CheckPercussionCoverage(const InstrumentSoundConfig& sound, const std::string& label)
+{
+    const auto* kit = std::get_if<DrumKitConfig>(&sound.source);
+    if (!kit) return;
+    std::array<InstrumentSoundConfig, 16> sounds{};
+    sounds[9] = sound;
+    const std::array<ChannelMixState, 16> mixes{};
+    for (int rate : {22050, 44100})
+    {
+        for (int note = 35; note <= 81; ++note)
+        {
+            const auto context = label + " GM " + std::to_string(note);
+            Require(kit->map[note].type != DrumType::None, context + ": missing percussion");
+            MIDIEvent on{}; on.type = MIDIEventType::Note; on.channel = 9;
+            on.noteNumber = note; on.velocity = 100; on.isNoteOn = true; on.noteInstanceID = 1;
+            MIDIEvent off = on; off.sample = rate / 100; off.isNoteOn = false;
+            double energy = 0.0, peak = 0.0;
+            bool finite = true;
+            RenderMIDIEventsWithFrameBlockCallback(rate / 5, rate, {on, off}, sounds, mixes,
+                [&](int, const double* frames, int count)
+                {
+                    for (int i = 0; i < count * 2; ++i)
+                    {
+                        finite = finite && std::isfinite(frames[i]);
+                        peak = std::max(peak, std::abs(frames[i]));
+                        energy += frames[i] * frames[i];
+                    }
+                    return true;
+                });
+            Require(finite, context + ": non-finite sample");
+            Require(energy > 0.00001, context + ": silent percussion");
+            Require(peak < 0.98, context + ": clipping percussion");
+        }
+    }
+    std::cout << label << ": all 47 GM hits audible and finite at 22050/44100 Hz\n";
+}
+
 inline void CheckAudioIntegration()
 {
+    CheckVocalFilterAndFmSweep();
     constexpr int rate = 44100;
     FmConfig fm{};
     fm.algorithm = 7;

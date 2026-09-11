@@ -208,6 +208,99 @@ double RenderClapSample(const DrumConfig& src, DrumVoiceState& ds, int sampleRat
     return DrumSoftClip(noise + tail, src.drive);
 }
 
+// Extra GM percussion uses independent resonances, friction and breath, rather
+// than retuning the snare/hat. Keep the original eight models unchanged.
+double PercussionSine(DrumVoiceState& ds, size_t partial, double hz, int sampleRate)
+{
+    const double frequency = hz * ds.pitchRatio;
+    if (frequency >= sampleRate * 0.45) return 0.0;
+    ds.metalPhase[partial] = WrapPhase(ds.metalPhase[partial] + frequency / sampleRate);
+    return std::sin(2.0 * kPi * ds.metalPhase[partial]);
+}
+
+double RenderPercussionSample(const DrumConfig& src, DrumVoiceState& ds, int sampleRate)
+{
+    const double t = ds.time;
+    const double tone = DrumVelocityShape(src, ds);
+    const double decay = DrumDecay(src, ds, 0.16);
+    const double bodyDecay = DrumParam(src.bodyDecaySec, 0.12) * ds.decayScale;
+    const double bodyLevel = DrumParam(src.bodyLevel, 0.6);
+    const double noiseLevel = DrumParam(src.noiseLevel, 0.08);
+    // White excitation has separate RNG state; filter the completed signal once.
+    // Do not share colored-noise history with the output filter.
+    const double noise = NextDrumWhite(ds);
+    double w = 0.0;
+    switch (src.type)
+    {
+    case DrumType::Bell:
+    {
+        const double hz = DrumParam(src.bodyFreq, 560.0);
+        const double body = PercussionSine(ds, 0, hz, sampleRate);
+        const double overtone = PercussionSine(ds, 1, hz * 1.48, sampleRate);
+        const double metal = 0.65 * PercussionSine(ds, 2, hz * 2.13, sampleRate)
+            + 0.35 * PercussionSine(ds, 3, hz * 3.76, sampleRate);
+        w = bodyLevel * (body + 0.6 * overtone) * DrumEnv(t, bodyDecay)
+            + DrumParam(src.metalLevel, 0.3) * tone * metal * DrumEnv(t, decay);
+        break;
+    }
+    case DrumType::Woodblock:
+    {
+        const double hz = DrumParam(src.bodyFreq, 900.0);
+        w = bodyLevel * (PercussionSine(ds, 0, hz, sampleRate) * DrumEnv(t, bodyDecay)
+            + 0.55 * PercussionSine(ds, 1, hz * 1.57, sampleRate) * DrumEnv(t, bodyDecay * 0.45)
+            + 0.23 * tone * PercussionSine(ds, 2, hz * 2.83, sampleRate) * DrumEnv(t, decay * 0.25));
+        break;
+    }
+    case DrumType::Shaker:
+    {
+        const double hz = DrumParam(src.bodyFreq, 3400.0);
+        const double period = DrumParam(src.pitchDecaySec, 0.012);
+        const double grains = 0.25 + 0.75 * DrumEnv(std::fmod(t, period), period * 0.24);
+        const double jingle = PercussionSine(ds, 0, hz, sampleRate)
+            * PercussionSine(ds, 1, hz * 1.43, sampleRate);
+        w = (noiseLevel * noise * grains
+            + DrumParam(src.metalLevel, 0.18) * tone * jingle) * DrumEnv(t, decay);
+        break;
+    }
+    case DrumType::Scrape:
+    {
+        // Slowing tooth strikes make a scrape, not a sustained hi-hat.
+        const double period = DrumParam(src.pitchDecaySec, 0.025);
+        const double toothPhase = std::log1p(t * 3.0) / (period * 3.0);
+        const double tooth = std::exp(-12.0 * (toothPhase - std::floor(toothPhase)));
+        const double body = PercussionSine(ds, 0, DrumParam(src.bodyFreq, 650.0), sampleRate);
+        w = (noiseLevel * noise + bodyLevel * body) * tooth * DrumEnv(t, decay);
+        break;
+    }
+    case DrumType::Whistle:
+    {
+        const double glide = 1.0 + (DrumParam(src.pitchStart, 1.03) - 1.0)
+            * DrumEnv(t, DrumParam(src.pitchDecaySec, 0.04));
+        const double hz = DrumParam(src.bodyFreq, 2200.0) * glide * (1.0 + 0.004 * std::sin(2.0 * kPi * 6.1 * t));
+        const double breath = (1.0 - std::exp(-t / 0.008)) * DrumEnv(t, decay);
+        w = (bodyLevel * PercussionSine(ds, 0, hz, sampleRate) + noiseLevel * noise) * breath;
+        break;
+    }
+    case DrumType::Cuica:
+    {
+        const double glide = 1.0 + (DrumParam(src.pitchStart, 1.8) - 1.0)
+            * DrumEnv(t, DrumParam(src.pitchDecaySec, 0.07));
+        const double hz = DrumParam(src.bodyFreq, 480.0) * glide;
+        const double membrane = PercussionSine(ds, 0, hz, sampleRate)
+            + 0.32 * tone * PercussionSine(ds, 1, hz * 2.0, sampleRate);
+        const double rub = 0.6 + 0.4 * std::sin(2.0 * kPi * 43.0 * t);
+        w = (bodyLevel * membrane + noiseLevel * noise * rub)
+            * (1.0 - std::exp(-t / 0.003)) * DrumEnv(t, decay);
+        break;
+    }
+    default: break;
+    }
+    w += noise * DrumParam(src.transientLevel, 0.045) * tone
+        * DrumEnv(t, DrumParam(src.transientDecaySec, 0.003));
+    EnsureDrumFilters(ds, DrumParam(src.hpCut, 40.0), DrumParam(src.lpCut, 8000.0), sampleRate);
+    return DrumSoftClip(FilterDrumNoise(ds, w), src.drive);
+}
+
 double RenderDrumSample(const DrumConfig& src, Voice& voices, size_t i, double dt, int sampleRate)
 {
     auto& ds = std::get<DrumVoiceState>(voices.sourceState[i]);
@@ -245,6 +338,10 @@ double RenderDrumSample(const DrumConfig& src, Voice& voices, size_t i, double d
     else if (src.type == DrumType::Ride)
     {
         w = RenderHatLikeSample(src, ds, sampleRate, true, false);
+    }
+    else if (src.type != DrumType::None)
+    {
+        w = RenderPercussionSample(src, ds, sampleRate);
     }
 
     ds.time += dt;

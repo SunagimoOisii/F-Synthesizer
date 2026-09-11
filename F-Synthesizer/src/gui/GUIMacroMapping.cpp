@@ -74,6 +74,11 @@ void ApplyDrumBrightnessRoughnessMovement(DrumConfig& src, const MacroSliderStat
         src.airLevel = SliderToLinear(s.roughness, 0.15, 0.75);
         src.decaySec = SliderToLinear(s.movement, 0.025, 0.16);
     }
+    else if (src.type >= DrumType::Bell)
+    {
+        src.lpCut = SliderToLogValue(s.brightness, 2500.0, 16000.0);
+        src.decaySec = SliderToLogValue(s.movement, 0.03, 0.6);
+    }
 }
 } // namespace
 
@@ -214,6 +219,12 @@ MacroSliderState ReadMacroSliders(const InstrumentSoundConfig& ch, const MacroSl
                 out.brightness = LinearToSlider(src.hpCut, 3600.0, 7600.0);
                 out.roughness = LinearToSlider(src.airLevel, 0.15, 0.75);
                 out.movement = LinearToSlider(src.decaySec, 0.025, 0.16);
+            }
+            else if (src.type >= DrumType::Bell)
+            {
+                out.brightness = LogValueToSlider(src.lpCut, 2500.0, 16000.0);
+                out.roughness = Clamp01(static_cast<float>(src.drive));
+                out.movement = LogValueToSlider(src.decaySec, 0.03, 0.6);
             }
             out.envelope = current.lastLayer2Envelope;
         }

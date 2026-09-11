@@ -229,7 +229,7 @@ if ($Iterations -le 0) {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$presets = @("sound_lead_blade", "sound_bass_chip", "sound_drums_arcade")
+$presets = @("sound_lead_razor", "sound_bass_anvil", "sound_drums_forge")
 if ($Preset) {
     $presets = @($Preset)
 }

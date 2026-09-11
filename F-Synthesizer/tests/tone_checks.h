@@ -51,6 +51,36 @@ inline void CheckToneWorkspace()
     state->pianoRoll.timeSignatures = {{0, 3, 4}, {2880, 6, 8}};
     Require(gui::SongBarTicks(*state) == std::vector<int>({0, 1440, 2880, 4320}), "3/4 and 6/8 bar boundaries failed");
     Require(Bytes(pathA) == originalA && Bytes(pathB) == originalB, "editing overwrote original presets");
+    // Updating a preset must not be hidden by its previous trial cache. Keep
+    // edits against both contents, including across workspace save/recovery.
+    std::filesystem::path revisionPath;
+    Require(gui::SaveUserPresetFile(testRoot, presetA, "revision fixture", revisionPath, error), error);
+    gui::RefreshPresetItems(*state, {}); gui::SelectToneChannel(*state, 0);
+    Require(gui::SelectTonePreset(*state, indexOf("revision fixture"), error), error);
+    gui::BeginToneEdit(*state); state->tones[0].draft.values[2] = .45f;
+    gui::UpdateToneControls(*state); gui::FinishToneEdit(*state);
+    const auto oldVersion = state->tones[0].draft;
+    const auto oldJson = nlohmann::json::parse(Bytes(revisionPath));
+    auto updated = oldJson;
+    updated["project"]["instruments"]["sound"]["sound"]["amp"] = presetA.sound.amp * .43;
+    Require(config::WriteJSONFile(revisionPath, updated, error), error);
+    gui::RefreshPresetItems(*state, {});
+    Require(gui::SelectTonePreset(*state, indexOf("revision fixture"), error), error);
+    const auto newVersion = state->tones[0].draft;
+    Require(newVersion.instrument.sound.amp == presetA.sound.amp * .43 &&
+        newVersion.presetRevision != oldVersion.presetRevision, "updated preset was hidden by a cached trial");
+    Require(state->tones[0].cache.at(gui::ToneCacheKey(oldVersion)).instrument.sound == oldVersion.instrument.sound,
+        "preset update discarded old adjustments");
+    Require(gui::SaveGUIStateFile(*state, error), error);
+    auto revisions = std::make_unique<GUIState>(); gui::InitializeGUIState(*revisions, {});
+    Require(gui::LoadGUIStateFile(*revisions, error), error);
+    Require(revisions->tones[0].cache.contains(gui::ToneCacheKey(oldVersion)) &&
+        revisions->tones[0].cache.contains(gui::ToneCacheKey(newVersion)), "recovery merged distinct preset revisions");
+    Require(config::WriteJSONFile(revisionPath, oldJson, error), error);
+    gui::RefreshPresetItems(*state, {});
+    Require(gui::SelectTonePreset(*state, indexOf("revision fixture"), error), error);
+    Require(state->tones[0].draft.instrument.sound == oldVersion.instrument.sound, "returning to old preset lost its edits");
+    std::cout << "Preset updates: fresh content, separate trials, revision recovery OK\n";
     std::cout << "Tone workspace: A/B/A, per-channel drafts, compare, independent mix, undo/redo, recovery, save guard OK\n";
 }
 

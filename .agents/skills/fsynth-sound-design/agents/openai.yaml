@@ -1,0 +1,4 @@
+interface:
+  display_name: "F-Synthesizer 音色制作"
+  short_description: "FM音色とドラムセットを本体の音源で制作し、同じ条件で比較・調整する"
+  default_prompt: "Use $fsynth-sound-design to plan, create, refine, or evaluate F-Synthesizer presets as requested, using the existing engine and comparable audio renders."

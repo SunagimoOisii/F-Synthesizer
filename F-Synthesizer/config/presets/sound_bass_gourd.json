@@ -1,0 +1,146 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Gourd",
+        "category": "Bass",
+        "description": "太い弦がブワッと張り出し、丸く沈む低音。短いフレーズに。",
+        "internal": false,
+        "tags": [
+          "bass",
+          "waveform",
+          "plucked",
+          "resonant"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 60,
+          "preview": 40
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.002,
+          "decaySec": 0.78,
+          "sustainLevel": 0,
+          "releaseSec": 0.11,
+          "source": {
+            "type": "waveform",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "drive": 0.07,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 280,
+              "resonance": 2.6,
+              "keytrack": 0,
+              "drive": 0
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 1,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 70
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.02,
+                  "enabled": true
+                },
+                "1": {
+                  "source": "env2",
+                  "destination": "filterCutoffHz",
+                  "amount": 0.95,
+                  "enabled": true
+                },
+                "2": {
+                  "source": "env2",
+                  "destination": "filterResonance",
+                  "amount": 0.65,
+                  "enabled": true
+                }
+              },
+              "env2": {
+                "attackSec": 0.004,
+                "decaySec": 0.25,
+                "sustainLevel": 0,
+                "releaseSec": 0.08,
+                "curve": 0
+              }
+            }
+          },
+          "layers": {
+            "pluck": {
+              "enabled": true,
+              "level": 0.32,
+              "decaySec": 0.065,
+              "brightness": 0.48,
+              "noiseMix": 0.6,
+              "pitchOffsetSemis": 0,
+              "bodySend": 0
+            },
+            "harmonic": {
+              "enabled": true,
+              "level": 0.14,
+              "harmonicLevels": [
+                1,
+                0.15,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "brightness": 0.2,
+              "stereo": 0,
+              "attackSec": 0.003
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.23,
+            "velocityToFmIndex": 0,
+            "velocityToPluck": 0.65
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

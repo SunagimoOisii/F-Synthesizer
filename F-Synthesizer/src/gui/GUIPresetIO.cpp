@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <cstdint>
 #include <fstream>
 
 #include "config/ProjectJSON.h"
@@ -33,6 +34,10 @@ GUIPresetItem ReadPresetItem(const std::filesystem::path& path, const std::strin
     const auto instruments = project.find("instruments");
     if (instruments == project.end() || instruments->empty()) return item;
     const auto& instrument = instruments->begin().value();
+    // Stable content identity; formatting changes do not invalidate a trial.
+    uint64_t revision = 14695981039346656037ull;
+    for (unsigned char byte : instrument.dump()) { revision ^= byte; revision *= 1099511628211ull; }
+    item.revision = std::to_string(revision);
     item.displayName = instrument.value("displayName", item.displayName);
     item.comparisonGain = instrument.value("comparisonGain", 1.0);
     item.category = instrument.value("category", std::string{});

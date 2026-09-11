@@ -14,11 +14,21 @@ namespace gui
 struct ToneVersion
 {
     std::string key;
+    std::string presetRevision;
     InstrumentConfig base;
     InstrumentConfig instrument;
     std::array<float, 6> values{}; // brightness, texture, release, attack, decay, motion
     bool customizedBase = false;
 };
+
+inline std::string ToneCacheKey(const std::string& key, const std::string& revision)
+{
+    return revision.empty() ? key : key + "\n" + revision;
+}
+inline std::string ToneCacheKey(const ToneVersion& tone)
+{
+    return ToneCacheKey(tone.key, tone.presetRevision);
+}
 
 struct ChannelToneWorkspace
 {

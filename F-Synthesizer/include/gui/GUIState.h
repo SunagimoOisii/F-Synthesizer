@@ -55,6 +55,7 @@ struct GUIPresetItem
     };
 
     std::string name{};
+    std::string revision{};
     std::vector<std::string> tags{};
     std::string description{};
     std::string displayName{};

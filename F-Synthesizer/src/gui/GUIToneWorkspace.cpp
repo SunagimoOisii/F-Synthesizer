@@ -21,7 +21,7 @@ void SyncDraft(GUIState& state, int ch)
 {
     auto& part = state.tones[ch];
     state.instruments[ch] = part.draft.instrument;
-    part.cache[part.draft.key] = part.draft;
+    part.cache[ToneCacheKey(part.draft)] = part.draft;
     state.presetDirty = true;
 }
 void PushUndo(ChannelToneWorkspace& part, const ToneVersion& tone)
@@ -79,7 +79,7 @@ void InitializeToneWorkspace(GUIState& state, bool reset)
             }
         part.draft.base = part.draft.instrument = state.instruments[ch];
         part.adopted = part.draft;
-        part.cache[part.draft.key] = part.draft;
+        part.cache[ToneCacheKey(part.draft)] = part.draft;
     }
     state.toneWorkspaceReady = true;
     SelectToneChannel(state, std::clamp(state.pianoRoll.displayChannel, 0, 15));
@@ -121,7 +121,7 @@ bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error)
     try
     {
         ToneVersion next;
-        if (const auto cached = part.cache.find(item.name); cached != part.cache.end()) next = cached->second;
+        if (const auto cached = part.cache.find(ToneCacheKey(item.name, item.revision)); cached != part.cache.end()) next = cached->second;
         else
         {
             const bool user = item.name.starts_with("user/");
@@ -135,9 +135,15 @@ bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error)
             next.key = item.name;
             next.base = next.instrument = model.instruments->begin()->second;
             next.base.comparisonGain = next.instrument.comparisonGain = item.comparisonGain;
+            // Recover pre-revision macro edits only when their original sound
+            // still matches. Keep other old trials in their own cache entry.
+            if (const auto old = part.cache.find(item.name); old != part.cache.end()
+                && !old->second.customizedBase && old->second.base.sound == next.base.sound)
+                next = old->second;
+            next.presetRevision = item.revision;
         }
         if (!SameTone(next, part.draft)) PushUndo(part, part.draft);
-        part.cache[part.draft.key] = part.draft;
+        part.cache[ToneCacheKey(part.draft)] = part.draft;
         part.draft = std::move(next);
         part.compare = false;
         SyncDraft(state, ch);
@@ -256,7 +262,7 @@ void CancelTone(GUIState& state, int channel)
 {
     FinishToneEdit(state);
     auto& part = state.tones[channel];
-    part.cache[part.draft.key] = part.draft;
+    part.cache[ToneCacheKey(part.draft)] = part.draft;
     part.draft = part.adopted;
     part.compare = false; part.undo.clear(); part.redo.clear();
     // Keep the exploratory cache even when returning to the adopted sound.

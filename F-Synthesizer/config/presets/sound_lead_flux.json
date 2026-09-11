@@ -1,0 +1,114 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Flux",
+        "category": "Lead",
+        "description": "細い鼻声が脈打つ。少し空洞のある電子音。",
+        "internal": false,
+        "tags": [
+          "lead",
+          "waveform",
+          "hollow",
+          "pulse"
+        ],
+        "recommendedRange": {
+          "low": 52,
+          "high": 88,
+          "preview": 69
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "倍音や高域の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "輪郭と歪みを調整"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "揺れの深さを調整"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.2,
+          "attackSec": 0.004,
+          "decaySec": 0.2,
+          "sustainLevel": 0.82,
+          "releaseSec": 0.16,
+          "source": {
+            "type": "waveform",
+            "wave": "square",
+            "unisonVoices": 1,
+            "subOscLevel": 0,
+            "filter": {
+              "mode": "lowpass",
+              "cutoffHz": 6200,
+              "resonance": 0.8,
+              "keytrack": 0.35,
+              "drive": 0
+            },
+            "drive": 0.055,
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 0.65,
+                "depth": 0.4,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 0,
+                "fadeMs": 160
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pulseWidth",
+                  "amount": 0.42,
+                  "enabled": true
+                }
+              }
+            },
+            "pulseWidth": 0.23,
+            "ringModEnabled": true,
+            "ringModRatio": 2,
+            "ringModMix": 0.23
+          },
+          "layers": {
+            "lead": {
+              "enabled": true,
+              "type": "edge",
+              "level": 0.13,
+              "pitchBendSemis": 0,
+              "bodyLevel": 0.7,
+              "edgeLevel": 0.12,
+              "detuneCents": 3,
+              "characterLevel": 0.05
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1.15,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0.06,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}
