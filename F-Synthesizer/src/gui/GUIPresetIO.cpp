@@ -7,8 +7,6 @@
 
 #include "config/ProjectJSON.h"
 #include "gui/GUIActions.h"
-#include "gui/GUIMacroMapping.h"
-#include "gui/GUIProjectFacade.h"
 #include "io/PlatformPaths.h"
 
 namespace
@@ -17,9 +15,11 @@ using Json = nlohmann::json;
 
 std::filesystem::path PresetPath(const std::filesystem::path& root, const std::string& key)
 {
-    if (key.rfind("user/", 0) == 0)
-        return root / "config" / "user_presets" / Utf8ToPath(key.substr(5) + ".json");
-    return root / "config" / "presets" / Utf8ToPath(key + ".json");
+    const bool user = key.starts_with("user/");
+    const auto stem = user ? key.substr(5) : key;
+    if (stem.empty() || stem == "." || stem == ".." || stem.find_first_of("/\\:") != std::string::npos)
+        throw std::runtime_error("音色の識別名が不正です。");
+    return root / "config" / (user ? "user_presets" : "presets") / Utf8ToPath(stem + ".json");
 }
 
 GUIPresetItem ReadPresetItem(const std::filesystem::path& path, const std::string& key)
@@ -62,6 +62,42 @@ GUIPresetItem ReadPresetItem(const std::filesystem::path& path, const std::strin
 
 namespace gui
 {
+bool LoadPresetInstrument(const std::filesystem::path& projectRoot, const GUIPresetItem& item,
+    InstrumentConfig& instrument, std::string& err)
+{
+    try
+    {
+        const auto path = PresetPath(projectRoot, item.name);
+        std::ifstream input(path, std::ios::binary);
+        ProjectModel model = DefaultProjectModel();
+        model.instruments.reset(); model.projectChannels.reset();
+        if (!config::ProjectFromJSON(Json::parse(input), path.parent_path(), model, err)) return false;
+        if (!model.instruments || model.instruments->empty()) { err = "音色が含まれていません。"; return false; }
+        instrument = model.instruments->begin()->second;
+        instrument.comparisonGain = item.comparisonGain;
+        return true;
+    }
+    catch (const std::exception& ex) { err = ex.what(); return false; }
+}
+
+bool RenameUserPreset(const std::filesystem::path& projectRoot, const std::string& key,
+    const std::string& name, std::string& err)
+{
+    try
+    {
+        if (!key.starts_with("user/")) { err = "付属音色の名前は変更できません。"; return false; }
+        if (name.empty()) { err = "音色名を入力してください。"; return false; }
+        const auto path = PresetPath(projectRoot, key);
+        std::ifstream input(path, std::ios::binary);
+        auto json = Json::parse(input); input.close();
+        auto& instruments = json.at("project").at("instruments");
+        if (!instruments.is_object() || instruments.empty()) { err = "音色が含まれていません。"; return false; }
+        instruments.begin().value()["displayName"] = name;
+        return config::WriteJSONFile(path, json, err);
+    }
+    catch (const std::exception& ex) { err = ex.what(); return false; }
+}
+
 bool SaveUserPresetFile(const std::filesystem::path& projectRoot, const InstrumentConfig& sound,
     const std::string& name, std::filesystem::path& savedPath, std::string& err)
 {
@@ -131,7 +167,7 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
                 const std::string key = (user ? "user/" : "") + PathToUtf8(it->path().stem());
                 auto item = ReadPresetItem(it->path(), key);
                 if (!user && levels.contains(key)) item.comparisonGain = std::clamp(levels.at(key).value("gain", 1.0), .1, 4.0);
-                if (state.UIModeTab != 3 && item.internalOnly) continue;
+                if (item.internalOnly) continue;
                 state.presetItems.push_back(std::move(item));
             }
             catch (const std::exception&)
@@ -147,59 +183,4 @@ void RefreshPresetItems(GUIState& state, const std::string& preferName)
         if (state.presetItems[i].name == preferName) { state.presetIndex = i; break; }
 }
 
-bool ApplySelectedPresetPaths(GUIState& state, std::string& err)
-{
-    if (state.presetIndex < 0 || state.presetIndex >= static_cast<int>(state.presetItems.size()))
-    {
-        err = "音色を選択してください。";
-        return false;
-    }
-    const GUIPresetItem item = state.presetItems[state.presetIndex];
-    try
-    {
-        const auto path = PresetPath(FindProjectRootPath(), item.name);
-        std::ifstream in(path, std::ios::binary);
-        const Json root = Json::parse(in);
-        ProjectModel project = DefaultProjectModel();
-        project.instruments.reset();
-        project.projectChannels.reset();
-        if (!config::ProjectFromJSON(root, path.parent_path(), project, err)) return false;
-        if (project.instruments && !project.instruments->empty())
-        {
-            const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-            PushSoundHistoryEntry(state, slot, ReadSoundSlot(state, slot), state.macroSliders[slot]);
-            // Presets are templates: copy the sound, never retain a writable link to its file.
-            state.instruments[slot] = project.instruments->begin()->second;
-            const auto& range = state.instruments[slot].recommendedRange;
-            state.tonePreviewNoteNumber = std::clamp(range.preview, 0, 127);
-            state.selectedDrumNote = state.tonePreviewNoteNumber;
-            state.macroSliders[slot] = ::ReadMacroSliders(state.instruments[slot].sound, MacroSliderState{});
-        }
-        if (root.at("project").contains("effects")) state.masterEffects = project.masterEffects;
-        strncpy_s(state.presetName, sizeof(state.presetName), item.name.c_str(), _TRUNCATE);
-        state.presetDirty = true;
-        return true;
-    }
-    catch (const std::exception& ex)
-    {
-        err = ex.what();
-        return false;
-    }
-}
-
-bool SaveUserPresetFromState(GUIState& state, std::string& err)
-{
-    const int slot = std::clamp(state.selectedSoundSlot, 0, 15);
-    std::filesystem::path path;
-    if (!SaveUserPresetFile(FindProjectRootPath(), state.instruments[slot],
-        state.userPresetName, path, err)) return false;
-    state.instruments[slot].displayName = state.userPresetName;
-    state.instruments[slot].internal = false;
-    state.lastPresetPath = PathToUtf8(path);
-    const std::string key = "user/" + PathToUtf8(path.stem());
-    strncpy_s(state.presetName, sizeof(state.presetName), key.c_str(), _TRUNCATE);
-    RefreshPresetItems(state, key);
-    state.presetDirty = true;
-    return true;
-}
 } // namespace gui

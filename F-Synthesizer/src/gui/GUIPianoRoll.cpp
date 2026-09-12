@@ -1,3 +1,4 @@
+#include "midi/TempoMap.h"
 #include "gui/GUIPianoRoll.h"
 
 #include <algorithm>

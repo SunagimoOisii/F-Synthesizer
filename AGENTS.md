@@ -51,19 +51,22 @@ ChoraleはFilterMode::Vocalの3共鳴帯を使用する。cutoffHzが第1帯域�
 | `src/SynthEngine/`, `src/synth/` | ボイス、ymfm 接続、その他の音源とエフェクト |
 | `third_party/` | バージョンを固定した ymfm / midifile の原文ソース |
 
-- 音色と metadata は `GUIState.instruments` が一緒に保持する。`GUIToneWorkspace` はチャンネルごとの採用済み・試聴中の音と、プリセット別の微調整を保持する。
+- 音色と metadata は `GUIState.tones[ch].draft.instrument` が一緒に保持する。`GUIToneWorkspace` はチャンネルごとの採用済み・試聴中の音、プリセット別の微調整、通常ノブと詳細編集に共通のUndoを保持する。GUI内で音色スロットへの別の対応表を持たず、曲の楽器IDは `GUIProjectFacade` でチャンネルごとのコピーへ解決する。
 - プリセットの試聴キャッシュは内容のrevisionごとに保持する。付属音色を更新しても旧キャッシュで新版を隠さない。曲・作業中の音は自動で差し替えず、一覧で選んだ時に新版を使う。
 - `GUIProjectFacade` が編集状態と `ProjectModel` を変換し、チャンネル割当を解決する。`AudibleInstrument` で比較中に鳴る音を解決し、`RenderSound` が音量補正を適用する。
 - JSON は `config::ProjectToJSON / ProjectFromJSON / WriteJSONFile` を共通利用する。
+- JSONはファイル境界で一度解析し、設定ローダー間では解析済みの値を渡す。音色の出力は `config::SoundToJSON` に集約し、内部で文字列化・再解析しない。
 - `GUIStatePersistence` は workspace と名前付き曲を保存する。`.fsynth` は MIDI 本体も含む。
-- `GUIPresetIO` は付属音色をコピーし、自分用音色は `config/user_presets/` に新規保存する。
+- `GUIPresetIO` が一覧・音色コピーの読込・自分用音色の新規保存と名前変更を担当する。保存先は `config/user_presets/`。画面や音色編集からプリセットJSONを直接操作しない。
 - 実行経路は `ProjectModel -> RenderConfig -> SynthEngine`。別の音生成・保存経路を増やさない。
 - 再生中の設定は `LiveRenderMailbox` へ immutable なスナップショットを公開し、生成側が64サンプル以下の区切りで受け取る。
 - `PreviewAudio` は約20msのリングを使う。音声コールバックへ可変GUI参照やファイル処理を渡さない。
 - 音声デバイスの生成・再生成・破棄はGUIスレッドにそろえ、GUIのCOMは起動から終了までSTAに保つ。短命の生成スレッドでminiaudioのCOMを初期化すると、再生後のファイルダイアログが停止する。生成側は準備済みデバイスだけを開始する。
 - ループは都度生成する。古い PCM を使い回して編集反映を失わないようにする。
 - `YmfmVoice` はボイスごとにチップを保持し、miniaudio で出力サンプルレートへ変換する。
-- 新画面は `src/gui/main/Studio*.inl`。`GUITransport` が曲の移動・一音試聴・自動再開を扱う。生成中の音を `AudioScope` へ送り、GUI が波形を描く。
+- 画面は `src/gui/main/Studio*.cpp` と `StepSequencer.cpp`。各ファイルは内部ヘッダーで依存を宣言する。`GUIMain` が起動ループ、素材の初期化・破棄、`FileActions` の寿命を管理する。詳細音源編集は `channeleditor/SourceEditor.cpp` へ音色と打音の選択を明示的に渡す。
+- `GUITransport` が曲の移動・一音試聴・自動再開を扱い、`GUIRenderJob` が再生・試聴・書き出しのジョブ開始と終了処理をまとめる。生成ジョブの完了と音声バッファの再生完了を混同しない。生成中の音を `AudioScope` へ送り、GUI が波形を描く。
+- GUIのtick・秒変換は `midi::TempoMap` を共通利用し、端数の丸めは呼び出し側で選ぶ。音を鳴らすサンプル位置の変換は引き続きmidifileを使う。
 - 音量補正は `assets/ui/preset-levels.json` の実測値をプリセットのコピーへ設定する。`InstrumentConfig.comparisonGain` として曲・お気に入りにも保存し、再生と WAV に同じ補正を使う。
 
 ## ビルド

@@ -2,8 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
-#include "config/ProjectJSON.h"
+#include "gui/GUIPresetIO.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIProjectFacade.h"
 #include "gui/GUIState.h"
@@ -20,7 +19,6 @@ bool SameTone(const ToneVersion& a, const ToneVersion& b)
 void SyncDraft(GUIState& state, int ch)
 {
     auto& part = state.tones[ch];
-    state.instruments[ch] = part.draft.instrument;
     part.cache[ToneCacheKey(part.draft)] = part.draft;
     state.presetDirty = true;
 }
@@ -46,7 +44,7 @@ std::string InferPartCategory(const GUIState& state, int channel)
 {
     if (channel == 9) return "Drums";
     if (!state.pianoRoll.hasProgramByChannel[channel])
-        return state.instruments[channel].category.empty() ? "Keys" : state.instruments[channel].category;
+        return state.tones[channel].draft.instrument.category.empty() ? "Keys" : state.tones[channel].draft.instrument.category;
     const int program = state.pianoRoll.programByChannel[channel];
     if (program < 24) return "Keys";
     if (program < 32) return "Guitar";
@@ -61,23 +59,22 @@ std::string InferPartCategory(const GUIState& state, int channel)
 void InitializeToneWorkspace(GUIState& state, bool reset)
 {
     if (state.toneWorkspaceReady && !reset) return;
-    const auto instruments = std::make_unique<std::array<InstrumentConfig, 16>>(state.instruments);
     for (int ch = 0; ch < 16; ++ch)
     {
-        state.instruments[ch] = (*instruments)[AssignedSoundSlot(state, ch)];
-        state.channelAssignments[ch] = ch;
         auto& part = state.tones[ch];
+        auto instrument = std::move(part.draft.instrument);
         part = {};
+        part.draft.instrument = instrument;
         part.category = InferPartCategory(state, ch);
         part.draft.key = "song/" + std::to_string(ch);
         for (const auto& preset : state.presetItems)
-            if (!preset.name.starts_with("user/") && preset.displayName == state.instruments[ch].displayName)
+            if (!preset.name.starts_with("user/") && preset.displayName == state.tones[ch].draft.instrument.displayName)
             {
                 part.draft.key = preset.name;
-                if (state.instruments[ch].comparisonGain == 1) state.instruments[ch].comparisonGain = preset.comparisonGain;
+                if (state.tones[ch].draft.instrument.comparisonGain == 1) state.tones[ch].draft.instrument.comparisonGain = preset.comparisonGain;
                 break;
             }
-        part.draft.base = part.draft.instrument = state.instruments[ch];
+        part.draft.base = part.draft.instrument;
         part.adopted = part.draft;
         part.cache[ToneCacheKey(part.draft)] = part.draft;
     }
@@ -98,13 +95,12 @@ int PendingToneCount(const GUIState& state)
 const InstrumentConfig& AudibleInstrument(const GUIState& state, int channel)
 {
     if (state.toneWorkspaceReady && state.tones[channel].compare) return state.tones[channel].adopted.instrument;
-    return state.instruments[AssignedSoundSlot(state, channel)];
+    return state.tones[channel].draft.instrument;
 }
 void SelectToneChannel(GUIState& state, int channel)
 {
     FinishToneEdit(state);
     state.playEditingChannel = state.pianoRoll.displayChannel = std::clamp(channel, 0, 15);
-    state.selectedSoundSlot = AssignedSoundSlot(state, state.playEditingChannel);
     state.pianoRoll.drumNameMode = channel == 9;
     state.audioScope->channel.store(state.playEditingChannel, std::memory_order_relaxed);
     state.tonePreviewNoteNumber = ChooseAuditionNote(state, channel);
@@ -124,17 +120,9 @@ bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error)
         if (const auto cached = part.cache.find(ToneCacheKey(item.name, item.revision)); cached != part.cache.end()) next = cached->second;
         else
         {
-            const bool user = item.name.starts_with("user/");
-            const auto path = FindProjectRootPath() / "config" / (user ? "user_presets" : "presets") /
-                Utf8ToPath((user ? item.name.substr(5) : item.name) + ".json");
-            ProjectModel model = DefaultProjectModel();
-            model.instruments.reset(); model.projectChannels.reset();
-            std::ifstream input(path, std::ios::binary);
-            if (!config::ProjectFromJSON(nlohmann::json::parse(input), path.parent_path(), model, error)) return false;
-            if (!model.instruments || model.instruments->empty()) { error = "音色が含まれていません。"; return false; }
             next.key = item.name;
-            next.base = next.instrument = model.instruments->begin()->second;
-            next.base.comparisonGain = next.instrument.comparisonGain = item.comparisonGain;
+            if (!LoadPresetInstrument(FindProjectRootPath(), item, next.base, error)) return false;
+            next.instrument = next.base;
             // Recover pre-revision macro edits only when their original sound
             // still matches. Keep other old trials in their own cache entry.
             if (const auto old = part.cache.find(item.name); old != part.cache.end()
@@ -234,6 +222,18 @@ void UpdateToneControls(GUIState& state)
     ApplyToneValues(state.tones[ch].draft);
     SyncDraft(state, ch);
 }
+void ApplyDetailedToneEdit(GUIState& state, const InstrumentSoundConfig& sound)
+{
+    auto& part = state.tones[state.pianoRoll.displayChannel];
+    if (part.draft.instrument.sound == sound) return;
+    BeginToneEdit(state);
+    part.draft.instrument.sound = sound;
+    part.draft.base = part.draft.instrument;
+    part.draft.values.fill(0);
+    part.draft.customizedBase = true;
+    SyncDraft(state, state.pianoRoll.displayChannel);
+}
+
 void FinishToneEdit(GUIState& state)
 {
     if (!state.toneEditBefore) return;
@@ -269,7 +269,6 @@ void CancelTone(GUIState& state, int channel)
     part.draft = part.adopted;
     part.compare = false; part.undo.clear(); part.redo.clear();
     // Keep the exploratory cache even when returning to the adopted sound.
-    state.instruments[channel] = part.draft.instrument;
     state.presetDirty = true;
 }
 void AdoptAllTones(GUIState& state)
@@ -285,6 +284,6 @@ int ChooseAuditionNote(const GUIState& state, int channel)
     for (const auto& note : state.pianoRoll.notes) if (note.channel == channel) ++counts[std::clamp(note.note, 0, 127)];
     const auto most = std::max_element(counts.begin(), counts.end());
     if (*most > 0) return static_cast<int>(most - counts.begin());
-    return std::clamp(state.instruments[AssignedSoundSlot(state, channel)].recommendedRange.preview, 0, 127);
+    return std::clamp(state.tones[channel].draft.instrument.recommendedRange.preview, 0, 127);
 }
 }

@@ -8,7 +8,7 @@ namespace config::internal::load
 {
 namespace
 {
-bool ParseDrumBusObject(const std::string& busObjText, DrumBusConfig& bus)
+bool ParseDrumBusObject(const Json& busObjText, DrumBusConfig& bus)
 {
     if (auto v = ReadJSONBool(busObjText, "enabled")) bus.enabled = *v;
     if (auto v = ReadJSONDouble(busObjText, "level")) bus.level = std::clamp(*v, 0.0, 2.0);
@@ -23,7 +23,7 @@ bool ParseDrumBusObject(const std::string& busObjText, DrumBusConfig& bus)
 }
 } // namespace
 
-bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseDrumKitSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     // DrumKit は差分上書き方式。未指定ノートは DrumType::None のまま保持する。
     DrumKitConfig kit{};
@@ -31,7 +31,7 @@ bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSourc
     {
         d.type = DrumType::None;
     }
-    std::string mapObj;
+    Json mapObj;
     bool mapFound = false;
     if (!ExtractObjectForKey(sourceObjText, "map", mapObj, mapFound, err))
     {
@@ -39,7 +39,7 @@ bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSourc
     }
     if (mapFound)
     {
-        if (!ParseTopLevelObjectEntries(mapObj, [&](const std::string& k, const std::string& valueObj) {
+        if (!ParseTopLevelObjectEntries(mapObj, [&](const std::string& k, const Json& valueObj) {
             int note = -1;
             try
             {
@@ -72,7 +72,7 @@ bool ParseDrumKitSource(const std::string& sourceObjText, SourceConfig& outSourc
             return false;
         }
     }
-    std::string drumBusObj;
+    Json drumBusObj;
     bool drumBusFound = false;
     if (!ExtractObjectForKey(sourceObjText, "drumBus", drumBusObj, drumBusFound, err))
     {

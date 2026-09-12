@@ -1,6 +1,7 @@
 #include "gui/GUIActions.h"
 #include <algorithm>
 #include <cmath>
+#include "midi/TempoMap.h"
 
 namespace gui
 {
@@ -25,29 +26,12 @@ std::vector<int> SongBarTicks(const GUIState& state)
 }
 double SongSecondsAtTick(const GUIState& state, int tick)
 {
-    double seconds = 0, bpm = 120;
-    int cursor = 0;
-    const int tpq = std::max(1, state.pianoRoll.ticksPerQuarter);
-    for (const auto& tempo : state.pianoRoll.tempoEvents)
-    {
-        if (tempo.tick > tick) break;
-        seconds += std::max(0, tempo.tick - cursor) * 60.0 / (bpm * tpq);
-        cursor = tempo.tick; bpm = tempo.bpm > 0 ? tempo.bpm : 120;
-    }
-    return seconds + std::max(0, tick - cursor) * 60.0 / (bpm * tpq);
+    return midi::TempoMap(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter).SecondsAtTick(tick);
 }
 int SongTickAtSeconds(const GUIState& state, double seconds)
 {
-    double elapsed = 0, bpm = 120;
-    int cursor = 0;
-    const int tpq = std::max(1, state.pianoRoll.ticksPerQuarter);
-    for (const auto& tempo : state.pianoRoll.tempoEvents)
-    {
-        const double span = std::max(0, tempo.tick - cursor) * 60.0 / (bpm * tpq);
-        if (elapsed + span > seconds) break;
-        elapsed += span; cursor = tempo.tick; bpm = tempo.bpm > 0 ? tempo.bpm : 120;
-    }
-    return std::max(0, cursor + static_cast<int>(std::lround((seconds - elapsed) * bpm * tpq / 60)));
+    return static_cast<int>(std::lround(midi::TempoMap(state.pianoRoll.tempoEvents,
+        state.pianoRoll.ticksPerQuarter).TickAtSeconds(seconds)));
 }
 bool SongIsPlaying(const GUIState& state)
 {
@@ -59,7 +43,7 @@ void PauseSongPlayback(GUIState& state)
     if (SongIsPlaying(state) && state.playback.streamMode.load() && state.playback.playing.load())
         state.songCursorTick = SongTickAtSeconds(state, SongSecondsAtTick(state, state.playback.playStartTick.load()) +
             double(state.playback.frameCursor.load()) / std::max(1u, state.playback.sampleRate));
-    state.transportAction = 0; state.resumeAfterAudition = false;
+    state.transportAction = gui::TransportAction::None; state.resumeAfterAudition = false;
     StopGUIRunAndPreview(state);
 }
 void RequestSongPlayback(GUIState& state)
@@ -69,7 +53,7 @@ void RequestSongPlayback(GUIState& state)
     if (state.songCursorTick >= state.pianoRoll.maxTick) state.songCursorTick = 0;
     if (state.pianoRoll.previewRangeEnabled && (state.songCursorTick < state.pianoRoll.previewRangeStartTick ||
         state.songCursorTick >= state.pianoRoll.previewRangeEndTick)) state.songCursorTick = state.pianoRoll.previewRangeStartTick;
-    state.transportAction = 1;
+    state.transportAction = gui::TransportAction::Song;
     StopGUIRunAndPreview(state);
 }
 void SeekSong(GUIState& state, int tick)
@@ -86,12 +70,12 @@ void RequestToneAudition(GUIState& state)
         state.songCursorTick = SongTickAtSeconds(state, SongSecondsAtTick(state, state.playback.playStartTick.load()) +
             double(state.playback.frameCursor.load()) / std::max(1u, state.playback.sampleRate));
     state.resumeSongTick = state.songCursorTick;
-    state.transportAction = 2;
+    state.transportAction = gui::TransportAction::Audition;
     StopGUIRunAndPreview(state);
 }
 void UpdateGUITransport(GUIState& state)
 {
-    if (SongIsPlaying(state) && state.playback.streamMode.load() && state.playback.playing.load() && state.transportAction == 0)
+    if (SongIsPlaying(state) && state.playback.streamMode.load() && state.playback.playing.load() && state.transportAction == gui::TransportAction::None)
     {
         const double absolute = SongSecondsAtTick(state, state.playback.playStartTick.load()) +
             double(state.playback.frameCursor.load()) / std::max(1u, state.playback.sampleRate);
@@ -104,14 +88,14 @@ void UpdateGUITransport(GUIState& state)
         if (state.resumeAfterAudition && state.lastRunExitCode == 0)
         {
             state.songCursorTick = state.resumeSongTick;
-            state.transportAction = 1;
+            state.transportAction = gui::TransportAction::Song;
         }
         state.resumeAfterAudition = false;
     }
-    const int action = state.transportAction;
-    state.transportAction = 0;
-    if (action == 1) { state.UIModeTab = 1; StartGUIRun(state, true); }
-    if (action == 2)
+    const auto action = state.transportAction;
+    state.transportAction = gui::TransportAction::None;
+    if (action == gui::TransportAction::Song) { StartGUIRun(state, true); }
+    if (action == gui::TransportAction::Audition)
     {
         state.toneAuditionActive = true;
         StartGUISoundTonePreview(state);

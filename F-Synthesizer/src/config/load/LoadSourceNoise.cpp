@@ -6,7 +6,7 @@
 
 namespace config::internal::load
 {
-bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseNoiseSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     auto noise = ReadJSONString(sourceObjText, "noise");
     if (!noise)
@@ -22,13 +22,13 @@ bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource,
     }
     NoiseConfig nz{};
     nz.noise = n;
-    std::string filterObj;
+    Json filterObj;
     bool foundFilter = false;
     if (!ExtractObjectForKey(sourceObjText, "filter", filterObj, foundFilter, err))
     {
         return false;
     }
-    const std::string& filterText = foundFilter ? filterObj : sourceObjText;
+    const Json& filterText = foundFilter ? filterObj : sourceObjText;
     if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
@@ -59,7 +59,7 @@ bool ParseNoiseSource(const std::string& sourceObjText, SourceConfig& outSource,
     return true;
 }
 
-bool ParsePsgSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParsePsgSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     PsgConfig psg{};
 

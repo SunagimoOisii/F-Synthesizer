@@ -8,9 +8,6 @@
 #include "io/PlatformPaths.h"
 #include "midi/MIDIReader.h"
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(MacroSliderState,
-    brightness, roughness, movement, envelope,
-    lastLayer2Roughness, lastLayer2Envelope, lastLayer2Movement)
 
 namespace gui
 {
@@ -59,11 +56,9 @@ gui::ToneVersion ToneFromJSON(const Json& json)
 }
 
 #define WORKSPACE_FIELDS(X) \
-    X(activeProjectPath) X(songMidiName) X(UIScaleIndex) X(UIModeTab) X(UIThemeIndex) X(logPanelHeight) \
-    X(serialSave) X(selectedSoundSlot) X(selectedDrumNote) X(tonePreviewNoteNumber) \
-    X(chordModeEnabled) X(chordType) X(drumChannelSpecialHandling) \
-    X(previewLoop) X(autoTonePreviewEnabled) X(macroSliders) \
-    X(macroRandomizeStrength) X(layer1Expanded) X(layer2Expanded) \
+    X(activeProjectPath) X(songMidiName) \
+    X(serialSave) X(selectedDrumNote) X(tonePreviewNoteNumber) \
+    X(drumChannelSpecialHandling) X(previewLoop) \
     X(auditionLengthSec) X(toneExtraOpen) X(toneNotesOpen) X(scopeWholeMix)
 
 #define PIANO_VIEW_FIELDS(X) \
@@ -160,8 +155,6 @@ void ApplyWorkspaceJSON(GUIState& state, const Json& root)
                 const auto cacheKey = gui::ToneCacheKey(tone);
                 part.cache.emplace(cacheKey, std::move(tone));
             }
-            state.instruments[ch] = part.draft.instrument;
-            state.channelAssignments[ch] = ch;
         }
         state.toneWorkspaceReady = true;
     }
@@ -304,7 +297,6 @@ bool LoadSongProjectFile(GUIState& state, const std::filesystem::path& path, std
         StopPreviewAudio(state.playback);
         static_cast<GUIPersistentState&>(state) = std::move(static_cast<GUIPersistentState&>(*candidate));
         strncpy_s(state.userPresetName, sizeof(state.userPresetName), candidate->userPresetName, _TRUNCATE);
-        state.soundUndoStack.clear(); state.soundRedoStack.clear();
         state.presetDirty = false; state.skipWorkspaceAutosave = false;
         state.playEditingChannel = state.pianoRoll.displayChannel;
         return true;

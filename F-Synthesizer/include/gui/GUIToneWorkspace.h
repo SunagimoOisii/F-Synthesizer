@@ -49,6 +49,9 @@ void SelectToneChannel(GUIState& state, int channel);
 bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error);
 void BeginToneEdit(GUIState& state);
 void UpdateToneControls(GUIState& state);
+// Applies a detailed edit to the selected channel through the same history as macros.
+// FinishToneEdit closes the gesture; other channels and preset files are untouched.
+void ApplyDetailedToneEdit(GUIState& state, const InstrumentSoundConfig& sound);
 void FinishToneEdit(GUIState& state);
 void UndoToneEdit(GUIState& state, bool redo = false);
 void AdoptTone(GUIState& state, int channel);

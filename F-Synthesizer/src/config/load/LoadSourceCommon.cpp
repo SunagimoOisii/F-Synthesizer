@@ -17,24 +17,14 @@ namespace
 {
 using Json = nlohmann::json;
 
-std::optional<Json> ParseJSONObject(const std::string& text)
+const Json* AsJSONObject(const Json& value)
 {
-    Json parsed = Json::parse(text, nullptr, false);
-    if (parsed.is_discarded() || !parsed.is_object())
-    {
-        return std::nullopt;
-    }
-    return parsed;
+    return value.is_object() ? &value : nullptr;
 }
 
-std::optional<Json> ParseJSONArray(const std::string& text)
+const Json* AsJSONArray(const Json& value)
 {
-    Json parsed = Json::parse(text, nullptr, false);
-    if (parsed.is_discarded() || !parsed.is_array())
-    {
-        return std::nullopt;
-    }
-    return parsed;
+    return value.is_array() ? &value : nullptr;
 }
 
 const char* RetriggerToString(SourceLifecycleRetrigger retrigger)
@@ -273,7 +263,7 @@ bool ValidateSourceBySchemaCommon(
 }
 
 template <typename T>
-bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::string& err)
+bool ParseWaveformLikeCommonFieldsImpl(const Json& text, T& cfg, std::string& err)
 {
     if (auto v = ReadJSONInt(text, "unisonVoices")) { cfg.unisonVoices = *v; }
     if (auto v = ReadJSONDouble(text, "unisonDetuneCents")) { cfg.unisonDetuneCents = *v; }
@@ -285,10 +275,10 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
     if (auto v = ReadJSONBool(text, "ringModEnabled")) { cfg.ringModEnabled = *v; }
     if (auto v = ReadJSONDouble(text, "ringModRatio")) { cfg.ringModRatio = std::clamp(*v, 0.125, 16.0); }
     if (auto v = ReadJSONDouble(text, "ringModMix")) { cfg.ringModMix = std::clamp(*v, 0.0, 1.0); }
-    std::string filterObj;
+    Json filterObj;
     bool foundFilter = false;
     if (!ExtractObjectForKey(text, "filter", filterObj, foundFilter, err)) { return false; }
-    const std::string& filterText = foundFilter ? filterObj : text;
+    const Json& filterText = foundFilter ? filterObj : text;
     if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
@@ -301,7 +291,7 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
     if (auto v = ReadJSONDouble(filterText, "drive")) { cfg.filterDrive = std::clamp(*v, 0.0, 1.0); }
     if (auto v = ReadJSONDouble(text, "drive")) { cfg.drive = std::clamp(*v, 0.0, 1.0); }
 
-    std::string arpeggioObj;
+    Json arpeggioObj;
     bool foundArpeggio = false;
     if (!ExtractObjectForKey(text, "arpeggio", arpeggioObj, foundArpeggio, err)) { return false; }
     if (foundArpeggio)
@@ -310,7 +300,7 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
         if (auto v = ReadJSONDouble(arpeggioObj, "rateHz")) { cfg.arpeggio.rateHz = std::clamp(*v, 0.5, 100.0); }
         if (auto v = ReadJSONInt(arpeggioObj, "steps")) { cfg.arpeggio.steps = std::clamp(*v, 1, 8); }
 
-        std::string semitonesArray;
+        Json semitonesArray;
         bool foundSemitones = false;
         if (!ExtractArrayForKey(arpeggioObj, "semitones", semitonesArray, foundSemitones, err)) { return false; }
         if (foundSemitones)
@@ -326,7 +316,7 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
         }
     }
 
-    std::string smoothingObj;
+    Json smoothingObj;
     bool foundSmoothing = false;
     if (!ExtractObjectForKey(text, "smoothing", smoothingObj, foundSmoothing, err)) { return false; }
     if (foundSmoothing)
@@ -338,7 +328,7 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
         }
     }
 
-    std::string modulationObj;
+    Json modulationObj;
     bool foundModulation = false;
     if (!ExtractObjectForKey(text, "modulation", modulationObj, foundModulation, err)) { return false; }
     if (foundModulation)
@@ -349,9 +339,9 @@ bool ParseWaveformLikeCommonFieldsImpl(const std::string& text, T& cfg, std::str
 }
 } // namespace
 
-bool ValidateLifecycleContract(const std::string& sourceObjText, SourceKind sourceKind, std::string& err)
+bool ValidateLifecycleContract(const Json& sourceObjText, SourceKind sourceKind, std::string& err)
 {
-    std::string lifecycleObj;
+    Json lifecycleObj;
     bool foundLifecycle = false;
     if (!ExtractObjectForKey(sourceObjText, "lifecycle", lifecycleObj, foundLifecycle, err))
     {
@@ -417,12 +407,12 @@ bool ValidateLifecycleContract(const std::string& sourceObjText, SourceKind sour
     return true;
 }
 
-bool ParseWaveformCommonFields(const std::string& text, WaveformConfig& cfg, std::string& err)
+bool ParseWaveformCommonFields(const Json& text, WaveformConfig& cfg, std::string& err)
 {
     return ParseWaveformLikeCommonFieldsImpl(text, cfg, err);
 }
 
-bool ParseAnalogCommonFields(const std::string& text, AnalogConfig& cfg, std::string& err)
+bool ParseAnalogCommonFields(const Json& text, AnalogConfig& cfg, std::string& err)
 {
     return ParseWaveformLikeCommonFieldsImpl(text, cfg, err);
 }
@@ -492,7 +482,7 @@ bool ValidateDrumBySchema(const DrumConfig& drum, std::string& err)
     return true;
 }
 
-bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::string& err)
+bool ParseDrumConfigObject(const Json& text, DrumConfig& drum, std::string& err)
 {
     if (auto t = ReadJSONString(text, "drumType"))
     {
@@ -538,10 +528,10 @@ bool ParseDrumConfigObject(const std::string& text, DrumConfig& drum, std::strin
     return true;
 }
 
-bool ExtractArrayForKey(const std::string& text, const std::string& key, std::string& outArray, bool& found, std::string& err)
+bool ExtractArrayForKey(const Json& text, const std::string& key, Json& outArray, bool& found, std::string& err)
 {
     found = false;
-    const auto root = ParseJSONObject(text);
+    const auto root = AsJSONObject(text);
     if (!root)
     {
         err = "invalid object";
@@ -559,16 +549,16 @@ bool ExtractArrayForKey(const std::string& text, const std::string& key, std::st
     }
 
     found = true;
-    outArray = it->dump();
+    outArray = *it;
     return true;
 }
 
 bool ParseTopLevelArrayObjectEntries(
-    const std::string& arrText,
-    const std::function<bool(size_t, const std::string&)>& onEntry,
+    const Json& arrText,
+    const std::function<bool(size_t, const Json&)>& onEntry,
     std::string& err)
 {
-    const auto root = ParseJSONArray(arrText);
+    const auto root = AsJSONArray(arrText);
     if (!root)
     {
         err = "invalid array";
@@ -582,7 +572,7 @@ bool ParseTopLevelArrayObjectEntries(
             err = "array item must be object";
             return false;
         }
-        if (!onEntry(index, item.dump()))
+        if (!onEntry(index, item))
         {
             return false;
         }
@@ -592,11 +582,11 @@ bool ParseTopLevelArrayObjectEntries(
 }
 
 bool ParseTopLevelIntArrayElements(
-    const std::string& arrText,
+    const Json& arrText,
     const std::function<bool(size_t, int)>& onElement,
     std::string& err)
 {
-    const auto root = ParseJSONArray(arrText);
+    const auto root = AsJSONArray(arrText);
     if (!root)
     {
         err = "invalid integer array";
@@ -620,11 +610,11 @@ bool ParseTopLevelIntArrayElements(
 }
 
 bool ParseTopLevelDoubleArrayElements(
-    const std::string& arrText,
+    const Json& arrText,
     const std::function<bool(size_t, double)>& onElement,
     std::string& err)
 {
-    const auto root = ParseJSONArray(arrText);
+    const auto root = AsJSONArray(arrText);
     if (!root)
     {
         err = "invalid number array";
@@ -647,9 +637,9 @@ bool ParseTopLevelDoubleArrayElements(
     return true;
 }
 
-bool ValidateSmoothingSupport(const std::string& sourceObjText, SourceKind sourceKind, std::string& err)
+bool ValidateSmoothingSupport(const Json& sourceObjText, SourceKind sourceKind, std::string& err)
 {
-    std::string smoothingObj;
+    Json smoothingObj;
     bool foundSmoothing = false;
     if (!ExtractObjectForKey(sourceObjText, "smoothing", smoothingObj, foundSmoothing, err))
     {

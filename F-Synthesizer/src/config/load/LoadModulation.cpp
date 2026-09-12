@@ -7,7 +7,7 @@ namespace config::internal::load
 namespace
 {
 // 目的: modulation.lfo1 のキーを読み取って既定値へ上書きする。
-bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
+bool ParseLfo1Object(const Json& text, LfoConfig& lfo, std::string& err)
 {
     if (auto v = ReadJSONString(text, "wave"))
     {
@@ -30,7 +30,7 @@ bool ParseLfo1Object(const std::string& text, LfoConfig& lfo, std::string& err)
     return true;
 }
 
-bool ParseEnv2Object(const std::string& text, ModEnvelopeConfig& env2)
+bool ParseEnv2Object(const Json& text, ModEnvelopeConfig& env2)
 {
     if (auto v = ReadJSONDouble(text, "attackSec")) env2.attackSec = *v;
     if (auto v = ReadJSONDouble(text, "decaySec")) env2.decaySec = *v;
@@ -42,7 +42,7 @@ bool ParseEnv2Object(const std::string& text, ModEnvelopeConfig& env2)
 
 // 目的: modulation.routes[n] の source/destination/amount/enabled を解析する。
 // 前提: destination 名の許可判定は ValidateModulation 側で行う。
-bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err)
+bool ParseRouteObject(const Json& text, ModRoute& route, std::string& err)
 {
     if (auto v = ReadJSONString(text, "source"))
     {
@@ -70,9 +70,9 @@ bool ParseRouteObject(const std::string& text, ModRoute& route, std::string& err
 }
 } // namespace
 
-bool ParseModulationObject(const std::string& text, ModulationConfig& modulation, std::string& err)
+bool ParseModulationObject(const Json& text, ModulationConfig& modulation, std::string& err)
 {
-    std::string lfo1Obj;
+    Json lfo1Obj;
     bool foundLfo1 = false;
     if (!ExtractObjectForKey(text, "lfo1", lfo1Obj, foundLfo1, err))
     {
@@ -83,7 +83,7 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
         return false;
     }
 
-    std::string env2Obj;
+    Json env2Obj;
     bool foundEnv2 = false;
     if (!ExtractObjectForKey(text, "env2", env2Obj, foundEnv2, err))
     {
@@ -94,7 +94,7 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
         return false;
     }
 
-    std::string routesObj;
+    Json routesObj;
     bool foundRoutes = false;
     if (!ExtractObjectForKey(text, "routes", routesObj, foundRoutes, err))
     {
@@ -102,7 +102,7 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
     }
     if (foundRoutes)
     {
-        if (!ParseTopLevelObjectEntries(routesObj, [&](const std::string& k, const std::string& valueObj) {
+        if (!ParseTopLevelObjectEntries(routesObj, [&](const std::string& k, const Json& valueObj) {
             int index = -1;
             try
             {
@@ -134,7 +134,7 @@ bool ParseModulationObject(const std::string& text, ModulationConfig& modulation
 }
 
 template <typename SmoothingT>
-bool ParseWaveformLikeSmoothingObject(const std::string& text, SmoothingT& smoothing)
+bool ParseWaveformLikeSmoothingObject(const Json& text, SmoothingT& smoothing)
 {
     if (auto v = ReadJSONBool(text, "enabled")) { smoothing.enabled = *v; }
     if (auto v = ReadJSONBool(text, "pitchEnabled")) { smoothing.pitchEnabled = *v; }
@@ -144,12 +144,12 @@ bool ParseWaveformLikeSmoothingObject(const std::string& text, SmoothingT& smoot
     return true;
 }
 
-bool ParseWaveformSmoothingObject(const std::string& text, WaveformConfig::SmoothingConfig& smoothing)
+bool ParseWaveformSmoothingObject(const Json& text, WaveformConfig::SmoothingConfig& smoothing)
 {
     return ParseWaveformLikeSmoothingObject(text, smoothing);
 }
 
-bool ParseWaveformSmoothingObject(const std::string& text, AnalogConfig::SmoothingConfig& smoothing)
+bool ParseWaveformSmoothingObject(const Json& text, AnalogConfig::SmoothingConfig& smoothing)
 {
     return ParseWaveformLikeSmoothingObject(text, smoothing);
 }

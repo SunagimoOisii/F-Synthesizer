@@ -3,6 +3,7 @@
 #include <string>
 
 #include "load/Internal.h"
+#include "config/ProjectJSON.h"
 
 namespace config::internal
 {
@@ -22,7 +23,7 @@ bool LoadProjectModelFileInternal(const std::filesystem::path& configPath, Proje
     const std::filesystem::path baseDir = configPath.has_parent_path()
         ? configPath.parent_path()
         : std::filesystem::current_path();
-    if (!load::LoadConfigFromText(text, baseDir, model, err))
+    if (!config::ProjectFromJSON(nlohmann::json::parse(text, nullptr, false), baseDir, model, err))
     {
         return false;
     }

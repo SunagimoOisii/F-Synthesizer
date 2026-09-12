@@ -8,7 +8,7 @@ namespace config::internal::load
 {
 namespace
 {
-bool ParseFmOperatorEnvObject(const std::string& text, ModEnvelopeConfig& env)
+bool ParseFmOperatorEnvObject(const Json& text, ModEnvelopeConfig& env)
 {
     if (auto v = ReadJSONDouble(text, "attackSec")) env.attackSec = std::clamp(*v, 0.0, 10.0);
     if (auto v = ReadJSONDouble(text, "decaySec")) env.decaySec = std::clamp(*v, 0.0, 10.0);
@@ -19,7 +19,7 @@ bool ParseFmOperatorEnvObject(const std::string& text, ModEnvelopeConfig& env)
 }
 } // namespace
 
-bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseFmSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     FmConfig fm{};
     if (auto v = ReadJSONInt(sourceObjText, "chip")) fm.chip = std::clamp(*v, 0, 1);
@@ -34,7 +34,7 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
         fm.ops[i].index = 0.0;
     }
 
-    std::string opsArray;
+    Json opsArray;
     bool foundOps = false;
     if (!ExtractArrayForKey(sourceObjText, "ops", opsArray, foundOps, err))
     {
@@ -57,7 +57,7 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
         }
 
         size_t opCount = 0;
-        if (!ParseTopLevelArrayObjectEntries(opsArray, [&](size_t opIndex, const std::string& opObj) {
+        if (!ParseTopLevelArrayObjectEntries(opsArray, [&](size_t opIndex, const Json& opObj) {
             if (opIndex >= 4)
             {
                 err = "fm.ops must contain 1..4 elements";
@@ -99,7 +99,7 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
             {
                 fm.ops[opIndex].index = std::clamp(*index, 0.0, 32.0);
             }
-            std::string levelEnvObj;
+            Json levelEnvObj;
             bool foundLevelEnv = false;
             if (!ExtractObjectForKey(opObj, "levelEnv", levelEnvObj, foundLevelEnv, err))
             {
@@ -109,7 +109,7 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
             {
                 ParseFmOperatorEnvObject(levelEnvObj, fm.ops[opIndex].levelEnv);
             }
-            std::string indexEnvObj;
+            Json indexEnvObj;
             bool foundIndexEnv = false;
             if (!ExtractObjectForKey(opObj, "indexEnv", indexEnvObj, foundIndexEnv, err))
             {
@@ -138,13 +138,13 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
         return false;
     }
 
-    std::string filterObj;
+    Json filterObj;
     bool foundFilter = false;
     if (!ExtractObjectForKey(sourceObjText, "filter", filterObj, foundFilter, err))
     {
         return false;
     }
-    const std::string& filterText = foundFilter ? filterObj : sourceObjText;
+    const Json& filterText = foundFilter ? filterObj : sourceObjText;
     if (auto v = ReadJSONString(filterText, "mode"))
     {
         FilterMode mode{};
@@ -171,7 +171,7 @@ bool ParseFmSource(const std::string& sourceObjText, SourceConfig& outSource, st
     {
         fm.drive = std::clamp(*v, 0.0, 1.0);
     }
-    std::string modulationObj;
+    Json modulationObj;
     bool foundModulation = false;
     if (!ExtractObjectForKey(sourceObjText, "modulation", modulationObj, foundModulation, err))
     {

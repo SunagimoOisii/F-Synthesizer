@@ -18,7 +18,7 @@ inline void CheckToneWorkspace()
     gui::InitializeGUIState(*state, {});
     std::string error;
     // Make two real preset fixtures and protect their bytes throughout editing.
-    auto presetA = state->instruments[0]; presetA.displayName = "tone A"; presetA.category = "Lead";
+    auto presetA = state->tones[0].draft.instrument; presetA.displayName = "tone A"; presetA.category = "Lead";
     auto presetB = presetA; presetB.displayName = "tone B"; presetB.sound.amp *= .6;
     std::filesystem::path pathA, pathB;
     Require(gui::SaveUserPresetFile(testRoot, presetA, "tone A", pathA, error), error);
@@ -40,7 +40,7 @@ inline void CheckToneWorkspace()
     gui::UndoToneEdit(*state, true); Require(state->tones[0].draft.values[2] == .7f, "tone redo failed");
     Require(gui::SelectTonePreset(*state, indexOf("tone B"), error), error);
     Require(gui::SelectTonePreset(*state, indexOf("tone A"), error), error);
-    Require(state->instruments[0].sound == adjusted, "A/B/A lost adjustments");
+    Require(state->tones[0].draft.instrument.sound == adjusted, "A/B/A lost adjustments");
     gui::SelectToneChannel(*state, 1); Require(gui::SelectTonePreset(*state, indexOf("tone B"), error), error);
     Require(gui::PendingToneCount(*state) == 2, "per-channel drafts lost");
     gui::PublishLiveRenderSettings(*state);
@@ -91,6 +91,34 @@ inline void CheckToneWorkspace()
     gui::RefreshPresetItems(*state, {});
     Require(gui::SelectTonePreset(*state, indexOf("revision fixture"), error), error);
     Require(state->tones[0].draft.instrument.sound == oldVersion.instrument.sound, "returning to old preset lost its edits");
+    gui::SelectToneChannel(*state, 1);
+    const auto otherChannel = gui::AudibleInstrument(*state, 0);
+    const auto beforeDetail = state->tones[1].draft;
+    auto detailSound = beforeDetail.instrument.sound;
+    detailSound.amp *= .63;
+    gui::ApplyDetailedToneEdit(*state, detailSound); gui::FinishToneEdit(*state);
+    gui::PublishLiveRenderSettings(*state);
+    Require(state->tones[1].draft.instrument.sound == detailSound &&
+        state->liveSettings->load()->sounds[1] == RenderSound(state->tones[1].draft.instrument),
+        "detailed edit did not reach playback");
+    Require(gui::AudibleInstrument(*state, 0).sound == otherChannel.sound, "detailed edit changed another channel");
+    gui::UndoToneEdit(*state);
+    Require(state->tones[1].draft.instrument.sound == beforeDetail.instrument.sound &&
+        state->tones[1].draft.values == beforeDetail.values, "detailed undo lost the previous tone or macros");
+    gui::UndoToneEdit(*state, true);
+    Require(state->tones[1].draft.instrument.sound == detailSound, "detailed redo failed");
+    Require(gui::SaveGUIStateFile(*state, error) && gui::LoadGUIStateFile(*restored, error), error);
+    Require(restored->tones[1].draft.instrument.sound == detailSound, "detailed edit was lost on restart");
+    auto sharedProject = gui::BuildProjectModelFromGUI(*state);
+    auto assignments = std::make_shared<std::array<ProjectChannelAssignment, 16>>(*sharedProject.projectChannels);
+    (*assignments)[1].instrumentId = (*assignments)[0].instrumentId;
+    sharedProject.projectChannels = assignments;
+    gui::ApplyProjectModelToGUI(*restored, sharedProject);
+    Require(restored->tones[0].draft.instrument.sound == restored->tones[1].draft.instrument.sound,
+        "shared project instrument ID did not resolve to both channels");
+    restored->tones[1].draft.instrument.sound.amp *= .5;
+    Require(restored->tones[0].draft.instrument.sound.amp == state->tones[0].draft.instrument.sound.amp,
+        "imported shared instrument was not detached for channel editing");
     std::cout << "Preset updates: fresh content, separate trials, revision recovery OK\n";
     std::cout << "Tone workspace: A/B/A, per-channel drafts, compare, independent mix, undo/redo, recovery, save guard OK\n";
 }
@@ -189,7 +217,7 @@ inline void CheckTransportDevice()
             "single note damaged loop range");
         Require(state->audioScope->cursor.load() > 1000, "audio scope received no render samples");
         gui::SeekSong(*state, 1200);
-        Require(pumpUntil([&] { return state->transportAction == 0 && state->playback.playing.load() && state->songCursorTick >= 1200; }), "seek failed");
+        Require(pumpUntil([&] { return state->transportAction == gui::TransportAction::None && state->playback.playing.load() && state->songCursorTick >= 1200; }), "seek failed");
         gui::PauseSongPlayback(*state);
         Require(pumpUntil([&] { return !state->running && !state->playback.playing.load(); }), "pause failed");
         const auto replacement = testRoot / L"replacement 日本語.mid";

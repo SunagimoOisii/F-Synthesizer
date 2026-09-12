@@ -2,33 +2,20 @@
 
 #include <algorithm>
 #include <array>
-#include <exception>
-#include <future>
 #include <map>
 #include <memory>
 #include <string>
-#include <system_error>
 #include <vector>
 
 #include "AppCore.h"
 #include "config/SourceRegistry.h"
-#include "gui/GUIActionsInternal.h"
+#include "gui/GUIRenderJob.h"
 #include "gui/GUIProjectFacade.h"
-#include "gui/GUIStateModel.h"
 #include "gui/PreviewAudio.h"
 #include "project/ProjectModel.h"
 
 namespace
 {
-std::string BuildUserErrorMessage(const std::string& summary, const std::string& detail)
-{
-    if (detail.empty())
-    {
-        return summary;
-    }
-    return summary + " (" + detail + ")";
-}
-
 bool ValidatePreviewOnlySettings(const GUIState& state, std::string& err)
 {
     if (state.targetChannel < -1 || state.targetChannel > 15)
@@ -36,9 +23,9 @@ bool ValidatePreviewOnlySettings(const GUIState& state, std::string& err)
         err = "Target Channel must be -1 or 0..15.";
         return false;
     }
-    if (state.selectedSoundSlot < 0 || state.selectedSoundSlot > 15)
+    if (state.pianoRoll.displayChannel < 0 || state.pianoRoll.displayChannel > 15)
     {
-        err = "Selected Sound Slot must be 0..15.";
+        err = "Selected channel must be 0..15.";
         return false;
     }
     if (state.sampleRate <= 0)
@@ -54,210 +41,10 @@ bool ValidatePreviewOnlySettings(const GUIState& state, std::string& err)
     return true;
 }
 
-std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForSoundTone(
-    int channel,
-    int noteNumber,
-    int velocity,
-    int ticksPerQuarter)
-{
-    auto ticks = std::make_shared<std::vector<MIDIEventTick>>();
-    ticks->reserve(2);
-
-    MIDIEventTick on{};
-    on.type = MIDIEventType::Note;
-    on.tick = 0;
-    on.noteNumber = std::clamp(noteNumber, 0, 127);
-    on.velocity = std::clamp(velocity, 1, 127);
-    on.channel = std::clamp(channel, 0, 15);
-    on.controller = 0;
-    on.value = 0;
-    on.noteInstanceID = 1;
-    on.order = 0;
-    on.isNoteOn = true;
-    ticks->push_back(on);
-
-    MIDIEventTick off{};
-    off.type = MIDIEventType::Note;
-    off.tick = (std::max)(1, ticksPerQuarter);
-    off.noteNumber = on.noteNumber;
-    off.velocity = 0;
-    off.channel = on.channel;
-    off.controller = 0;
-    off.value = 0;
-    off.noteInstanceID = on.noteInstanceID;
-    off.order = 1;
-    off.isNoteOn = false;
-    ticks->push_back(off);
-
-    return ticks;
-}
-
-std::shared_ptr<const std::vector<MIDIEventTick>> BuildOverrideNoteTicksForChord(
-    int channel,
-    const std::array<int, 4>& notes,
-    int noteCount,
-    int velocity,
-    int ticksPerQuarter)
-{
-    auto ticks = std::make_shared<std::vector<MIDIEventTick>>();
-    ticks->reserve(static_cast<size_t>(noteCount) * 2);
-
-    for (int i = 0; i < noteCount; ++i)
-    {
-        MIDIEventTick on{};
-        on.type = MIDIEventType::Note;
-        on.tick = 0;
-        on.noteNumber = std::clamp(notes[i], 0, 127);
-        on.velocity = std::clamp(velocity, 1, 127);
-        on.channel = std::clamp(channel, 0, 15);
-        on.controller = 0;
-        on.value = 0;
-        on.noteInstanceID = i + 1;
-        on.order = i;
-        on.isNoteOn = true;
-        ticks->push_back(on);
-    }
-
-    for (int i = 0; i < noteCount; ++i)
-    {
-        MIDIEventTick off{};
-        off.type = MIDIEventType::Note;
-        off.tick = (std::max)(1, ticksPerQuarter);
-        off.noteNumber = std::clamp(notes[i], 0, 127);
-        off.velocity = 0;
-        off.channel = std::clamp(channel, 0, 15);
-        off.controller = 0;
-        off.value = 0;
-        off.noteInstanceID = i + 1;
-        off.order = noteCount + i;
-        off.isNoteOn = false;
-        ticks->push_back(off);
-    }
-
-    return ticks;
-}
-
-int ResolveSoundTonePreviewNote(const GUIState& state, int slot)
-{
-    slot = std::clamp(slot, 0, 15);
-    const SourceConfig& src = gui::ReadSoundSlot(state, slot).source;
-    if (!config::UsesDrumKitNoteSelection(src))
-    {
-        return std::clamp(state.tonePreviewNoteNumber, 0, 127);
-    }
-    if (const auto* kit = std::get_if<DrumKitConfig>(&src))
-    {
-        const int preferred = std::clamp(state.selectedDrumNote, 0, 127);
-        if (kit->map[preferred].type != DrumType::None)
-        {
-            return preferred;
-        }
-
-        constexpr int kPreferredNotes[] = { 36, 38, 42 };
-        for (int n : kPreferredNotes)
-        {
-            if (kit->map[n].type != DrumType::None)
-            {
-                return n;
-            }
-        }
-        for (int n = 0; n < 128; n++)
-        {
-            if (kit->map[n].type != DrumType::None)
-            {
-                return n;
-            }
-        }
-        return 36;
-    }
-    return std::clamp(state.tonePreviewNoteNumber, 0, 127);
-}
-
-std::string FormatPreviewException(const std::exception& ex)
-{
-    if (const auto* systemError = dynamic_cast<const std::system_error*>(&ex))
-    {
-        return std::string(systemError->what()) +
-            " code=" + std::to_string(systemError->code().value()) +
-            " category=" + systemError->code().category().name();
-    }
-    return ex.what();
-}
-
-int RunPreviewSafely(
-    ProjectModel project,
-    RenderOptions options,
-    RenderRuntimeOverrides overrides,
-    GUIState& state)
-{
-    try
-    {
-        PreviewAudioStreamSink sink(state.playback, 0);
-        return RunPreviewStreaming(project, options, overrides, &state.observer, sink, false);
-    }
-    catch (const std::exception& ex)
-    {
-        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: " + FormatPreviewException(ex));
-        return 1;
-    }
-    catch (...)
-    {
-        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: unknown exception");
-        return 1;
-    }
-}
-
-void MarkPreviewStartFailed(GUIState& state, const std::string& detail)
-{
-    state.running = false;
-    state.hasRun = true;
-    state.lastRunExitCode = 1;
-    state.previewAudioReady = false;
-    state.runIsPreview = false;
-    gui::AppendGUILog(state, "[GUI] Preview start failed: " + detail);
-    gui::RaiseGUIError(
-        state,
-        BuildUserErrorMessage("Tone Preview を開始できません。実行環境を確認してください。", detail),
-        0,
-        true);
-}
 } // namespace
 
 namespace gui
 {
-void ActivateSoloPreview(GUIState& state, int channel)
-{
-    channel = std::clamp(channel, 0, 15);
-    if (!state.soloPreviewActive)
-    {
-        state.soloPreviewBackup = MutableChannelMixStates(state);
-    }
-    for (int ch = 0; ch < 16; ch++)
-    {
-        ChannelMixState& mix = MutableChannelMix(state, ch);
-        mix.solo = (ch == channel);
-        if (ch == channel)
-        {
-            mix.mute = false;
-        }
-    }
-    state.soloPreviewChannel = channel;
-    state.soloPreviewActive = true;
-    AppendGUILog(state, "[GUI] Solo Preview ON: ch" + std::to_string(channel));
-}
-
-void DeactivateSoloPreview(GUIState& state)
-{
-    if (!state.soloPreviewActive)
-    {
-        return;
-    }
-    MutableChannelMixStates(state) = state.soloPreviewBackup;
-    AppendGUILog(state, "[GUI] Solo Preview OFF: restore previous mix state");
-    state.soloPreviewActive = false;
-    state.restorePreviewOnRunComplete = false;
-}
-
 void StartGUISoundTonePreview(GUIState& state)
 {
     if (state.running) return;
@@ -269,7 +56,7 @@ void StartGUISoundTonePreview(GUIState& state)
         AppendGUILog(state, "[GUI] Sound Tone Preview validation failed: " + validationError);
         RaiseGUIError(
             state,
-            BuildUserErrorMessage("Tone Preview を開始できません。Sound 設定を確認してください。", validationError),
+            detail::BuildUserErrorMessage("Tone Preview を開始できません。Sound 設定を確認してください。", validationError),
             3,
             true);
         return;
@@ -278,7 +65,7 @@ void StartGUISoundTonePreview(GUIState& state)
     // short-lived async render thread.
     if (!EnsurePreviewAudioDevice(state.playback, state.sampleRate, validationError))
     {
-        MarkPreviewStartFailed(state, validationError);
+        detail::ReportRunStartFailure(state, validationError);
         return;
     }
     ClearGUIError(state);
@@ -290,14 +77,11 @@ void StartGUISoundTonePreview(GUIState& state)
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
-    ProjectModel project = BuildRuntimeProjectFromGUI(state, "gui_tone_preview__ch", false);
+    ProjectModel project = BuildProjectModelFromGUI(state);
     project.targetChannel = previewChannel;
-    OverrideProjectChannelWithSoundSlot(state, previewChannel, state.selectedSoundSlot, project);
     const int previewNote = ChooseAuditionNote(state, previewChannel);
     project.midiPath.clear();
     RenderRuntimeOverrides overrides{};
-    state.livePreviewChannel = previewChannel;
-    state.livePreviewSlot = state.selectedSoundSlot;
     PublishLiveRenderSettings(state);
     overrides.liveSettings = state.liveSettings;
     overrides.ticksPerQuarter = 480;
@@ -332,48 +116,10 @@ void StartGUISoundTonePreview(GUIState& state)
     options.durationSec = drums ? 4.0 : state.auditionLengthSec + .5;
     project.extraReleaseSec = .5;
 
-    state.restorePreviewOnRunComplete = false;
     state.previewRequestedStartTick = 0;
     state.previewRequestedDurationSec = options.durationSec;
     state.lastOutputPath = "[memory preview]";
 
-    state.runLogTab = state.UIModeTab;
-    state.observer.logs = &detail::LogsByTab(state, state.runLogTab);
-    {
-        std::lock_guard<std::mutex> lock(state.logMutex);
-        detail::LogsByTab(state, state.runLogTab).clear();
-    }
-    state.lastPeak = 0.0;
-    state.hasPeak = false;
-    state.runIsPreview = true;
-    detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Sound Tone Preview started (note=" + std::to_string(previewNote) + ")");
-    detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
-    state.hasRun = false;
-    state.stopRequested.store(false, std::memory_order_relaxed);
-    state.running = true;
-    try
-    {
-        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state]() {
-            return RunPreviewSafely(project, options, overrides, state);
-            });
-    }
-    catch (const std::exception& ex)
-    {
-        MarkPreviewStartFailed(state, FormatPreviewException(ex));
-    }
-    catch (...)
-    {
-        MarkPreviewStartFailed(state, "unknown exception");
-    }
-}
-
-void StopGUIRunAndPreview(GUIState& state)
-{
-    StopPreviewAudio(state.playback);
-    if (state.running)
-    {
-        state.stopRequested.store(true, std::memory_order_relaxed);
-        AppendGUILog(state, "[GUI] Stop requested (render cancellation signal sent)");
-    }
+    detail::LaunchRenderJob(state, {std::move(project), options, std::move(overrides), 0});
 }
 } // namespace gui

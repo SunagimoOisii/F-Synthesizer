@@ -6,7 +6,7 @@
 
 namespace config::internal::load
 {
-bool ParseSourceObject(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseSourceObject(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     const auto type = ReadJSONString(sourceObjText, "type");
     if (!type)

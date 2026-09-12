@@ -1,4 +1,6 @@
 #include "gui/GUIChannelEditor.h"
+#include "channeleditor/SourceEditor.h"
+#include "channeleditor/EnvelopeView.h"
 
 #include <algorithm>
 #include <array>
@@ -8,9 +10,6 @@
 
 #include "config/SourceRegistry.h"
 #include "gui/GUIConfigUtils.h"
-#include "gui/GUIMacroMapping.h"
-#include "gui/GUIProjectFacade.h"
-#include "gui/GUIStateModel.h"
 
 namespace
 {
@@ -27,277 +26,22 @@ std::string ChannelLabel(int channel)
     return label;
 }
 
-std::string ChannelsUsingSoundLabel(const GUIState& state, int soundIndex)
-{
-    soundIndex = std::clamp(soundIndex, 0, 15);
-    std::string result;
-    for (int ch = 0; ch < 16; ++ch)
-    {
-        if (std::clamp(state.channelAssignments[ch], 0, 15) != soundIndex)
-        {
-            continue;
-        }
-        if (!result.empty())
-        {
-            result += ", ";
-        }
-        result += ChannelLabel(ch);
-    }
-    return result;
-}
-
-void ApplyFmTemplateByAlgorithm(FmConfig& fm, int algorithm)
-{
-    const int chip = fm.chip;
-    fm = FmConfig{};
-    fm.chip = chip;
-    fm.algorithm = std::clamp(algorithm, 0, 7);
-    constexpr int carriers[] = { 8, 8, 8, 8, 10, 14, 14, 15 };
-    for (int i = 0; i < 4; ++i)
-    {
-        fm.ops[i].level = (carriers[fm.algorithm] & (1 << i)) ? 0.6 : 0.25;
-        fm.ops[i].index = 4.0;
-    }
-}
-
-bool DrawDrumConfigEditor(const char* IDPrefix, DrumConfig& d, const HoverHelpFn& updateHoverHelp)
-{
-    bool changed = false;
-    int drumType = static_cast<int>(d.type);
-    const char* drumTypes[] = { "none", "kick", "snare", "hat", "tom", "rim", "clap", "crash", "ride",
-        "bell", "shaker", "scrape", "whistle", "woodblock", "cuica" };
-    std::string key = std::string("Drum Type##") + IDPrefix;
-    changed |= ImGui::Combo(key.c_str(), &drumType, drumTypes, IM_ARRAYSIZE(drumTypes));
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "Drum Type を選択します。",
-            "ドラム発音モデルが切り替わります。",
-            nullptr);
-    }
-    ImGui::TextDisabled("DrumConfig: 0 = 未指定（内部デフォルト）");
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "DrumConfig の未指定値ルールを確認します。",
-            "数値パラメータを 0 にすると内部デフォルトが使われます。",
-            "明示値に戻す場合は 0 以外の値を入力してください。");
-    }
-    d.type = static_cast<DrumType>(drumType);
-
-    if (d.type == DrumType::None)
-    {
-        return changed;
-    }
-
-    key = std::string("Gain##") + IDPrefix;
-    changed |= ImGui::InputDouble(key.c_str(), &d.gain, 0.01, 0.1, "%.3f");
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "Drum Gain を調整します。",
-            "該当ドラム音の音量が変わります。",
-            "上げすぎるとクリップしやすくなります。");
-    }
-
-    if (d.type >= DrumType::Bell)
-    {
-        key = std::string("Body Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyFreq, 10.0, 100.0, "%.2f");
-        if (d.type != DrumType::Shaker)
-        {
-            key = std::string("Body Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyLevel, 0.01, 0.1, "%.3f");
-        }
-        if (d.type == DrumType::Bell || d.type == DrumType::Woodblock)
-        {
-            key = std::string("Body Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyDecaySec, 0.01, 0.1, "%.3f");
-        }
-        if (d.type == DrumType::Bell || d.type == DrumType::Shaker)
-        {
-            key = std::string("Metal Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.metalLevel, 0.01, 0.1, "%.3f");
-        }
-        if (d.type == DrumType::Whistle || d.type == DrumType::Cuica)
-        {
-            key = std::string("Pitch Start##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchStart, 0.01, 0.1, "%.3f");
-            key = std::string("Pitch Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.001, 0.01, "%.3f");
-        }
-        if (d.type == DrumType::Shaker || d.type == DrumType::Scrape)
-        {
-            key = std::string("Pulse Interval##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.001, 0.01, "%.3f");
-        }
-        if (d.type != DrumType::Bell && d.type != DrumType::Woodblock)
-        {
-            key = std::string("Noise Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
-        }
-        key = std::string("Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.decaySec, 0.001, 0.01, "%.3f");
-        key = std::string("Transient Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientLevel, 0.01, 0.1, "%.3f");
-        key = std::string("Transient Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientDecaySec, 0.001, 0.01, "%.3f");
-        key = std::string("HP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
-        key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
-        key = std::string("Drive##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.drive, 0.01, 0.1, "%.3f");
-        d.drive = std::clamp(d.drive, 0.0, 1.0);
-    }
-    else if (d.type == DrumType::Kick)
-    {
-        key = std::string("Body Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyFreq, 1.0, 10.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("Body Freq を調整します。", "キックの低域の芯が変わります。", nullptr);
-        key = std::string("Body Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyLevel, 0.01, 0.1, "%.3f");
-        key = std::string("Body Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyDecaySec, 0.01, 0.1, "%.3f");
-        key = std::string("Pitch Start##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchStart, 0.1, 1.0, "%.3f");
-        if (updateHoverHelp) updateHoverHelp("Pitch Start を調整します。", "キック開始時の高いピッチ量が変わります。", nullptr);
-        key = std::string("Pitch Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
-        if (updateHoverHelp) updateHoverHelp("Pitch Decay を調整します。", "キックのピッチ変化速度が変わります。", nullptr);
-        key = std::string("Transient Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientLevel, 0.01, 0.1, "%.3f");
-        key = std::string("Transient Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientDecaySec, 0.001, 0.01, "%.3f");
-        key = std::string("Drive##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.drive, 0.01, 0.1, "%.3f");
-        d.drive = std::clamp(d.drive, 0.0, 1.0);
-        if (updateHoverHelp) updateHoverHelp("Drive を調整します。", "ドラム専用ソフトクリップの強さが変わります。", nullptr);
-    }
-    else if (d.type == DrumType::Snare || d.type == DrumType::Tom || d.type == DrumType::Rim)
-    {
-        key = std::string("Body Freq##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyFreq, 10.0, 100.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("Body Freq を調整します。", "胴鳴り/打撃トーンの周波数が変わります。", nullptr);
-        key = std::string("Body Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyLevel, 0.01, 0.1, "%.3f");
-        key = std::string("Body Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.bodyDecaySec, 0.01, 0.1, "%.3f");
-        if (d.type == DrumType::Tom)
-        {
-            key = std::string("Pitch Start##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchStart, 0.1, 1.0, "%.3f");
-            key = std::string("Pitch Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.pitchDecaySec, 0.01, 0.1, "%.3f");
-        }
-        if (d.type == DrumType::Snare)
-        {
-            key = std::string("Snap Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.snapLevel, 0.01, 0.1, "%.3f");
-            key = std::string("Snap Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.snapDecaySec, 0.001, 0.01, "%.3f");
-        }
-        key = std::string("Transient Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientLevel, 0.01, 0.1, "%.3f");
-        key = std::string("Transient Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientDecaySec, 0.001, 0.01, "%.3f");
-        key = std::string("HP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("HP Cut を調整します。", "高域寄りに残す帯域が変わります。", nullptr);
-        key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("LP Cut を調整します。", "低域寄りに残す帯域が変わります。", nullptr);
-        key = std::string("Drive##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.drive, 0.01, 0.1, "%.3f");
-        d.drive = std::clamp(d.drive, 0.0, 1.0);
-        if (updateHoverHelp) updateHoverHelp("Drive を調整します。", "ドラム専用ソフトクリップの強さが変わります。", nullptr);
-    }
-    else
-    {
-        key = std::string("Metal Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.metalLevel, 0.01, 0.1, "%.3f");
-        if (updateHoverHelp) updateHoverHelp("Metal Level を調整します。", "ハットの硬い金属トーン量が変わります。", nullptr);
-        key = std::string("Air Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.airLevel, 0.01, 0.1, "%.3f");
-        if (updateHoverHelp) updateHoverHelp("Air Level を調整します。", "ハットの高域ノイズ量が変わります。", nullptr);
-        key = std::string("Noise Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.noiseLevel, 0.01, 0.1, "%.3f");
-        if (d.type == DrumType::Clap)
-        {
-            key = std::string("Transient Level##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientLevel, 0.01, 0.1, "%.3f");
-            key = std::string("Transient Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.transientDecaySec, 0.001, 0.01, "%.3f");
-        }
-        key = std::string("Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.decaySec, 0.001, 0.01, "%.3f");
-        if (updateHoverHelp) updateHoverHelp("Decay を調整します。", "ハットの短さが変わります。", nullptr);
-        key = std::string("HP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.hpCut, 10.0, 100.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("HP Cut を調整します。", "高域寄りに残す帯域が変わります。", nullptr);
-        key = std::string("LP Cut##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.lpCut, 10.0, 100.0, "%.2f");
-        if (updateHoverHelp) updateHoverHelp("LP Cut を調整します。", "低域寄りに残す帯域が変わります。", nullptr);
-        key = std::string("Drive##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.drive, 0.01, 0.1, "%.3f");
-        d.drive = std::clamp(d.drive, 0.0, 1.0);
-        if (updateHoverHelp) updateHoverHelp("Drive を調整します。", "ドラム専用ソフトクリップの強さが変わります。", nullptr);
-    }
-
-    key = std::string("Velocity -> Tone##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.velocityToTone, 0.01, 0.1, "%.3f");
-    key = std::string("Velocity -> Decay##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.velocityToDecay, 0.01, 0.1, "%.3f");
-    key = std::string("Humanize Pitch Cents##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.humanizePitchCents, 0.1, 1.0, "%.2f");
-    key = std::string("Humanize Decay Pct##") + IDPrefix; changed |= ImGui::InputDouble(key.c_str(), &d.humanizeDecayPct, 0.01, 0.1, "%.3f");
-    d.velocityToTone = std::clamp(d.velocityToTone, 0.0, 1.0);
-    d.velocityToDecay = std::clamp(d.velocityToDecay, -1.0, 1.0);
-    d.humanizePitchCents = std::clamp(d.humanizePitchCents, 0.0, 50.0);
-    d.humanizeDecayPct = std::clamp(d.humanizeDecayPct, 0.0, 1.0);
-
-    if (d.type == DrumType::Snare || d.type == DrumType::Hat || d.type == DrumType::Clap || d.type == DrumType::Crash || d.type == DrumType::Ride)
-    {
-        int noiseColor = d.noiseColor;
-        const char* noises[] = { "white", "pink", "brown", "blue" };
-        key = std::string("Noise Color##") + IDPrefix;
-        changed |= ImGui::Combo(key.c_str(), &noiseColor, noises, IM_ARRAYSIZE(noises));
-        if (updateHoverHelp) updateHoverHelp("Noise Color を選択します。", "スナップ/エア成分の周波数傾向が変わります。", nullptr);
-        d.noiseColor = noiseColor;
-    }
-    return changed;
-}
-
-#include "channeleditor/EnvelopeView.inl"
 } // namespace
 
 namespace gui
 {
+using detail::DrawADSRPreview;
 bool DrawChannelEditor(
-    GUIState& state,
+    InstrumentSoundConfig& chCfg,
+    int channel,
+    int& selectedDrumNote,
     bool showSourceTypeSelector,
     const std::function<void(const char* what, const char* impact, const char* caution)>& updateHoverHelp)
 {
-    static InstrumentSoundConfig l3BeforeConfig{};
-    static MacroSliderState l3BeforeSliders{};
-    static int l3BeforeSlot = -1;
-    static bool l3SessionChanged = false;
-
     bool changed = false;
-    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
-    // Layer3 Undo bracketing: IsAnyItemActive() の遷移を利用して before スナップショットを記録する。
-    // 精度注記: IsAnyItemActive() はウィンドウ全体のフラグのため Layer2 の操作で誤アーム
-    // することがあるが、Layer2 は独自の per-slider undo を持つため実用上の問題はない。
-    const int prChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
-    const int assignedSlot = std::clamp(state.channelAssignments[prChannel], 0, 15);
-    ImGui::Text("編集対象: %sの音色", ChannelLabel(prChannel).c_str());
-    ImGui::SameLine();
-    if (ImGui::Button("表示中チャンネルの音色を編集"))
-    {
-        state.selectedSoundSlot = assignedSlot;
-    }
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "表示中チャンネルの音色へ編集対象を合わせます。",
-            "Composeで表示しているチャンネルの音を直接編集できます。",
-            nullptr);
-    }
-    int selectedSoundNumber = state.selectedSoundSlot + 1;
-    if (ImGui::InputInt("詳細 音色番号 (1-16)", &selectedSoundNumber))
-    {
-        state.selectedSoundSlot = std::clamp(selectedSoundNumber - 1, 0, 15);
-        changed = true;
-    }
-    if (updateHoverHelp)
-    {
-        updateHoverHelp(
-            "高度な編集対象を番号で指定します。",
-            "複数チャンネルで同じ音色を共有している場合は、共有先にも編集が反映されます。",
-            nullptr);
-    }
-    state.selectedSoundSlot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const std::string sharedChannels = ChannelsUsingSoundLabel(state, state.selectedSoundSlot);
-    if (!sharedChannels.empty())
-    {
-        ImGui::TextDisabled("この音色は %s で使用中", sharedChannels.c_str());
-    }
-    const int editSlot = std::clamp(state.selectedSoundSlot, 0, 15);
-    const InstrumentSoundConfig frameConfig = ReadSoundSlot(state, editSlot);
-    const MacroSliderState frameSliders = state.macroSliders[editSlot];
-
-    auto sliderWaveParam = [&](const char* label, double& value, float minV, float maxV, const char* fmt = "%.3f") -> bool
-    {
-        float v = static_cast<float>(value);
-        bool edited = ImGui::SliderFloat(label, &v, minV, maxV, fmt);
-        if (edited)
-        {
-            value = static_cast<double>(v);
-        }
-        return edited;
-    };
-#include "channeleditor/ChannelEditorModulation.inl"
-    ImGui::TextDisabled("Advancedの音色詳細は音色定義のみ編集します（ミックス/割当はMixerで扱います）。");
+    ImGui::Text("編集対象: %sの音色", ChannelLabel(channel).c_str());
 
     ImGui::Separator();
-    InstrumentSoundConfig& chCfg = MutableSoundSlot(state, state.selectedSoundSlot);
-    ImGui::Text("編集中の音色番号: %d", state.selectedSoundSlot + 1);
-    ImGui::TextDisabled("Tone Preview は編集中の音色を使用します。");
-
     if (ImGui::CollapsingHeader("エンベロープ / 音量", ImGuiTreeNodeFlags_DefaultOpen))
     {
         changed |= ImGui::InputDouble("Amp", &chCfg.amp, 0.01, 0.1, "%.3f");
@@ -744,10 +488,8 @@ bool DrawChannelEditor(
         map.cc74ToPadBrightness = std::clamp(map.cc74ToPadBrightness, -1.0, 1.0);
     }
 
-    bool layer3Changed = false;
     if (ImGui::CollapsingHeader("音源詳細", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        const bool changedBeforeSourceDetails = changed;
         if (showSourceTypeSelector)
         {
             const config::SourceKind selectedKind = config::SourceConfigKind(chCfg.source);
@@ -790,53 +532,7 @@ bool DrawChannelEditor(
             }
         }
 
-#include "channeleditor/ChannelEditorCommon.inl"
-
-#include "channeleditor/ChannelEditorWaveform.inl"
-#include "channeleditor/ChannelEditorNoise.inl"
-#include "channeleditor/ChannelEditorFm.inl"
-#include "channeleditor/ChannelEditorDrum.inl"
-        layer3Changed = (changed && !changedBeforeSourceDetails);
-    }
-    if (layer3Changed)
-    {
-        // Layer2 マクロスライダーを Layer3 編集に追従させる。
-        const int ch = std::clamp(state.selectedSoundSlot, 0, 15);
-        state.macroSliders[ch] = ReadMacroSliders(ReadSoundSlot(state, ch), state.macroSliders[ch]);
-    }
-
-    const bool anyItemActive = ImGui::IsAnyItemActive();
-
-    // 音色切替でアーム状態をリセット
-    if (l3BeforeSlot >= 0 && l3BeforeSlot != editSlot)
-    {
-        l3BeforeSlot = -1;
-        l3SessionChanged = false;
-    }
-
-    // アクティブ開始: before スナップショットをキャプチャ
-    if (anyItemActive && l3BeforeSlot < 0)
-    {
-        l3BeforeConfig = frameConfig; // このフレームのレンダリング前の値
-        l3BeforeSliders = frameSliders;
-        l3BeforeSlot = editSlot;
-        l3SessionChanged = false;
-    }
-
-    if (changed)
-    {
-        l3SessionChanged = true;
-    }
-
-    // アクティブ終了: 変更があればスタックに積む
-    if (!anyItemActive && l3BeforeSlot >= 0)
-    {
-        if (l3SessionChanged)
-        {
-            PushSoundHistoryEntry(state, l3BeforeSlot, l3BeforeConfig, l3BeforeSliders);
-        }
-        l3BeforeSlot = -1;
-        l3SessionChanged = false;
+        changed |= detail::DrawSourceEditor(chCfg, selectedDrumNote, updateHoverHelp);
     }
     return changed;
 }

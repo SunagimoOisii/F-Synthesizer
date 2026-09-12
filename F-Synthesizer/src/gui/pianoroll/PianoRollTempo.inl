@@ -104,93 +104,15 @@ int SnapTick(int tick, int step)
     return (std::max)(0, q * step);
 }
 
-double SecondsAtTick(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, int targetTick)
+double SecondsAtTick(const std::vector<TempoEvent>& events, int tpq, int tick)
 {
-    if (targetTick <= 0 || ticksPerQuarter <= 0)
-    {
-        return 0.0;
-    }
-
-    std::vector<TempoEvent> sortedTempo = tempoEvents;
-    std::sort(sortedTempo.begin(), sortedTempo.end(), [](const TempoEvent& a, const TempoEvent& b) {
-        return a.tick < b.tick;
-    });
-    if (sortedTempo.empty() || sortedTempo.front().tick != 0)
-    {
-        TempoEvent te{};
-        te.tick = 0;
-        te.bpm = 120.0;
-        sortedTempo.insert(sortedTempo.begin(), te);
-    }
-
-    double seconds = 0.0;
-    int cursorTick = 0;
-    double cursorBpm = sortedTempo.front().bpm;
-    size_t tempoIndex = 1;
-    while (tempoIndex < sortedTempo.size() && sortedTempo[tempoIndex].tick <= targetTick)
-    {
-        const int nextTick = sortedTempo[tempoIndex].tick;
-        const int deltaTick = nextTick - cursorTick;
-        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
-        seconds += secPerTick * static_cast<double>(deltaTick);
-        cursorTick = nextTick;
-        cursorBpm = sortedTempo[tempoIndex].bpm;
-        tempoIndex++;
-    }
-    if (targetTick > cursorTick)
-    {
-        const int deltaTick = targetTick - cursorTick;
-        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
-        seconds += secPerTick * static_cast<double>(deltaTick);
-    }
-    return seconds;
+    return tpq > 0 ? midi::TempoMap(events, tpq).SecondsAtTick(tick) : 0.0;
 }
-
-int TickAtSeconds(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, double targetSeconds)
+int TickAtSeconds(const std::vector<TempoEvent>& events, int tpq, double seconds)
 {
-    if (targetSeconds <= 0.0 || ticksPerQuarter <= 0)
-    {
-        return 0;
-    }
-
-    std::vector<TempoEvent> sortedTempo = tempoEvents;
-    std::sort(sortedTempo.begin(), sortedTempo.end(), [](const TempoEvent& a, const TempoEvent& b) {
-        return a.tick < b.tick;
-    });
-    if (sortedTempo.empty() || sortedTempo.front().tick != 0)
-    {
-        TempoEvent te{};
-        te.tick = 0;
-        te.bpm = 120.0;
-        sortedTempo.insert(sortedTempo.begin(), te);
-    }
-
-    double seconds = 0.0;
-    int cursorTick = 0;
-    double cursorBpm = sortedTempo.front().bpm;
-    size_t tempoIndex = 1;
-    while (tempoIndex < sortedTempo.size())
-    {
-        const int nextTick = sortedTempo[tempoIndex].tick;
-        const int deltaTick = nextTick - cursorTick;
-        const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
-        const double segmentSeconds = secPerTick * static_cast<double>(deltaTick);
-        if (seconds + segmentSeconds >= targetSeconds)
-        {
-            const double remain = targetSeconds - seconds;
-            return cursorTick + static_cast<int>(remain / secPerTick);
-        }
-        seconds += segmentSeconds;
-        cursorTick = nextTick;
-        cursorBpm = sortedTempo[tempoIndex].bpm;
-        tempoIndex++;
-    }
-
-    const double secPerTick = (60.0 / cursorBpm) / static_cast<double>(ticksPerQuarter);
-    const double remain = targetSeconds - seconds;
-    return (std::max)(0, cursorTick + static_cast<int>(remain / secPerTick));
+    // The piano roll follows the last complete tick; the transport rounds to nearest.
+    return tpq > 0 ? static_cast<int>(midi::TempoMap(events, tpq).TickAtSeconds(seconds)) : 0;
 }
-
 
 int MouseToTick(float mouseX, float gridMinX, int startTick, float pxPerTick)
 {

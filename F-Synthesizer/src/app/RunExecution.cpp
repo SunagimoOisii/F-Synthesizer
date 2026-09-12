@@ -13,6 +13,34 @@ namespace app::run
 {
 namespace
 {
+bool PrepareRenderMIDI(const ProjectModel& project, const RenderOptions& options,
+    const RenderRuntimeOverrides& overrides, IRunObserver* observer, MIDIBuildOutput& midi)
+{
+    std::string error;
+    if (!BuildMIDIPipeline(project.midiPath, project.targetChannel, project.sampleRate,
+        options.startSec, options.durationSec, overrides.noteTicks.get(), overrides.ticksPerQuarter, midi, error))
+    {
+        LogLine(observer, error == "no note events found" ? "No note events found." :
+            "Failed to load MIDI: " + PathToUtf8(project.midiPath));
+        return false;
+    }
+    if (midi.events.empty()) { LogLine(observer, "No note events found."); return false; }
+    LogMIDITickSummary(observer, midi.ticks, midi.tempoEvents, midi.ticksPerQuarter, midi.stats);
+    LogSampleEventSummary(observer, midi.events);
+    return true;
+}
+
+int RenderLength(const ProjectModel& project, const RenderOptions& options, int lastSample)
+{
+    const bool preview = options.mode == RunMode::Preview;
+    const int release = static_cast<int>(project.extraReleaseSec * project.sampleRate);
+    int needed = lastSample + release + 1;
+    if (preview && options.durationSec >= 0)
+        needed = std::min(needed, static_cast<int>(options.durationSec * project.sampleRate) + release + 1);
+    const int initial = project.initialSeconds * project.sampleRate;
+    return needed > initial || (preview && needed > 0) ? needed : initial;
+}
+
 int RunRenderCommon(
     const ProjectModel& project,
     const RenderOptions& options,
@@ -48,66 +76,12 @@ int RunRenderCommon(
     LogLine(observer, std::string("Run Mode: ") + (previewMode ? "preview" : "export"));
 
     MIDIBuildOutput midiOut{};
-    std::string midiErr;
-    if (!BuildMIDIPipeline(
-        project.midiPath,
-        project.targetChannel,
-        project.sampleRate,
-        options.startSec,
-        options.durationSec,
-        overrides.noteTicks.get(),
-        overrides.ticksPerQuarter,
-        midiOut,
-        midiErr))
-    {
-        if (midiErr == "no note events found")
-        {
-            LogLine(observer, "No note events found.");
-        }
-        else
-        {
-            LogLine(observer, "Failed to load MIDI: " + PathToUtf8(project.midiPath));
-        }
-        return 1;
-    }
-
-    LogMIDITickSummary(observer, midiOut.ticks, midiOut.tempoEvents, midiOut.ticksPerQuarter, midiOut.stats);
-
-    std::vector<MIDIEvent> events = std::move(midiOut.events);
-    LogSampleEventSummary(observer, events);
-
-    if (events.empty())
-    {
-        if (midiErr.empty())
-        {
-            LogLine(observer, "No note events found.");
-        }
-        return 1;
-    }
+    if (!PrepareRenderMIDI(project, options, overrides, observer, midiOut)) return 1;
+    const auto& events = midiOut.events;
 
     const ResolvedRenderConfigInputs renderInputs = ResolveRenderConfigInputs(project);
 
-    int lastSample = events.back().sample;
-    int extraRelease = static_cast<int>(project.extraReleaseSec * project.sampleRate);
-    int neededSamples = lastSample + extraRelease + 1;
-    if (previewMode && options.durationSec >= 0.0)
-    {
-        const double durSec = (options.durationSec > 0.0) ? options.durationSec : 0.0;
-        const int previewMax = static_cast<int>(durSec * project.sampleRate) + extraRelease + 1;
-        if (neededSamples > previewMax)
-        {
-            neededSamples = previewMax;
-        }
-    }
-    int soundLength = project.initialSeconds * project.sampleRate;
-    if (neededSamples > soundLength)
-    {
-        soundLength = neededSamples;
-    }
-    else if (previewMode && neededSamples > 0 && neededSamples < soundLength)
-    {
-        soundLength = neededSamples;
-    }
+    int soundLength = RenderLength(project, options, events.back().sample);
     SoundData sound(soundLength, project.bits, project.sampleRate, 2);
 
     {
@@ -193,51 +167,12 @@ int RunPreviewStreamingInternal(
     LogLine(observer, "Run Mode: preview streaming");
 
     MIDIBuildOutput midiOut{};
-    std::string midiErr;
-    if (!BuildMIDIPipeline(
-        project.midiPath,
-        project.targetChannel,
-        project.sampleRate,
-        previewOptions.startSec,
-        previewOptions.durationSec,
-        overrides.noteTicks.get(),
-        overrides.ticksPerQuarter,
-        midiOut,
-        midiErr))
-    {
-        LogLine(observer, (midiErr == "no note events found") ? "No note events found." : "Failed to load MIDI: " + PathToUtf8(project.midiPath));
-        return 1;
-    }
-
-    std::vector<MIDIEvent> events = std::move(midiOut.events);
-    LogSampleEventSummary(observer, events);
-    if (events.empty())
-    {
-        LogLine(observer, "No note events found.");
-        return 1;
-    }
+    if (!PrepareRenderMIDI(project, previewOptions, overrides, observer, midiOut)) return 1;
+    const auto& events = midiOut.events;
 
     const ResolvedRenderConfigInputs renderInputs = ResolveRenderConfigInputs(project);
 
-    int lastSample = events.back().sample;
-    int extraRelease = static_cast<int>(project.extraReleaseSec * project.sampleRate);
-    int neededSamples = lastSample + extraRelease + 1;
-    if (previewOptions.durationSec >= 0.0)
-    {
-        const double durSec = (previewOptions.durationSec > 0.0) ? previewOptions.durationSec : 0.0;
-        const int previewMax = static_cast<int>(durSec * project.sampleRate) + extraRelease + 1;
-        neededSamples = std::min(neededSamples, previewMax);
-    }
-    int soundLength = project.initialSeconds * project.sampleRate;
-    if (neededSamples > soundLength)
-    {
-        soundLength = neededSamples;
-    }
-    else if (neededSamples > 0 && neededSamples < soundLength)
-    {
-        soundLength = neededSamples;
-    }
-
+    int soundLength = RenderLength(project, previewOptions, events.back().sample);
     // A selected loop spans exactly the selected beats, without a release gap.
     if (loop && previewOptions.durationSec > 0.0)
         soundLength = std::max(1, static_cast<int>(std::lround(previewOptions.durationSec * project.sampleRate)));

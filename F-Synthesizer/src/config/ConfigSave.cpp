@@ -1,12 +1,11 @@
 #include "ConfigFileInternal.h"
 
 #include <fstream>
-#include <limits>
-#include <sstream>
 #define NOMINMAX
 #include <Windows.h>
 
 #include "config/ProjectJSON.h"
+#include "config/SourceJSON.h"
 #include "io/PlatformPaths.h"
 #include "third_party/nlohmann/json.hpp"
 
@@ -15,19 +14,6 @@ namespace config::internal
 namespace
 {
 using Json = nlohmann::json;
-
-Json ChannelSoundToJson(const InstrumentSoundConfig& config)
-{
-    std::ostringstream tmp;
-    tmp.precision(std::numeric_limits<double>::max_digits10);
-    WriteInstrumentSoundConfig(tmp, 0, config, false);
-    Json wrapped = Json::parse("{" + tmp.str() + "}", nullptr, false);
-    if (wrapped.is_discarded() || !wrapped.contains("0") || !wrapped["0"].is_object())
-    {
-        throw std::runtime_error("failed to serialize instrument sound");
-    }
-    return wrapped["0"];
-}
 
 Json InstrumentToJson(const InstrumentConfig& instrument)
 {
@@ -54,7 +40,7 @@ Json InstrumentToJson(const InstrumentConfig& instrument)
             {"preview", instrument.recommendedRange.preview},
         }},
         {"macroHints", std::move(macroHints)},
-        {"sound", ChannelSoundToJson(instrument.sound)},
+        {"sound", config::SoundToJSON(instrument.sound)},
     };
 }
 

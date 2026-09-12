@@ -1,0 +1,3 @@
+interface:
+  display_name: "Software Design Philosophy / F-Synthesizer"
+  short_description: "既存の設計原則を使い、F-Synthesizerの理解と変更の負担を減らす"

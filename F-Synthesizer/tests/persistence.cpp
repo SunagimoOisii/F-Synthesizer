@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
         auto state = std::make_unique<GUIState>();
         gui::InitializeGUIState(*state, {});
-        auto& instrument = state->instruments[4];
+        auto& instrument = state->tones[4].draft.instrument;
         instrument.displayName = "Lead \"A\" 日本語";
         instrument.category = "Lead";
         instrument.description = "line 1\nline 2";
@@ -78,14 +78,11 @@ int main(int argc, char** argv)
         sound.ampCabLayer.enabled = true; sound.ampCabLayer.drive = 0.27;
         sound.expressionMap.enabled = false;
         sound.expressionMap.velocityToString = 0.37;
-        state->instruments[15] = instrument;
-        state->instruments[15].displayName = "Unused sound";
-        state->channelAssignments[0] = 4;
-        state->channelAssignments[2] = 4;
-        state->channelAssignments[15] = 0;
+        state->tones[15].draft.instrument = instrument;
+        state->tones[15].draft.instrument.displayName = "Unused sound";
+        state->tones[0].draft.instrument = instrument;
+        state->tones[2].draft.instrument = instrument;
         state->channelMixStates[2].pan = -0.4;
-        state->macroSliders[4].brightness = 0.75f;
-        state->macroSliders[4].lastLayer2Roughness = 0.625f;
         state->stepSeq.steps[3][7] = true;
         state->stepSeq.velocity[3] = 83;
         state->pianoRoll.hasProjectData = true;
@@ -99,13 +96,12 @@ int main(int argc, char** argv)
         Require(gui::LoadGUIStateFile(*restored, err), "workspace load: " + err);
         const auto actual = config::ProjectToJSON(gui::BuildProjectModelFromGUI(*restored));
         Require(expected == actual, "project metadata / sounds / assignments changed after restore");
-        Require(restored->instruments[4].sound.attackLayer.level == 0.23, "attack layer was lost");
-        Require(restored->instruments[4].sound.pluckLayer.level == 0.21, "pluck layer was lost");
-        Require(restored->instruments[4].sound.stringLayer.level == 0.22, "string layer was lost");
-        Require(restored->instruments[4].sound.portamentoTimeSec == 0.125, "portamento was lost");
-        Require(restored->instruments[4].sound.expressionMap.velocityToString == 0.37,
+        Require(restored->tones[4].draft.instrument.sound.attackLayer.level == 0.23, "attack layer was lost");
+        Require(restored->tones[4].draft.instrument.sound.pluckLayer.level == 0.21, "pluck layer was lost");
+        Require(restored->tones[4].draft.instrument.sound.stringLayer.level == 0.22, "string layer was lost");
+        Require(restored->tones[4].draft.instrument.sound.portamentoTimeSec == 0.125, "portamento was lost");
+        Require(restored->tones[4].draft.instrument.sound.expressionMap.velocityToString == 0.37,
             "disabled expression settings were lost");
-        Require(restored->macroSliders[4].lastLayer2Roughness == 0.625f, "macro state was lost");
         Require(restored->stepSeq.steps[3][7] && restored->stepSeq.velocity[3] == 83, "drums were lost");
         Require(restored->pianoRoll.projectNotes.size() == 1 &&
             restored->pianoRoll.projectNotes[0].channel == 2, "edited notes were lost");
@@ -115,10 +111,10 @@ int main(int argc, char** argv)
         Require(restored->pianoRoll.hasProjectData && restored->pianoRoll.projectNotes.empty(),
             "empty edited score must remain empty");
         const auto savedWorkspace = Bytes(gui::GUIStatePath());
-        state->instruments[4].sound.amp = std::numeric_limits<double>::quiet_NaN();
+        state->tones[4].draft.instrument.sound.amp = std::numeric_limits<double>::quiet_NaN();
         Require(!gui::SaveGUIStateFile(*state, err), "invalid sound should fail to save");
         Require(Bytes(gui::GUIStatePath()) == savedWorkspace, "failed save damaged existing workspace");
-        state->instruments[4] = restored->instruments[4];
+        state->tones[4].draft.instrument = restored->tones[4].draft.instrument;
 
         std::filesystem::path first, second;
         Require(gui::SaveUserPresetFile(testRoot, instrument, "My Lead", first, err), err);
@@ -142,22 +138,41 @@ int main(int argc, char** argv)
         std::filesystem::copy_file(source, builtin, std::filesystem::copy_options::overwrite_existing);
         const auto builtinBytes = Bytes(builtin);
         gui::RefreshPresetItems(*state, "sound_lead_razor");
-        state->selectedSoundSlot = 4;
-        Require(gui::ApplySelectedPresetPaths(*state, err), err);
-        const auto factorySound = state->instruments[4].sound.amp;
-        state->instruments[4].sound.amp *= 0.75;
-        Require(gui::SaveGUIStateFile(*state, err), err);
-        Require(gui::SaveUserPresetFromState(*state, err), err);
+        gui::InitializeToneWorkspace(*state);
+        gui::SelectToneChannel(*state, 4);
+        Require(gui::SelectTonePreset(*state, state->presetIndex, err), err);
+        auto edited = state->tones[4].draft.instrument.sound;
+        edited.amp *= .75;
+        gui::ApplyDetailedToneEdit(*state, edited); gui::FinishToneEdit(*state);
+        const auto adjusted = state->tones[4].draft;
+        Require(gui::SaveUserPresetFile(testRoot, adjusted.instrument, "Edited Razor", first, err), err);
         Require(Bytes(builtin) == builtinBytes, "factory preset was overwritten");
-        gui::RefreshPresetItems(*state, "sound_lead_razor");
-        Require(gui::ApplySelectedPresetPaths(*state, err), err);
-        Require(state->instruments[4].sound.amp == factorySound, "factory reload retained edits");
-        Require(UndoSound(*state), "preset selection must be undoable");
-        Require(state->instruments[4].sound.amp == factorySound * 0.75 &&
-            state->instruments[4].displayName == state->userPresetName,
-            "undo must restore both edited sound and personal name");
-        Require(RedoSound(*state) && state->instruments[4].sound.amp == factorySound,
-            "redo must restore the selected preset");
+        gui::RefreshPresetItems(*state, "user/" + PathToUtf8(first.stem()));
+        Require(gui::SelectTonePreset(*state, state->presetIndex, err), err);
+        gui::UndoToneEdit(*state);
+        Require(state->tones[4].draft.instrument.sound == adjusted.instrument.sound &&
+            state->tones[4].draft.instrument.displayName == adjusted.instrument.displayName,
+            "undo must restore edited sound and its name");
+        gui::UndoToneEdit(*state, true);
+        Require(state->tones[4].draft.instrument.displayName == "Edited Razor", "redo must restore selected personal copy");
+
+        const std::string personalKey = "user/" + PathToUtf8(first.stem());
+        const auto beforeRename = nlohmann::json::parse(Bytes(first));
+        const auto revision = state->presetItems[state->presetIndex].revision;
+        Require(gui::RenameUserPreset(testRoot, personalKey, "Renamed 日本語", err), err);
+        auto expectedRename = beforeRename;
+        expectedRename["project"]["instruments"].begin().value()["displayName"] = "Renamed 日本語";
+        Require(nlohmann::json::parse(Bytes(first)) == expectedRename, "rename changed the sound or other metadata");
+        gui::RefreshPresetItems(*state, personalKey);
+        Require(state->presetItems[state->presetIndex].revision != revision, "rename did not refresh preset identity");
+        InstrumentConfig loaded;
+        Require(gui::LoadPresetInstrument(testRoot, state->presetItems[state->presetIndex], loaded, err) &&
+            loaded.displayName == "Renamed 日本語" && loaded.sound == adjusted.instrument.sound,
+            "preset repository did not return the renamed sound");
+        Require(!gui::RenameUserPreset(testRoot, "sound_lead_razor", "Changed", err) && Bytes(builtin) == builtinBytes,
+            "rename must protect factory presets");
+        Require(!gui::RenameUserPreset(testRoot, "user/../presets/sound_lead_razor", "Changed", err) && Bytes(builtin) == builtinBytes,
+            "personal preset key escaped its directory");
 
         const auto beforeFailure = config::ProjectToJSON(gui::BuildProjectModelFromGUI(*state));
         { std::ofstream out(gui::GUIStatePath()); out << "{"; }

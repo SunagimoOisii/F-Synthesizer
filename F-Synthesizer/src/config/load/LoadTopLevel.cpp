@@ -435,7 +435,7 @@ bool LoadInstrumentObject(const Json& instrumentJson, const std::string& id, Ins
         err = path + ".sound must be object";
         return false;
     }
-    if (!ParseInstrumentSoundObject(soundIt->dump(), instrument.sound, err))
+    if (!ParseInstrumentSoundObject(*soundIt, instrument.sound, err))
     {
         const std::string soundPrefix = "sound";
         if (err.rfind(soundPrefix, 0) == 0)
@@ -553,7 +553,7 @@ bool LoadV3InstrumentProject(const Json& projectRoot, ProjectModel& model, std::
                 err = "project.channels." + channelKey + ".mix must be object";
                 return false;
             }
-            if (!ParseChannelMixObject(mixIt->dump(), channel.mix, err))
+            if (!ParseChannelMixObject(*mixIt, channel.mix, err))
             {
                 RewriteChannelMixError(channelKey, err);
                 return false;
@@ -566,13 +566,13 @@ bool LoadV3InstrumentProject(const Json& projectRoot, ProjectModel& model, std::
 }
 } // namespace
 
-bool LoadConfigFromText(
-    const std::string& text,
+bool LoadConfigFromJSON(
+    const Json& text,
     const std::filesystem::path& baseDir,
     ProjectModel& model,
     std::string& err)
 {
-    Json root = Json::parse(text, nullptr, false);
+    const Json& root = text;
     if (root.is_discarded() || !root.is_object())
     {
         err = "config root must be object";

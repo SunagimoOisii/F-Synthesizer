@@ -146,6 +146,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\\gui\\channeleditor\\SourceEditor.cpp" />
+    <ClCompile Include="src\\gui\\main\\StepSequencer.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioWindow.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioFiles.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioPanels.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioWidgets.cpp" />
+    <ClCompile Include="src\\gui\\GUIRenderJob.cpp" />
+    <ClCompile Include="src\\midi\\TempoMap.cpp" />
     <ClCompile Include="src\\synth\\YmfmVoice.cpp" />
     <ClCompile Include="third_party\\ymfm\\src\\ymfm_opm.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
     <ClCompile Include="third_party\\ymfm\\src\\ymfm_opn.cpp"><WarningLevel>TurnOffAllWarnings</WarningLevel><Optimization>MaxSpeed</Optimization><BasicRuntimeChecks>Default</BasicRuntimeChecks><DebugInformationFormat>ProgramDatabase</DebugInformationFormat></ClCompile>
@@ -195,8 +203,6 @@
     <ClCompile Include="src\\gui\\GUITransport.cpp" />
     <ClCompile Include="src\\gui\\GUIProjectFacade.cpp" />
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp" />
-    <ClCompile Include="src\\gui\\GUIMacroMapping.cpp" />
-    <ClCompile Include="src\\gui\\GUISoundHistory.cpp" />
     <ClCompile Include="src\\gui\\GUIStateModel.cpp" />
     <ClCompile Include="src\\gui\\GUIStatePersistence.cpp" />
     <ClCompile Include="src\\gui\\PreviewAudio.cpp" />
@@ -221,6 +227,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\\gui\\channeleditor\\EnvelopeView.h" />
+    <ClInclude Include="src\\gui\\channeleditor\\SourceEditor.h" />
+    <ClInclude Include="src\\gui\\main\\StepSequencer.h" />
+    <ClInclude Include="src\\gui\\main\\StudioWindow.h" />
+    <ClInclude Include="src\\gui\\main\\StudioFiles.h" />
+    <ClInclude Include="src\\gui\\main\\StudioPanels.h" />
+    <ClInclude Include="src\\gui\\main\\StudioWidgets.h" />
+    <ClInclude Include="include\\gui\\GUIRenderJob.h" />
+    <ClInclude Include="include\\midi\\TempoMap.h" />
     <ClInclude Include="include\\synth\\YmfmVoice.h" />
     <ClInclude Include="include\\SynthEngine\\LiveRenderSettings.h" />
     <ClInclude Include="include\\core\\AudioBuffer.h" />
@@ -243,29 +258,14 @@
     <ClInclude Include="include\\gui\\GUIActions.h" />
     <ClInclude Include="include\\gui\\GUIActionsInternal.h" />
     <ClInclude Include="include\\gui\\GUIConfigUtils.h" />
-    <ClInclude Include="include\\gui\\GUIMacroMapping.h" />
     <ClInclude Include="include\\gui\\GUIPlatform.h" />
     <ClInclude Include="include\\gui\\GUIPresetIO.h" />
     <ClInclude Include="include\\gui\\GUIProjectFacade.h" />
     <ClInclude Include="include\\gui\\GUIRunHelpers.h" />
-    <ClInclude Include="include\\gui\\GUIMacroSliders.h" />
-    <ClInclude Include="include\\gui\\GUISoundHistory.h" />
     <ClInclude Include="include\\gui\\GUIState.h" />
     <ClInclude Include="include\\gui\\GUIStateModel.h" />
     <ClInclude Include="include\\gui\\GUIStatePersistence.h" />
     <ClInclude Include="include\\gui\\PreviewAudio.h" />
-    <ClInclude Include="src\\gui\\main\\StudioWidgets.inl" />
-    <ClInclude Include="src\\gui\\main\\StudioPanels.inl" />
-    <ClInclude Include="src\\gui\\main\\StudioFiles.inl" />
-    <ClInclude Include="src\\gui\\main\\StudioWindow.inl" />
-    <ClInclude Include="src\\gui\\main\\StepSequencer.inl" />
-    <ClInclude Include="src\\gui\\main\\RunLoop.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorCommon.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorWaveform.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorNoise.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorFm.inl" />
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorDrum.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollInput.inl" />
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollRender.inl" />

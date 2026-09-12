@@ -17,15 +17,9 @@ void InitializeGUIState(
 {
     StopPreviewAudio(state.playback);
     ApplyProjectModelToGUI(state, DefaultProjectModel());
-    state.UIScaleIndex = 0;
-    state.UIModeTab = 1;
-    state.UIThemeIndex = 0;
-    state.logPanelHeight = 240.0f;
     state.presetIndex = 0;
-    state.selectedSoundSlot = 0;
     state.selectedDrumNote = 36;
     state.tonePreviewNoteNumber = 60;
-    state.channelAssignments = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     state.drumChannelSpecialHandling = true;
     strncpy_s(state.presetName, sizeof(state.presetName), "sound_lead_razor", _TRUNCATE);
     state.running = false;
@@ -39,16 +33,9 @@ void InitializeGUIState(
     state.musicLogs.clear();
     state.exportLogs.clear();
     state.recentWavPaths.clear();
-    state.runLogTab = state.UIModeTab;
     state.lastPeak = 0.0;
     state.hasPeak = false;
-    state.soloPreviewActive = false;
-    state.restorePreviewOnRunComplete = false;
-    state.soloPreviewChannel = 0;
     state.previewLoop = false;
-    state.autoTonePreviewEnabled = false;
-    state.autoTonePreviewPending = false;
-    state.autoTonePreviewLastEditSec = 0.0;
     state.previewAudioReady = false;
     state.runIsPreview = false;
     state.pianoRoll = gui::PianoRollState{};
@@ -62,7 +49,6 @@ void InitializeGUIState(
         refreshPresetItems(state.presetName);
     }
 
-    state.soloPreviewBackup = MutableChannelMixStates(state);
 }
 
 void RepairGUIStatePaths(
@@ -248,26 +234,6 @@ void RepairGUIStatePaths(
         fx.reverb.damping = clampedReverbDamping;
         repaired = true;
     }
-    if (state.UIScaleIndex < 0 || state.UIScaleIndex > 2)
-    {
-        state.UIScaleIndex = 1;
-        repaired = true;
-    }
-    if (state.UIModeTab < 0 || state.UIModeTab > 3)
-    {
-        state.UIModeTab = 1;
-        repaired = true;
-    }
-    if (state.UIThemeIndex < 0 || state.UIThemeIndex > 1)
-    {
-        state.UIThemeIndex = 0;
-        repaired = true;
-    }
-    if (state.logPanelHeight < 140.0f || state.logPanelHeight > 520.0f)
-    {
-        state.logPanelHeight = std::clamp(state.logPanelHeight, 140.0f, 520.0f);
-        repaired = true;
-    }
     if (state.pianoRoll.displayChannel < 0 || state.pianoRoll.displayChannel > 15)
     {
         state.pianoRoll.displayChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
@@ -303,18 +269,10 @@ void RepairGUIStatePaths(
         state.pianoRoll.previewStartTick = 0;
         repaired = true;
     }
-    for (int ch = 0; ch < 16; ch++)
-    {
-        if (state.channelAssignments[ch] < 0 || state.channelAssignments[ch] > 15)
-        {
-            SetChannelAssignment(state, ch, state.channelAssignments[ch]);
-            repaired = true;
-        }
-    }
 
     for (int ch = 0; ch < 16; ch++)
     {
-        ChannelMixState& mix = MutableChannelMix(state, ch);
+        ChannelMixState& mix = state.channelMixStates[ch];
         bool mixRepaired = false;
         if (mix.level < 0.0 || mix.level > 2.0)
         {

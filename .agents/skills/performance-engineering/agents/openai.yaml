@@ -1,0 +1,12 @@
+interface:
+  display_name: "Performance Engineering / F-Synthesizer"
+  short_description: "音と操作を守り、実測に基づいてF-Synthesizerの性能を改善する"
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

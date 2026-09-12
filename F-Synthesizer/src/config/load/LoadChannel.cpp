@@ -12,14 +12,9 @@ namespace
 {
 using Json = nlohmann::json;
 
-std::optional<Json> ParseJSONObject(const std::string& text)
+const Json* AsJSONObject(const Json& value)
 {
-    Json parsed = Json::parse(text, nullptr, false);
-    if (parsed.is_discarded() || !parsed.is_object())
-    {
-        return std::nullopt;
-    }
-    return parsed;
+    return value.is_object() ? &value : nullptr;
 }
 
 bool ValidateOptionalBool(const Json& obj, const char* key, const std::string& path, std::string& err)
@@ -324,7 +319,7 @@ bool TryParseBodyLayerMode(const std::string& name, BodyLayerConfig::Mode& outMo
     return false;
 }
 
-bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& layer, std::string& err)
+bool ParseAttackLayerObject(const Json& layerObjText, AttackLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONString(layerObjText, "type"))
@@ -346,7 +341,7 @@ bool ParseAttackLayerObject(const std::string& layerObjText, AttackLayerConfig& 
     return true;
 }
 
-bool ParseBassLayerObject(const std::string& layerObjText, BassLayerConfig& layer, std::string& err)
+bool ParseBassLayerObject(const Json& layerObjText, BassLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONString(layerObjText, "type"))
@@ -376,7 +371,7 @@ bool ParseBassLayerObject(const std::string& layerObjText, BassLayerConfig& laye
     return true;
 }
 
-bool ParseLeadLayerObject(const std::string& layerObjText, LeadLayerConfig& layer, std::string& err)
+bool ParseLeadLayerObject(const Json& layerObjText, LeadLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONString(layerObjText, "type"))
@@ -407,7 +402,7 @@ bool ParseLeadLayerObject(const std::string& layerObjText, LeadLayerConfig& laye
     return true;
 }
 
-bool ParseChordLayerObject(const std::string& layerObjText, ChordLayerConfig& layer, std::string& err)
+bool ParseChordLayerObject(const Json& layerObjText, ChordLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
@@ -416,7 +411,7 @@ bool ParseChordLayerObject(const std::string& layerObjText, ChordLayerConfig& la
     if (auto v = ReadJSONDouble(layerObjText, "cutoffHz")) layer.cutoffHz = std::clamp(*v, 80.0, 10000.0);
     if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
 
-    std::string intervalsArray;
+    Json intervalsArray;
     bool foundIntervals = false;
     if (!ExtractArrayForKey(layerObjText, "intervalsSemis", intervalsArray, foundIntervals, err)) { return false; }
     if (foundIntervals)
@@ -428,7 +423,7 @@ bool ParseChordLayerObject(const std::string& layerObjText, ChordLayerConfig& la
         }, err)) { return false; }
     }
 
-    std::string levelsArray;
+    Json levelsArray;
     bool foundLevels = false;
     if (!ExtractArrayForKey(layerObjText, "voiceLevels", levelsArray, foundLevels, err)) { return false; }
     if (foundLevels)
@@ -442,7 +437,7 @@ bool ParseChordLayerObject(const std::string& layerObjText, ChordLayerConfig& la
     return true;
 }
 
-bool ParsePadLayerObject(const std::string& layerObjText, PadLayerConfig& layer, std::string& err)
+bool ParsePadLayerObject(const Json& layerObjText, PadLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -459,7 +454,7 @@ bool ParsePadLayerObject(const std::string& layerObjText, PadLayerConfig& layer,
     return true;
 }
 
-bool ParsePluckLayerObject(const std::string& layerObjText, PluckLayerConfig& layer, std::string& err)
+bool ParsePluckLayerObject(const Json& layerObjText, PluckLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -473,7 +468,7 @@ bool ParsePluckLayerObject(const std::string& layerObjText, PluckLayerConfig& la
     return true;
 }
 
-bool ParseStringLayerObject(const std::string& layerObjText, StringLayerConfig& layer, std::string& err)
+bool ParseStringLayerObject(const Json& layerObjText, StringLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -490,7 +485,7 @@ bool ParseStringLayerObject(const std::string& layerObjText, StringLayerConfig& 
     return true;
 }
 
-bool ParseBodyLayerObject(const std::string& layerObjText, BodyLayerConfig& layer, std::string& err)
+bool ParseBodyLayerObject(const Json& layerObjText, BodyLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONString(layerObjText, "mode"))
@@ -512,7 +507,7 @@ bool ParseBodyLayerObject(const std::string& layerObjText, BodyLayerConfig& laye
     return true;
 }
 
-bool ParseHarmonicLayerObject(const std::string& layerObjText, HarmonicLayerConfig& layer, std::string& err)
+bool ParseHarmonicLayerObject(const Json& layerObjText, HarmonicLayerConfig& layer, std::string& err)
 {
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
     if (auto v = ReadJSONDouble(layerObjText, "level")) layer.level = std::clamp(*v, 0.0, 1.0);
@@ -523,7 +518,7 @@ bool ParseHarmonicLayerObject(const std::string& layerObjText, HarmonicLayerConf
     if (auto v = ReadJSONDouble(layerObjText, "drive")) layer.drive = std::clamp(*v, 0.0, 1.0);
     if (auto v = ReadJSONDouble(layerObjText, "stereo")) layer.stereo = std::clamp(*v, 0.0, 1.0);
 
-    std::string levelsArray;
+    Json levelsArray;
     bool foundLevels = false;
     if (!ExtractArrayForKey(layerObjText, "harmonicLevels", levelsArray, foundLevels, err)) { return false; }
     if (foundLevels)
@@ -537,7 +532,7 @@ bool ParseHarmonicLayerObject(const std::string& layerObjText, HarmonicLayerConf
     return true;
 }
 
-bool ParsePowerChordLayerObject(const std::string& layerObjText, PowerChordLayerConfig& layer, std::string& err)
+bool ParsePowerChordLayerObject(const Json& layerObjText, PowerChordLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -551,7 +546,7 @@ bool ParsePowerChordLayerObject(const std::string& layerObjText, PowerChordLayer
     return true;
 }
 
-bool ParseChugLayerObject(const std::string& layerObjText, ChugLayerConfig& layer, std::string& err)
+bool ParseChugLayerObject(const Json& layerObjText, ChugLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -565,7 +560,7 @@ bool ParseChugLayerObject(const std::string& layerObjText, ChugLayerConfig& laye
     return true;
 }
 
-bool ParseAmpCabLayerObject(const std::string& layerObjText, AmpCabLayerConfig& layer, std::string& err)
+bool ParseAmpCabLayerObject(const Json& layerObjText, AmpCabLayerConfig& layer, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(layerObjText, "enabled")) layer.enabled = *v;
@@ -578,7 +573,7 @@ bool ParseAmpCabLayerObject(const std::string& layerObjText, AmpCabLayerConfig& 
     return true;
 }
 
-bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig& map, std::string& err)
+bool ParseExpressionMapObject(const Json& mapObjText, ExpressionMapConfig& map, std::string& err)
 {
     (void)err;
     if (auto v = ReadJSONBool(mapObjText, "enabled")) map.enabled = *v;
@@ -605,7 +600,7 @@ bool ParseExpressionMapObject(const std::string& mapObjText, ExpressionMapConfig
     return true;
 }
 
-bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, InstrumentSoundConfig& cfg, std::string& err)
+bool ParseInstrumentSoundObjectImpl(const Json& channelObjText, InstrumentSoundConfig& cfg, std::string& err)
 {
     if (auto v = ReadJSONDouble(channelObjText, "amp")) cfg.amp = *v;
     if (auto v = ReadJSONDouble(channelObjText, "attackSec")) cfg.attackSec = *v;
@@ -616,15 +611,15 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
     {
         cfg.portamentoTimeSec = std::clamp(*v, 0.0, 30.0);
     }
-    std::string layersObj;
+    Json layersObj;
     bool foundLayers = false;
     if (!ExtractObjectForKey(channelObjText, "layers", layersObj, foundLayers, err))
     {
         return false;
     }
-    const std::string& layerRoot = foundLayers ? layersObj : channelObjText;
+    const Json& layerRoot = foundLayers ? layersObj : channelObjText;
 
-    std::string attackLayerObj;
+    Json attackLayerObj;
     bool foundAttackLayer = false;
     if (!ExtractObjectForKey(layerRoot, "attack", attackLayerObj, foundAttackLayer, err))
     {
@@ -635,7 +630,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string bassLayerObj;
+    Json bassLayerObj;
     bool foundBassLayer = false;
     if (!ExtractObjectForKey(layerRoot, "bass", bassLayerObj, foundBassLayer, err))
     {
@@ -646,7 +641,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string leadLayerObj;
+    Json leadLayerObj;
     bool foundLeadLayer = false;
     if (!ExtractObjectForKey(layerRoot, "lead", leadLayerObj, foundLeadLayer, err))
     {
@@ -657,7 +652,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string chordLayerObj;
+    Json chordLayerObj;
     bool foundChordLayer = false;
     if (!ExtractObjectForKey(layerRoot, "chord", chordLayerObj, foundChordLayer, err))
     {
@@ -668,7 +663,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string padLayerObj;
+    Json padLayerObj;
     bool foundPadLayer = false;
     if (!ExtractObjectForKey(layerRoot, "pad", padLayerObj, foundPadLayer, err))
     {
@@ -679,7 +674,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string pluckLayerObj;
+    Json pluckLayerObj;
     bool foundPluckLayer = false;
     if (!ExtractObjectForKey(layerRoot, "pluck", pluckLayerObj, foundPluckLayer, err))
     {
@@ -690,7 +685,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string stringLayerObj;
+    Json stringLayerObj;
     bool foundStringLayer = false;
     if (!ExtractObjectForKey(layerRoot, "string", stringLayerObj, foundStringLayer, err))
     {
@@ -701,7 +696,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string bodyLayerObj;
+    Json bodyLayerObj;
     bool foundBodyLayer = false;
     if (!ExtractObjectForKey(layerRoot, "body", bodyLayerObj, foundBodyLayer, err))
     {
@@ -712,7 +707,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string harmonicLayerObj;
+    Json harmonicLayerObj;
     bool foundHarmonicLayer = false;
     if (!ExtractObjectForKey(layerRoot, "harmonic", harmonicLayerObj, foundHarmonicLayer, err))
     {
@@ -723,7 +718,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string powerChordLayerObj;
+    Json powerChordLayerObj;
     bool foundPowerChordLayer = false;
     if (!ExtractObjectForKey(layerRoot, "powerChord", powerChordLayerObj, foundPowerChordLayer, err))
     {
@@ -734,7 +729,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string chugLayerObj;
+    Json chugLayerObj;
     bool foundChugLayer = false;
     if (!ExtractObjectForKey(layerRoot, "chug", chugLayerObj, foundChugLayer, err))
     {
@@ -745,7 +740,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string ampCabLayerObj;
+    Json ampCabLayerObj;
     bool foundAmpCabLayer = false;
     if (!ExtractObjectForKey(layerRoot, "ampCab", ampCabLayerObj, foundAmpCabLayer, err))
     {
@@ -756,7 +751,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string expressionMapObj;
+    Json expressionMapObj;
     bool foundExpressionMap = false;
     if (!ExtractObjectForKey(channelObjText, "expressionMap", expressionMapObj, foundExpressionMap, err))
     {
@@ -767,7 +762,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
         return false;
     }
 
-    std::string sourceObj;
+    Json sourceObj;
     bool found = false;
     if (!ExtractObjectForKey(channelObjText, "source", sourceObj, found, err))
     {
@@ -785,7 +780,7 @@ bool ParseInstrumentSoundObjectImpl(const std::string& channelObjText, Instrumen
     return true;
 }
 
-bool ParseChannelMixObjectImpl(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
+bool ParseChannelMixObjectImpl(const Json& mixObjText, ChannelMixState& mix, std::string& err)
 {
     if (auto v = ReadJSONBool(mixObjText, "mute")) mix.mute = *v;
     if (auto v = ReadJSONBool(mixObjText, "solo")) mix.solo = *v;
@@ -812,9 +807,9 @@ bool ParseChannelMixObjectImpl(const std::string& mixObjText, ChannelMixState& m
 }
 } // namespace
 
-bool ParseInstrumentSoundObject(const std::string& soundObjText, InstrumentSoundConfig& cfg, std::string& err)
+bool ParseInstrumentSoundObject(const Json& soundObjText, InstrumentSoundConfig& cfg, std::string& err)
 {
-    const auto root = ParseJSONObject(soundObjText);
+    const auto root = AsJSONObject(soundObjText);
     if (!root)
     {
         err = "sound must be object";
@@ -827,7 +822,7 @@ bool ParseInstrumentSoundObject(const std::string& soundObjText, InstrumentSound
     return ParseInstrumentSoundObjectImpl(soundObjText, cfg, err);
 }
 
-bool ParseChannelMixObject(const std::string& mixObjText, ChannelMixState& mix, std::string& err)
+bool ParseChannelMixObject(const Json& mixObjText, ChannelMixState& mix, std::string& err)
 {
     return ParseChannelMixObjectImpl(mixObjText, mix, err);
 }

@@ -2,12 +2,14 @@
 
 #include <functional>
 
-#include "gui/GUIState.h"
+#include "SynthEngine/InstrumentSoundConfig.h"
 
 namespace gui
 {
 bool DrawChannelEditor(
-    GUIState& state,
+    InstrumentSoundConfig& sound,
+    int channel,
+    int& selectedDrumNote,
     bool showSourceTypeSelector = true,
     const std::function<void(const char* what, const char* impact, const char* caution)>& updateHoverHelp = {});
 } // namespace gui

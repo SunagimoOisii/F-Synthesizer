@@ -6,7 +6,7 @@
 
 namespace config::internal::load
 {
-bool ParseWaveformSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseWaveformSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     auto wave = ReadJSONString(sourceObjText, "wave");
     if (!wave)
@@ -39,7 +39,7 @@ bool ParseWaveformSource(const std::string& sourceObjText, SourceConfig& outSour
     return true;
 }
 
-bool ParseAnalogSource(const std::string& sourceObjText, SourceConfig& outSource, std::string& err)
+bool ParseAnalogSource(const Json& sourceObjText, SourceConfig& outSource, std::string& err)
 {
     auto wave = ReadJSONString(sourceObjText, "wave");
     if (!wave)

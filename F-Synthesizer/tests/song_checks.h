@@ -1,6 +1,6 @@
 #pragma once
 #include "midi/MIDIPipeline.h"
-#include "gui/GUIMacroMapping.h"
+#include "midi/TempoMap.h"
 
 inline void CheckSongIntegration()
 {
@@ -31,6 +31,18 @@ inline void CheckSongIntegration()
     BuildSampleEvents(noTempoNotes, {}, 96, 22050, samples);
     Require(samples[1].sample == 2756 && samples[2].sample == 5512 && samples[3].sample == 11025,
         "no-tempo MIDI tick interpolation failed");
+    midi::TempoMap map(raw.tempoEvents, raw.ticksPerQuarter);
+    for (const int tick : {0, 239, 240, 479, 480, 481, 720, 960})
+        Require(std::abs(map.TickAtSeconds(map.SecondsAtTick(tick)) - tick) < 1e-7,
+            "tempo boundary forward/inverse conversion failed");
+    Require(map.SecondsAtTick(720) == 1.0 && midi::TempoMap({}, 96).SecondsAtTick(96) == .5,
+        "UI tempo map disagrees with MIDI timing");
+    auto reversed = raw.tempoEvents; std::reverse(reversed.begin(), reversed.end());
+    Require(midi::TempoMap(reversed, 480).SecondsAtTick(960) == 1.5,
+        "tempo event order affected conversion");
+    midi::TempoMap fractional({}, 96);
+    Require(std::abs(fractional.TickAtSeconds(.125 + .5 / 96 * .6) - 24.6) < 1e-7,
+        "fractional ticks must remain available for caller rounding");
     MIDIBuildOutput windowed;
     std::string windowError;
     Require(BuildMIDIPipeline(midiPath, -1, 44100, 0.6, 0.4, nullptr, 0, windowed, windowError), "range preview failed");
@@ -52,8 +64,8 @@ inline void CheckSongIntegration()
     strncpy_s(state->midiPath, sizeof(state->midiPath), midiUtf8.c_str(), _TRUNCATE);
     Require(gui::LoadPianoRollMIDI(state->pianoRoll, midiPath), "piano roll import failed");
     state->pianoRoll.notes[0].note = 60;
-    state->instruments[2].displayName = "自分のベース";
-    state->channelAssignments[0] = 2; state->channelMixStates[0].pan = -0.25;
+    state->tones[2].draft.instrument.displayName = "自分のベース";
+    state->tones[0].draft.instrument = state->tones[2].draft.instrument; state->channelMixStates[0].pan = -0.25;
     const auto song = testRoot / L"曲_日本語.fsynth";
     Require(gui::SaveSongProjectFile(*state, song, error), "named song save: " + error);
     const auto originalSongBytes = Bytes(song);
@@ -62,7 +74,7 @@ inline void CheckSongIntegration()
     Require(gui::LoadSongProjectFile(*restored, song, error), "portable song load: " + error);
     Require(restored->pianoRoll.notes.size() == 2 && restored->pianoRoll.notes[0].note == 60, "song lost edited notes");
     Require(restored->pianoRoll.tempoEvents.size() == 2 && ParseSMFFile(Utf8ToPath(restored->midiPath), -1).ok, "song lost its embedded MIDI / tempo");
-    Require(restored->channelAssignments[0] == 2 && restored->instruments[2].displayName == "自分のベース" && restored->channelMixStates[0].pan == -0.25,
+    Require(restored->tones[0].draft.instrument.displayName == "自分のベース" && restored->channelMixStates[0].pan == -0.25,
         "song lost sounds or channel mix");
     Require(gui::SaveGUIStateFile(*restored, error), error);
     auto resumed = std::make_unique<GUIState>(); gui::InitializeGUIState(*resumed, {});
@@ -70,7 +82,6 @@ inline void CheckSongIntegration()
     const std::string wav = PathToUtf8(testRoot / L"再開した曲.wav");
     strncpy_s(resumed->wavPath, sizeof(resumed->wavPath), wav.c_str(), _TRUNCATE);
     resumed->initialSeconds = 1;
-    resumed->UIModeTab = 2;
     gui::StartGUIRun(*resumed, false);
     if (!resumed->runFuture.valid()) for (const auto& log : resumed->exportLogs) std::cerr << log << '\n';
     Require(resumed->runFuture.valid(), "export before opening piano roll failed to start");
@@ -82,18 +93,19 @@ inline void CheckSongIntegration()
     Require(gui::SaveSongProjectFile(*restored, song, error), error);
     Require(gui::LoadSongProjectFile(*state, song, error) && state->pianoRoll.notes.empty(), "saved empty score was not restored");
     const auto validBytes = Bytes(song);
-    state->instruments[0].sound.amp = std::numeric_limits<double>::quiet_NaN();
+    state->tones[0].draft.instrument.sound.amp = std::numeric_limits<double>::quiet_NaN();
     Require(!gui::SaveSongProjectFile(*state, song, error) && Bytes(song) == validBytes, "failed save damaged named song");
-    state->instruments[0].sound.amp = 0.2;
+    state->tones[0].draft.instrument.sound.amp = 0.2;
     const auto before = config::ProjectToJSON(gui::BuildProjectModelFromGUI(*state));
     { std::ofstream broken(testRoot / "broken.fsynth"); broken << "{}"; }
     Require(!gui::LoadSongProjectFile(*state, testRoot / "broken.fsynth", error) && config::ProjectToJSON(gui::BuildProjectModelFromGUI(*state)) == before,
         "failed song load changed the current work");
-    auto sound = state->instruments[0].sound;
-    auto previous = ReadMacroSliders(sound, {}); auto edited = previous; edited.brightness = 0.9f;
-    const double attack = sound.attackSec, release = sound.releaseSec;
-    ApplyMacroSliders(sound, edited, &previous);
-    Require(sound.attackSec == attack && sound.releaseSec == release, "brightness changed unrelated envelope controls");
+    gui::ToneVersion tone;
+    tone.base = state->tones[0].draft.instrument;
+    tone.values[0] = .9f;
+    gui::ApplyToneValues(tone);
+    Require(tone.instrument.sound.attackSec == tone.base.sound.attackSec &&
+        tone.instrument.sound.releaseSec == tone.base.sound.releaseSec, "brightness changed unrelated envelope controls");
     struct LoopSink : IPreviewStreamSink
     {
         std::shared_ptr<LiveRenderMailbox> mailbox;
@@ -119,7 +131,7 @@ inline void CheckSongIntegration()
     ProjectModel loopProject = DefaultProjectModel();
     loopProject.midiPath.clear();
     auto live = std::make_shared<LiveRenderSettings>();
-    live->sounds[0] = sound;
+    live->sounds[0] = tone.base.sound;
     sink.mailbox = std::make_shared<LiveRenderMailbox>(); sink.mailbox->store(live);
     RenderRuntimeOverrides overrides;
     overrides.noteTicks = std::make_shared<const std::vector<MIDIEventTick>>(notes);

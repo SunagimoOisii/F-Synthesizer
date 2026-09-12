@@ -7,7 +7,7 @@ bool config::ProjectFromJSON(const nlohmann::json& json, const std::filesystem::
     ProjectModel& project, std::string& err)
 {
     ProjectModel candidate = project;
-    if (!internal::load::LoadConfigFromText(json.dump(), baseDir, candidate, err)) return false;
+    if (!internal::load::LoadConfigFromJSON(json, baseDir, candidate, err)) return false;
     project = std::move(candidate);
     return true;
 }

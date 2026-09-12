@@ -1,83 +1,22 @@
 #include "gui/GUIActions.h"
 
 #include <algorithm>
-#include <chrono>
-#include <exception>
-#include <future>
 #include <map>
-#include <mutex>
-#include <system_error>
 #include <vector>
 
 #include "AppCore.h"
-#include "gui/GUIActionsInternal.h"
+#include "midi/TempoMap.h"
+#include "gui/GUIRenderJob.h"
 #include "gui/GUIConfigUtils.h"
 #include "gui/GUIPianoRoll.h"
 #include "gui/GUIProjectFacade.h"
 #include "gui/GUIRunHelpers.h"
-#include "gui/GUIStateModel.h"
 #include "gui/PreviewAudio.h"
 #include "io/PlatformPaths.h"
 #include "project/ProjectModel.h"
 
 namespace
 {
-std::string BuildUserErrorMessage(const std::string& summary, const std::string& detail)
-{
-    if (detail.empty())
-    {
-        return summary;
-    }
-    return summary + " (" + detail + ")";
-}
-
-double SafeBpm(double bpm)
-{
-    return (bpm > 1e-3) ? bpm : 120.0;
-}
-
-double SecondsAtTickForPreview(const std::vector<TempoEvent>& tempoEvents, int ticksPerQuarter, int targetTick)
-{
-    if (targetTick <= 0 || ticksPerQuarter <= 0)
-    {
-        return 0.0;
-    }
-
-    std::vector<TempoEvent> sorted = tempoEvents;
-    std::sort(sorted.begin(), sorted.end(), [](const TempoEvent& a, const TempoEvent& b) {
-        return a.tick < b.tick;
-    });
-    if (sorted.empty() || sorted.front().tick != 0)
-    {
-        TempoEvent te{};
-        te.tick = 0;
-        te.bpm = 120.0;
-        sorted.insert(sorted.begin(), te);
-    }
-
-    double seconds = 0.0;
-    int cursorTick = 0;
-    double cursorBpm = SafeBpm(sorted.front().bpm);
-    size_t idx = 1;
-    while (idx < sorted.size() && sorted[idx].tick <= targetTick)
-    {
-        const int nextTick = sorted[idx].tick;
-        const int deltaTick = nextTick - cursorTick;
-        const double secPerTick = (60.0 / SafeBpm(cursorBpm)) / static_cast<double>(ticksPerQuarter);
-        seconds += secPerTick * static_cast<double>(deltaTick);
-        cursorTick = nextTick;
-        cursorBpm = SafeBpm(sorted[idx].bpm);
-        idx++;
-    }
-    if (targetTick > cursorTick)
-    {
-        const int deltaTick = targetTick - cursorTick;
-        const double secPerTick = (60.0 / SafeBpm(cursorBpm)) / static_cast<double>(ticksPerQuarter);
-        seconds += secPerTick * static_cast<double>(deltaTick);
-    }
-    return seconds;
-}
-
 double PreviewRangeDurationSec(const GUIState& state)
 {
     const auto& pr = state.pianoRoll;
@@ -91,8 +30,9 @@ double PreviewRangeDurationSec(const GUIState& state)
     {
         return 0.0;
     }
-    const double startSec = SecondsAtTickForPreview(pr.tempoEvents, pr.ticksPerQuarter, rangeStartTick);
-    const double endSec = SecondsAtTickForPreview(pr.tempoEvents, pr.ticksPerQuarter, rangeEndTick);
+    const midi::TempoMap tempo(pr.tempoEvents, pr.ticksPerQuarter);
+    const double startSec = tempo.SecondsAtTick(rangeStartTick);
+    const double endSec = tempo.SecondsAtTick(rangeEndTick);
     return (std::max)(0.0, endSec - startSec);
 }
 
@@ -169,57 +109,6 @@ bool ValidateBeforeRun(const GUIState& state, std::string& err)
         err);
 }
 
-std::string FormatRunException(const std::exception& ex)
-{
-    if (const auto* systemError = dynamic_cast<const std::system_error*>(&ex))
-    {
-        return std::string(systemError->what()) +
-            " code=" + std::to_string(systemError->code().value()) +
-            " category=" + systemError->code().category().name();
-    }
-    return ex.what();
-}
-
-int RunSafely(
-    ProjectModel project,
-    RenderOptions options,
-    RenderRuntimeOverrides overrides,
-    GUIState& state, int startTick, uint64_t frameOffset, bool loop)
-{
-    try
-    {
-        if (options.mode == RunMode::Preview)
-        {
-            PreviewAudioStreamSink sink(state.playback, startTick, frameOffset);
-            return RunPreviewStreaming(project, options, overrides, &state.observer, sink, loop);
-        }
-        return Run(project, options, overrides, &state.observer, nullptr);
-    }
-    catch (const std::exception& ex)
-    {
-        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: " + FormatRunException(ex));
-        return 1;
-    }
-    catch (...)
-    {
-        gui::detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run exception: unknown exception");
-        return 1;
-    }
-}
-
-void MarkRunStartFailed(GUIState& state, const std::string& detail)
-{
-    state.running = false;
-    state.hasRun = true;
-    state.lastRunExitCode = 1;
-    state.runIsPreview = false;
-    gui::AppendGUILog(state, "[GUI] Run start failed: " + detail);
-    gui::RaiseGUIError(
-        state,
-        BuildUserErrorMessage("Export/Preview を開始できません。実行環境を確認してください。", detail),
-        0,
-        true);
-}
 } // namespace
 
 namespace gui
@@ -242,7 +131,7 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
             : ((actionHint == 2)
                 ? "Export/Preview を開始できません。出力先設定を確認してください。"
                 : "Export/Preview を開始できません。入力値を確認してください。");
-        RaiseGUIError(state, BuildUserErrorMessage(summary, validationError), actionHint, true);
+        RaiseGUIError(state, detail::BuildUserErrorMessage(summary, validationError), actionHint, true);
         return;
     }
     // Workspace notes must be restored even when playback/export starts before
@@ -256,37 +145,27 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
     // it here, on the same GUI thread that eventually destroys the device.
     if (previewSelected && !EnsurePreviewAudioDevice(state.playback, state.sampleRate, validationError))
     {
-        MarkRunStartFailed(state, validationError);
+        detail::ReportRunStartFailure(state, validationError);
         return;
     }
     ClearGUIError(state);
 
-    const int previewChannel = previewSelected
-        ? std::clamp(state.pianoRoll.displayChannel, 0, 15)
-        : std::clamp(state.selectedSoundSlot, 0, 15);
+    const int previewChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
     if (state.playback.playing.load(std::memory_order_relaxed))
     {
         StopPreviewAudio(state.playback);
         AppendGUILog(state, "[GUI] Previous preview playback stopped for new run");
     }
 
-    ProjectModel project = BuildRuntimeProjectFromGUI(state, "gui_runtime__ch", true);
+    ProjectModel project = BuildProjectModelFromGUI(state);
     if (previewSelected)
     {
         project.targetChannel = selectedChannelOnly ? previewChannel : -1;
-    }
-    if (previewSelected && state.UIModeTab == 0)
-    {
-        OverrideProjectChannelWithSoundSlot(state, previewChannel, state.selectedSoundSlot, project);
-        AppendGUILog(state, "[GUI] Sound Preview route: PR Channel ch" + std::to_string(previewChannel) +
-            " <= Selected Slot s" + std::to_string(std::clamp(state.selectedSoundSlot, 0, 15)));
     }
     int overrideTicksPerQuarter = 0;
     RenderRuntimeOverrides overrides{};
     if (previewSelected)
     {
-        state.livePreviewChannel = state.UIModeTab == 0 ? previewChannel : -1;
-        state.livePreviewSlot = state.UIModeTab == 0 ? state.selectedSoundSlot : -1;
         PublishLiveRenderSettings(state);
         overrides.liveSettings = state.liveSettings;
     }
@@ -299,8 +178,8 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
     }
     if (previewSelected)
     {
-        state.restorePreviewOnRunComplete = false;
         options.writeWAV = false;
+        const midi::TempoMap tempo(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter);
         const double rangeDurationSec = PreviewRangeDurationSec(state);
         if (state.pianoRoll.previewRangeEnabled && rangeDurationSec > 0.0)
         {
@@ -319,16 +198,12 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
         state.previewFrameOffset = 0;
         if (state.pianoRoll.previewRangeEnabled && state.songCursorTick > startTick && state.songCursorTick < state.pianoRoll.previewRangeEndTick)
         {
-            options.previewSkipSec = SecondsAtTickForPreview(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter, state.songCursorTick)
-                - SecondsAtTickForPreview(state.pianoRoll.tempoEvents, state.pianoRoll.ticksPerQuarter, startTick);
+            options.previewSkipSec = tempo.SecondsAtTick(state.songCursorTick) - tempo.SecondsAtTick(startTick);
             state.previewFrameOffset = static_cast<uint64_t>(options.previewSkipSec * state.sampleRate);
         }
         if (startTick > 0 && state.pianoRoll.ticksPerQuarter > 0)
         {
-            options.startSec = SecondsAtTickForPreview(
-                state.pianoRoll.tempoEvents,
-                state.pianoRoll.ticksPerQuarter,
-                startTick);
+            options.startSec = tempo.SecondsAtTick(startTick);
         }
         state.previewRequestedStartTick = startTick;
         state.previewRequestedDurationSec = rangeDurationSec;
@@ -340,127 +215,7 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
     }
     state.lastOutputPath = previewSelected ? "[memory preview]" : PathToUtf8(project.wavPath);
 
-    state.runLogTab = state.UIModeTab;
-    state.observer.logs = &detail::LogsByTab(state, state.runLogTab);
-    {
-        std::lock_guard<std::mutex> lock(state.logMutex);
-        detail::LogsByTab(state, state.runLogTab).clear();
-    }
-    state.lastPeak = 0.0;
-    state.hasPeak = false;
-    state.runIsPreview = previewSelected;
-    detail::AppendGUILogToTab(state, state.runLogTab, previewSelected ? "[GUI] Preview Play started" : "[GUI] Export started");
-    if (overrides.noteTicks != nullptr)
-    {
-        detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] PianoRoll edited notes applied: count=" +
-            std::to_string(overrides.noteTicks->size() / 2));
-    }
-    if (previewSelected)
-    {
-        if (state.pianoRoll.previewRangeEnabled)
-        {
-            const int a = (std::min)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
-            const int b = (std::max)(state.pianoRoll.previewRangeStartTick, state.pianoRoll.previewRangeEndTick);
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview optional range tick=" + std::to_string(a) + "-" +
-                std::to_string(b) + " secStart=" + std::to_string(options.startSec) +
-                " secDuration=" + std::to_string(options.durationSec));
-        }
-        else
-        {
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview full range secStart=0 secDuration=full");
-        }
-    }
-    detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Effective Output: " + state.lastOutputPath);
-    state.hasRun = false;
-    state.stopRequested.store(false, std::memory_order_relaxed);
-    state.running = true;
-    try
-    {
-        const int startTick = state.previewRequestedStartTick;
-        const uint64_t frameOffset = state.previewFrameOffset;
-        const bool loop = state.previewLoop;
-        state.runFuture = std::async(std::launch::async, [project, options, overrides, &state, startTick, frameOffset, loop]() {
-            return RunSafely(project, options, overrides, state, startTick, frameOffset, loop);
-            });
-    }
-    catch (const std::exception& ex)
-    {
-        MarkRunStartFailed(state, FormatRunException(ex));
-    }
-    catch (...)
-    {
-        MarkRunStartFailed(state, "unknown exception");
-    }
-}
-
-bool TryFinalizeCompletedRun(GUIState& state)
-{
-    if (!state.running ||
-        !state.runFuture.valid() ||
-        state.runFuture.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
-    {
-        return false;
-    }
-
-    try
-    {
-        state.lastRunExitCode = state.runFuture.get();
-    }
-    catch (const std::exception& ex)
-    {
-        state.lastRunExitCode = 1;
-        detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run future exception: " + FormatRunException(ex));
-        RaiseGUIError(
-            state,
-            BuildUserErrorMessage("Export/Preview 実行中に例外が発生しました。ログを確認してください。", FormatRunException(ex)),
-            0,
-            true);
-    }
-    catch (...)
-    {
-        state.lastRunExitCode = 1;
-        detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Run future exception: unknown exception");
-        RaiseGUIError(
-            state,
-            "Export/Preview 実行中に不明な例外が発生しました。ログを確認してください。",
-            0,
-            true);
-    }
-    state.hasRun = true;
-    state.running = false;
-    if (state.lastRunExitCode == 1 && !state.hasUIError)
-        RaiseGUIError(state, state.runIsPreview ? "再生を開始できませんでした。MIDIと音声出力を確認してください。" :
-            "WAVを書き出せませんでした。MIDIと出力先を確認してください。", 0, true);
-    detail::AppendGUILogToTab(state, state.runLogTab, std::string("[GUI] Run finished: exit=") + std::to_string(state.lastRunExitCode));
-    const bool finishedPreview = state.runIsPreview;
-    if (state.runIsPreview)
-    {
-        if (state.lastRunExitCode == 0)
-        {
-            state.previewAudioReady = true;
-            detail::AppendGUILogToTab(state, state.runLogTab, "[GUI] Preview streaming completed");
-        }
-        else
-        {
-            state.previewAudioReady = false;
-        }
-        state.runIsPreview = false;
-    }
-    if (!finishedPreview &&
-        state.lastRunExitCode == 0 &&
-        !state.lastOutputPath.empty() &&
-        state.lastOutputPath != "[memory preview]")
-    {
-        state.recentWavPaths.insert(state.recentWavPaths.begin(), state.lastOutputPath);
-        if (state.recentWavPaths.size() > 5)
-        {
-            state.recentWavPaths.resize(5);
-        }
-    }
-    if (state.restorePreviewOnRunComplete)
-    {
-        DeactivateSoloPreview(state);
-    }
-    return true;
+    detail::LaunchRenderJob(state, {std::move(project), options, std::move(overrides),
+        previewSelected ? 1 : 2, state.previewRequestedStartTick, state.previewFrameOffset, state.previewLoop});
 }
 } // namespace gui

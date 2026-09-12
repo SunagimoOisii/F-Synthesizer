@@ -15,6 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\\gui\\channeleditor\\SourceEditor.cpp" />
+    <ClCompile Include="src\\gui\\main\\StepSequencer.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioWindow.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioFiles.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioPanels.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioWidgets.cpp" />
+    <ClCompile Include="src\\gui\\GUIRenderJob.cpp" />
+    <ClCompile Include="src\\midi\\TempoMap.cpp" />
     <ClCompile Include="src\\synth\\YmfmVoice.cpp"><Filter>ソース ファイル</Filter></ClCompile>
     <ClCompile Include="third_party\\ymfm\\src\\ymfm_opm.cpp"><Filter>ソース ファイル</Filter></ClCompile>
     <ClCompile Include="third_party\\ymfm\\src\\ymfm_opn.cpp"><Filter>ソース ファイル</Filter></ClCompile>
@@ -137,12 +145,6 @@
     <ClCompile Include="src\\gui\\GUIRunHelpers.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="src\\gui\\GUIMacroMapping.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="src\\gui\\GUISoundHistory.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="src\\gui\\GUIStateModel.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -202,6 +204,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\\gui\\channeleditor\\EnvelopeView.h" />
+    <ClInclude Include="src\\gui\\channeleditor\\SourceEditor.h" />
+    <ClInclude Include="src\\gui\\main\\StepSequencer.h" />
+    <ClInclude Include="src\\gui\\main\\StudioWindow.h" />
+    <ClInclude Include="src\\gui\\main\\StudioFiles.h" />
+    <ClInclude Include="src\\gui\\main\\StudioPanels.h" />
+    <ClInclude Include="src\\gui\\main\\StudioWidgets.h" />
+    <ClInclude Include="include\\gui\\GUIRenderJob.h" />
+    <ClInclude Include="include\\midi\\TempoMap.h" />
     <ClInclude Include="include\\synth\\YmfmVoice.h"><Filter>ヘッダー ファイル</Filter></ClInclude>
     <ClInclude Include="include\\SynthEngine\\LiveRenderSettings.h"><Filter>ヘッダー ファイル</Filter></ClInclude>
     <ClInclude Include="include\\core\\AudioBuffer.h">
@@ -264,9 +275,6 @@
     <ClInclude Include="include\\gui\\GUIConfigUtils.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\gui\\GUIMacroMapping.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="include\\gui\\GUIPlatform.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -279,12 +287,6 @@
     <ClInclude Include="include\\gui\\GUIRunHelpers.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\\gui\\GUIMacroSliders.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="include\\gui\\GUISoundHistory.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="include\\gui\\GUIState.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -295,27 +297,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="include\\gui\\PreviewAudio.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\main\\RunLoop.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorModulation.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorCommon.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorWaveform.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorNoise.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorFm.inl">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="src\\gui\\channeleditor\\ChannelEditorDrum.inl">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="src\\gui\\pianoroll\\PianoRollEdit.inl">
