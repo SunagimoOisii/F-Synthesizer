@@ -1,6 +1,7 @@
 #include "Internal.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <type_traits>
 
@@ -457,42 +458,16 @@ ChannelRenderContext BuildChannelRenderContext(const RenderState& state, const S
     return ctx;
 }
 
-bool RenderVoiceSampleToChannel(
-    RenderState& state,
-    const ChannelRenderContext& ctx,
-    size_t i,
-    int sourceKindIndex,
-    StereoFrame& channelSum,
-    DrumBusConfig& channelDrumBus,
-    bool& channelHasDrumBus)
+VoiceRenderInput PrepareVoiceInput(const RenderState& state, const ChannelRenderContext& ctx, size_t i)
 {
-    auto& voices = state.voices;
-    if (voices.pendingRemove[i] != 0 || voices.env[i].stage == ADSRStage::Off)
-    {
-        return false;
-    }
-
-    const double envGain = StepADSR(
-        voices.env[i],
-        ctx.dt,
-        voices.attackSec[i] * ctx.attackScale,
-        voices.decaySec[i] * ctx.decayScale,
-        std::clamp(voices.sustainLevel[i] + ctx.sustainAdd, 0.0, 1.0),
-        voices.releaseSec[i] * ctx.releaseScale);
-    if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
-    {
-        voices.pendingRemove[i] = 1;
-        return true;
-    }
-
+    const auto& voices = state.voices;
     VoiceRenderInput in{};
     in.dt = ctx.dt;
-    in.envGain = envGain;
-    if (!ctx.renderable)
-    {
-        return false;
-    }
-
+    in.attackSec = voices.attackSec[i] * ctx.attackScale;
+    in.decaySec = voices.decaySec[i] * ctx.decayScale;
+    in.sustainLevel = std::clamp(voices.sustainLevel[i] + ctx.sustainAdd, 0.0, 1.0);
+    in.releaseSec = voices.releaseSec[i] * ctx.releaseScale;
+    if (!ctx.renderable) return in;
     const uint8_t fastPathMask = voices.fastPathMask[i];
     in.mixGainL = ctx.mixGainL;
     in.mixGainR = ctx.mixGainR;
@@ -550,23 +525,71 @@ bool RenderVoiceSampleToChannel(
 
     if (ctx.portamentoOn)
     {
-        const double effectivePortamentoTimeSec =
-            ((fastPathMask & kVoiceFastPathPortamentoDisabled) != 0)
-                ? ctx.portamentoTimeSec
-                : (std::max)(voices.portamentoTimeSec[i], ctx.portamentoTimeSec);
-        if (effectivePortamentoTimeSec > 0.0)
-        {
-            if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
-            {
-                voices.portamentoPitchHz[i] +=
-                    (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) *
-                    (1.0 - std::exp(-in.dt / effectivePortamentoTimeSec));
-            }
-            if (voices.portamentoTargetHz[i] > 0.0)
-            {
-                in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
-            }
-        }
+        const double time = (fastPathMask & kVoiceFastPathPortamentoDisabled) != 0
+            ? ctx.portamentoTimeSec : (std::max)(voices.portamentoTimeSec[i], ctx.portamentoTimeSec);
+        in.portamentoEnabled = time > 0.0;
+        if (in.portamentoEnabled) in.portamentoStep = 1.0 - std::exp(-in.dt / time);
+    }
+    double drive = 0.0, filterDrive = 0.0;
+    std::visit([&](const auto& source)
+    {
+        using T = std::decay_t<decltype(source)>;
+        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, AnalogConfig> || std::is_same_v<T, FmConfig>)
+            drive = source.drive;
+        if constexpr (std::is_same_v<T, WaveformConfig> || std::is_same_v<T, AnalogConfig> ||
+            std::is_same_v<T, FmConfig> || std::is_same_v<T, NoiseConfig>)
+            filterDrive = source.filterDrive;
+    }, voices.source[i]);
+    in.shaperDrive = std::clamp(drive + in.expressionDriveAdd, 0.0, 1.0);
+    if (in.shaperDrive > 0.0) in.shaperDriveNorm = std::tanh(in.shaperDrive * 20.0);
+    in.filterDrive = std::clamp(filterDrive + in.expressionFilterDriveAdd, 0.0, 1.0);
+    in.filterResonance = SourceFilterResonance(voices.source[i]);
+    return in;
+}
+
+void PrepareChannelInputs(RenderState& state, const ChannelRenderContext& ctx)
+{
+    for (const size_t i : state.activeVoiceIndicesByChannel[ctx.ch])
+        state.renderVoiceInputs[i] = PrepareVoiceInput(state, ctx, i);
+}
+
+bool RenderVoiceSampleToChannel(
+    RenderState& state,
+    const ChannelRenderContext& ctx,
+    size_t i,
+    int sourceKindIndex,
+    StereoFrame& channelSum,
+    DrumBusConfig& channelDrumBus,
+    bool& channelHasDrumBus)
+{
+    auto& voices = state.voices;
+    if (voices.pendingRemove[i] != 0 || voices.env[i].stage == ADSRStage::Off)
+    {
+        return false;
+    }
+
+    VoiceRenderInput in = state.renderVoiceInputs[i];
+    const double envGain = StepADSR(voices.env[i], ctx.dt,
+        in.attackSec, in.decaySec, in.sustainLevel, in.releaseSec);
+    if (voices.pendingRemove[i] == 0 && voices.env[i].stage == ADSRStage::Off)
+    {
+        voices.pendingRemove[i] = 1;
+        return true;
+    }
+
+    in.envGain = envGain;
+    if (!ctx.renderable)
+    {
+        return false;
+    }
+
+    if (in.portamentoEnabled)
+    {
+        if (std::abs(voices.portamentoPitchHz[i] - voices.portamentoTargetHz[i]) > 0.01)
+            voices.portamentoPitchHz[i] +=
+                (voices.portamentoTargetHz[i] - voices.portamentoPitchHz[i]) * in.portamentoStep;
+        if (voices.portamentoTargetHz[i] > 0.0)
+            in.pitchFactor *= voices.portamentoPitchHz[i] / voices.portamentoTargetHz[i];
     }
 
     SourceRenderFrame frame{};
@@ -643,6 +666,7 @@ size_t MixChannelBlockToOutput(
 {
     size_t removedCount = 0;
     const ChannelRenderContext ctx = BuildChannelRenderContext(state, sound, ch);
+    PrepareChannelInputs(state, ctx);
     const auto& sourceBuckets = state.activeVoiceIndicesByChannelSource[ch];
     const auto& activeSourceKinds = state.activeSourceKindsByChannel[ch];
     for (int offset = 0; offset < frameCount; offset++)
@@ -691,6 +715,7 @@ size_t RenderChannelBlockToBuffer(
     size_t removedCount = 0;
     channelFrames.resize(static_cast<size_t>(frameCount));
     const ChannelRenderContext ctx = BuildChannelRenderContext(state, sound, ch);
+    PrepareChannelInputs(state, ctx);
     const auto& sourceBuckets = state.activeVoiceIndicesByChannelSource[ch];
     const auto& activeSourceKinds = state.activeSourceKindsByChannel[ch];
     for (int offset = 0; offset < frameCount; offset++)
@@ -724,7 +749,7 @@ size_t RenderChannelBlockToBuffer(
 
 size_t ResolveRenderWorkerCount(size_t workerJobCount)
 {
-    const unsigned int hardwareThreads = std::thread::hardware_concurrency();
+    static const unsigned int hardwareThreads = std::thread::hardware_concurrency();
     if (hardwareThreads <= 1 || workerJobCount == 0)
     {
         return 0;
@@ -787,11 +812,34 @@ bool RenderVoicesBlockParallel(
     const size_t workerJobCount = activeChannels.size() - 1;
     if (frameCount < 32 ||
         activeChannels.size() < 2 ||
-        HasActiveDrumBusVoice(state, activeChannels) ||
-        !EnsureRenderWorkerPool(state, workerJobCount))
+        HasActiveDrumBusVoice(state, activeChannels))
     {
         return false;
     }
+
+    // Short, cheap parts cost more CPU to dispatch than to render together.
+    // Count work outside the heaviest channel: splitting off an almost empty
+    // part cannot shorten that channel's critical path. These relative weights
+    // distinguish basic waves from FM/layered voices without timing every block.
+    size_t totalWork = 0, largestChannelWork = 0;
+    for (const int ch : activeChannels)
+    {
+        size_t channelWork = 0;
+        if (state.channelRenderable[ch])
+            for (const size_t i : state.activeVoiceIndicesByChannel[ch])
+            {
+                const auto kind = config::SourceKindFromIndex(state.voices.runtimeSourceKind[i]);
+                channelWork += (kind == config::SourceKind::Fm ? 4u : 1u) + std::popcount(state.voices.layerMask[i]);
+            }
+        totalWork += channelWork;
+        largestChannelWork = std::max(largestChannelWork, channelWork);
+    }
+    // Release measurements: four plain waves do not benefit; sixteen spread
+    // across four channels and four layered FM voices do. Keep event boundaries
+    // and the 64-sample live-update interval unchanged.
+    if ((totalWork - largestChannelWork) * static_cast<size_t>(frameCount) < 4 * 64 ||
+        !EnsureRenderWorkerPool(state, workerJobCount))
+        return false;
 
     for (const int ch : activeChannels)
     {
@@ -863,6 +911,7 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
     }
 
     outFrames.resize(static_cast<size_t>(frameCount));
+    state.renderVoiceInputs.resize(state.voices.size());
     auto& activeChannels = state.renderActiveChannels;
     activeChannels.clear();
     activeChannels.reserve(16);

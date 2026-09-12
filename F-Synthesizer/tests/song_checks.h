@@ -101,11 +101,11 @@ inline void CheckSongIntegration()
     Require(!gui::LoadSongProjectFile(*state, testRoot / "broken.fsynth", error) && config::ProjectToJSON(gui::BuildProjectModelFromGUI(*state)) == before,
         "failed song load changed the current work");
     gui::ToneVersion tone;
-    tone.base = state->tones[0].draft.instrument;
+    tone.base = std::make_shared<const InstrumentConfig>(state->tones[0].draft.instrument);
     tone.values[0] = .9f;
     gui::ApplyToneValues(tone);
-    Require(tone.instrument.sound.attackSec == tone.base.sound.attackSec &&
-        tone.instrument.sound.releaseSec == tone.base.sound.releaseSec, "brightness changed unrelated envelope controls");
+    Require(tone.instrument.sound.attackSec == tone.base->sound.attackSec &&
+        tone.instrument.sound.releaseSec == tone.base->sound.releaseSec, "brightness changed unrelated envelope controls");
     struct LoopSink : IPreviewStreamSink
     {
         std::shared_ptr<LiveRenderMailbox> mailbox;
@@ -131,7 +131,7 @@ inline void CheckSongIntegration()
     ProjectModel loopProject = DefaultProjectModel();
     loopProject.midiPath.clear();
     auto live = std::make_shared<LiveRenderSettings>();
-    live->sounds[0] = tone.base.sound;
+    live->sounds[0] = tone.base->sound;
     sink.mailbox = std::make_shared<LiveRenderMailbox>(); sink.mailbox->store(live);
     RenderRuntimeOverrides overrides;
     overrides.noteTicks = std::make_shared<const std::vector<MIDIEventTick>>(notes);

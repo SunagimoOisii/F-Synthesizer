@@ -80,7 +80,7 @@ inline void CheckToneWorkspace()
     const auto newVersion = state->tones[0].draft;
     Require(newVersion.instrument.sound.amp == presetA.sound.amp * .43 &&
         newVersion.presetRevision != oldVersion.presetRevision, "updated preset was hidden by a cached trial");
-    Require(state->tones[0].cache.at(gui::ToneCacheKey(oldVersion)).instrument.sound == oldVersion.instrument.sound,
+    Require(gui::RestoreTone(state->tones[0].cache.at(gui::ToneCacheKey(oldVersion))).instrument.sound == oldVersion.instrument.sound,
         "preset update discarded old adjustments");
     Require(gui::SaveGUIStateFile(*state, error), error);
     auto revisions = std::make_unique<GUIState>(); gui::InitializeGUIState(*revisions, {});
@@ -119,6 +119,60 @@ inline void CheckToneWorkspace()
     restored->tones[1].draft.instrument.sound.amp *= .5;
     Require(restored->tones[0].draft.instrument.sound.amp == state->tones[0].draft.instrument.sound.amp,
         "imported shared instrument was not detached for channel editing");
+
+    // Sharing a starting sound must not share edits, undo, or the active draft.
+    for (int ch : {2, 3})
+    {
+        gui::SelectToneChannel(*state, ch);
+        Require(gui::SelectTonePreset(*state, indexOf("tone A"), error), error);
+    }
+    Require(state->tones[2].draft.base == state->tones[3].draft.base, "the same preset was copied for each channel");
+    const auto channel2 = state->tones[2].draft.instrument.sound;
+    auto channel3 = channel2; channel3.amp *= .37;
+    gui::ApplyDetailedToneEdit(*state, channel3); gui::FinishToneEdit(*state);
+    Require(state->tones[2].draft.instrument.sound == channel2 && state->tones[2].draft.base->sound == channel2,
+        "detailed edit mutated a shared starting sound");
+    gui::UndoToneEdit(*state);
+    Require(state->tones[3].draft.instrument.sound == channel2, "compact history lost the previous base");
+    gui::UndoToneEdit(*state, true);
+    Require(gui::SelectTonePreset(*state, indexOf("tone B"), error), error);
+    Require(gui::SelectTonePreset(*state, indexOf("tone A"), error) && state->tones[3].draft.instrument.sound == channel3,
+        "compact trial cache lost a detailed edit");
+    Require(gui::SaveGUIStateFile(*state, error), error);
+    const auto compact = nlohmann::json::parse(Bytes(gui::GUIStatePath()));
+    Require(gui::LoadGUIStateFile(*restored, error) && restored->tones[3].draft.instrument.sound == channel3 &&
+        restored->tones[2].draft.instrument.sound == channel2, "shared-base recovery mixed channel edits");
+
+    // Reconstruct the previous embedded format to cover existing private work.
+    auto embedded = compact;
+    const auto& bank = compact.at("workspace").at("toneBases");
+    auto expand = [&](nlohmann::json& tone)
+    {
+        auto original = bank;
+        original["project"]["instruments"] = {{"tone", bank.at("project").at("instruments").at(tone.at("base").get<std::string>())}};
+        for (const char* field : {"key", "presetRevision", "values", "customizedBase"}) original[field] = tone.at(field);
+        tone = std::move(original);
+    };
+    for (auto& part : embedded["workspace"]["tones"])
+    {
+        expand(part["adopted"]); expand(part["draft"]);
+        for (auto& tone : part["cache"]) expand(tone);
+    }
+    embedded["workspace"].erase("toneBases");
+    Require(config::WriteJSONFile(gui::GUIStatePath(), embedded, error) && gui::LoadGUIStateFile(*restored, error) &&
+        restored->tones[3].draft.instrument.sound == channel3, "existing embedded workspace did not recover");
+    auto damaged = compact;
+    damaged["workspace"]["tones"][3]["draft"]["base"] = "missing";
+    Require(config::WriteJSONFile(gui::GUIStatePath(), damaged, error), error);
+    Require(!gui::LoadGUIStateFile(*restored, error) && restored->tones[3].draft.instrument.sound == channel3,
+        "invalid base reference damaged current work");
+    Require(gui::SaveGUIStateFile(*state, error), error);
+    gui::AdoptAllTones(*state); state->midiPath[0] = '\0';
+    const auto compactSong = testRoot / "without-trials.fsynth";
+    Require(gui::SaveSongProjectFile(*state, compactSong, error), error);
+    const auto song = nlohmann::json::parse(Bytes(compactSong));
+    Require(!song.at("workspace").contains("tones") && !song.at("workspace").contains("toneBases"),
+        "named song contains exploration history");
     std::cout << "Preset updates: fresh content, separate trials, revision recovery OK\n";
     std::cout << "Tone workspace: A/B/A, per-channel drafts, compare, independent mix, undo/redo, recovery, save guard OK\n";
 }

@@ -3,7 +3,6 @@ void RenderNoiseSource(const NoiseConfig& src, SourceRenderFrame& frame)
     frame.sample = SampleNoise(src.noise);
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz;
-    frame.shaperFilterDrive = src.filterDrive;
 }
 
 void RenderPsgSource(

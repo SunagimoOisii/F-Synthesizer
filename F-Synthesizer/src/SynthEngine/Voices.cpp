@@ -149,16 +149,6 @@ void InitWaveformLikeVoiceStateCommon(
             }
         }
     }
-    if (src.drive > 0.0)
-    {
-        const double k = src.drive * 20.0;
-        const double tanhK = std::tanh(k);
-        state.driveNorm = (tanhK > 1e-9) ? (1.0 / tanhK) : 1.0;
-    }
-    else
-    {
-        state.driveNorm = 1.0;
-    }
     ResetModulationState(state.modulation);
     NoteOnModulation(state.modulation, src.modulation);
 }
@@ -333,16 +323,6 @@ void InitializeVoiceAtIndex(
         SetFilterResonance(fs.filter, fm->filterResonance);
         SetFilterDrive(fs.filter, fm->filterDrive);
         ResetFilterState(fs.filter);
-        if (fm->drive > 0.0)
-        {
-            const double k = fm->drive * 20.0;
-            const double tanhK = std::tanh(k);
-            fs.driveNorm = (tanhK > 1e-9) ? (1.0 / tanhK) : 1.0;
-        }
-        else
-        {
-            fs.driveNorm = 1.0;
-        }
     }
     else if (const auto* noise = std::get_if<NoiseConfig>(&cfg.source))
     {
@@ -732,7 +712,6 @@ void Voice::UpdateSound(size_t i, const InstrumentSoundConfig& cfg, int sampleRa
             InitWaveformLikeVoiceStateCommon(src, cache, sampleRate, noteNumber[i]);
             st.unisonDetuneRatio = cache.unisonDetuneRatio;
             st.filterKeytrackRatio = cache.filterKeytrackRatio;
-            st.driveNorm = cache.driveNorm;
             SetFilterMode(st.filter, src.filterMode);
             SetFilterResonance(st.filter, src.filterResonance);
             SetSmoothingTimeMs(st.ampSmoothing, src.smoothing.ampTimeMs);

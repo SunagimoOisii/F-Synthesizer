@@ -67,20 +67,20 @@ void ApplyCommonShaper(
                 }
                 filterCutoffHz *= in.brightnessCutoffScale;
                 SetFilterCutoffHz(st.filter, filterCutoffHz);
-                const double baseResonance = SourceFilterResonance(src);
+                const double baseResonance = in.filterResonance;
                 SetFilterResonance(st.filter, baseResonance * in.resonanceScale * frame.shaperResonanceMul);
-                SetFilterDrive(st.filter, std::clamp(frame.shaperFilterDrive + in.expressionFilterDriveAdd, 0.0, 1.0));
+                SetFilterDrive(st.filter, in.filterDrive);
                 frame.sample = ProcessFilterSample(st.filter, frame.sample);
             }
         }, voices.sourceState[i]);
     }
 
-    const double drive = std::clamp(frame.shaperDrive + in.expressionDriveAdd, 0.0, 1.0);
+    const double drive = in.shaperDrive;
     if (drive > 0.0)
     {
         // tanh ソフトクリップ: tanh(k*x) / tanh(k), k = drive * 20.0
         const double k = drive * 20.0;
-        const double norm = std::tanh(k);
+        const double norm = in.shaperDriveNorm;
         if (norm > 0.0)
         {
             frame.sample = std::tanh(k * frame.sample) / norm;

@@ -1,36 +1,3 @@
-struct VoiceRenderInput
-{
-    double dt = 0.0;
-    double mixGainL = 1.0;
-    double mixGainR = 1.0;
-    double pitchFactor = 1.0;
-    double ccGain = 1.0;
-    double velGain = 1.0;
-    double velocityNorm = 1.0;
-    double expressionVelocity = 1.0;
-    double expressionFmIndexMul = 1.0;
-    double expressionAttackMul = 1.0;
-    double expressionBassMul = 1.0;
-    double expressionLeadMul = 1.0;
-    double expressionChordMul = 1.0;
-    double expressionPadMul = 1.0;
-    double expressionPluckMul = 1.0;
-    double expressionStringMul = 1.0;
-    double expressionBodyMul = 1.0;
-    double expressionPadBrightnessAdd = 0.0;
-    double expressionStringBrightnessAdd = 0.0;
-    double expressionDriveAdd = 0.0;
-    double expressionFilterDriveAdd = 0.0;
-    double envGain = 1.0;
-    double modwheel = 0.0;
-    double channelPressure = 0.0;
-    double polyPressure = 0.0;
-    double brightness = 0.5;
-    double resonance = 0.5;
-    double brightnessCutoffScale = 1.0;
-    double resonanceScale = 1.0;
-};
-
 double TimeScaleFromOffset(double offset)
 {
     return RenderTimeScaleFromOffset(offset);

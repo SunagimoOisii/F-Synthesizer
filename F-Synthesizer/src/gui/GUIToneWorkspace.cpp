@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include "gui/GUIPresetIO.h"
 #include "gui/GUIActions.h"
 #include "gui/GUIProjectFacade.h"
@@ -19,12 +20,12 @@ bool SameTone(const ToneVersion& a, const ToneVersion& b)
 void SyncDraft(GUIState& state, int ch)
 {
     auto& part = state.tones[ch];
-    part.cache[ToneCacheKey(part.draft)] = part.draft;
+    part.cache[ToneCacheKey(part.draft)] = RememberTone(part.draft);
     state.presetDirty = true;
 }
 void PushUndo(ChannelToneWorkspace& part, const ToneVersion& tone)
 {
-    part.undo.push_back(tone);
+    part.undo.push_back(RememberTone(tone));
     if (part.undo.size() > 32) part.undo.pop_front();
     part.redo.clear();
 }
@@ -56,6 +57,21 @@ std::string InferPartCategory(const GUIState& state, int channel)
     return "Support";
 }
 
+ToneSnapshot RememberTone(const ToneVersion& tone)
+{
+    ToneSnapshot snapshot = tone;
+    snapshot.adjusted = tone.base && tone.instrument.sound != tone.base->sound;
+    return snapshot;
+}
+
+ToneVersion RestoreTone(ToneSnapshot snapshot)
+{
+    ToneVersion tone;
+    static_cast<ToneSnapshot&>(tone) = std::move(snapshot);
+    ApplyToneValues(tone);
+    return tone;
+}
+
 void InitializeToneWorkspace(GUIState& state, bool reset)
 {
     if (state.toneWorkspaceReady && !reset) return;
@@ -64,7 +80,7 @@ void InitializeToneWorkspace(GUIState& state, bool reset)
         auto& part = state.tones[ch];
         auto instrument = std::move(part.draft.instrument);
         part = {};
-        part.draft.instrument = instrument;
+        part.draft.instrument = std::move(instrument);
         part.category = InferPartCategory(state, ch);
         part.draft.key = "song/" + std::to_string(ch);
         for (const auto& preset : state.presetItems)
@@ -74,9 +90,9 @@ void InitializeToneWorkspace(GUIState& state, bool reset)
                 if (state.tones[ch].draft.instrument.comparisonGain == 1) state.tones[ch].draft.instrument.comparisonGain = preset.comparisonGain;
                 break;
             }
-        part.draft.base = part.draft.instrument;
+        part.draft.base = std::make_shared<const InstrumentConfig>(part.draft.instrument);
         part.adopted = part.draft;
-        part.cache[ToneCacheKey(part.draft)] = part.draft;
+        part.cache[ToneCacheKey(part.draft)] = RememberTone(part.draft);
     }
     state.toneWorkspaceReady = true;
     SelectToneChannel(state, std::clamp(state.pianoRoll.displayChannel, 0, 15));
@@ -117,21 +133,31 @@ bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error)
     try
     {
         ToneVersion next;
-        if (const auto cached = part.cache.find(ToneCacheKey(item.name, item.revision)); cached != part.cache.end()) next = cached->second;
+        if (const auto cached = part.cache.find(ToneCacheKey(item.name, item.revision)); cached != part.cache.end()) next = RestoreTone(cached->second);
         else
         {
             next.key = item.name;
-            if (!LoadPresetInstrument(FindProjectRootPath(), item, next.base, error)) return false;
-            next.instrument = next.base;
+            // Other channels can share the same original, never their detailed edits.
+            for (const auto& other : state.tones)
+                if (const auto cached = other.cache.find(ToneCacheKey(item.name, item.revision));
+                    cached != other.cache.end() && !cached->second.customizedBase)
+                { next.base = cached->second.base; break; }
+            if (!next.base)
+            {
+                auto base = std::make_shared<InstrumentConfig>();
+                if (!LoadPresetInstrument(FindProjectRootPath(), item, *base, error)) return false;
+                next.base = std::move(base);
+            }
+            next.instrument = *next.base;
             // Recover pre-revision macro edits only when their original sound
             // still matches. Keep other old trials in their own cache entry.
             if (const auto old = part.cache.find(item.name); old != part.cache.end()
-                && !old->second.customizedBase && old->second.base.sound == next.base.sound)
-                next = old->second;
+                && !old->second.customizedBase && old->second.base->sound == next.base->sound)
+                next = RestoreTone(old->second);
             next.presetRevision = item.revision;
         }
         if (!SameTone(next, part.draft)) PushUndo(part, part.draft);
-        part.cache[ToneCacheKey(part.draft)] = part.draft;
+        part.cache[ToneCacheKey(part.draft)] = RememberTone(part.draft);
         part.draft = std::move(next);
         part.compare = false;
         SyncDraft(state, ch);
@@ -160,7 +186,8 @@ bool ToneControlSupported(const InstrumentSoundConfig& sound, int control)
 
 void ApplyToneValues(ToneVersion& tone)
 {
-    tone.instrument = tone.base;
+    if (!tone.base) throw std::runtime_error("音色の出発点がありません。");
+    tone.instrument = *tone.base;
     auto& sound = tone.instrument.sound;
     const auto& v = tone.values;
     if (std::all_of(v.begin(), v.end(), [](float value) { return value == 0; })) return;
@@ -228,7 +255,7 @@ void ApplyDetailedToneEdit(GUIState& state, const InstrumentSoundConfig& sound)
     if (part.draft.instrument.sound == sound) return;
     BeginToneEdit(state);
     part.draft.instrument.sound = sound;
-    part.draft.base = part.draft.instrument;
+    part.draft.base = std::make_shared<const InstrumentConfig>(part.draft.instrument);
     part.draft.values.fill(0);
     part.draft.customizedBase = true;
     SyncDraft(state, state.pianoRoll.displayChannel);
@@ -249,8 +276,8 @@ void UndoToneEdit(GUIState& state, bool redo)
     auto& source = redo ? part.redo : part.undo;
     auto& destination = redo ? part.undo : part.redo;
     if (source.empty()) return;
-    destination.push_back(part.draft);
-    part.draft = std::move(source.back()); source.pop_back();
+    destination.push_back(RememberTone(part.draft));
+    part.draft = RestoreTone(std::move(source.back())); source.pop_back();
     part.compare = false; SyncDraft(state, ch);
 }
 void AdoptTone(GUIState& state, int channel)
@@ -265,7 +292,7 @@ void CancelTone(GUIState& state, int channel)
 {
     FinishToneEdit(state);
     auto& part = state.tones[channel];
-    part.cache[ToneCacheKey(part.draft)] = part.draft;
+    part.cache[ToneCacheKey(part.draft)] = RememberTone(part.draft);
     part.draft = part.adopted;
     part.compare = false; part.undo.clear(); part.redo.clear();
     // Keep the exploratory cache even when returning to the adopted sound.

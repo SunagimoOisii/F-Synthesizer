@@ -14,7 +14,4 @@ void RenderFmSource(
     frame.shaperKind = CommonShaperKind::BiquadFilter;
     frame.shaperCutoffHz = src.filterCutoffHz * mod.filterCutoffMul;
     frame.shaperResonanceMul = mod.resonanceMul;
-    frame.shaperDrive = src.drive;
-    frame.shaperDriveNorm = src.drive > 0.0 ? 1.0 / std::tanh(src.drive * 20.0) : 1.0;
-    frame.shaperFilterDrive = src.filterDrive;
 }

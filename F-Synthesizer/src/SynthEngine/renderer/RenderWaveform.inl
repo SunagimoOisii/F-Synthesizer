@@ -148,9 +148,6 @@ void RenderWaveformLikeSourceCommon(
     }
     frame.shaperCutoffHz = effectiveCutoff;
     frame.shaperResonanceMul = mod.resonanceMul;
-    frame.shaperDrive = src.drive;
-    frame.shaperDriveNorm = state.driveNorm;
-    frame.shaperFilterDrive = src.filterDrive;
 
     if (src.hardSyncEnabled)
     {

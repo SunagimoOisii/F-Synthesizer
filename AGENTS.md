@@ -53,6 +53,7 @@ ChoraleはFilterMode::Vocalの3共鳴帯を使用する。cutoffHzが第1帯域�
 
 - 音色と metadata は `GUIState.tones[ch].draft.instrument` が一緒に保持する。`GUIToneWorkspace` はチャンネルごとの採用済み・試聴中の音、プリセット別の微調整、通常ノブと詳細編集に共通のUndoを保持する。GUI内で音色スロットへの別の対応表を持たず、曲の楽器IDは `GUIProjectFacade` でチャンネルごとのコピーへ解決する。
 - プリセットの試聴キャッシュは内容のrevisionごとに保持する。付属音色を更新しても旧キャッシュで新版を隠さない。曲・作業中の音は自動で差し替えず、一覧で選んだ時に新版を使う。
+- 試聴キャッシュとUndoは `ToneSnapshot`（変更不能な元音色への参照と調整値）を保持し、採用済み・編集中の `ToneVersion` だけが調整後の音色を持つ。詳細編集は新しい元音色を作り、共有元を変更しない。workspaceは `toneBases` に元音色を一度ずつ保存する。既存の埋め込み形式も読み込める。名前付き曲では試聴履歴を組み立てない。
 - `GUIProjectFacade` が編集状態と `ProjectModel` を変換し、チャンネル割当を解決する。`AudibleInstrument` で比較中に鳴る音を解決し、`RenderSound` が音量補正を適用する。
 - JSON は `config::ProjectToJSON / ProjectFromJSON / WriteJSONFile` を共通利用する。
 - JSONはファイル境界で一度解析し、設定ローダー間では解析済みの値を渡す。音色の出力は `config::SoundToJSON` に集約し、内部で文字列化・再解析しない。
@@ -60,6 +61,7 @@ ChoraleはFilterMode::Vocalの3共鳴帯を使用する。cutoffHzが第1帯域�
 - `GUIPresetIO` が一覧・音色コピーの読込・自分用音色の新規保存と名前変更を担当する。保存先は `config/user_presets/`。画面や音色編集からプリセットJSONを直接操作しない。
 - 実行経路は `ProjectModel -> RenderConfig -> SynthEngine`。別の音生成・保存経路を増やさない。
 - 再生中の設定は `LiveRenderMailbox` へ immutable なスナップショットを公開し、生成側が64サンプル以下の区切りで受け取る。
+- MIDI・設定変更を区切りに、音声生成の固定係数をブロックごとに準備する。波形・変調・エンベロープはサンプルごとに進める。並列化はチャンネル数だけでなく音源・レイヤーの負荷も見て判断し、合成順と即時反映の区切りを維持する。
 - `PreviewAudio` は約20msのリングを使う。音声コールバックへ可変GUI参照やファイル処理を渡さない。
 - 音声デバイスの生成・再生成・破棄はGUIスレッドにそろえ、GUIのCOMは起動から終了までSTAに保つ。短命の生成スレッドでminiaudioのCOMを初期化すると、再生後のファイルダイアログが停止する。生成側は準備済みデバイスだけを開始する。
 - ループは都度生成する。古い PCM を使い回して編集反映を失わないようにする。

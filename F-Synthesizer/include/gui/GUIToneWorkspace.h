@@ -10,22 +10,31 @@ struct GUIState;
 
 namespace gui
 {
-// Values are offsets from a copied preset, never edits to the preset file.
-struct ToneVersion
+// Trials and undo share an immutable starting sound. Only the active versions
+// materialize their adjusted instrument; remembering a trial does not copy it.
+struct ToneSnapshot
 {
     std::string key;
     std::string presetRevision;
-    InstrumentConfig base;
-    InstrumentConfig instrument;
+    std::shared_ptr<const InstrumentConfig> base;
     std::array<float, 6> values{}; // brightness, texture, release, attack, decay, motion
     bool customizedBase = false;
+    bool adjusted = false; // Actual sound difference, captured with the snapshot.
 };
+
+struct ToneVersion : ToneSnapshot
+{
+    InstrumentConfig instrument;
+};
+
+ToneSnapshot RememberTone(const ToneVersion& tone);
+ToneVersion RestoreTone(ToneSnapshot snapshot);
 
 inline std::string ToneCacheKey(const std::string& key, const std::string& revision)
 {
     return revision.empty() ? key : key + "\n" + revision;
 }
-inline std::string ToneCacheKey(const ToneVersion& tone)
+inline std::string ToneCacheKey(const ToneSnapshot& tone)
 {
     return ToneCacheKey(tone.key, tone.presetRevision);
 }
@@ -34,11 +43,11 @@ struct ChannelToneWorkspace
 {
     ToneVersion adopted;
     ToneVersion draft;
-    std::map<std::string, ToneVersion> cache;
+    std::map<std::string, ToneSnapshot> cache;
     std::string category;
     int auditionNote = -1; // -1: choose from the part
     bool compare = false;
-    std::deque<ToneVersion> undo, redo;
+    std::deque<ToneSnapshot> undo, redo;
 };
 
 void InitializeToneWorkspace(GUIState& state, bool reset = false);

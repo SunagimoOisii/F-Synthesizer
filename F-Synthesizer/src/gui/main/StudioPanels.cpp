@@ -368,7 +368,7 @@ void presetList(GUIState &s, float x, float y, float w, float h)
                                        : "";
         if (!selected && !adopted)
             if (auto it = part.cache.find(gui::ToneCacheKey(preset.name, preset.revision)); it != part.cache.end())
-                if (it->second.customizedBase || it->second.instrument.sound != it->second.base.sound)
+                if (it->second.customizedBase || it->second.adjusted)
                     status = "調整済み";
         clipped(p.x + 60, p.y + 9, rw - 152, preset.displayName.c_str(), fg, GetFonts().body);
         text(p.x + rw - 83, p.y + 11, status, selected && !part.compare ? pendingColor : muted, GetFonts().fontSmall);

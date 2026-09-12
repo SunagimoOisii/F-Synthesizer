@@ -39,8 +39,6 @@ struct WaveformVoiceState
     std::array<double, 8> unisonDetuneRatio{};
     // filter keytrack の固定比率（noteNumberとfilterKeytrackから算出）。
     double filterKeytrackRatio = 1.0;
-    // drive正規化定数 1/tanh(k)（k=drive*20）。
-    double driveNorm = 1.0;
 };
 
 struct AnalogVoiceState
@@ -64,7 +62,6 @@ struct AnalogVoiceState
     double arpElapsedSec = 0.0;
     std::array<double, 8> unisonDetuneRatio{};
     double filterKeytrackRatio = 1.0;
-    double driveNorm = 1.0;
 };
 
 struct FmVoiceState
@@ -72,7 +69,6 @@ struct FmVoiceState
     std::shared_ptr<YmfmVoice> chip;
     ModulationRuntimeState modulation;
     FilterInstance filter;
-    double driveNorm = 1.0;
 };
 
 struct NoiseVoiceState
@@ -276,9 +272,6 @@ struct SourceRenderFrame
     double sourceGain = 1.0;
     double shaperCutoffHz = 0.0;
     double shaperResonanceMul = 1.0;
-    double shaperDrive = 0.0;
-    double shaperDriveNorm = 1.0;
-    double shaperFilterDrive = 0.0;
     CommonShaperKind shaperKind = CommonShaperKind::None;
 };
 
@@ -357,6 +350,46 @@ private:
     std::exception_ptr exception_{};
 };
 
+// Prepared once per event-bounded block. MIDI controls and sound snapshots stay
+// constant inside it; oscillator, envelope and modulation state still advances per sample.
+struct VoiceRenderInput
+{
+    double attackSec = 0.0, decaySec = 0.0, sustainLevel = 0.0, releaseSec = 0.0;
+    double portamentoStep = 0.0;
+    bool portamentoEnabled = false;
+    double shaperDrive = 0.0, shaperDriveNorm = 1.0, filterDrive = 0.0;
+    double filterResonance = 0.707;
+    double dt = 0.0;
+    double mixGainL = 1.0;
+    double mixGainR = 1.0;
+    double pitchFactor = 1.0;
+    double ccGain = 1.0;
+    double velGain = 1.0;
+    double velocityNorm = 1.0;
+    double expressionVelocity = 1.0;
+    double expressionFmIndexMul = 1.0;
+    double expressionAttackMul = 1.0;
+    double expressionBassMul = 1.0;
+    double expressionLeadMul = 1.0;
+    double expressionChordMul = 1.0;
+    double expressionPadMul = 1.0;
+    double expressionPluckMul = 1.0;
+    double expressionStringMul = 1.0;
+    double expressionBodyMul = 1.0;
+    double expressionPadBrightnessAdd = 0.0;
+    double expressionStringBrightnessAdd = 0.0;
+    double expressionDriveAdd = 0.0;
+    double expressionFilterDriveAdd = 0.0;
+    double envGain = 1.0;
+    double modwheel = 0.0;
+    double channelPressure = 0.0;
+    double polyPressure = 0.0;
+    double brightness = 0.5;
+    double resonance = 0.5;
+    double brightnessCutoffScale = 1.0;
+    double resonanceScale = 1.0;
+};
+
 struct RenderState
 {
     int scopeChannel = -1;
@@ -395,6 +428,7 @@ struct RenderState
     std::array<std::array<std::vector<size_t>, config::kSourceKindCount>, 16> activeVoiceIndicesByChannelSource{};
     std::array<std::vector<int>, 16> activeSourceKindsByChannel{};
     std::vector<StereoFrame> renderBlockFrames{};
+    std::vector<VoiceRenderInput> renderVoiceInputs;
     std::vector<int> renderActiveChannels{};
     std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
     std::unique_ptr<RenderWorkerPool> renderWorkerPool{};
