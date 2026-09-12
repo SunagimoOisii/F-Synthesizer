@@ -155,6 +155,9 @@ bool SelectTonePreset(GUIState& state, int presetIndex, std::string& error)
 
 bool ToneControlSupported(const InstrumentSoundConfig& sound, int control)
 {
+    // A waveform held at the attack level has no audible decay stage.
+    if (control == 4 && sound.sustainLevel == 1.0 &&
+        (std::holds_alternative<WaveformConfig>(sound.source) || std::holds_alternative<AnalogConfig>(sound.source))) return false;
     return std::visit([control](const auto& source) {
         using T = std::decay_t<decltype(source)>;
         if constexpr (std::is_same_v<T, FmConfig>) if (control == 0 && source.algorithm == 7) return false;

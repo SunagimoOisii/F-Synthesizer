@@ -175,12 +175,16 @@ uint64_t StartStreamingPreviewAudio(
     std::string& err)
 {
     StopPreviewAudio(playback);
-    if (playback.deviceReady) ma_device_stop(&playback.device);
-    playback.channels = (channels >= 2) ? 2 : 1;
-    if (!EnsurePreviewAudioDevice(playback, sampleRate, err))
+    // Begin runs on a render worker. Creating or destroying a context here
+    // leaves miniaudio's COM lifetime tied to a thread that exits after playback,
+    // which can hang the next Windows file dialog.
+    if (!playback.deviceReady || playback.sampleRate != static_cast<ma_uint32>(sampleRate) ||
+        playback.channels != ((channels >= 2) ? 2u : 1u))
     {
+        err = "preview audio device must be prepared on the GUI thread before rendering";
         return 0;
     }
+    ma_device_stop(&playback.device);
 
     StopPreviewAudio(playback);
     const ma_uint64 session = playback.streamSession.fetch_add(1, std::memory_order_relaxed) + 1;

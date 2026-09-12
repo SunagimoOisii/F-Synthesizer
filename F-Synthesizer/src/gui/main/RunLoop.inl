@@ -1,5 +1,17 @@
 int RunGUIApp()
 {
+    // Shell dialogs require an STA. Keep it alive until audio and windows are
+    // destroyed, including early returns during GUI initialization.
+    struct COMScope
+    {
+        HRESULT result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        ~COMScope() { if (SUCCEEDED(result)) CoUninitialize(); }
+    } com;
+    if (FAILED(com.result))
+    {
+        MessageBoxW(nullptr, L"Windowsの画面処理を初期化できませんでした。", L"F-Synthesizer", MB_OK | MB_ICONERROR);
+        return 1;
+    }
     wchar_t capturePath[2048]{};
     const bool captureMode = GetEnvironmentVariableW(L"FSYNTH_CAPTURE", capturePath, 2048) > 0;
     bool capturePlaying = false;

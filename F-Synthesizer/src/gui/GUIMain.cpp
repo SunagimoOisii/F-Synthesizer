@@ -11,6 +11,7 @@
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <objbase.h>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>

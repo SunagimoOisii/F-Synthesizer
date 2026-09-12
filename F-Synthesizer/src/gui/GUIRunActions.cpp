@@ -252,6 +252,13 @@ void StartGUIRun(GUIState& state, bool previewSelected, bool selectedChannelOnly
         RaiseGUIError(state, "MIDI を読み込めません。" + state.pianoRoll.lastError, 1, true);
         return;
     }
+    // miniaudio's context owns thread-local COM initialization. Create/recreate
+    // it here, on the same GUI thread that eventually destroys the device.
+    if (previewSelected && !EnsurePreviewAudioDevice(state.playback, state.sampleRate, validationError))
+    {
+        MarkRunStartFailed(state, validationError);
+        return;
+    }
     ClearGUIError(state);
 
     const int previewChannel = previewSelected

@@ -1,0 +1,106 @@
+{
+  "format": "projectModel.v3",
+  "project": {
+    "instruments": {
+      "sound": {
+        "displayName": "Saw",
+        "category": "Support",
+        "description": "ノコギリ波。明るい倍音が並ぶ、ざらりとした電子音。",
+        "internal": false,
+        "tags": [
+          "support",
+          "waveform",
+          "basic",
+          "saw"
+        ],
+        "recommendedRange": {
+          "low": 28,
+          "high": 96,
+          "preview": 69
+        },
+        "macroHints": [
+          {
+            "id": "brightness",
+            "label": "明るさ",
+            "description": "高い倍音の出方を調整"
+          },
+          {
+            "id": "roughness",
+            "label": "ざらつき",
+            "description": "上げると波形に歪みを加える"
+          },
+          {
+            "id": "movement",
+            "label": "揺れ",
+            "description": "上げると音程に小さな揺れを加える"
+          },
+          {
+            "id": "envelope",
+            "label": "鳴り方",
+            "description": "立ち上がりと余韻を調整"
+          }
+        ],
+        "sound": {
+          "amp": 0.16,
+          "attackSec": 0.005,
+          "decaySec": 0.08,
+          "sustainLevel": 1,
+          "releaseSec": 0.025,
+          "source": {
+            "type": "waveform",
+            "wave": "saw",
+            "unisonVoices": 1,
+            "unisonDetuneCents": 0,
+            "unisonSpread": 0,
+            "subOscLevel": 0,
+            "pulseWidth": 0.5,
+            "hardSyncEnabled": false,
+            "ringModEnabled": false,
+            "drive": 0,
+            "filter": {
+              "mode": "bypass",
+              "cutoffHz": 8000,
+              "resonance": 0.707,
+              "keytrack": 0,
+              "drive": 0
+            },
+            "arpeggio": {
+              "enabled": false
+            },
+            "modulation": {
+              "lfo1": {
+                "wave": "sine",
+                "rateHz": 5,
+                "depth": 0,
+                "bipolar": true,
+                "keySync": true,
+                "delayMs": 80,
+                "fadeMs": 80
+              },
+              "routes": {
+                "0": {
+                  "source": "lfo1",
+                  "destination": "pitchMul",
+                  "amount": 0.018,
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "expressionMap": {
+            "enabled": true,
+            "velocityCurve": 1,
+            "velocityToAmp": 1,
+            "velocityToBrightness": 0,
+            "velocityToFmIndex": 0
+          }
+        }
+      }
+    },
+    "channels": {
+      "0": {
+        "instrumentId": "sound"
+      }
+    }
+  }
+}

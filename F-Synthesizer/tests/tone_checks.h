@@ -1,8 +1,19 @@
 #pragma once
 #include <thread>
+#include <objbase.h>
+#include "gui/GUIPlatform.h"
 
 inline void CheckToneWorkspace()
 {
+    InstrumentSoundConfig steady{};
+    WaveformConfig pure{}; pure.wave = WaveType::Sine; pure.filterMode = FilterMode::Bypass;
+    steady.source = pure; steady.sustainLevel = 1;
+    Require(!gui::ToneControlSupported(steady, 0) && !gui::ToneControlSupported(steady, 4),
+        "pure held waveform exposes inactive brightness/decay controls");
+    Require(gui::ToneControlSupported(steady, 2) && gui::ToneControlSupported(steady, 3),
+        "pure waveform lost its attack/release controls");
+    steady.sustainLevel = .7;
+    Require(gui::ToneControlSupported(steady, 4), "decaying waveform lost its decay control");
     auto state = std::make_unique<GUIState>();
     gui::InitializeGUIState(*state, {});
     std::string error;
@@ -84,8 +95,66 @@ inline void CheckToneWorkspace()
     std::cout << "Tone workspace: A/B/A, per-channel drafts, compare, independent mix, undo/redo, recovery, save guard OK\n";
 }
 
+inline bool fileDialogSeen = false;
+inline bool cancelFileDialog = false;
+
+inline void CALLBACK FinishTestFileDialog(HWND window, UINT, UINT_PTR timer, DWORD)
+{
+    KillTimer(window, timer);
+    PostMessageW(window, WM_COMMAND, cancelFileDialog ? IDCANCEL : IDOK, 0);
+}
+inline LRESULT CALLBACK TestFileDialogHook(int code, WPARAM wp, LPARAM lp)
+{
+    if (code == HCBT_ACTIVATE)
+    {
+        const auto window = reinterpret_cast<HWND>(wp);
+        wchar_t name[32]{}; GetClassNameW(window, name, 32);
+        if (wcscmp(name, L"#32770") == 0)
+        {
+            fileDialogSeen = true;
+            ShowWindow(window, SW_HIDE);
+            SetTimer(window, 1, 250, FinishTestFileDialog);
+        }
+    }
+    return CallNextHookEx(nullptr, code, wp, lp);
+}
+
+inline void CheckFileDialogAfterAudio(const std::filesystem::path& path, bool save, bool cancel)
+{
+    // Exercise the real Shell dialog: the regression hangs inside its folder
+    // initialization after a render thread exits. A PCM-only test misses it.
+    std::jthread watchdog([](std::stop_token stop) {
+        for (int i = 0; i < 200 && !stop.stop_requested(); ++i) Sleep(100);
+        if (!stop.stop_requested())
+        {
+            std::cerr << "File dialog did not return after audio playback\n" << std::flush;
+            ExitProcess(1);
+        }
+    });
+    fileDialogSeen = false; cancelFileDialog = cancel;
+    const auto hook = SetWindowsHookExW(WH_CBT, TestFileDialogHook, nullptr, GetCurrentThreadId());
+    Require(hook != nullptr, "file dialog test hook failed");
+    std::string selected = "unchanged";
+    const bool accepted = save
+        ? BrowseSavePath(PathToUtf8(path), L"F-Synthesizer Song (*.fsynth)\0*.fsynth\0", L"fsynth", selected)
+        : BrowseOpenPath(PathToUtf8(path), L"MIDI (*.mid;*.midi)\0*.mid;*.midi\0", selected);
+    UnhookWindowsHookEx(hook);
+    watchdog.request_stop();
+    Require(fileDialogSeen && accepted == !cancel, "file dialog did not open/accept/cancel");
+    Require(cancel ? selected == "unchanged" : Utf8ToPath(selected) == path, "file dialog changed selected path");
+    APTTYPE type{}; APTTYPEQUALIFIER qualifier{};
+    Require(SUCCEEDED(CoGetApartmentType(&type, &qualifier)) && (type == APTTYPE_STA || type == APTTYPE_MAINSTA),
+        "audio or file dialog unbalanced the GUI's COM apartment");
+}
+
 inline void CheckTransportDevice()
 {
+    struct COMScope
+    {
+        HRESULT result = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        ~COMScope() { if (SUCCEEDED(result)) CoUninitialize(); }
+    } com;
+    Require(SUCCEEDED(com.result), "transport test requires the GUI's STA apartment");
     std::filesystem::create_directories(testRoot);
     const auto midi = testRoot / "transport.mid";
     const unsigned char bytes[] = {'M','T','h','d',0,0,0,6,0,0,0,1,1,0xe0,
@@ -123,6 +192,23 @@ inline void CheckTransportDevice()
         Require(pumpUntil([&] { return state->transportAction == 0 && state->playback.playing.load() && state->songCursorTick >= 1200; }), "seek failed");
         gui::PauseSongPlayback(*state);
         Require(pumpUntil([&] { return !state->running && !state->playback.playing.load(); }), "pause failed");
+        const auto replacement = testRoot / L"replacement 日本語.mid";
+        std::filesystem::copy_file(midi, replacement, std::filesystem::copy_options::overwrite_existing);
+        CheckFileDialogAfterAudio(replacement, false, true);
+        CheckFileDialogAfterAudio(replacement, false, false);
+        Require(gui::LoadPianoRollMIDI(state->pianoRoll, replacement), "MIDI replacement after audio failed");
+        strncpy_s(state->midiPath, PathToUtf8(replacement).c_str(), _TRUNCATE);
+        const auto songPath = testRoot / L"dialog-only 日本語.fsynth";
+        CheckFileDialogAfterAudio(songPath, true, true);
+        CheckFileDialogAfterAudio(songPath, true, false);
+        Require(!std::filesystem::exists(songPath), "file picker unexpectedly wrote a song");
+        // Recreate the device, audition another note, then open again. Both
+        // preview entry points and device teardown must keep the same owner.
+        state->sampleRate = 48000;
+        gui::RequestToneAudition(*state);
+        Require(pumpUntil([&] { return state->toneAuditionActive && state->playback.playing.load(); }), "48000 Hz audition failed");
+        Require(pumpUntil([&] { return !state->toneAuditionActive && !state->running && !state->playback.playing.load(); }), "audition did not finish");
+        CheckFileDialogAfterAudio(replacement, false, false);
         ShutdownPreviewAudio(state->playback);
     }
     catch (...)
@@ -132,6 +218,7 @@ inline void CheckTransportDevice()
         ShutdownPreviewAudio(state->playback); throw;
     }
     std::cout << "Audio device: loop seek, pause -> one note -> resume, preserved position/range, live waveform OK\n";
+    std::cout << "File dialogs after audio: MIDI replace, open/save cancellation, Japanese paths, 48000 Hz recreation OK\n";
 }
 
 inline void CalibratePresetLevels(const std::filesystem::path& root)

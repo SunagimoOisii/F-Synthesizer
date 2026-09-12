@@ -37,6 +37,8 @@ struct PreviewPlaybackState
     ma_uint32 sampleRate = 44100;
 };
 
+// Create/recreate and shut down on the GUI thread. Prepare before launching a
+// render worker; StartStreamingPreviewAudio only starts an existing device.
 bool EnsurePreviewAudioDevice(PreviewPlaybackState& playback, int sampleRate, std::string& err);
 void StopPreviewAudio(PreviewPlaybackState& playback);
 void ShutdownPreviewAudio(PreviewPlaybackState& playback);

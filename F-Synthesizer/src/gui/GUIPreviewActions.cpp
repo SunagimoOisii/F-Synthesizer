@@ -274,6 +274,13 @@ void StartGUISoundTonePreview(GUIState& state)
             true);
         return;
     }
+    // Device/COM lifetime belongs to the GUI thread, not this preview's
+    // short-lived async render thread.
+    if (!EnsurePreviewAudioDevice(state.playback, state.sampleRate, validationError))
+    {
+        MarkPreviewStartFailed(state, validationError);
+        return;
+    }
     ClearGUIError(state);
 
     const int previewChannel = std::clamp(state.pianoRoll.displayChannel, 0, 15);
