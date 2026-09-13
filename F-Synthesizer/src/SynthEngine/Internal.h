@@ -93,6 +93,8 @@ struct DrumVoiceState
     double pitchRatio = 1.0;
     double decayScale = 1.0;
     double velocityNorm = 1.0;
+    double driveAmount = 1.0;
+    double driveNorm = 1.0;
     uint32_t noiseState = 0xA5A5A5A5u;
 };
 
@@ -123,6 +125,10 @@ struct ChannelAdsrOffset
 
 struct DrumBusRuntimeState
 {
+    // The last active drum can change within a block as older hits finish.
+    DrumBusConfig coefficientConfig{};
+    int coefficientSampleRate = 0;
+    double fastAlpha = 0.0, slowAlpha = 0.0, lowAlpha = 0.0, presenceAlpha = 0.0;
     double envFast = 0.0;
     double envSlow = 0.0;
     double presenceLpL = 0.0;
@@ -352,8 +358,27 @@ private:
 
 // Prepared once per event-bounded block. MIDI controls and sound snapshots stay
 // constant inside it; oscillator, envelope and modulation state still advances per sample.
+struct SoftClipCoefficients
+{
+    double k = 0.0, norm = 1.0;
+};
+
+struct LayerRenderCoefficients
+{
+    SoftClipCoefficients attackClip, bassClip, bassBodyClip, leadClip, chordClip, padClip;
+    SoftClipCoefficients pluckClip, stringClip, harmonicClip, powerChordClip, chugClip, ampCabClip, bodyClip;
+    double attackPitch = 1.0, bassPitch = 1.0, leadDetune = 1.0, pluckPitch = 1.0;
+    std::array<double, 4> chordPitch{};
+    std::array<double, 3> powerChordPitchL{}, powerChordPitchR{};
+    std::array<double, 5> bodyDecay{};
+    double bassAlpha = 0.0, chordAlpha = 0.0, padAlpha = 0.0, pluckAlpha = 0.0;
+    double chugAlpha = 0.0, ampCabHpAlpha = 0.0, ampCabLpAlpha = 0.0;
+};
+
 struct VoiceRenderInput
 {
+    // Keep coefficients outside the input copied for every voice sample.
+    const LayerRenderCoefficients* layers = nullptr;
     double attackSec = 0.0, decaySec = 0.0, sustainLevel = 0.0, releaseSec = 0.0;
     double portamentoStep = 0.0;
     bool portamentoEnabled = false;
@@ -429,6 +454,7 @@ struct RenderState
     std::array<std::vector<int>, 16> activeSourceKindsByChannel{};
     std::vector<StereoFrame> renderBlockFrames{};
     std::vector<VoiceRenderInput> renderVoiceInputs;
+    std::vector<LayerRenderCoefficients> renderLayerCoefficients;
     std::vector<int> renderActiveChannels{};
     std::array<std::vector<StereoFrame>, 16> renderChannelBlockFrames{};
     std::unique_ptr<RenderWorkerPool> renderWorkerPool{};

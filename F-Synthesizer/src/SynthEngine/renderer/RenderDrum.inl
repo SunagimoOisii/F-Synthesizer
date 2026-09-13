@@ -42,10 +42,15 @@ double DrumEnv(double time, double decaySec)
     return std::exp(-time / DrumParam(decaySec, 0.05));
 }
 
-double DrumSoftClip(double x, double drive)
+void PrepareDrumCoefficients(const DrumConfig& src, DrumVoiceState& ds)
 {
-    const double amount = 1.0 + std::clamp(drive, 0.0, 1.0) * 10.0;
-    return std::tanh(x * amount) / std::tanh(amount);
+    ds.driveAmount = 1.0 + std::clamp(src.drive, 0.0, 1.0) * 10.0;
+    ds.driveNorm = std::tanh(ds.driveAmount);
+}
+
+double DrumSoftClip(double x, const DrumVoiceState& ds)
+{
+    return std::tanh(x * ds.driveAmount) / ds.driveNorm;
 }
 
 NoiseType DrumNoiseColor(const DrumConfig& src)
@@ -119,7 +124,7 @@ double RenderKickSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds
         * DrumParam(src.bodyLevel, 0.9)
         * DrumEnv(ds.time, DrumParam(src.bodyDecaySec, 0.18) * ds.decayScale);
     const double transient = RenderTransient(src, ds, sampleRate, 2600.0 + 700.0 * toneShape, 0.28, 0.007);
-    return DrumSoftClip(body + transient, src.drive);
+    return DrumSoftClip(body + transient, ds);
 }
 
 double RenderSnareSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
@@ -133,7 +138,7 @@ double RenderSnareSample(const DrumConfig& src, Voice& voices, DrumVoiceState& d
         * DrumParam(src.snapLevel, 0.82)
         * DrumEnv(ds.time, DrumParam(src.snapDecaySec, 0.055) * ds.decayScale);
     const double transient = RenderTransient(src, ds, sampleRate, 3600.0, 0.15, 0.006);
-    return DrumSoftClip(body + snapNoise + transient, src.drive);
+    return DrumSoftClip(body + snapNoise + transient, ds);
 }
 
 double RenderHatLikeSample(const DrumConfig& src, DrumVoiceState& ds, int sampleRate, bool ride, bool crash)
@@ -156,7 +161,7 @@ double RenderHatLikeSample(const DrumConfig& src, DrumVoiceState& ds, int sample
     }
     metal *= 0.25 * DrumParam(src.metalLevel, ride ? 0.7 : 0.55);
     const double ping = ride ? std::sin(2.0 * kPi * ds.metalPhase[0]) * DrumParam(src.transientLevel, 0.22) * DrumEnv(ds.time, 0.035) : 0.0;
-    return DrumSoftClip((metal + noise) * DrumEnv(ds.time, decay) + ping, src.drive);
+    return DrumSoftClip((metal + noise) * DrumEnv(ds.time, decay) + ping, ds);
 }
 
 double RenderTomSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
@@ -170,7 +175,7 @@ double RenderTomSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds,
         * DrumParam(src.bodyLevel, 0.78)
         * DrumEnv(ds.time, DrumParam(src.bodyDecaySec, 0.20) * ds.decayScale);
     const double transient = RenderTransient(src, ds, sampleRate, 1800.0, 0.12, 0.009);
-    return DrumSoftClip(body + transient, src.drive);
+    return DrumSoftClip(body + transient, ds);
 }
 
 double RenderRimSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds, size_t i, int sampleRate)
@@ -184,7 +189,7 @@ double RenderRimSample(const DrumConfig& src, Voice& voices, DrumVoiceState& ds,
     const double stick = FilterDrumNoise(ds, NextDrumNoise(ds, NoiseType::Blue))
         * DrumParam(src.transientLevel, 0.36)
         * DrumEnv(ds.time, DrumParam(src.transientDecaySec, 0.008));
-    return DrumSoftClip(body + stick, src.drive);
+    return DrumSoftClip(body + stick, ds);
 }
 
 double RenderClapSample(const DrumConfig& src, DrumVoiceState& ds, int sampleRate)
@@ -205,7 +210,7 @@ double RenderClapSample(const DrumConfig& src, DrumVoiceState& ds, int sampleRat
     const double tail = FilterDrumNoise(ds, NextDrumNoise(ds, DrumNoiseColor(src)))
         * DrumParam(src.airLevel, 0.25)
         * DrumEnv(ds.time, DrumDecay(src, ds, 0.16));
-    return DrumSoftClip(noise + tail, src.drive);
+    return DrumSoftClip(noise + tail, ds);
 }
 
 // Extra GM percussion uses independent resonances, friction and breath, rather
@@ -298,7 +303,7 @@ double RenderPercussionSample(const DrumConfig& src, DrumVoiceState& ds, int sam
     w += noise * DrumParam(src.transientLevel, 0.045) * tone
         * DrumEnv(t, DrumParam(src.transientDecaySec, 0.003));
     EnsureDrumFilters(ds, DrumParam(src.hpCut, 40.0), DrumParam(src.lpCut, 8000.0), sampleRate);
-    return DrumSoftClip(FilterDrumNoise(ds, w), src.drive);
+    return DrumSoftClip(FilterDrumNoise(ds, w), ds);
 }
 
 double RenderDrumSample(const DrumConfig& src, Voice& voices, size_t i, double dt, int sampleRate)

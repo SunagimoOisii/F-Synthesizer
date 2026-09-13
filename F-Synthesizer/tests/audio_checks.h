@@ -320,10 +320,92 @@ inline void CheckPercussionCoverage(const InstrumentSoundConfig& sound, const st
     std::cout << label << ": all 47 GM hits audible and finite at 22050/44100 Hz\n";
 }
 
+inline void CheckCoefficientBlockBoundaries()
+{
+    // Rendering one sample at a time is an oracle for coefficients that must
+    // stay constant only inside a MIDI/sound-bounded block, including moving detune.
+    for (int rate : {22050, 44100, 48000})
+    {
+        auto render = [&](int blockSize) {
+            auto state = std::make_unique<RenderState>();
+            state->renderParallelDisabled = true;
+            state->channelCcGain.fill(1); state->channelPitch.fill(1);
+            state->channelRenderable.fill(true); state->channelMixGainL.fill(.7); state->channelMixGainR.fill(.6);
+            state->channelAttackScale.fill(1); state->channelDecayScale.fill(1); state->channelReleaseScale.fill(1);
+            state->channelBrightness.fill(.5); state->channelResonance.fill(.5);
+            state->channelBrightnessCutoffScale.fill(1); state->channelResonanceScale.fill(1);
+            auto tone = std::make_unique<InstrumentSoundConfig>();
+            tone->source = WaveformConfig{}; tone->amp = .1; tone->sustainLevel = 1;
+            auto enable = [](auto& layer) { layer.enabled = true; layer.level = .2; layer.drive = .3; };
+            enable(tone->attackLayer); enable(tone->bassLayer); enable(tone->leadLayer);
+            enable(tone->chordLayer); enable(tone->padLayer); enable(tone->pluckLayer);
+            enable(tone->stringLayer); enable(tone->harmonicLayer); enable(tone->powerChordLayer); enable(tone->chugLayer);
+            tone->bodyLayer.enabled = true; tone->bodyLayer.mix = .2;
+            tone->ampCabLayer.enabled = true; tone->ampCabLayer.drive = .3;
+            tone->expressionMap.enabled = true; tone->expressionMap.pressureToDrive = .4;
+            tone->padLayer.motionDepth = .7; tone->padLayer.motionRateHz = 5;
+            tone->stringLayer.motionDepth = .6; tone->stringLayer.motionRateHz = 7;
+            MIDIEvent on{}; on.type = MIDIEventType::Note; on.isNoteOn = true;
+            on.noteNumber = 57; on.velocity = 103; on.noteInstanceID = 1;
+            state->voices.AddVoice(*tone, on, rate);
+            auto drum = std::make_unique<InstrumentSoundConfig>();
+            DrumConfig hit{}; hit.type = DrumType::Snare; hit.drive = .25;
+            drum->source = hit; drum->amp = .1; drum->attackSec = 0; drum->decaySec = .08; drum->releaseSec = .01;
+            drum->drumBus.enabled = true; drum->drumBus.lowTighten = .2; drum->drumBus.presenceCut = .7;
+            on.channel = 9; on.noteInstanceID = 2; state->voices.AddVoice(*drum, on, rate);
+            MarkActiveVoiceIndicesDirty(*state);
+            std::vector<StereoFrame> output, block;
+            SoundData context(1, 16, rate, 2);
+            for (int sample = 0; sample < 1024;)
+            {
+                if (sample == 128)
+                {
+                    // The newer hit ends inside a 64-frame block; the older bus settings resume.
+                    drum->decaySec = .001; drum->releaseSec = .0005;
+                    drum->drumBus.lowTighten = .9; drum->drumBus.presenceCut = .1;
+                    on.noteInstanceID = 3; state->voices.AddVoice(*drum, on, rate);
+                    MarkActiveVoiceIndicesDirty(*state);
+                }
+                if (sample == 320)
+                {
+                    tone->bassLayer.pitchOffsetSemis = -12; tone->bassLayer.drive = .8;
+                    tone->leadLayer.detuneCents = 31; tone->chordLayer.intervalsSemis[1] = 5;
+                    tone->powerChordLayer.spread = .8; tone->powerChordLayer.detuneCents = 15;
+                    tone->bodyLayer.damping = .8; tone->ampCabLayer.cabHigh = .2;
+                    state->voices.UpdateSound(0, *tone, rate);
+                }
+                if (sample == 576)
+                {
+                    state->channelPressure[0] = .9; state->channelBrightness[0] = .2;
+                    state->channelPitch[0] = 1.25;
+                    state->voices.MarkNoteOff(0, 57, 1, false);
+                }
+                const int boundary = sample < 128 ? 128 : sample < 320 ? 320 : sample < 576 ? 576 : 1024;
+                const int count = std::min(blockSize, boundary - sample);
+                RenderVoicesBlock(*state, context, count, block);
+                output.insert(output.end(), block.begin(), block.end());
+                sample += count;
+            }
+            return output;
+        };
+        const auto expected = render(1), actual = render(64);
+        double energy = 0;
+        for (size_t i = 0; i < actual.size(); ++i)
+        {
+            Require(actual[i].left == expected[i].left && actual[i].right == expected[i].right,
+                "prepared coefficients changed sound across block boundaries");
+            energy += actual[i].left * actual[i].left;
+        }
+        Require(energy > .0001, "coefficient comparison was silent");
+    }
+    std::cout << "Coefficient blocks agree sample-for-sample through tone/control changes and overlapping drum tails\n";
+}
+
 inline void CheckAudioIntegration()
 {
     CheckTriangleFourierAgreement();
     CheckParallelDrumMix();
+    CheckCoefficientBlockBoundaries();
     CheckVocalFilterAndFmSweep();
     constexpr int rate = 44100;
     FmConfig fm{};

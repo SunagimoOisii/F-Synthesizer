@@ -252,11 +252,21 @@ StereoFrame ApplyDrumBus(
         return in;
     }
 
+    if (st.coefficientSampleRate != sampleRate || st.coefficientConfig != cfg)
+    {
+        st.fastAlpha = OnePoleAlpha(120.0, sampleRate);
+        st.slowAlpha = OnePoleAlpha(12.0, sampleRate);
+        st.lowAlpha = OnePoleAlpha(95.0 + std::clamp(cfg.lowTighten, 0.0, 1.0) * 80.0, sampleRate);
+        const double presence = std::clamp(cfg.presenceCut, 0.0, 1.0);
+        st.presenceAlpha = OnePoleAlpha(3200.0 - presence * 1000.0, sampleRate);
+        st.coefficientConfig = cfg;
+        st.coefficientSampleRate = sampleRate;
+    }
     double l = in.left;
     double r = in.right;
     const double monoAbs = std::abs((l + r) * 0.5);
-    const double fastA = OnePoleAlpha(120.0, sampleRate);
-    const double slowA = OnePoleAlpha(12.0, sampleRate);
+    const double fastA = st.fastAlpha;
+    const double slowA = st.slowAlpha;
     st.envFast += (monoAbs - st.envFast) * fastA;
     st.envSlow += (monoAbs - st.envSlow) * slowA;
 
@@ -275,7 +285,7 @@ StereoFrame ApplyDrumBus(
         r *= gain;
     }
 
-    const double lowA = OnePoleAlpha(95.0 + std::clamp(cfg.lowTighten, 0.0, 1.0) * 80.0, sampleRate);
+    const double lowA = st.lowAlpha;
     st.lowLpL += (l - st.lowLpL) * lowA;
     st.lowLpR += (r - st.lowLpR) * lowA;
     l -= st.lowLpL * std::clamp(cfg.lowTighten, 0.0, 1.0) * 0.32;
@@ -284,7 +294,7 @@ StereoFrame ApplyDrumBus(
     const double presence = std::clamp(cfg.presenceCut, 0.0, 1.0);
     if (presence > 0.0)
     {
-        const double presA = OnePoleAlpha(3200.0 - presence * 1000.0, sampleRate);
+        const double presA = st.presenceAlpha;
         st.presenceLpL += (l - st.presenceLpL) * presA;
         st.presenceLpR += (r - st.presenceLpR) * presA;
         l = l * (1.0 - presence * 0.48) + st.presenceLpL * (presence * 0.48);
@@ -550,7 +560,16 @@ VoiceRenderInput PrepareVoiceInput(const RenderState& state, const ChannelRender
 void PrepareChannelInputs(RenderState& state, const ChannelRenderContext& ctx)
 {
     for (const size_t i : state.activeVoiceIndicesByChannel[ctx.ch])
+    {
         state.renderVoiceInputs[i] = PrepareVoiceInput(state, ctx, i);
+        if (!ctx.renderable) continue;
+        auto& in = state.renderVoiceInputs[i];
+        auto& coefficients = state.renderLayerCoefficients[i];
+        PrepareLayerCoefficients(state.voices, i, in, coefficients);
+        in.layers = &coefficients;
+        if (const auto* drum = std::get_if<DrumConfig>(&state.voices.source[i]))
+            PrepareDrumCoefficients(*drum, std::get<DrumVoiceState>(state.voices.sourceState[i]));
+    }
 }
 
 bool RenderVoiceSampleToChannel(
@@ -914,6 +933,7 @@ void RenderVoicesBlock(RenderState& state, const SoundData& sound, int frameCoun
 
     outFrames.resize(static_cast<size_t>(frameCount));
     state.renderVoiceInputs.resize(state.voices.size());
+    state.renderLayerCoefficients.resize(state.voices.size());
     auto& activeChannels = state.renderActiveChannels;
     activeChannels.clear();
     activeChannels.reserve(16);
