@@ -35,6 +35,9 @@ struct PreviewPlaybackState
     std::atomic<uint64_t> sessionGeneration{ 0 };
     ma_uint32 channels = 2;
     ma_uint32 sampleRate = 44100;
+    // Consumption and stop both change this value before notifying the producer.
+    // Keep it monotonic across sessions so stopping a full ring cannot lose a wake.
+    std::atomic<uint64_t> streamSpaceRevision{ 0 };
 };
 
 // Create/recreate and shut down on the GUI thread. Prepare before launching a

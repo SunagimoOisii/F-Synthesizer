@@ -6,6 +6,101 @@
 #include "midi/MIDIReader.h"
 #include "synth/Oscillator.h"
 #include "SynthEngine/Internal.h"
+#include <future>
+
+// The device is initialized but stopped: invoke its real callback directly so
+// wraparound, partial reads and stop races are independent of hardware timing.
+inline void CheckPreviewRingTransfer(PreviewPlaybackState& playback)
+{
+    auto reset = [&](int channels, uint64_t capacity, uint64_t offset = 0) {
+        StopPreviewAudio(playback);
+        playback.channels = channels;
+        playback.streamCapacityFrames = capacity;
+        playback.streamStartupFrames = 1;
+        playback.streamRing.assign(capacity * channels, 0);
+        playback.streamReadFrame.store(offset); playback.streamWriteFrame.store(offset);
+        playback.streamAvailableFrames.store(0);
+        playback.streamMode.store(true);
+        return playback.streamSession.load();
+    };
+    auto finish = [](std::future<bool>& writer) {
+        if (writer.wait_for(std::chrono::seconds(2)) != std::future_status::ready)
+        {
+            // Do not let future destruction hang the checker on a lost wake.
+            std::cerr << "Preview producer did not wake after consume/stop\n";
+            std::quick_exit(1);
+        }
+        return writer.get();
+    };
+    auto read = [&](float* output, int count) { playback.device.onData(&playback.device, output, nullptr, count); };
+    for (int channels : {1, 2})
+    {
+        const auto session = reset(channels, 7, 5);
+        constexpr int frames = 259;
+        std::array<double, frames * 2> source{};
+        for (size_t i = 0; i < source.size(); ++i) source[i] = (int(i % 31) - 15) / 9.0;
+        auto writer = std::async(std::launch::async, [&] {
+            if (!WriteStreamingPreviewFrame(playback, session, source[0], source[1])) return false;
+            return WriteStreamingPreviewFrames(playback, session, source.data() + 2, frames - 1);
+        });
+        std::vector<float> actual;
+        int consumed = 0;
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+        while (consumed < frames && std::chrono::steady_clock::now() < deadline)
+        {
+            const auto available = playback.streamAvailableFrames.load();
+            if (!available || !playback.playing.load()) { std::this_thread::yield(); continue; }
+            const int count = std::min({int(available), 1 + consumed % 5, frames - consumed});
+            float out[10]{}; read(out, count);
+            actual.insert(actual.end(), out, out + count * channels);
+            consumed += count;
+        }
+        if (consumed != frames) StopPreviewAudio(playback);
+        Require(finish(writer) && consumed == frames, "preview ring lost frames or a wake");
+        for (int i = 0; i < frames; ++i)
+        {
+            const float left = static_cast<float>(std::clamp(source[i * 2], -1.0, 1.0));
+            const float right = static_cast<float>(std::clamp(source[i * 2 + 1], -1.0, 1.0));
+            Require(actual[i * channels] == (channels == 1 ? (left + right) * .5f : left),
+                "preview wraparound changed PCM/order/clipping");
+            if (channels == 2) Require(actual[i * 2 + 1] == right, "preview right channel changed");
+        }
+        Require(playback.streamAvailableFrames.load() == 0 && playback.streamReadFrame.load() == 5 + frames &&
+            playback.streamWriteFrame.load() == 5 + frames, "preview cursor/count mismatch");
+    }
+
+    for (bool stop : {false, true})
+    {
+        const auto session = reset(2, 7);
+        double input[16]{};
+        Require(WriteStreamingPreviewFrames(playback, session, input, 7), "preview fill failed");
+        auto writer = std::async(std::launch::async, [&] { return WriteStreamingPreviewFrame(playback, session, .25, -.5); });
+        const bool waited = writer.wait_for(std::chrono::milliseconds(20)) == std::future_status::timeout;
+        if (stop) StopPreviewAudio(playback);
+        else { float out[2]{}; read(out, 1); }
+        Require(finish(writer) == !stop && waited, "full preview ring did not block/resume/cancel correctly");
+        if (stop) Require(!WriteStreamingPreviewFrames(playback, session, input, 1), "stale preview session accepted PCM");
+    }
+    // Stop racing the writer's initial checks must also release it; there need
+    // not have been a wait when the notification was sent.
+    for (int trial = 0; trial < 32; ++trial)
+    {
+        const auto session = reset(2, 1);
+        Require(WriteStreamingPreviewFrame(playback, session, 0, 0), "preview race fill failed");
+        auto writer = std::async(std::launch::async, [&] { return WriteStreamingPreviewFrame(playback, session, 1, 1); });
+        StopPreviewAudio(playback);
+        Require(!finish(writer), "stopped preview writer resumed");
+    }
+    const auto session = reset(2, 7);
+    playback.streamStartupFrames = 4;
+    Require(WriteStreamingPreviewFrame(playback, session, .25, -.5) && !playback.playing.load(), "preview started before prefill");
+    CompleteStreamingPreviewAudio(playback, session, false);
+    float tail[6]{}; read(tail, 3);
+    Require(tail[0] == .25f && tail[1] == -.5f && tail[2] == 0 && tail[5] == 0 && !playback.playing.load(),
+        "short preview did not drain its final frame");
+    StopPreviewAudio(playback);
+    std::cout << "Preview ring: exact mono/stereo PCM, wrapping, backpressure, consume/stop wake and short drain OK\n";
+}
 
 inline void CheckTriangleFourierAgreement()
 {

@@ -257,6 +257,9 @@ inline void CheckTransportDevice()
     };
     try
     {
+        std::string deviceError;
+        Require(EnsurePreviewAudioDevice(state->playback, state->sampleRate, deviceError), deviceError);
+        CheckPreviewRingTransfer(state->playback);
         state->pianoRoll.previewRangeStartTick = 480; state->pianoRoll.previewRangeEndTick = 1920;
         state->pianoRoll.previewRangeEnabled = state->previewLoop = true;
         state->songCursorTick = 720; state->auditionLengthSec = .2f;

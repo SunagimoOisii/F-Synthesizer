@@ -3,9 +3,7 @@
 #include "gui/PreviewAudio.h"
 
 #include <algorithm>
-#include <chrono>
 #include <memory>
-#include <thread>
 
 namespace
 {
@@ -13,6 +11,12 @@ namespace
 float ClampAudio(double v)
 {
     return static_cast<float>((std::max)(-1.0, (std::min)(1.0, v)));
+}
+
+void NotifyStreamSpace(PreviewPlaybackState& playback)
+{
+    playback.streamSpaceRevision.fetch_add(1, std::memory_order_release);
+    playback.streamSpaceRevision.notify_one();
 }
 
 void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/, ma_uint32 frameCount)
@@ -90,6 +94,7 @@ void PreviewAudioCallback(ma_device* device, void* output, const void* /*input*/
             const uint64_t songFrame = playback->streamFrameOffset.load(std::memory_order_relaxed) + readFrame + chunk;
             playback->frameCursor.store(loopFrames ? songFrame % loopFrames : songFrame, std::memory_order_relaxed);
             playback->streamAvailableFrames.fetch_sub(chunk, std::memory_order_release);
+            NotifyStreamSpace(*playback);
             written += chunk;
         }
         playback->streamPeak.store(peak, std::memory_order_relaxed);
@@ -155,6 +160,7 @@ void StopPreviewAudio(PreviewPlaybackState& playback)
     playback.playStartTick.store(0, std::memory_order_relaxed);
     playback.sessionGeneration.fetch_add(1, std::memory_order_relaxed);
     playback.streamSession.fetch_add(1, std::memory_order_relaxed);
+    NotifyStreamSpace(playback);
 }
 
 void ShutdownPreviewAudio(PreviewPlaybackState& playback)
@@ -216,45 +222,8 @@ bool WriteStreamingPreviewFrame(
     double left,
     double right)
 {
-    if (session == 0 ||
-        playback.streamSession.load(std::memory_order_relaxed) != session ||
-        !playback.streamMode.load(std::memory_order_acquire))
-    {
-        return false;
-    }
-
-    while (playback.streamAvailableFrames.load(std::memory_order_acquire) >= playback.streamCapacityFrames)
-    {
-        if (playback.streamSession.load(std::memory_order_relaxed) != session ||
-            !playback.streamMode.load(std::memory_order_acquire))
-        {
-            return false;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    const ma_uint64 writeFrame = playback.streamWriteFrame.load(std::memory_order_relaxed);
-    const ma_uint64 ringIndex = writeFrame % playback.streamCapacityFrames;
-    const size_t base = static_cast<size_t>(ringIndex * playback.channels);
-    const float l = ClampAudio(left);
-    const float r = ClampAudio(right);
-    if (playback.channels == 1)
-    {
-        playback.streamRing[base] = (l + r) * 0.5f;
-    }
-    else
-    {
-        playback.streamRing[base + 0] = l;
-        playback.streamRing[base + 1] = r;
-    }
-    playback.streamWriteFrame.store(writeFrame + 1, std::memory_order_relaxed);
-    const ma_uint64 available = playback.streamAvailableFrames.fetch_add(1, std::memory_order_release) + 1;
-    if (!playback.playing.load(std::memory_order_relaxed) && available >= playback.streamStartupFrames)
-    {
-        playback.streamUnderrun.store(false, std::memory_order_relaxed);
-        playback.playing.store(true, std::memory_order_relaxed);
-    }
-    return true;
+    const double frame[] = {left, right};
+    return WriteStreamingPreviewFrames(playback, session, frame, 1);
 }
 
 bool WriteStreamingPreviewFrames(
@@ -271,16 +240,54 @@ bool WriteStreamingPreviewFrames(
     {
         return false;
     }
-    for (int i = 0; i < frameCount; i++)
+    int written = 0;
+    while (written < frameCount)
     {
-        if (!WriteStreamingPreviewFrame(
-            playback,
-            session,
-            interleavedStereo[static_cast<size_t>(i) * 2 + 0],
-            interleavedStereo[static_cast<size_t>(i) * 2 + 1]))
+        // Observe the revision before checking stop/space. A consume or stop
+        // between the checks and wait then makes wait return immediately.
+        const auto revision = playback.streamSpaceRevision.load(std::memory_order_acquire);
+        if (session == 0 || playback.streamSession.load(std::memory_order_relaxed) != session ||
+            !playback.streamMode.load(std::memory_order_acquire))
         {
             return false;
         }
+        const ma_uint64 available = playback.streamAvailableFrames.load(std::memory_order_acquire);
+        if (available >= playback.streamCapacityFrames)
+        {
+            playback.streamSpaceRevision.wait(revision, std::memory_order_acquire);
+            continue;
+        }
+
+        const ma_uint64 writeFrame = playback.streamWriteFrame.load(std::memory_order_relaxed);
+        const ma_uint64 ringIndex = writeFrame % playback.streamCapacityFrames;
+        const int chunk = static_cast<int>((std::min<ma_uint64>)({
+            playback.streamCapacityFrames - available,
+            playback.streamCapacityFrames - ringIndex,
+            static_cast<ma_uint64>(frameCount - written)}));
+        float* destination = playback.streamRing.data() + static_cast<size_t>(ringIndex * playback.channels);
+        for (int i = 0; i < chunk; ++i)
+        {
+            const size_t source = static_cast<size_t>(written + i) * 2;
+            const float left = ClampAudio(interleavedStereo[source]);
+            const float right = ClampAudio(interleavedStereo[source + 1]);
+            if (playback.channels == 1)
+                destination[i] = (left + right) * .5f;
+            else
+            {
+                destination[i * 2] = left;
+                destination[i * 2 + 1] = right;
+            }
+        }
+        // Publish only after the entire contiguous span is ready. The callback
+        // releases space after reading it, so neither side touches unowned frames.
+        playback.streamWriteFrame.store(writeFrame + chunk, std::memory_order_relaxed);
+        const ma_uint64 published = playback.streamAvailableFrames.fetch_add(chunk, std::memory_order_release) + chunk;
+        if (!playback.playing.load(std::memory_order_relaxed) && published >= playback.streamStartupFrames)
+        {
+            playback.streamUnderrun.store(false, std::memory_order_relaxed);
+            playback.playing.store(true, std::memory_order_relaxed);
+        }
+        written += chunk;
     }
     return true;
 }
