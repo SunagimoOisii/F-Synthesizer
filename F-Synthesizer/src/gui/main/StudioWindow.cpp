@@ -1,6 +1,7 @@
 #include "StudioWindow.h"
 #include "StudioPanels.h"
 #include "StudioFiles.h"
+#include "StudioFrame.h"
 #include "StepSequencer.h"
 #include "gui/GUIActions.h"
 #include "io/PlatformPaths.h"
@@ -71,7 +72,7 @@ void timeline(GUIState &s, float width)
         ImGui::SetTooltip("クリックで移動 / ドラッグで小節単位の繰り返し範囲を選択");
 }
 
-void DrawMainWindowFrame(GUIState &s, FileActions &files)
+void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
 {
     using namespace studio;
     studio::style();
@@ -85,22 +86,22 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
     box(24, 26, 5, 26, accent);
     box(35, 21, 9, 31, accent);
     text(56, 23, "F-Synthesizer", fg, GetFonts().heading);
-    line(259, 21, 259, 60);
+    line(224, 21, 224, 60);
     const std::string name = s.activeProjectPath.empty() ? (s.songMidiName.empty() ? "名前のない曲" : s.songMidiName)
                                                          : PathToUtf8(Utf8ToPath(s.activeProjectPath).stem());
-    clipped(281, 20, width - 1038, (name + (s.presetDirty ? " *" : "")).c_str(), fg, GetFonts().heading);
+    clipped(244, 20, width - 1049, (name + (s.presetDirty ? " *" : "")).c_str(), fg, GetFonts().heading);
     const int pending = gui::PendingToneCount(s);
     const std::string status = pending ? "未採用 " + std::to_string(pending) + " ch" : "";
-    text(281, 49, status.c_str(), pendingColor, GetFonts().fontSmall);
+    text(244, 49, status.c_str(), pendingColor, GetFonts().fontSmall);
     const int seconds = static_cast<int>(gui::SongSecondsAtTick(s, s.songCursorTick)),
               duration = static_cast<int>(gui::SongSecondsAtTick(s, s.pianoRoll.maxTick));
     char timer[40];
     std::snprintf(timer, sizeof(timer), "%02d:%02d / %02d:%02d", seconds / 60, seconds % 60, duration / 60,
                   duration % 60);
-    text(width - 739, 30, timer, fg, GetFonts().heading);
+    text(width - 785, 30, timer, fg, GetFonts().heading);
     const bool exporting = s.running && !s.runIsPreview;
     ImGui::BeginDisabled(exporting);
-    if (button(gui::SongIsPlaying(s) ? "一時停止" : "再生", width - 560, 21, 115, 45, false, true,
+    if (button(gui::SongIsPlaying(s) ? "一時停止" : "再生", width - 628, 21, 100, 45, false, true,
                gui::SongIsPlaying(s) ? PauseIcon : PlayIcon))
     {
         if (gui::SongIsPlaying(s))
@@ -108,7 +109,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
         else
             gui::RequestSongPlayback(s);
     }
-    if (button("区間リピート", width - 435, 21, 139, 45, s.previewLoop))
+    if (button("区間リピート", width - 516, 21, 128, 45, s.previewLoop))
     {
         const bool playing = gui::SongIsPlaying(s);
         s.previewLoop = !s.previewLoop;
@@ -121,13 +122,14 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
         if (playing)
             gui::RequestSongPlayback(s);
     }
-    if (button("保存", width - 278, 21, 95, 45, false, false, SaveIcon))
+    if (button("保存", width - 376, 21, 84, 45, false, false, SaveIcon))
         files.requestOperation(s, 1);
-    if (button("WAV", width - 173, 21, 84, 45))
+    if (button(exporting ? "書出中" : "WAV", width - 282, 21, 78, 45))
         files.requestOperation(s, 3);
     ImGui::EndDisabled();
-    if (button("…", width - 77, 21, 53, 45))
+    if (button("…", width - 194, 21, 44, 45))
         ImGui::OpenPopup("song_menu");
+    frame.drawControls(width);
     bool settings = false, help = false;
     if (ImGui::BeginPopup("song_menu"))
     {
@@ -151,7 +153,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
     channelStrip(s, width);
     const float x = 24, w = width - 48, sideW = std::min(410.f, width * .285f), gap = 24, leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
-    const float top = 312, favoritesY = height - 196, contentH = favoritesY - 18 - top;
+    const float top = 312, actionsY = height - 66, contentH = actionsY - 12 - top;
     const int ch = s.pianoRoll.displayChannel;
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
@@ -223,25 +225,14 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
         if (s.toneExtraOpen)
             extraControls(s, x, top + contentH - 92, leftW);
     }
-    presetList(s, rightX, 220, sideW, top + contentH - 220);
-    files.favorites(s, x, favoritesY, w);
-    const float fy = height - 72;
-    box(0, fy, width, 72, panel);
-    line(24, fy, width - 24, fy);
-    box(24, fy + 15, 3, 40, gui::TonePending(s, ch) ? pendingColor : accent);
-    const std::string selectedState = "ch " + std::to_string(ch + 1) + "  " +
-                                      (part.compare              ? "採用前と比較中"
-                                       : gui::TonePending(s, ch) ? "試聴中"
-                                                                 : "採用済み");
-    text(42, fy + 12, exporting ? "WAVを書き出し中…" : selectedState.c_str(),
-         gui::TonePending(s, ch) ? pendingColor : fg, GetFonts().fontSmall);
-    clipped(42, fy + 37, width - 650, ("採用前：" + toneName(part.adopted.instrument)).c_str(), muted,
-            GetFonts().fontSmall);
+    presetList(s, rightX, 220, sideW, height - 240);
+    const float fy = actionsY;
+    line(x, fy, x + leftW, fy);
     ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
     const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
-    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", width - 575, fy + 15, 155, 42))
+    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, fy + 12, 155, 40))
         gui::RequestToneAudition(s);
-    if (button("", width - 412, fy + 15, 34, 42, false, false, DownIcon))
+    if (button("", x + 163, fy + 12, 34, 40, false, false, DownIcon))
         ImGui::OpenPopup("preview_settings");
     ImGui::EndDisabled();
     if (ImGui::BeginPopup("preview_settings"))
@@ -265,10 +256,12 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files)
         ImGui::EndPopup();
     }
     ImGui::BeginDisabled(!gui::TonePending(s, ch) || exporting);
-    if (button("取り消す", width - 364, fy + 15, 126, 42))
+    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213, fy + 12, 160, 40, part.compare))
+        part.compare = !part.compare;
+    if (button("取り消す", x + leftW - 286, fy + 12, 112, 40))
         gui::CancelTone(s, ch);
     ImGui::BeginDisabled(part.compare);
-    if (button("このchに採用", width - 222, fy + 15, 198, 42, false, true))
+    if (button("このchに採用", x + leftW - 162, fy + 12, 162, 40, false, true))
         gui::AdoptTone(s, ch);
     ImGui::EndDisabled();
     ImGui::EndDisabled();

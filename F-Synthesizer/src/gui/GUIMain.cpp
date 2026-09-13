@@ -35,6 +35,7 @@
 
 #include "main/StudioWidgets.h"
 #include "main/StudioWindow.h"
+#include "main/StudioFrame.h"
 #include "main/StudioFiles.h"
 #include "main/StepSequencer.h"
 
@@ -85,6 +86,7 @@ int RunGUIApp()
         return 1;
     }
 
+    auto windowFrame = std::make_unique<studio::WindowFrame>(window);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
@@ -123,14 +125,13 @@ int RunGUIApp()
     if (state.midiPath[0]) gui::LoadPianoRollMIDI(state.pianoRoll, Utf8ToPath(state.midiPath));
     gui::InitializeToneWorkspace(state);
     gui::SelectToneChannel(state, state.pianoRoll.displayChannel);
-    glfwSetWindowSizeLimits(window, 1240, 900, GLFW_DONT_CARE, GLFW_DONT_CARE);
     if (captureMode)
     {
         wchar_t view[32]{}; GetEnvironmentVariableW(L"FSYNTH_CAPTURE_VIEW", view, 32);
         const std::wstring mode(view);
         state.toneExtraOpen = mode.find(L"controls") != std::wstring::npos;
         state.toneNotesOpen = mode.find(L"notes") != std::wstring::npos || mode == L"drums";
-        if (mode.find(L"compact") != std::wstring::npos) glfwSetWindowSize(window, 1240, 900);
+        if (mode.find(L"compact") != std::wstring::npos) windowFrame->resize(1240, 720);
         if (mode == L"drums") { gui::SelectToneChannel(state, 9); state.stepSeq.viewActive = true; studio::LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll); }
         if (mode == L"playing") { capturePlaying = true; state.scopeWholeMix = true; gui::RequestSongPlayback(state); }
     }
@@ -148,7 +149,7 @@ int RunGUIApp()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::GetIO().FontGlobalScale = 1.f;
-        studio::DrawMainWindowFrame(state, fileActions);
+        studio::DrawMainWindowFrame(state, fileActions, *windowFrame);
         if (state.running && state.runIsPreview) gui::PublishLiveRenderSettings(state);
 
         ImGui::Render();
@@ -202,6 +203,7 @@ int RunGUIApp()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+    windowFrame.reset();
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

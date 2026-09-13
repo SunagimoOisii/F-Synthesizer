@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClCompile Include="src\\gui\\channeleditor\\SourceEditor.cpp" />
     <ClCompile Include="src\\gui\\main\\StepSequencer.cpp" />
+    <ClCompile Include="src\\gui\\main\\StudioFrame.cpp" />
     <ClCompile Include="src\\gui\\main\\StudioWindow.cpp" />
     <ClCompile Include="src\\gui\\main\\StudioFiles.cpp" />
     <ClCompile Include="src\\gui\\main\\StudioPanels.cpp" />
@@ -230,6 +231,7 @@
     <ClInclude Include="src\\gui\\channeleditor\\EnvelopeView.h" />
     <ClInclude Include="src\\gui\\channeleditor\\SourceEditor.h" />
     <ClInclude Include="src\\gui\\main\\StepSequencer.h" />
+    <ClInclude Include="src\\gui\\main\\StudioFrame.h" />
     <ClInclude Include="src\\gui\\main\\StudioWindow.h" />
     <ClInclude Include="src\\gui\\main\\StudioFiles.h" />
     <ClInclude Include="src\\gui\\main\\StudioPanels.h" />

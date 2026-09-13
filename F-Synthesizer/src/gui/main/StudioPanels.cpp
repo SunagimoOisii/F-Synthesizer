@@ -147,10 +147,9 @@ void waveform(GUIState &s, float x, float y, float w, float h)
     }
     box(x, y, w, h, scope);
     ImGui::GetWindowDrawList()->AddRect({x, y}, {x + w, y + h}, edge);
-    text(x + 18, y + 13, "波形", muted, GetFonts().fontSmall);
-    if (button("選択ch", x + 76, y + 9, 96, 32, !s.scopeWholeMix))
+    if (button("選択ch", x + 18, y + 9, 96, 32, !s.scopeWholeMix))
         s.scopeWholeMix = false;
-    if (button("曲全体", x + 180, y + 9, 96, 32, s.scopeWholeMix))
+    if (button("曲全体", x + 122, y + 9, 96, 32, s.scopeWholeMix))
         s.scopeWholeMix = true;
     at(x + w - 103, y + 14);
     ImGui::PushFont(GetFonts().fontSmall);
@@ -158,7 +157,7 @@ void waveform(GUIState &s, float x, float y, float w, float h)
     ImGui::Checkbox("固定", &freeze);
     ImGui::PopStyleVar();
     ImGui::PopFont();
-    const float top = y + 56, bottom = y + h - 24, cy = (top + bottom) * .5f;
+    const float top = y + 56, bottom = y + h - 16, cy = (top + bottom) * .5f;
     for (int i = 1; i < 8; ++i)
         line(x + w * i / 8, top, x + w * i / 8, bottom, color(31, 47, 57));
     line(x + 18, cy, x + w - 18, cy, edge);
@@ -167,11 +166,6 @@ void waveform(GUIState &s, float x, float y, float w, float h)
         line(x + 18 + (w - 36) * (i - 1) / 1023, cy - samples[i - 1] * gain * (bottom - top) * .45f,
              x + 18 + (w - 36) * i / 1023, cy - samples[i] * gain * (bottom - top) * .45f, accent, 1.6f);
     ImGui::GetWindowDrawList()->PopClipRect();
-    text(x + 18, y + h - 22,
-         freeze    ? "固定中"
-         : playing ? ""
-                   : "再生すると音の形を表示します",
-         muted, GetFonts().fontSmall);
 }
 
 void toneControls(GUIState &s, float x, float y, float w)
@@ -180,18 +174,14 @@ void toneControls(GUIState &s, float x, float y, float w)
     dial(s, 1, "ざらつき", x + 116, y);
     dial(s, 2, "余韻", x + 226, y);
     auto &part = s.tones[s.pianoRoll.displayChannel];
-    if (button("鳴り方・揺れ", x + 342, y + 5, 160, 36, s.toneExtraOpen))
+    if (button("鳴り方・揺れ", x + 342, y + 28, 160, 36, s.toneExtraOpen))
         s.toneExtraOpen = !s.toneExtraOpen;
-    ImGui::BeginDisabled(!gui::TonePending(s, s.pianoRoll.displayChannel));
-    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 342, y + 50, 160, 36, part.compare))
-        part.compare = !part.compare;
-    ImGui::EndDisabled();
     ImGui::BeginDisabled(part.undo.empty());
-    if (button("戻す", x + w - 193, y + 7, 85, 33))
+    if (button("戻す", x + w - 193, y + 30, 85, 33))
         gui::UndoToneEdit(s);
     ImGui::EndDisabled();
     ImGui::BeginDisabled(part.redo.empty());
-    if (button("やり直す", x + w - 100, y + 7, 100, 33))
+    if (button("やり直す", x + w - 100, y + 30, 100, 33))
         gui::UndoToneEdit(s, true);
     ImGui::EndDisabled();
 }

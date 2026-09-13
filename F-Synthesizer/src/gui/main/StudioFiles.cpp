@@ -122,78 +122,6 @@ void FileActions::finishOperation(GUIState &s)
     }
 }
 
-void FileActions::favorites(GUIState &s, float x, float y, float w)
-{
-    static char search[128]{};
-    static int category = -1;
-    icon(StarIcon, x, y + 3, 22);
-    text(x + 33, y, "お気に入り", fg, GetFonts().heading);
-    at(x + 230, y - 2);
-    ImGui::SetNextItemWidth(230);
-    ImGui::InputTextWithHint("##favorite_search", "名前で検索", search, sizeof(search));
-    at(x + 476, y - 2);
-    ImGui::SetNextItemWidth(176);
-    if (ImGui::BeginCombo("##favorite_category", category < 0 ? "すべての分類" : categoryLabels[category]))
-    {
-        if (ImGui::Selectable("すべての分類", category < 0))
-            category = -1;
-        for (int i = 0; i < 8; ++i)
-            if (ImGui::Selectable(categoryLabels[i], category == i))
-                category = i;
-        ImGui::EndCombo();
-    }
-    if (button("いまの音を追加", x + w - 174, y - 2, 174, 36, false, false, StarIcon))
-    {
-        const auto &instrument = gui::AudibleInstrument(s, s.pianoRoll.displayChannel);
-        std::filesystem::path saved;
-        std::string error;
-        if (gui::SaveUserPresetFile(FindProjectRootPath(), instrument, toneName(instrument), saved, error))
-            gui::RefreshPresetItems(s, "user/" + PathToUtf8(saved.stem()));
-        else
-            gui::RaiseGUIError(s, error, 0, true);
-    }
-    at(x, y + 42);
-    ImGui::BeginChild("favorites", {w, 86}, false, ImGuiWindowFlags_HorizontalScrollbar);
-    bool first = true;
-    for (int i = 0; i < static_cast<int>(s.presetItems.size()); ++i)
-    {
-        const auto &item = s.presetItems[i];
-        if (!item.name.starts_with("user/") || !matches(item.displayName, search) ||
-            (category >= 0 && categoryIndex(item.category) != category))
-            continue;
-        if (!first)
-            ImGui::SameLine(0, 16);
-        first = false;
-        const auto p = ImGui::GetCursorScreenPos();
-        ImGui::PushID(i);
-        if (ImGui::InvisibleButton("favorite", {265, 62}))
-        {
-            std::string error;
-            if (!gui::SelectTonePreset(s, i, error))
-                gui::RaiseGUIError(s, error, 0, true);
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-            ImGui::SetTooltip("%s\n右クリックで名前を変更", item.displayName.c_str());
-        box(p.x, p.y, 265, 62, ImGui::IsItemHovered() ? raised : panel);
-        icon(categoryGlyphs[categoryIndex(item.category)], p.x + 14, p.y + 18, 25);
-        clipped(p.x + 52, p.y + 7, 202, item.displayName.c_str(), fg, GetFonts().body);
-        text(p.x + 52, p.y + 35, categoryLabels[categoryIndex(item.category)], muted, GetFonts().fontSmall);
-        if (ImGui::BeginPopupContextItem("favorite_menu"))
-        {
-            if (ImGui::MenuItem("名前を変更"))
-            {
-                windowState.renameKey = item.name;
-                strncpy_s(windowState.renameText, item.displayName.c_str(), _TRUNCATE);
-            }
-            ImGui::EndPopup();
-        }
-        ImGui::PopID();
-    }
-    if (first)
-        ImGui::TextDisabled("気に入った音は「いまの音を追加」で保存できます。");
-    ImGui::EndChild();
-}
-
 void FileActions::dialogs(GUIState &s)
 {
     if (windowState.confirmOperation && !ImGui::IsPopupOpen("未採用の音色"))
@@ -239,31 +167,6 @@ void FileActions::dialogs(GUIState &s)
         if (ImGui::Button("戻る"))
         {
             windowState.openPath.clear();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-    if (!windowState.renameKey.empty() && !ImGui::IsPopupOpen("お気に入りの名前"))
-        ImGui::OpenPopup("お気に入りの名前");
-    if (ImGui::BeginPopupModal("お気に入りの名前", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::InputText("名前", windowState.renameText, sizeof(windowState.renameText));
-        if (ImGui::Button("変更") && windowState.renameText[0])
-        {
-            std::string error;
-            if (gui::RenameUserPreset(FindProjectRootPath(), windowState.renameKey, windowState.renameText, error))
-            {
-                gui::RefreshPresetItems(s, windowState.renameKey);
-                windowState.renameKey.clear();
-                ImGui::CloseCurrentPopup();
-            }
-            else
-                gui::RaiseGUIError(s, error, 0, true);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("戻る"))
-        {
-            windowState.renameKey.clear();
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
@@ -382,7 +285,7 @@ void FileActions::dialogs(GUIState &s)
             "1. 上部のメニューから MIDI を開く\n2. チャンネルを選び、右のプリセットをクリック\n3. "
             "ノブで調整して「このchに採用」\n\nSpace: 再生・一時停止 / Ctrl+S: 曲を保存\nCtrl+Z / Ctrl+Y: "
             "元に戻す・やり直す\nノブ: 上下ドラッグ / Shift: 微調整 / 右クリック: 数値入力\n進行バー: クリックで移動 / "
-            "ドラッグで区間リピート\nお気に入り: 右クリックで名前を変更");
+            "ドラッグで区間リピート\n上部の空白: ドラッグで移動 / ダブルクリックで最大化・元に戻す");
         if (ImGui::Button("閉じる"))
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
