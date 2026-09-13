@@ -786,21 +786,6 @@ bool EnsureRenderWorkerPool(RenderState& state, size_t workerJobCount)
     return state.renderWorkerPool != nullptr && state.renderWorkerPool->WorkerCount() > 0;
 }
 
-bool HasActiveDrumBusVoice(const RenderState& state, const std::vector<int>& activeChannels)
-{
-    for (const int ch : activeChannels)
-    {
-        for (const size_t i : state.activeVoiceIndicesByChannel[ch])
-        {
-            if (state.voices.runtimeHasDrumBus[i] != 0)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 bool RenderVoicesBlockParallel(
     RenderState& state,
     const SoundData& sound,
@@ -809,10 +794,8 @@ bool RenderVoicesBlockParallel(
     const std::vector<int>& activeChannels,
     size_t& removedCount)
 {
-    const size_t workerJobCount = activeChannels.size() - 1;
     if (frameCount < 32 ||
-        activeChannels.size() < 2 ||
-        HasActiveDrumBusVoice(state, activeChannels))
+        activeChannels.size() < 2)
     {
         return false;
     }
@@ -821,7 +804,13 @@ bool RenderVoicesBlockParallel(
     // Count work outside the heaviest channel: splitting off an almost empty
     // part cannot shorten that channel's critical path. These relative weights
     // distinguish basic waves from FM/layered voices without timing every block.
-    size_t totalWork = 0, largestChannelWork = 0;
+    // Drum-bus state is channel-owned, so its channel can run on a worker.
+    // SampleNoise owns thread-local colour/history: keep those channels on the
+    // caller, in channel order, even when other parts switch to parallel work.
+    std::array<int, 16> workerChannels{}, callerChannels{};
+    size_t workerJobCount = 0, callerJobCount = 0;
+    const int noiseKind = config::SourceKindToIndex(config::SourceKind::Noise);
+    size_t totalWork = 0, largestChannelWork = 0, callerWork = 0;
     for (const int ch : activeChannels)
     {
         size_t channelWork = 0;
@@ -833,11 +822,21 @@ bool RenderVoicesBlockParallel(
             }
         totalWork += channelWork;
         largestChannelWork = std::max(largestChannelWork, channelWork);
+        if (ch == activeChannels.front() || !state.activeVoiceIndicesByChannelSource[ch][noiseKind].empty())
+        {
+            callerChannels[callerJobCount++] = ch;
+            callerWork += channelWork;
+        }
+        else
+        {
+            workerChannels[workerJobCount++] = ch;
+        }
     }
     // Release measurements: four plain waves do not benefit; sixteen spread
     // across four channels and four layered FM voices do. Keep event boundaries
     // and the 64-sample live-update interval unchanged.
-    if ((totalWork - largestChannelWork) * static_cast<size_t>(frameCount) < 4 * 64 ||
+    if (workerJobCount == 0 ||
+        (totalWork - std::max(largestChannelWork, callerWork)) * static_cast<size_t>(frameCount) < 4 * 64 ||
         !EnsureRenderWorkerPool(state, workerJobCount))
         return false;
 
@@ -847,8 +846,8 @@ bool RenderVoicesBlockParallel(
     }
 
     std::array<size_t, 16> removedByChannel{};
-    const bool ok = state.renderWorkerPool->RunWithCaller(activeChannels.size() - 1, [&](size_t jobIndex) {
-        const int ch = activeChannels[jobIndex + 1];
+    const bool ok = state.renderWorkerPool->RunWithCaller(workerJobCount, [&](size_t jobIndex) {
+        const int ch = workerChannels[jobIndex];
         removedByChannel[ch] = RenderChannelBlockToBuffer(
             state,
             sound,
@@ -856,13 +855,16 @@ bool RenderVoicesBlockParallel(
             frameCount,
             state.renderChannelBlockFrames[ch]);
     }, [&]() {
-        const int ch = activeChannels.front();
-        removedByChannel[ch] = RenderChannelBlockToBuffer(
-            state,
-            sound,
-            ch,
-            frameCount,
-            state.renderChannelBlockFrames[ch]);
+        for (size_t jobIndex = 0; jobIndex < callerJobCount; ++jobIndex)
+        {
+            const int ch = callerChannels[jobIndex];
+            removedByChannel[ch] = RenderChannelBlockToBuffer(
+                state,
+                sound,
+                ch,
+                frameCount,
+                state.renderChannelBlockFrames[ch]);
+        }
     });
     if (!ok)
     {

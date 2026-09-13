@@ -4,6 +4,122 @@
 #include "synth/YmfmVoice.h"
 #include "SynthEngine/SynthEngine.h"
 #include "midi/MIDIReader.h"
+#include "synth/Oscillator.h"
+#include "SynthEngine/Internal.h"
+
+inline void CheckTriangleFourierAgreement()
+{
+    const double pi = std::acos(-1.0);
+    double maxError = 0;
+    // Exercise every harmonic cutoff, phase wrapping, and the zero/Nyquist paths.
+    std::vector<double> increments{0, 1e-300, .5, .75};
+    for (int harmonic = 1; harmonic <= 256; ++harmonic)
+    {
+        const double edge = .5 / harmonic;
+        increments.push_back(edge);
+        increments.push_back(std::nextafter(edge, 0.0));
+        increments.push_back(std::nextafter(edge, 1.0));
+    }
+    for (double increment : increments)
+        for (int n = 0; n <= 128; ++n)
+        {
+            const double phase = (n - 32) / 64.0;
+            const double p = phase - std::floor(phase);
+            double expected = 1.0 - 4.0 * std::abs(p - .5);
+            if (increment > 0 && increment < .5)
+            {
+                const int limit = static_cast<int>(std::min(255.0, std::floor(.5 / increment)));
+                double sum = 0;
+                for (int h = 1; h <= limit; h += 2)
+                    sum += std::cos(2 * pi * h * p) / (h * h);
+                expected = -8.0 / (pi * pi) * sum;
+            }
+            for (double sign : {-1.0, 1.0})
+            {
+                const double actual = SampleWavePhase(WaveType::Triangle, phase, sign * increment);
+                Require(std::isfinite(actual), "triangle produced non-finite output");
+                maxError = std::max(maxError, std::abs(actual - expected));
+            }
+        }
+    Require(maxError < 1e-11, "triangle changed its band-limited Fourier sum");
+    std::cout << "Triangle Fourier agreement: max error=" << maxError << '\n';
+}
+
+inline void CheckParallelDrumMix()
+{
+    constexpr int rate = 44100;
+    auto sounds = std::make_unique<std::array<InstrumentSoundConfig, 16>>();
+    std::vector<MIDIEvent> events;
+    for (int ch : {0, 2, 5, 9})
+    {
+        auto& sound = (*sounds)[ch];
+        sound.source = FmConfig{}; sound.amp = .2;
+        sound.attackSec = .001; sound.decaySec = .02; sound.sustainLevel = .7; sound.releaseSec = .01;
+        if (ch == 9)
+        {
+            DrumConfig drum{}; drum.type = DrumType::Snare;
+            drum.bodyFreq = 170; drum.bodyLevel = .5; drum.noiseLevel = .3; drum.decaySec = .06;
+            sound.source = drum;
+            sound.drumBus.enabled = true; sound.drumBus.glue = .6;
+            sound.drumBus.lowTighten = .3; sound.drumBus.presenceCut = .2; sound.drumBus.roomSend = .3;
+        }
+        for (int n = 0; n < 2; ++n)
+        {
+            MIDIEvent on{}; on.type = MIDIEventType::Note; on.isNoteOn = true;
+            on.channel = ch; on.noteNumber = 48 + n * 7; on.velocity = 100; on.noteInstanceID = ch * 10 + n + 1;
+            events.push_back(on);
+            auto off = on; off.sample = 1200; off.isNoteOn = false; events.push_back(off);
+        }
+    }
+    std::stable_sort(events.begin(), events.end(), [](const auto& a, const auto& b) { return a.sample < b.sample; });
+    auto makeState = [&](bool serial)
+    {
+        auto state = std::make_unique<RenderState>(); state->renderParallelDisabled = serial;
+        state->channelCcGain.fill(1); state->channelPitch.fill(1);
+        state->channelRenderable.fill(true); state->channelMixGainL.fill(.7); state->channelMixGainR.fill(.6);
+        state->channelAttackScale.fill(1); state->channelDecayScale.fill(1); state->channelReleaseScale.fill(1);
+        state->channelBrightness.fill(.5); state->channelResonance.fill(.5);
+        state->channelBrightnessCutoffScale.fill(1); state->channelResonanceScale.fill(1);
+        state->scopeChannel = 9;
+        return state;
+    };
+    auto serial = makeState(true), parallel = makeState(false);
+    SoundData context(1, 16, rate, 2);
+    std::vector<StereoFrame> expected, actual;
+    double energy = 0;
+    for (int sample = 0; sample < 2400;)
+    {
+        for (auto* state : {serial.get(), parallel.get()})
+        {
+            ProcessEventsAtSample(events, sample, *sounds, rate, *state);
+            if (sample == 640) // A held note changes source at a render boundary.
+                for (size_t i = 0; i < state->voices.size(); ++i)
+                    if (state->voices.channelIndex[i] == 2)
+                    {
+                        auto changed = (*sounds)[2]; changed.source = WaveformConfig{};
+                        state->voices.UpdateSound(i, changed, rate);
+                        MarkActiveVoiceIndicesDirty(*state);
+                    }
+        }
+        const int end = std::min({sample + (sample == 704 ? 17 : 64), sample < 1200 ? 1200 : 2400, 2400});
+        serial->scopeFrames.assign(end - sample, 0); parallel->scopeFrames.assign(end - sample, 0);
+        RenderVoicesBlock(*serial, context, end - sample, expected);
+        RenderVoicesBlock(*parallel, context, end - sample, actual);
+        Require(expected.size() == actual.size(), "parallel render lost frames");
+        for (size_t n = 0; n < actual.size(); ++n)
+        {
+            Require(actual[n].left == expected[n].left && actual[n].right == expected[n].right,
+                "parallel drum mix changed PCM/order/state");
+            energy += actual[n].left * actual[n].left;
+        }
+        Require(serial->scopeFrames == parallel->scopeFrames, "parallel drum scope changed");
+        sample = end;
+    }
+    Require(energy > .001, "parallel comparison was silent");
+    if (std::thread::hardware_concurrency() > 1)
+        Require(parallel->renderWorkerPool != nullptr, "drum bus disabled parallel rendering");
+    std::cout << "Parallel drum mix, source change, note-off and scope agree with serial output\n";
+}
 
 inline void CheckVocalFilterAndFmSweep()
 {
@@ -111,6 +227,8 @@ inline void CheckPercussionCoverage(const InstrumentSoundConfig& sound, const st
 
 inline void CheckAudioIntegration()
 {
+    CheckTriangleFourierAgreement();
+    CheckParallelDrumMix();
     CheckVocalFilterAndFmSweep();
     constexpr int rate = 44100;
     FmConfig fm{};

@@ -46,17 +46,25 @@ double SampleBandLimitedTriangle(double phase, double phaseInc)
         return 1.0 - 4.0 * std::fabs(phase - 0.5);
     }
 
-    const int maxHarmonic = static_cast<int>(std::floor(0.5 / dt));
-    const int cappedMaxHarmonic = std::min(maxHarmonic, 255);
+    const int cappedMaxHarmonic = static_cast<int>(std::min(std::floor(0.5 / dt), 255.0));
     if (cappedMaxHarmonic < 1)
     {
         return 0.0;
     }
 
+    // Keep the same band-limited Fourier sum. Odd harmonics follow
+    // cos((n+2)x) = 2*cos(2x)*cos(nx) - cos((n-2)x), starting at cos(-x).
+    // Re-seeding each sample bounds rounding error to at most 128 terms.
+    double previous = std::cos(2.0 * kPi * phase);
+    double current = previous;
+    const double step = 2.0 * std::cos(4.0 * kPi * phase);
     double sum = 0.0;
     for (int n = 1; n <= cappedMaxHarmonic; n += 2)
     {
-        sum += std::cos(2.0 * kPi * static_cast<double>(n) * phase) / static_cast<double>(n * n);
+        sum += current / static_cast<double>(n * n);
+        const double next = step * current - previous;
+        previous = current;
+        current = next;
     }
     return -(8.0 / (kPi * kPi)) * sum;
 }
