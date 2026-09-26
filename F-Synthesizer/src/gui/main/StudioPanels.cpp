@@ -364,13 +364,13 @@ void presetList(GUIState &s, float x, float y, float w, float h)
                               categoryLabels[categoryIndex(preset.category)], preset.description.c_str());
         if (selected || hovered)
             box(p.x, p.y, rw, 78, panel);
+        const ImU32 selectedColor = part.compare ? muted : accent;
         if (selected)
-            box(p.x, p.y, 3, 78, part.compare ? muted : accent);
+            box(p.x, p.y, 3, 78, selectedColor);
         if (showRowCategory)
-            icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? accent : muted);
-        const char *status = selected  ? (part.compare              ? "保持中"
-                                          : gui::TonePending(s, ch) ? "試聴中"
-                                                                    : "採用済み")
+            icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? selectedColor : muted);
+        const bool auditioning = selected && !part.compare && gui::TonePending(s, ch);
+        const char *status = selected  ? (part.compare ? "保持中" : auditioning ? "試聴中" : "採用済み")
                              : adopted ? "採用済み"
                                        : "";
         if (!selected && !adopted)
@@ -378,7 +378,7 @@ void presetList(GUIState &s, float x, float y, float w, float h)
                 if (it->second.customizedBase || it->second.adjusted)
                     status = "調整済み";
         clipped(p.x + textInset, p.y + 9, rw - textInset - 92, preset.displayName.c_str(), fg, GetFonts().body);
-        text(p.x + rw - 83, p.y + 11, status, selected && !part.compare ? pendingColor : muted, GetFonts().fontSmall);
+        text(p.x + rw - 83, p.y + 11, status, auditioning ? pendingColor : muted, GetFonts().fontSmall);
         clipped(p.x + textInset, p.y + 43, rw - textInset - 12, preset.description.c_str(), muted, GetFonts().fontSmall);
         ImGui::PopID();
     }
