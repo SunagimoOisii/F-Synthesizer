@@ -153,6 +153,8 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     channelStrip(s, width);
     const float x = 24, w = width - 48, sideW = std::min(410.f, width * .285f), gap = 24, leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
+    // 関連する操作が横へ離れすぎないよう、余った幅はグループの外側に残す。
+    const float controlsW = std::min(leftW, 720.f);
     float actionsY = height - 66;
     const float top = 312, contentH = actionsY - 12 - top;
     const int ch = s.pianoRoll.displayChannel;
@@ -233,14 +235,14 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         const float waveH = std::min(240.f, contentH - controlsH - extraH);
         const float controlsBottom = top + waveH + controlsH;
         waveform(s, x, top, leftW, waveH);
-        toneControls(s, x, top + waveH + 8, leftW);
+        toneControls(s, x, top + waveH + 8, controlsW);
         if (extraOpen)
-            extraControls(s, x, controlsBottom + 2, leftW);
+            extraControls(s, x, controlsBottom + 2, controlsW);
         actionsY = controlsBottom + extraH + 12;
     }
     presetList(s, rightX, 220, sideW, height - 240);
     const float fy = actionsY;
-    line(x, fy, x + leftW, fy);
+    line(x, fy, x + controlsW, fy);
     ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
     const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
@@ -278,10 +280,10 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     ImGui::BeginDisabled(!gui::TonePending(s, ch) || exporting);
     if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213, fy + 12, 160, 40, part.compare))
         part.compare = !part.compare;
-    if (button("取り消す", x + leftW - 286, fy + 12, 112, 40))
+    if (button("取り消す", x + controlsW - 286, fy + 12, 112, 40))
         gui::CancelTone(s, ch);
     ImGui::BeginDisabled(part.compare);
-    if (button("このchに採用", x + leftW - 162, fy + 12, 162, 40, false, true))
+    if (button("このchに採用", x + controlsW - 162, fy + 12, 162, 40, false, true))
         gui::AdoptTone(s, ch);
     ImGui::EndDisabled();
     ImGui::EndDisabled();
