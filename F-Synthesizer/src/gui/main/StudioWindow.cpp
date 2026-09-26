@@ -83,6 +83,8 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     ImGui::Begin("F-Synthesizer", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
                      ImGuiWindowFlags_NoScrollbar);
+    box(0, 72, width, height - 72, scope);
+    line(0, 72, width, 72);
     box(24, 26, 5, 26, accent);
     box(35, 21, 9, 31, accent);
     text(56, 23, "F-Synthesizer", fg, GetFonts().heading);
@@ -149,32 +151,42 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         ImGui::OpenPopup("設定");
     if (help)
         ImGui::OpenPopup("操作方法");
-    // 作業全体の幅を抑え、広い画面の余白は左右の外側へ均等に残す。
-    constexpr float controlsMaxW = 720, gap = 32;
-    const float w = std::min(width - 48, 1392.f), x = (width - w) / 2;
-    // 最小ウィンドウでも音色操作の幅を確保し、残りを読みやすい一覧へ配分する。
-    const float sideW = std::min(480.f, w - gap - controlsMaxW), leftW = w - sideW - gap,
+    constexpr float x = 24, gap = 32;
+    const float w = width - 48;
+    // 一覧は読みやすい幅に保ち、広い画面は波形・音符編集へ割り当てる。
+    const float sideW = std::clamp(width / 3, 440.f, 560.f), leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
+    box(x - 12, 120, w + 24, 80, bg);
+    ImGui::GetWindowDrawList()->AddRect({x - 12, 120}, {x + w + 12, 200}, edge);
     timeline(s, x, w);
     channelStrip(s, x, w);
-    // 関連する操作が横へ離れすぎないよう、余った幅はグループの外側に残す。
-    const float controlsW = std::min(leftW, controlsMaxW);
-    float actionsY = height - 66;
-    const float top = 312, contentH = actionsY - 12 - top;
+    auto drawArea = [&](float left, float areaWidth) {
+        box(left - 12, 208, areaWidth + 24, height - 216, bg);
+        ImGui::GetWindowDrawList()->AddRect({left - 12, 208}, {left + areaWidth + 12, height - 8}, edge);
+        line(left - 12, 270, left + areaWidth + 12, 270);
+    };
+    drawArea(x, leftW);
+    drawArea(rightX, sideW);
+    // 操作部はまとまりごと広げる。低いウィンドウでは追加調整と波形の高さを優先する。
+    const float controlsGrowth = std::clamp(std::min((width - 1440.f) / 480, (height - 720.f) / 180), 0.f, 1.f);
+    const float controlsScale = 1 + .2f * controlsGrowth, controlsW = 720 * controlsScale;
+    const float controlsX = x + (leftW - controlsW) / 2;
+    float actionsY = height - 14 - 52 * controlsScale;
+    constexpr float top = 324;
     const int ch = s.pianoRoll.displayChannel;
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
     const int category = categoryIndex(part.category);
     const std::string label = "ch " + std::to_string(ch + 1) + " / " + categoryLabels[category];
-    at(x, 205);
+    at(x, 217);
     if (ImGui::InvisibleButton("part_category", {170, 24}, ImGuiButtonFlags_EnableNav))
         ImGui::OpenPopup("part_category");
     const bool categoryHovered = ImGui::IsItemHovered();
     const bool categoryHighlighted = categoryHovered || ImGui::IsItemFocused() || ImGui::IsPopupOpen("part_category");
     if (categoryHighlighted)
-        box(x, 205, 170, 24, panel);
-    text(x, 206, label.c_str(), categoryHighlighted ? fg : muted, GetFonts().fontSmall);
-    icon(DownIcon, x + 144, 211, 12, categoryHighlighted ? fg : muted);
+        box(x, 217, 170, 24, panel);
+    text(x, 218, label.c_str(), categoryHighlighted ? fg : muted, GetFonts().fontSmall);
+    icon(DownIcon, x + 144, 223, 12, categoryHighlighted ? fg : muted);
     if (categoryHovered)
         ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
@@ -191,12 +203,12 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
             }
         ImGui::EndPopup();
     }
-    clipped(x, 224, leftW - 256, toneName(audible).c_str(), fg, GetFonts().heading);
-    if (tab("音色", x + leftW - 238, 218, 95, 38, !s.toneNotesOpen))
+    clipped(x, 236, leftW - 256, toneName(audible).c_str(), fg, GetFonts().heading);
+    if (tab("音色", x + leftW - 238, 230, 95, 38, !s.toneNotesOpen))
         s.toneNotesOpen = false;
-    if (tab("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))
+    if (tab("音符を編集", x + leftW - 133, 230, 133, 38, s.toneNotesOpen))
         s.toneNotesOpen = true;
-    mixControls(s, x, 266);
+    mixControls(s, x, 278);
     if (s.toneNotesOpen)
     {
         static bool firstNotes = true;
@@ -207,7 +219,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
             firstNotes = false;
         }
         at(x, top);
-        ImGui::BeginChild("notes", {leftW, contentH}, false);
+        ImGui::BeginChild("notes", {leftW, actionsY - top}, false);
         if (ch == 9 && ImGui::Checkbox("16ステップで編集", &s.stepSeq.viewActive) && s.stepSeq.viewActive)
         {
             const int span = std::max(1, s.pianoRoll.ticksPerQuarter * 4);
@@ -232,10 +244,10 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     }
     else
     {
-        actionsY = toneEditor(s, x, top, leftW, controlsW, contentH);
+        actionsY = toneEditor(s, x, top, leftW, controlsW, actionsY - top - 12 * controlsScale);
     }
-    presetList(s, rightX, 220, sideW, height - 240);
-    toneActions(s, x, actionsY, controlsW);
+    presetList(s, rightX, 232, sideW, height - 252);
+    toneActions(s, controlsX, actionsY, controlsW);
     const auto &io = ImGui::GetIO();
     if (!io.WantTextInput && !ImGui::IsAnyItemActive() &&
         !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel))

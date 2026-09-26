@@ -181,40 +181,42 @@ void waveform(GUIState &s, float x, float y, float w, float h)
 
 void toneControls(GUIState &s, float x, float y, float w)
 {
-    dial(s, 0, "明るさ", x + 6, y);
-    dial(s, 1, "ざらつき", x + 116, y);
-    dial(s, 2, "余韻", x + 226, y);
+    const float scale = w / 720;
+    dial(s, 0, "明るさ", x + 6 * scale, y, .88f * scale);
+    dial(s, 1, "ざらつき", x + 116 * scale, y, .88f * scale);
+    dial(s, 2, "余韻", x + 226 * scale, y, .88f * scale);
     auto &part = s.tones[s.pianoRoll.displayChannel];
-    if (disclosure("鳴り方・揺れ", x + 342, y + 28, 160, 36, s.toneExtraOpen))
+    if (disclosure("鳴り方・揺れ", x + 342 * scale, y + 28 * scale, 160 * scale, 36 * scale, s.toneExtraOpen))
         s.toneExtraOpen = !s.toneExtraOpen;
     ImGui::BeginDisabled(part.undo.empty());
-    if (button("戻す", x + w - 193, y + 30, 85, 33))
+    if (button("戻す", x + w - 193 * scale, y + 30 * scale, 85 * scale, 33 * scale))
         gui::UndoToneEdit(s);
     ImGui::EndDisabled();
     ImGui::BeginDisabled(part.redo.empty());
-    if (button("やり直す", x + w - 100, y + 30, 100, 33))
+    if (button("やり直す", x + w - 100 * scale, y + 30 * scale, 100 * scale, 33 * scale))
         gui::UndoToneEdit(s, true);
     ImGui::EndDisabled();
 }
 
 void extraControls(GUIState &s, float x, float y, float w)
 {
+    const float scale = w / 720;
     line(x, y, x + w, y);
-    // 通常ノブと同じ中心位置（50 / 160 / 270）にそろえる。
-    dial(s, 3, "立ち上がり", x + 19, y + 7, .62f);
-    dial(s, 4, "減衰", x + 129, y + 7, .62f);
-    dial(s, 5, "揺れ", x + 239, y + 7, .62f);
+    // 通常ノブと同じ基準の中心位置（50 / 160 / 270）にそろえる。
+    dial(s, 3, "立ち上がり", x + 19 * scale, y + 7 * scale, .62f * scale);
+    dial(s, 4, "減衰", x + 129 * scale, y + 7 * scale, .62f * scale);
+    dial(s, 5, "揺れ", x + 239 * scale, y + 7 * scale, .62f * scale);
     const auto &sound = gui::AudibleInstrument(s, s.pianoRoll.displayChannel).sound;
-    const float gx = x + 356, gy = y + 62, gw = std::max(65.f, w - 486);
+    const float gx = x + 356 * scale, gy = y + 62 * scale, gw = w - 486 * scale;
     const double total = std::max(.2, sound.attackSec + sound.decaySec + sound.releaseSec + .3);
     const float a = static_cast<float>(sound.attackSec / total) * gw;
     const float d = static_cast<float>(sound.decaySec / total) * gw;
-    line(gx, gy, gx + a, y + 16, accent);
-    line(gx + a, y + 16, gx + a + d, gy - 40 * static_cast<float>(sound.sustainLevel), accent);
-    line(gx + a + d, gy - 40 * static_cast<float>(sound.sustainLevel), gx + gw * .8f,
-         gy - 40 * static_cast<float>(sound.sustainLevel), accent);
-    line(gx + gw * .8f, gy - 40 * static_cast<float>(sound.sustainLevel), gx + gw, gy, accent);
-    if (button("詳細", x + w - 104, y + 26, 104, 36))
+    const float sustainY = gy - 40 * scale * static_cast<float>(sound.sustainLevel);
+    line(gx, gy, gx + a, y + 16 * scale, accent);
+    line(gx + a, y + 16 * scale, gx + a + d, sustainY, accent);
+    line(gx + a + d, sustainY, gx + gw * .8f, sustainY, accent);
+    line(gx + gw * .8f, sustainY, gx + gw, gy, accent);
+    if (button("詳細", x + w - 104 * scale, y + 26 * scale, 104 * scale, 36 * scale))
     {
         s.tones[s.pianoRoll.displayChannel].compare = false;
         ImGui::OpenPopup("音色の詳細");
@@ -227,19 +229,21 @@ float toneEditor(GUIState &s, float x, float y, float w, float controlsW, float 
 {
     // 開閉したフレームも同じ状態で高さを決め、下部操作まで一つのまとまりにする。
     const bool extraOpen = s.toneExtraOpen;
-    constexpr float controlsH = 124, extraControlsH = 94;
-    const float extraH = extraOpen ? extraControlsH : 0;
-    const float waveH = std::min(240.f, availableH - controlsH - extraH);
+    const float scale = controlsW / 720, controlsX = x + (w - controlsW) / 2;
+    const float controlsH = 124 * scale, extraH = extraOpen ? 94 * scale : 0;
+    const float preferredWaveH = std::clamp(availableH * .64f, 240.f, 440.f);
+    const float waveH = std::min(preferredWaveH, availableH - controlsH - extraH);
     const float controlsBottom = y + waveH + controlsH;
     waveform(s, x, y, w, waveH);
-    toneControls(s, x, y + waveH + 8, controlsW);
+    toneControls(s, controlsX, y + waveH + 8 * scale, controlsW);
     if (extraOpen)
-        extraControls(s, x, controlsBottom + 2, controlsW);
-    return controlsBottom + extraH + 12;
+        extraControls(s, controlsX, controlsBottom + 2 * scale, controlsW);
+    return controlsBottom + extraH + 12 * scale;
 }
 
 void toneActions(GUIState &s, float x, float fy, float w)
 {
+    const float scale = w / 720, buttonY = fy + 12 * scale, buttonH = 40 * scale;
     const int ch = s.pianoRoll.displayChannel;
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
@@ -248,16 +252,16 @@ void toneActions(GUIState &s, float x, float fy, float w)
     ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
     const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, fy + 12, 155, 40))
+    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, buttonY, 155 * scale, buttonH))
         gui::RequestToneAudition(s);
-    if (button("", x + 155, fy + 12, 42, 40, ImGui::IsPopupOpen("preview_settings"), false, DownIcon))
+    if (button("", x + 155 * scale, buttonY, 42 * scale, buttonH, ImGui::IsPopupOpen("preview_settings"), false, DownIcon))
         ImGui::OpenPopup("preview_settings");
     ImGui::PopStyleVar();
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
         ImGui::SetTooltip(drum ? "試聴ビートの内容を表示" : "試聴する音の高さ・長さを設定");
     const ImU32 previewBorder = ImGui::GetColorU32(vec(edge));
-    ImGui::GetWindowDrawList()->AddRect({x, fy + 12}, {x + 197, fy + 52}, previewBorder);
-    line(x + 155.5f, fy + 12.5f, x + 155.5f, fy + 51.5f, previewBorder);
+    ImGui::GetWindowDrawList()->AddRect({x, buttonY}, {x + 197 * scale, buttonY + buttonH}, previewBorder);
+    line(x + 155 * scale + .5f, buttonY + .5f, x + 155 * scale + .5f, buttonY + buttonH - .5f, previewBorder);
     ImGui::EndDisabled();
     if (ImGui::BeginPopup("preview_settings"))
     {
@@ -280,12 +284,12 @@ void toneActions(GUIState &s, float x, float fy, float w)
         ImGui::EndPopup();
     }
     ImGui::BeginDisabled(!gui::TonePending(s, ch) || exporting);
-    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213, fy + 12, 160, 40, part.compare))
+    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213 * scale, buttonY, 160 * scale, buttonH, part.compare))
         part.compare = !part.compare;
-    if (button("取り消す", x + w - 286, fy + 12, 112, 40))
+    if (button("取り消す", x + w - 286 * scale, buttonY, 112 * scale, buttonH))
         gui::CancelTone(s, ch);
     ImGui::BeginDisabled(part.compare);
-    if (button("このchに採用", x + w - 162, fy + 12, 162, 40, false, true))
+    if (button("このchに採用", x + w - 162 * scale, buttonY, 162 * scale, buttonH, false, true))
         gui::AdoptTone(s, ch);
     ImGui::EndDisabled();
     ImGui::EndDisabled();
@@ -294,7 +298,7 @@ void toneActions(GUIState &s, float x, float fy, float w)
 void channelStrip(GUIState &s, float x, float w)
 {
     at(x, 124);
-    ImGui::BeginChild("channels", {w, 84}, false, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("channels", {w, 74}, false, ImGuiWindowFlags_HorizontalScrollbar);
 
     static int previousChannel = -1;
     const bool scrollToSelected = previousChannel != s.pianoRoll.displayChannel;
@@ -307,15 +311,17 @@ void channelStrip(GUIState &s, float x, float w)
         const int ch = used[i];
         ImGui::PushID(ch);
         const auto p = ImGui::GetCursorScreenPos();
-        if (ImGui::InvisibleButton("channel", {174, 63}))
+        if (ImGui::InvisibleButton("channel", {174, 55}, ImGuiButtonFlags_EnableNav))
             gui::SelectToneChannel(s, ch);
         if (scrollToSelected && ch == s.pianoRoll.displayChannel)
             ImGui::SetScrollHereX(.5f);
         const bool selected = ch == s.pianoRoll.displayChannel;
-        if (ImGui::IsItemHovered())
-            box(p.x, p.y, 174, 63, panel);
+        if (selected || ImGui::IsItemHovered())
+            box(p.x, p.y, 174, 55, ImGui::IsItemHovered() ? raised : panel);
         if (selected)
-            box(p.x, p.y + 61, 174, 2, accent);
+            box(p.x, p.y + 53, 174, 2, accent);
+        if (i + 1 < used.size())
+            line(p.x + 178, p.y + 8, p.x + 178, p.y + 47, edge);
         const auto &part = s.tones[ch];
         const int cat = categoryIndex(part.category);
         icon(categoryGlyphs[cat], p.x + 12, p.y + 17, 25, selected ? accent : muted);
@@ -457,6 +463,7 @@ void presetList(GUIState &s, float x, float y, float w, float h)
         clipped(p.x + textInset, p.y + 9, rw - textInset - 92, preset.displayName.c_str(), fg, GetFonts().body);
         text(p.x + rw - 83, p.y + 11, status, auditioning ? pendingColor : muted, GetFonts().fontSmall);
         clipped(p.x + textInset, p.y + 43, rw - textInset - 12, preset.description.c_str(), muted, GetFonts().fontSmall);
+        line(p.x + 12, p.y + 82, p.x + rw - 12, p.y + 82, color(69, 85, 95, 125));
         ImGui::PopID();
     }
     if (!count)
