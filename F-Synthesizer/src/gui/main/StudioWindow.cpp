@@ -98,7 +98,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     char timer[40];
     std::snprintf(timer, sizeof(timer), "%02d:%02d / %02d:%02d", seconds / 60, seconds % 60, duration / 60,
                   duration % 60);
-    text(width - 785, 30, timer, fg, GetFonts().heading);
+    text(width - 785, 21 + (45 - GetFonts().body->FontSize) / 2, timer, fg);
     const bool exporting = s.running && !s.runIsPreview;
     ImGui::BeginDisabled(exporting);
     if (button(gui::SongIsPlaying(s) ? "一時停止" : "再生", width - 628, 21, 100, 45, false, true,
@@ -184,7 +184,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
             }
         ImGui::EndPopup();
     }
-    clipped(x, 228, leftW - 256, toneName(audible).c_str(), fg, GetFonts().title);
+    clipped(x, 224, leftW - 256, toneName(audible).c_str(), fg, GetFonts().heading);
     if (tab("音色", x + leftW - 238, 218, 95, 38, !s.toneNotesOpen))
         s.toneNotesOpen = false;
     if (tab("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))

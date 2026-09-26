@@ -234,7 +234,6 @@ void InitializeResources()
     fonts_.body = add("MPLUS1-Regular.ttf", 21);
     fonts_.fontSmall = add("MPLUS1-Regular.ttf", 18);
     fonts_.heading = add("MPLUS1-Medium.ttf", 24);
-    fonts_.title = add("MPLUS1-Medium.ttf", 30);
     if (!fonts_.body)
         for (const char *font : {"C:/Windows/Fonts/meiryo.ttc", "C:/Windows/Fonts/YuGothM.ttc"})
             if (std::filesystem::exists(font))
@@ -249,8 +248,6 @@ void InitializeResources()
         fonts_.fontSmall = fonts_.body;
     if (!fonts_.heading)
         fonts_.heading = fonts_.body;
-    if (!fonts_.title)
-        fonts_.title = fonts_.heading;
     io.FontDefault = fonts_.body;
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;

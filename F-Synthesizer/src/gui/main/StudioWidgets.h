@@ -29,7 +29,7 @@ inline constexpr ImU32 bg = color(26, 37, 44), panel = color(32, 47, 55), raised
                        accent = color(175, 217, 208), pendingColor = color(225, 173, 117), scope = color(17, 28, 36);
 struct Fonts
 {
-    ImFont *body = nullptr, *fontSmall = nullptr, *heading = nullptr, *title = nullptr;
+    ImFont *body = nullptr, *fontSmall = nullptr, *heading = nullptr;
 };
 const Fonts &GetFonts();
 // Called with the application's OpenGL/ImGui contexts current, on the GUI thread.

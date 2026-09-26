@@ -115,7 +115,7 @@ void dial(GUIState &s, int index, const char *label, float x, float y, float sca
     char number[16];
     std::snprintf(number, sizeof(number), "%+d", static_cast<int>(std::round(value * 100)));
     text(center.x - GetFonts().fontSmall->CalcTextSizeA(GetFonts().fontSmall->FontSize, 100, 0, number).x / 2,
-         center.y - 10, number, fg, GetFonts().fontSmall);
+         center.y - GetFonts().fontSmall->FontSize / 2, number, fg, GetFonts().fontSmall);
     ImFont *labelFont = scale < .8f ? GetFonts().fontSmall : GetFonts().body;
     text(center.x - labelFont->CalcTextSizeA(labelFont->FontSize, 200, 0, label).x / 2, y + 102 * scale, label, fg,
          labelFont);
@@ -194,9 +194,10 @@ void toneControls(GUIState &s, float x, float y, float w)
 void extraControls(GUIState &s, float x, float y, float w)
 {
     line(x, y, x + w, y);
-    dial(s, 3, "立ち上がり", x + 16, y + 7, .62f);
-    dial(s, 4, "減衰", x + 136, y + 7, .62f);
-    dial(s, 5, "揺れ", x + 256, y + 7, .62f);
+    // 通常ノブと同じ中心位置（50 / 160 / 270）にそろえる。
+    dial(s, 3, "立ち上がり", x + 19, y + 7, .62f);
+    dial(s, 4, "減衰", x + 129, y + 7, .62f);
+    dial(s, 5, "揺れ", x + 239, y + 7, .62f);
     const auto &sound = gui::AudibleInstrument(s, s.pianoRoll.displayChannel).sound;
     const float gx = x + 356, gy = y + 62, gw = std::max(65.f, w - 486);
     const double total = std::max(.2, sound.attackSec + sound.decaySec + sound.releaseSec + .3);
@@ -260,7 +261,7 @@ void channelStrip(GUIState &s, float width)
 void mixControls(GUIState &s, float x, float y, float w)
 {
     auto &mix = s.channelMixStates[s.pianoRoll.displayChannel];
-    text(x, y + 6, "音量", muted, GetFonts().fontSmall);
+    text(x, y + (35 - GetFonts().fontSmall->FontSize) / 2, "音量", muted, GetFonts().fontSmall);
     at(x + 46, y);
     ImGui::SetNextItemWidth(160);
     float volume = static_cast<float>(mix.level * 100);
@@ -310,7 +311,7 @@ void presetList(GUIState &s, float x, float y, float w, float h)
     const int ch = s.pianoRoll.displayChannel;
     auto &part = s.tones[ch];
     int &filter = filters[ch];
-    text(x, y, "プリセット", fg, GetFonts().heading);
+    text(x, y + 4, "プリセット", fg, GetFonts().heading);
     const int category = filter == -2 ? categoryIndex(part.category) : filter;
     if (category >= 0)
         icon(categoryGlyphs[category], x + w - 192, y + 4, 24, muted);
