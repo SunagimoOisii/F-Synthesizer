@@ -11,13 +11,12 @@ inline constexpr const char *categoryLabels[] = {"リード", "ベース", "鍵�
 inline constexpr Icon categoryGlyphs[] = {MusicIcon,  GuitarIcon, PianoIcon,    LayersIcon,
                                           GuitarIcon, DrumIcon,   SparklesIcon, ChipIcon};
 int categoryIndex(const std::string &name);
-bool matches(std::string name, std::string query);
 std::string toneName(const InstrumentConfig &instrument);
-std::string pitchName(int note);
-void waveform(GUIState &state, float x, float y, float w, float h);
-void toneControls(GUIState &state, float x, float y, float w);
-void extraControls(GUIState &state, float x, float y, float w);
+// 波形・通常ノブ・追加調整を配置し、試聴・採用操作を置くY座標を返す。
+float toneEditor(GUIState &state, float x, float y, float w, float controlsW, float availableH);
+// 試聴設定・比較・取り消し・採用を一つの操作領域として扱う。
+void toneActions(GUIState &state, float x, float y, float w);
 void channelStrip(GUIState &state, float x, float w);
-void mixControls(GUIState &state, float x, float y, float w);
+void mixControls(GUIState &state, float x, float y);
 void presetList(GUIState &state, float x, float y, float w, float h);
 } // namespace studio

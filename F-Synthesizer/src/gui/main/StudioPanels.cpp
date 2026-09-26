@@ -16,16 +16,18 @@ int categoryIndex(const std::string &name)
             return i;
     return 7;
 }
+std::string toneName(const InstrumentConfig &instrument)
+{
+    return instrument.displayName.empty() ? "名前のない音色" : instrument.displayName;
+}
+namespace
+{
 bool matches(std::string name, std::string query)
 {
     auto lower = [](unsigned char c) { return static_cast<char>(c < 128 ? std::tolower(c) : c); };
     std::transform(name.begin(), name.end(), name.begin(), lower);
     std::transform(query.begin(), query.end(), query.begin(), lower);
     return name.find(query) != std::string::npos;
-}
-std::string toneName(const InstrumentConfig &instrument)
-{
-    return instrument.displayName.empty() ? "名前のない音色" : instrument.displayName;
 }
 std::string pitchName(int note)
 {
@@ -35,13 +37,15 @@ std::string pitchName(int note)
 void dial(GUIState &s, int index, const char *label, float x, float y, float scale = .88f)
 {
     auto &part = s.tones[s.pianoRoll.displayChannel];
-    if (!gui::ToneControlSupported(part.draft.instrument.sound, index))
+    if (!gui::ToneControlSupported(gui::AudibleInstrument(s, s.pianoRoll.displayChannel).sound, index))
         return;
     auto edit = [&](float value) {
         part.draft.values[index] = std::clamp(value, -1.f, 1.f);
         gui::UpdateToneControls(s);
     };
     ImGui::PushID(index + 40);
+    // 比較表示は採用前の値。試聴中へ戻るまで編集を受け付けず、別の音を誤って調整しない。
+    ImGui::BeginDisabled(part.compare);
     at(x, y);
     ImGui::InvisibleButton("dial", {100 * scale, 101 * scale}, ImGuiButtonFlags_EnableNav);
     const bool active = ImGui::IsItemActive(), hover = ImGui::IsItemHovered(), focus = ImGui::IsItemFocused();
@@ -75,11 +79,13 @@ void dial(GUIState &s, int index, const char *label, float x, float y, float sca
         edit(0);
         gui::FinishToneEdit(s);
     }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-        ImGui::SetTooltip("上下にドラッグ（上で増やす / 下で減らす）\n"
+    ImGui::EndDisabled();
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip(part.compare ? "採用前の音色を表示中\n「試聴中へ戻る」で調整を再開" :
+                          "上下にドラッグ（上で増やす / 下で減らす）\n"
                           "0は音色の基準 / ダブルクリックで基準に戻す\n"
                           "Shiftで微調整 / 右クリックで数値入力");
-    if (ImGui::BeginPopupContextItem("value"))
+    if (!part.compare && ImGui::BeginPopupContextItem("value"))
     {
         ImGui::TextUnformatted(label);
         float value = part.draft.values[index] * 100;
@@ -215,6 +221,76 @@ void extraControls(GUIState &s, float x, float y, float w)
     }
 }
 
+} // namespace
+
+float toneEditor(GUIState &s, float x, float y, float w, float controlsW, float availableH)
+{
+    // 開閉したフレームも同じ状態で高さを決め、下部操作まで一つのまとまりにする。
+    const bool extraOpen = s.toneExtraOpen;
+    constexpr float controlsH = 124, extraControlsH = 94;
+    const float extraH = extraOpen ? extraControlsH : 0;
+    const float waveH = std::min(240.f, availableH - controlsH - extraH);
+    const float controlsBottom = y + waveH + controlsH;
+    waveform(s, x, y, w, waveH);
+    toneControls(s, x, y + waveH + 8, controlsW);
+    if (extraOpen)
+        extraControls(s, x, controlsBottom + 2, controlsW);
+    return controlsBottom + extraH + 12;
+}
+
+void toneActions(GUIState &s, float x, float fy, float w)
+{
+    const int ch = s.pianoRoll.displayChannel;
+    auto &part = s.tones[ch];
+    const auto &audible = gui::AudibleInstrument(s, ch);
+    const bool exporting = s.running && !s.runIsPreview;
+    line(x, fy, x + w, fy);
+    ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
+    const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, fy + 12, 155, 40))
+        gui::RequestToneAudition(s);
+    if (button("", x + 155, fy + 12, 42, 40, ImGui::IsPopupOpen("preview_settings"), false, DownIcon))
+        ImGui::OpenPopup("preview_settings");
+    ImGui::PopStyleVar();
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        ImGui::SetTooltip(drum ? "試聴ビートの内容を表示" : "試聴する音の高さ・長さを設定");
+    const ImU32 previewBorder = ImGui::GetColorU32(vec(edge));
+    ImGui::GetWindowDrawList()->AddRect({x, fy + 12}, {x + 197, fy + 52}, previewBorder);
+    line(x + 155.5f, fy + 12.5f, x + 155.5f, fy + 51.5f, previewBorder);
+    ImGui::EndDisabled();
+    if (ImGui::BeginPopup("preview_settings"))
+    {
+        if (drum)
+            ImGui::TextUnformatted("キック・スネア・ハイハット\n2小節 / 120 BPM");
+        else
+        {
+            bool automatic = part.auditionNote < 0;
+            if (ImGui::Checkbox("曲に合う高さを自動選択", &automatic))
+                part.auditionNote = automatic ? -1 : gui::ChooseAuditionNote(s, ch);
+            int pitch = gui::ChooseAuditionNote(s, ch);
+            ImGui::BeginDisabled(automatic);
+            ImGui::SetNextItemWidth(260);
+            if (ImGui::SliderInt("高さ", &pitch, 0, 127, pitchName(pitch).c_str()))
+                part.auditionNote = pitch;
+            ImGui::EndDisabled();
+            ImGui::SetNextItemWidth(260);
+            ImGui::SliderFloat("長さ", &s.auditionLengthSec, .2f, 3.f, "%.1f 秒");
+        }
+        ImGui::EndPopup();
+    }
+    ImGui::BeginDisabled(!gui::TonePending(s, ch) || exporting);
+    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213, fy + 12, 160, 40, part.compare))
+        part.compare = !part.compare;
+    if (button("取り消す", x + w - 286, fy + 12, 112, 40))
+        gui::CancelTone(s, ch);
+    ImGui::BeginDisabled(part.compare);
+    if (button("このchに採用", x + w - 162, fy + 12, 162, 40, false, true))
+        gui::AdoptTone(s, ch);
+    ImGui::EndDisabled();
+    ImGui::EndDisabled();
+}
+
 void channelStrip(GUIState &s, float x, float w)
 {
     at(x, 124);
@@ -258,7 +334,7 @@ void channelStrip(GUIState &s, float x, float w)
     ImGui::EndChild();
 }
 
-void mixControls(GUIState &s, float x, float y, float w)
+void mixControls(GUIState &s, float x, float y)
 {
     auto &mix = s.channelMixStates[s.pianoRoll.displayChannel];
     text(x, y + (35 - GetFonts().fontSmall->FontSize) / 2, "音量", muted, GetFonts().fontSmall);

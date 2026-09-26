@@ -196,7 +196,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         s.toneNotesOpen = false;
     if (tab("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))
         s.toneNotesOpen = true;
-    mixControls(s, x, 266, leftW);
+    mixControls(s, x, 266);
     if (s.toneNotesOpen)
     {
         static bool firstNotes = true;
@@ -232,65 +232,10 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     }
     else
     {
-        // 開閉操作のフレームでも、波形・ノブ・下部操作に同じ配置を使う。
-        const bool extraOpen = s.toneExtraOpen;
-        constexpr float controlsH = 124, extraControlsH = 94;
-        const float extraH = extraOpen ? extraControlsH : 0;
-        const float waveH = std::min(240.f, contentH - controlsH - extraH);
-        const float controlsBottom = top + waveH + controlsH;
-        waveform(s, x, top, leftW, waveH);
-        toneControls(s, x, top + waveH + 8, controlsW);
-        if (extraOpen)
-            extraControls(s, x, controlsBottom + 2, controlsW);
-        actionsY = controlsBottom + extraH + 12;
+        actionsY = toneEditor(s, x, top, leftW, controlsW, contentH);
     }
     presetList(s, rightX, 220, sideW, height - 240);
-    const float fy = actionsY;
-    line(x, fy, x + controlsW, fy);
-    ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
-    const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
-    if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, fy + 12, 155, 40))
-        gui::RequestToneAudition(s);
-    if (button("", x + 155, fy + 12, 42, 40, ImGui::IsPopupOpen("preview_settings"), false, DownIcon))
-        ImGui::OpenPopup("preview_settings");
-    ImGui::PopStyleVar();
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-        ImGui::SetTooltip(drum ? "試聴ビートの内容を表示" : "試聴する音の高さ・長さを設定");
-    const ImU32 previewBorder = ImGui::GetColorU32(vec(edge));
-    ImGui::GetWindowDrawList()->AddRect({x, fy + 12}, {x + 197, fy + 52}, previewBorder);
-    line(x + 155.5f, fy + 12.5f, x + 155.5f, fy + 51.5f, previewBorder);
-    ImGui::EndDisabled();
-    if (ImGui::BeginPopup("preview_settings"))
-    {
-        if (drum)
-            ImGui::TextUnformatted("キック・スネア・ハイハット\n2小節 / 120 BPM");
-        else
-        {
-            bool automatic = part.auditionNote < 0;
-            if (ImGui::Checkbox("曲に合う高さを自動選択", &automatic))
-                part.auditionNote = automatic ? -1 : gui::ChooseAuditionNote(s, ch);
-            int pitch = gui::ChooseAuditionNote(s, ch);
-            ImGui::BeginDisabled(automatic);
-            ImGui::SetNextItemWidth(260);
-            if (ImGui::SliderInt("高さ", &pitch, 0, 127, pitchName(pitch).c_str()))
-                part.auditionNote = pitch;
-            ImGui::EndDisabled();
-            ImGui::SetNextItemWidth(260);
-            ImGui::SliderFloat("長さ", &s.auditionLengthSec, .2f, 3.f, "%.1f 秒");
-        }
-        ImGui::EndPopup();
-    }
-    ImGui::BeginDisabled(!gui::TonePending(s, ch) || exporting);
-    if (button(part.compare ? "試聴中へ戻る" : "採用前と比較", x + 213, fy + 12, 160, 40, part.compare))
-        part.compare = !part.compare;
-    if (button("取り消す", x + controlsW - 286, fy + 12, 112, 40))
-        gui::CancelTone(s, ch);
-    ImGui::BeginDisabled(part.compare);
-    if (button("このchに採用", x + controlsW - 162, fy + 12, 162, 40, false, true))
-        gui::AdoptTone(s, ch);
-    ImGui::EndDisabled();
-    ImGui::EndDisabled();
+    toneActions(s, x, actionsY, controlsW);
     const auto &io = ImGui::GetIO();
     if (!io.WantTextInput && !ImGui::IsAnyItemActive() &&
         !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel))
