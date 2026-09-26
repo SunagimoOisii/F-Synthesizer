@@ -159,7 +159,7 @@ void waveform(GUIState &s, float x, float y, float w, float h)
         gain += (std::min(10.f, .8f / peak) - gain) * .12f;
     }
     box(x, y, w, h, scope);
-    ImGui::GetWindowDrawList()->AddRect({x, y}, {x + w, y + h}, edge);
+    ImGui::GetWindowDrawList()->AddRect({x, y}, {x + w, y + h}, separator);
     if (tab("選択ch", x + 18, y + 9, 96, 32, !s.scopeWholeMix))
         s.scopeWholeMix = false;
     if (tab("曲全体", x + 122, y + 9, 96, 32, s.scopeWholeMix))
@@ -201,7 +201,7 @@ void toneControls(GUIState &s, float x, float y, float w)
 void extraControls(GUIState &s, float x, float y, float w)
 {
     const float scale = w / 720;
-    line(x, y, x + w, y);
+    line(x, y, x + w, y, separator);
     // 通常ノブと同じ基準の中心位置（50 / 160 / 270）にそろえる。
     dial(s, 3, "立ち上がり", x + 19 * scale, y + 7 * scale, .62f * scale);
     dial(s, 4, "減衰", x + 129 * scale, y + 7 * scale, .62f * scale);
@@ -229,15 +229,15 @@ float toneEditor(GUIState &s, float x, float y, float w, float controlsW, float 
 {
     // 開閉したフレームも同じ状態で高さを決め、下部操作まで一つのまとまりにする。
     const bool extraOpen = s.toneExtraOpen;
-    const float scale = controlsW / 720, controlsX = x + (w - controlsW) / 2;
+    const float scale = controlsW / 720;
     const float controlsH = 124 * scale, extraH = extraOpen ? 94 * scale : 0;
     const float preferredWaveH = std::clamp(availableH * .64f, 240.f, 440.f);
     const float waveH = std::min(preferredWaveH, availableH - controlsH - extraH);
     const float controlsBottom = y + waveH + controlsH;
     waveform(s, x, y, w, waveH);
-    toneControls(s, controlsX, y + waveH + 8 * scale, controlsW);
+    toneControls(s, x, y + waveH + 8 * scale, controlsW);
     if (extraOpen)
-        extraControls(s, controlsX, controlsBottom + 2 * scale, controlsW);
+        extraControls(s, x, controlsBottom + 2 * scale, controlsW);
     return controlsBottom + extraH + 12 * scale;
 }
 
@@ -248,7 +248,7 @@ void toneActions(GUIState &s, float x, float fy, float w)
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
     const bool exporting = s.running && !s.runIsPreview;
-    line(x, fy, x + w, fy);
+    line(x, fy, x + w, fy, separator);
     ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
     const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
@@ -321,7 +321,7 @@ void channelStrip(GUIState &s, float x, float w)
         if (selected)
             box(p.x, p.y + 53, 174, 2, accent);
         if (i + 1 < used.size())
-            line(p.x + 178, p.y + 8, p.x + 178, p.y + 47, edge);
+            line(p.x + 178, p.y + 8, p.x + 178, p.y + 47, separator);
         const auto &part = s.tones[ch];
         const int cat = categoryIndex(part.category);
         icon(categoryGlyphs[cat], p.x + 12, p.y + 17, 25, selected ? accent : muted);
@@ -414,7 +414,9 @@ void presetList(GUIState &s, float x, float y, float w, float h)
     ImGui::SetNextItemWidth(w);
     ImGui::InputTextWithHint("##preset_search", "音色を検索", query, sizeof(query));
     at(x, y + 94);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, vec(sidebar));
     ImGui::BeginChild("presets", {w, h - 94}, false);
+    ImGui::PopStyleColor();
     const bool showRowCategory = category < 0;
     const float textInset = showRowCategory ? 60.f : 16.f;
     int count = 0;
@@ -463,7 +465,7 @@ void presetList(GUIState &s, float x, float y, float w, float h)
         clipped(p.x + textInset, p.y + 9, rw - textInset - 92, preset.displayName.c_str(), fg, GetFonts().body);
         text(p.x + rw - 83, p.y + 11, status, auditioning ? pendingColor : muted, GetFonts().fontSmall);
         clipped(p.x + textInset, p.y + 43, rw - textInset - 12, preset.description.c_str(), muted, GetFonts().fontSmall);
-        line(p.x + 12, p.y + 82, p.x + rw - 12, p.y + 82, color(69, 85, 95, 125));
+        line(p.x + 12, p.y + 82, p.x + rw - 12, p.y + 82, separator);
         ImGui::PopID();
     }
     if (!count)

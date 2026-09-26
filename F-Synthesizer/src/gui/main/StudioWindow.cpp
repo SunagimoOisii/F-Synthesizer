@@ -83,8 +83,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     ImGui::Begin("F-Synthesizer", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
                      ImGuiWindowFlags_NoScrollbar);
-    box(0, 72, width, height - 72, scope);
-    line(0, 72, width, 72);
+    line(0, 72, width, 72, separator);
     box(24, 26, 5, 26, accent);
     box(35, 21, 9, 31, accent);
     text(56, 23, "F-Synthesizer", fg, GetFonts().heading);
@@ -156,21 +155,14 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     // 一覧は読みやすい幅に保ち、広い画面は波形・音符編集へ割り当てる。
     const float sideW = std::clamp(width / 3, 440.f, 560.f), leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
-    box(x - 12, 120, w + 24, 80, bg);
-    ImGui::GetWindowDrawList()->AddRect({x - 12, 120}, {x + w + 12, 200}, edge);
     timeline(s, x, w);
     channelStrip(s, x, w);
-    auto drawArea = [&](float left, float areaWidth) {
-        box(left - 12, 208, areaWidth + 24, height - 216, bg);
-        ImGui::GetWindowDrawList()->AddRect({left - 12, 208}, {left + areaWidth + 12, height - 8}, edge);
-        line(left - 12, 270, left + areaWidth + 12, 270);
-    };
-    drawArea(x, leftW);
-    drawArea(rightX, sideW);
+    line(x, 200, x + w, 200, separator);
+    box(rightX - 12, 208, sideW + 24, height - 216, sidebar);
+    line(rightX - gap / 2, 208, rightX - gap / 2, height - 8, separator);
     // 操作部はまとまりごと広げる。低いウィンドウでは追加調整と波形の高さを優先する。
     const float controlsGrowth = std::clamp(std::min((width - 1440.f) / 480, (height - 720.f) / 180), 0.f, 1.f);
     const float controlsScale = 1 + .2f * controlsGrowth, controlsW = 720 * controlsScale;
-    const float controlsX = x + (leftW - controlsW) / 2;
     float actionsY = height - 14 - 52 * controlsScale;
     constexpr float top = 324;
     const int ch = s.pianoRoll.displayChannel;
@@ -247,7 +239,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         actionsY = toneEditor(s, x, top, leftW, controlsW, actionsY - top - 12 * controlsScale);
     }
     presetList(s, rightX, 232, sideW, height - 252);
-    toneActions(s, controlsX, actionsY, controlsW);
+    toneActions(s, x, actionsY, controlsW);
     const auto &io = ImGui::GetIO();
     if (!io.WantTextInput && !ImGui::IsAnyItemActive() &&
         !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel))

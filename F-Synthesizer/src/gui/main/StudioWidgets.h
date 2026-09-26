@@ -27,6 +27,8 @@ constexpr ImU32 color(int r, int g, int b, int a = 255)
 inline constexpr ImU32 bg = color(26, 37, 44), panel = color(32, 47, 55), raised = color(53, 67, 76),
                        edge = color(69, 85, 95), fg = color(230, 233, 230), muted = color(159, 178, 187),
                        accent = color(175, 217, 208), pendingColor = color(225, 173, 117), scope = color(17, 28, 36);
+// 領域の区切りは操作部の枠より弱くし、選択・入力の目印を優先する。
+inline constexpr ImU32 separator = color(43, 56, 65), sidebar = color(23, 33, 40);
 struct Fonts
 {
     ImFont *body = nullptr, *fontSmall = nullptr, *heading = nullptr;
