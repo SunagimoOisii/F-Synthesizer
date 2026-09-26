@@ -179,9 +179,9 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         ImGui::EndPopup();
     }
     clipped(x + 48, 228, leftW - 304, toneName(audible).c_str(), fg, GetFonts().title);
-    if (button("音色", x + leftW - 238, 218, 95, 38, !s.toneNotesOpen))
+    if (tab("音色", x + leftW - 238, 218, 95, 38, !s.toneNotesOpen))
         s.toneNotesOpen = false;
-    if (button("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))
+    if (tab("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))
         s.toneNotesOpen = true;
     mixControls(s, x, 266, leftW);
     if (s.toneNotesOpen)

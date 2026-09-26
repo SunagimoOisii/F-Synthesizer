@@ -15,6 +15,20 @@ namespace
 {
 Fonts fonts_;
 GLuint iconTexture = 0;
+
+bool flatButton(const char *label, float x, float y, float w, float h)
+{
+    at(x, y);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
+    ImGui::PushStyleColor(ImGuiCol_Button, {0, 0, 0, 0});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, vec(panel));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, vec(raised));
+    const std::string id = std::string("##") + label;
+    const bool clicked = ImGui::Button(id.c_str(), {w, h});
+    ImGui::PopStyleColor(3);
+    ImGui::PopStyleVar();
+    return clicked;
+}
 } // namespace
 const Fonts &GetFonts()
 {
@@ -125,6 +139,36 @@ bool button(const char *label, float x, float y, float w, float h, bool chosen, 
     if (glyph >= 0)
         icon(static_cast<Icon>(glyph), left, y + (h - 18) / 2, 18, tint(primary ? scope : accent));
     text(left + (glyph >= 0 ? 26 : 0), y + (h - fonts_.body->FontSize) / 2, label, tint(primary ? scope : fg));
+    return clicked;
+}
+bool tab(const char *label, float x, float y, float w, float h, bool selected)
+{
+    const bool clicked = flatButton(label, x, y, w, h);
+    const bool highlighted = selected || ImGui::IsItemHovered() || ImGui::IsItemFocused();
+    const float textWidth = fonts_.body->CalcTextSizeA(fonts_.body->FontSize, 1000, 0, label).x;
+    text(x + (w - textWidth) / 2, y + (h - fonts_.body->FontSize) / 2, label,
+         ImGui::GetColorU32(vec(highlighted ? fg : muted)));
+    if (selected)
+        box(x, y + h - 2, w, 2, ImGui::GetColorU32(vec(accent)));
+    return clicked;
+}
+bool disclosure(const char *label, float x, float y, float w, float h, bool expanded)
+{
+    const bool clicked = flatButton(label, x, y, w, h);
+    const float textWidth = fonts_.body->CalcTextSizeA(fonts_.body->FontSize, 1000, 0, label).x;
+    const float left = x + (w - textWidth - 20) / 2, cx = left + 5, cy = y + h / 2;
+    const ImU32 tint = ImGui::GetColorU32(vec(expanded ? accent : muted));
+    if (expanded)
+    {
+        line(cx - 4, cy - 2, cx, cy + 2, tint);
+        line(cx, cy + 2, cx + 4, cy - 2, tint);
+    }
+    else
+    {
+        line(cx - 2, cy - 4, cx + 2, cy, tint);
+        line(cx + 2, cy, cx - 2, cy + 4, tint);
+    }
+    text(left + 20, y + (h - fonts_.body->FontSize) / 2, label, ImGui::GetColorU32(vec(fg)));
     return clicked;
 }
 void style()

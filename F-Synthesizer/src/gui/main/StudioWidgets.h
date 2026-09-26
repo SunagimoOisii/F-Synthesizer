@@ -46,4 +46,6 @@ void clipped(float x, float y, float width, const char *value, ImU32 color = fg,
 void icon(Icon id, float x, float y, float size, ImU32 tint = accent);
 bool button(const char *label, float x, float y, float w, float h, bool chosen = false, bool primary = false,
             int glyph = -1);
+bool tab(const char *label, float x, float y, float w, float h, bool selected);
+bool disclosure(const char *label, float x, float y, float w, float h, bool expanded);
 } // namespace studio

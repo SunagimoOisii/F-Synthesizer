@@ -147,9 +147,9 @@ void waveform(GUIState &s, float x, float y, float w, float h)
     }
     box(x, y, w, h, scope);
     ImGui::GetWindowDrawList()->AddRect({x, y}, {x + w, y + h}, edge);
-    if (button("選択ch", x + 18, y + 9, 96, 32, !s.scopeWholeMix))
+    if (tab("選択ch", x + 18, y + 9, 96, 32, !s.scopeWholeMix))
         s.scopeWholeMix = false;
-    if (button("曲全体", x + 122, y + 9, 96, 32, s.scopeWholeMix))
+    if (tab("曲全体", x + 122, y + 9, 96, 32, s.scopeWholeMix))
         s.scopeWholeMix = true;
     at(x + w - 103, y + 14);
     ImGui::PushFont(GetFonts().fontSmall);
@@ -174,7 +174,7 @@ void toneControls(GUIState &s, float x, float y, float w)
     dial(s, 1, "ざらつき", x + 116, y);
     dial(s, 2, "余韻", x + 226, y);
     auto &part = s.tones[s.pianoRoll.displayChannel];
-    if (button("鳴り方・揺れ", x + 342, y + 28, 160, 36, s.toneExtraOpen))
+    if (disclosure("鳴り方・揺れ", x + 342, y + 28, 160, 36, s.toneExtraOpen))
         s.toneExtraOpen = !s.toneExtraOpen;
     ImGui::BeginDisabled(part.undo.empty());
     if (button("戻す", x + w - 193, y + 30, 85, 33))
