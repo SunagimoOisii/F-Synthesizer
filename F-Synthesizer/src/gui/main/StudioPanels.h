@@ -13,9 +13,9 @@ inline constexpr Icon categoryGlyphs[] = {MusicIcon,  GuitarIcon, PianoIcon,    
 int categoryIndex(const std::string &name);
 std::string toneName(const InstrumentConfig &instrument);
 // 波形・通常ノブ・追加調整を配置し、試聴・採用操作を置くY座標を返す。
-float toneEditor(GUIState &state, float x, float y, float w, float controlsW, float availableH);
+float toneEditor(GUIState &state, float x, float y, float w, float availableH, float controlsScale);
 // 試聴設定・比較・取り消し・採用を一つの操作領域として扱う。
-void toneActions(GUIState &state, float x, float y, float w);
+void toneActions(GUIState &state, float x, float y, float w, float controlsScale);
 void channelStrip(GUIState &state, float x, float w);
 void mixControls(GUIState &state, float x, float y);
 void presetList(GUIState &state, float x, float y, float w, float h);

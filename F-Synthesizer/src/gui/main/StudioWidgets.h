@@ -42,12 +42,12 @@ void style();
 ImVec4 vec(ImU32 color);
 void box(float x, float y, float w, float h, ImU32 color);
 void line(float x, float y, float x2, float y2, ImU32 color = edge, float thick = 1);
-void text(float x, float y, const char *value, ImU32 color = fg, ImFont *font = nullptr);
+void text(float x, float y, const char *value, ImU32 color = fg, ImFont *font = nullptr, float scale = 1);
 void at(float x, float y);
-void clipped(float x, float y, float width, const char *value, ImU32 color = fg, ImFont *font = nullptr);
+void clipped(float x, float y, float width, const char *value, ImU32 color = fg, ImFont *font = nullptr, float scale = 1);
 void icon(Icon id, float x, float y, float size, ImU32 tint = accent);
 bool button(const char *label, float x, float y, float w, float h, bool chosen = false, bool primary = false,
-            int glyph = -1);
+            int glyph = -1, float textScale = 1);
 bool tab(const char *label, float x, float y, float w, float h, bool selected);
-bool disclosure(const char *label, float x, float y, float w, float h, bool expanded);
+bool disclosure(const char *label, float x, float y, float w, float h, bool expanded, float textScale = 1);
 } // namespace studio

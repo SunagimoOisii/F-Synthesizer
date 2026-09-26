@@ -161,8 +161,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     box(rightX - 12, 208, sideW + 24, height - 216, sidebar);
     line(rightX - gap / 2, 208, rightX - gap / 2, height - 8, separator);
     // 操作部はまとまりごと広げる。低いウィンドウでは追加調整と波形の高さを優先する。
-    const float controlsGrowth = std::clamp(std::min((width - 1440.f) / 480, (height - 720.f) / 180), 0.f, 1.f);
-    const float controlsScale = 1 + .2f * controlsGrowth, controlsW = 720 * controlsScale;
+    const float controlsScale = std::clamp(std::min(leftW / 720, 1 + (height - 720) / 360), 1.f, 1.15f);
     float actionsY = height - 14 - 52 * controlsScale;
     constexpr float top = 324;
     const int ch = s.pianoRoll.displayChannel;
@@ -195,7 +194,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
             }
         ImGui::EndPopup();
     }
-    clipped(x, 236, leftW - 256, toneName(audible).c_str(), fg, GetFonts().heading);
+    clipped(x, 236, leftW - 256, toneName(audible).c_str(), fg, GetFonts().heading, std::min(controlsScale, 1.2f));
     if (tab("音色", x + leftW - 238, 230, 95, 38, !s.toneNotesOpen))
         s.toneNotesOpen = false;
     if (tab("音符を編集", x + leftW - 133, 230, 133, 38, s.toneNotesOpen))
@@ -236,10 +235,10 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     }
     else
     {
-        actionsY = toneEditor(s, x, top, leftW, controlsW, actionsY - top - 12 * controlsScale);
+        actionsY = toneEditor(s, x, top, leftW, actionsY - top - 12 * controlsScale, controlsScale);
     }
     presetList(s, rightX, 232, sideW, height - 252);
-    toneActions(s, x, actionsY, controlsW);
+    toneActions(s, x, actionsY, leftW, controlsScale);
     const auto &io = ImGui::GetIO();
     if (!io.WantTextInput && !ImGui::IsAnyItemActive() &&
         !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel))

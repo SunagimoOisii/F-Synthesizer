@@ -52,20 +52,21 @@ void line(float x, float y, float x2, float y2, ImU32 c, float thick)
 {
     ImGui::GetWindowDrawList()->AddLine({x, y}, {x2, y2}, c, thick);
 }
-void text(float x, float y, const char *value, ImU32 c, ImFont *f)
+void text(float x, float y, const char *value, ImU32 c, ImFont *f, float scale)
 {
     f = f ? f : fonts_.body;
-    ImGui::GetWindowDrawList()->AddText(f, f->FontSize, {x, y}, c, value);
+    ImGui::GetWindowDrawList()->AddText(f, f->FontSize * scale, {x, y}, c, value);
 }
 void at(float x, float y)
 {
     ImGui::SetCursorScreenPos({x, y});
 }
-void clipped(float x, float y, float width, const char *value, ImU32 c, ImFont *f)
+void clipped(float x, float y, float width, const char *value, ImU32 c, ImFont *f, float scale)
 {
     f = f ? f : fonts_.body;
+    const float fontSize = f->FontSize * scale;
     std::string display = value;
-    if (f->CalcTextSizeA(f->FontSize, 10000, 0, value).x > width)
+    if (f->CalcTextSizeA(fontSize, 10000, 0, value).x > width)
     {
         do
         {
@@ -73,11 +74,11 @@ void clipped(float x, float y, float width, const char *value, ImU32 c, ImFont *
             while (cut > 0 && (static_cast<unsigned char>(display[cut]) & 0xc0) == 0x80)
                 --cut;
             display.resize(cut);
-        } while (!display.empty() && f->CalcTextSizeA(f->FontSize, 10000, 0, (display + "…").c_str()).x > width);
+        } while (!display.empty() && f->CalcTextSizeA(fontSize, 10000, 0, (display + "…").c_str()).x > width);
         display += "…";
     }
-    ImGui::GetWindowDrawList()->PushClipRect({x, y}, {x + width, y + f->FontSize + 6}, true);
-    text(x, y, display.c_str(), c, f);
+    ImGui::GetWindowDrawList()->PushClipRect({x, y}, {x + width, y + fontSize + 6}, true);
+    text(x, y, display.c_str(), c, f, scale);
     ImGui::GetWindowDrawList()->PopClipRect();
 }
 void icon(Icon id, float x, float y, float size, ImU32 tint)
@@ -118,7 +119,7 @@ bool loadIcons()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 832, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
     return true;
 }
-bool button(const char *label, float x, float y, float w, float h, bool chosen, bool primary, int glyph)
+bool button(const char *label, float x, float y, float w, float h, bool chosen, bool primary, int glyph, float textScale)
 {
     at(x, y);
     ImGui::PushStyleColor(ImGuiCol_Button, vec(primary ? accent : chosen ? raised : panel));
@@ -129,8 +130,9 @@ bool button(const char *label, float x, float y, float w, float h, bool chosen, 
     std::string id = std::string("##") + label;
     bool clicked = ImGui::Button(id.c_str(), {w, h});
     ImGui::PopStyleColor(5);
-    const float textWidth = fonts_.body->CalcTextSizeA(fonts_.body->FontSize, 1000, 0, label).x;
-    const float glyphWidth = glyph >= 0 ? (textWidth > 0 ? 26.f : 18.f) : 0.f;
+    const float fontSize = fonts_.body->FontSize * textScale;
+    const float textWidth = fonts_.body->CalcTextSizeA(fontSize, 1000, 0, label).x;
+    const float glyphWidth = glyph >= 0 ? (textWidth > 0 ? 26.f : 18.f) * textScale : 0.f;
     const float groupWidth = textWidth + glyphWidth, left = x + (w - groupWidth) / 2;
     auto tint = [](ImU32 value) {
         ImVec4 v = vec(value);
@@ -138,8 +140,8 @@ bool button(const char *label, float x, float y, float w, float h, bool chosen, 
         return ImGui::ColorConvertFloat4ToU32(v);
     };
     if (glyph >= 0)
-        icon(static_cast<Icon>(glyph), left, y + (h - 18) / 2, 18, tint(primary ? scope : accent));
-    text(left + glyphWidth, y + (h - fonts_.body->FontSize) / 2, label, tint(primary ? scope : fg));
+        icon(static_cast<Icon>(glyph), left, y + (h - 18 * textScale) / 2, 18 * textScale, tint(primary ? scope : accent));
+    text(left + glyphWidth, y + (h - fontSize) / 2, label, tint(primary ? scope : fg), fonts_.body, textScale);
     return clicked;
 }
 bool tab(const char *label, float x, float y, float w, float h, bool selected)
@@ -153,11 +155,12 @@ bool tab(const char *label, float x, float y, float w, float h, bool selected)
         box(x, y + h - 2, w, 2, ImGui::GetColorU32(vec(accent)));
     return clicked;
 }
-bool disclosure(const char *label, float x, float y, float w, float h, bool expanded)
+bool disclosure(const char *label, float x, float y, float w, float h, bool expanded, float textScale)
 {
     const bool clicked = flatButton(label, x, y, w, h);
-    const float textWidth = fonts_.body->CalcTextSizeA(fonts_.body->FontSize, 1000, 0, label).x;
-    const float left = x + (w - textWidth - 20) / 2, cx = left + 5, cy = y + h / 2;
+    const float fontSize = fonts_.body->FontSize * textScale;
+    const float textWidth = fonts_.body->CalcTextSizeA(fontSize, 1000, 0, label).x;
+    const float left = x + (w - textWidth - 20 * textScale) / 2, cx = left + 5 * textScale, cy = y + h / 2;
     const ImU32 tint = ImGui::GetColorU32(vec(expanded ? accent : muted));
     if (expanded)
     {
@@ -169,7 +172,7 @@ bool disclosure(const char *label, float x, float y, float w, float h, bool expa
         line(cx - 2, cy - 4, cx + 2, cy, tint);
         line(cx + 2, cy, cx - 2, cy + 4, tint);
     }
-    text(left + 20, y + (h - fonts_.body->FontSize) / 2, label, ImGui::GetColorU32(vec(fg)));
+    text(left + 20 * textScale, y + (h - fontSize) / 2, label, ImGui::GetColorU32(vec(fg)), fonts_.body, textScale);
     return clicked;
 }
 void style()
@@ -229,7 +232,11 @@ void InitializeResources()
             return nullptr;
         void *owned = IM_ALLOC(data.size());
         std::memcpy(owned, data.data(), data.size());
-        return io.Fonts->AddFontFromMemoryTTF(owned, static_cast<int>(data.size()), size, nullptr, glyphs.Data);
+        ImFontConfig config;
+        // 拡大時も文字がぼやけないよう、表示寸法と切り離して字形を高密度に焼く。
+        config.RasterizerDensity = 1.5f;
+        config.OversampleH = config.OversampleV = 1;
+        return io.Fonts->AddFontFromMemoryTTF(owned, static_cast<int>(data.size()), size, &config, glyphs.Data);
     };
     fonts_.body = add("MPLUS1-Regular.ttf", 21);
     fonts_.fontSmall = add("MPLUS1-Regular.ttf", 18);
