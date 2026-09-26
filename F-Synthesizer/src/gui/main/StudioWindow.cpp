@@ -158,14 +158,20 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
     const int category = categoryIndex(part.category);
-    icon(categoryGlyphs[category], x + 2, 225, 32);
     const std::string label = "ch " + std::to_string(ch + 1) + " / " + categoryLabels[category];
-    text(x + 50, 206, label.c_str(), muted, GetFonts().fontSmall);
-    icon(DownIcon, x + 192, 211, 12, muted);
-    at(x + 48, 205);
-    ImGui::InvisibleButton("part_category", {170, 24});
-    if (ImGui::IsItemClicked())
+    at(x, 205);
+    if (ImGui::InvisibleButton("part_category", {170, 24}, ImGuiButtonFlags_EnableNav))
         ImGui::OpenPopup("part_category");
+    const bool categoryHovered = ImGui::IsItemHovered();
+    const bool categoryHighlighted = categoryHovered || ImGui::IsItemFocused() || ImGui::IsPopupOpen("part_category");
+    if (categoryHighlighted)
+        box(x, 205, 170, 24, panel);
+    text(x, 206, label.c_str(), categoryHighlighted ? fg : muted, GetFonts().fontSmall);
+    icon(DownIcon, x + 144, 211, 12, categoryHighlighted ? fg : muted);
+    if (categoryHovered)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        ImGui::SetTooltip("パートの分類を変更\nプリセット一覧の初期絞り込みに使います");
     if (ImGui::BeginPopup("part_category"))
     {
         ImGui::TextUnformatted("パートの分類");
@@ -178,7 +184,7 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
             }
         ImGui::EndPopup();
     }
-    clipped(x + 48, 228, leftW - 304, toneName(audible).c_str(), fg, GetFonts().title);
+    clipped(x, 228, leftW - 256, toneName(audible).c_str(), fg, GetFonts().title);
     if (tab("音色", x + leftW - 238, 218, 95, 38, !s.toneNotesOpen))
         s.toneNotesOpen = false;
     if (tab("音符を編集", x + leftW - 133, 218, 133, 38, s.toneNotesOpen))
