@@ -45,6 +45,8 @@ void dial(GUIState &s, int index, const char *label, float x, float y, float sca
     at(x, y);
     ImGui::InvisibleButton("dial", {100 * scale, 101 * scale}, ImGuiButtonFlags_EnableNav);
     const bool active = ImGui::IsItemActive(), hover = ImGui::IsItemHovered(), focus = ImGui::IsItemFocused();
+    if (hover || active)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
     const auto &io = ImGui::GetIO();
     const float fine = io.KeyShift ? .1f : 1.f;
     if (ImGui::IsItemActivated())
@@ -74,7 +76,9 @@ void dial(GUIState &s, int index, const char *label, float x, float y, float sca
         gui::FinishToneEdit(s);
     }
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-        ImGui::SetTooltip("上下にドラッグ / Shiftで微調整\n右クリックで数値入力 / ダブルクリックで基準値");
+        ImGui::SetTooltip("上下にドラッグ（上で増やす / 下で減らす）\n"
+                          "0は音色の基準 / ダブルクリックで基準に戻す\n"
+                          "Shiftで微調整 / 右クリックで数値入力");
     if (ImGui::BeginPopupContextItem("value"))
     {
         ImGui::TextUnformatted(label);
@@ -93,16 +97,19 @@ void dial(GUIState &s, int index, const char *label, float x, float y, float sca
     const float normalized = (value + 1) * .5f;
     const ImVec2 center{x + 50 * scale, y + 50 * scale};
     const ImU32 tint = part.compare ? muted : accent;
-    for (int i = 0; i <= 28; ++i)
+    constexpr float startAngle = 2.35f, sweepAngle = 4.72f;
+    for (int i = 0; i <= 4; ++i)
     {
-        const float angle = 2.35f + i / 28.f * 4.72f;
-        line(center.x + std::cos(angle) * 40 * scale, center.y + std::sin(angle) * 40 * scale,
+        const float angle = startAngle + i / 4.f * sweepAngle;
+        const bool reference = i == 2;
+        const float innerRadius = (reference ? 36.f : 40.f) * scale;
+        line(center.x + std::cos(angle) * innerRadius, center.y + std::sin(angle) * innerRadius,
              center.x + std::cos(angle) * 45 * scale, center.y + std::sin(angle) * 45 * scale,
-             i <= normalized * 28 ? tint : edge, i % 7 == 0 ? 2.f : 1.f);
+             reference ? fg : muted, reference ? 2.f : 1.f);
     }
     ImGui::GetWindowDrawList()->AddCircleFilled(center, 31 * scale, panel, 48);
-    ImGui::GetWindowDrawList()->AddCircle(center, 31 * scale, hover || focus ? tint : edge, 48);
-    const float angle = 2.35f + normalized * 4.72f;
+    ImGui::GetWindowDrawList()->AddCircle(center, 31 * scale, hover || active || focus ? tint : edge, 48);
+    const float angle = startAngle + normalized * sweepAngle;
     line(center.x + std::cos(angle) * 21 * scale, center.y + std::sin(angle) * 21 * scale,
          center.x + std::cos(angle) * 29 * scale, center.y + std::sin(angle) * 29 * scale, tint, 2);
     char number[16];
@@ -158,8 +165,6 @@ void waveform(GUIState &s, float x, float y, float w, float h)
     ImGui::PopStyleVar();
     ImGui::PopFont();
     const float top = y + 56, bottom = y + h - 16, cy = (top + bottom) * .5f;
-    for (int i = 1; i < 8; ++i)
-        line(x + w * i / 8, top, x + w * i / 8, bottom, color(31, 47, 57));
     line(x + 18, cy, x + w - 18, cy, edge);
     ImGui::GetWindowDrawList()->PushClipRect({x + 16, top}, {x + w - 16, bottom}, true);
     for (size_t i = 1; i < samples.size(); ++i)
