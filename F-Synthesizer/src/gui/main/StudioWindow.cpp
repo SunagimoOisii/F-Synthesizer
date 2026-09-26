@@ -230,10 +230,17 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     line(x, fy, x + leftW, fy);
     ImGui::BeginDisabled(exporting || s.toneAuditionActive || s.transportAction == gui::TransportAction::Audition);
     const bool drum = std::holds_alternative<DrumKitConfig>(audible.sound.source);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0);
     if (button(s.toneAuditionActive ? "試聴中" : drum ? "ビートを試聴" : "一音鳴らす", x, fy + 12, 155, 40))
         gui::RequestToneAudition(s);
-    if (button("", x + 163, fy + 12, 34, 40, false, false, DownIcon))
+    if (button("", x + 155, fy + 12, 42, 40, ImGui::IsPopupOpen("preview_settings"), false, DownIcon))
         ImGui::OpenPopup("preview_settings");
+    ImGui::PopStyleVar();
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        ImGui::SetTooltip(drum ? "試聴ビートの内容を表示" : "試聴する音の高さ・長さを設定");
+    const ImU32 previewBorder = ImGui::GetColorU32(vec(edge));
+    ImGui::GetWindowDrawList()->AddRect({x, fy + 12}, {x + 197, fy + 52}, previewBorder);
+    line(x + 155.5f, fy + 12.5f, x + 155.5f, fy + 51.5f, previewBorder);
     ImGui::EndDisabled();
     if (ImGui::BeginPopup("preview_settings"))
     {

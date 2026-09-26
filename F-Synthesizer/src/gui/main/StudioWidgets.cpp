@@ -130,7 +130,8 @@ bool button(const char *label, float x, float y, float w, float h, bool chosen, 
     bool clicked = ImGui::Button(id.c_str(), {w, h});
     ImGui::PopStyleColor(5);
     const float textWidth = fonts_.body->CalcTextSizeA(fonts_.body->FontSize, 1000, 0, label).x;
-    const float groupWidth = textWidth + (glyph >= 0 ? 26 : 0), left = x + (w - groupWidth) / 2;
+    const float glyphWidth = glyph >= 0 ? (textWidth > 0 ? 26.f : 18.f) : 0.f;
+    const float groupWidth = textWidth + glyphWidth, left = x + (w - groupWidth) / 2;
     auto tint = [](ImU32 value) {
         ImVec4 v = vec(value);
         v.w *= ImGui::GetStyle().Alpha;
@@ -138,7 +139,7 @@ bool button(const char *label, float x, float y, float w, float h, bool chosen, 
     };
     if (glyph >= 0)
         icon(static_cast<Icon>(glyph), left, y + (h - 18) / 2, 18, tint(primary ? scope : accent));
-    text(left + (glyph >= 0 ? 26 : 0), y + (h - fonts_.body->FontSize) / 2, label, tint(primary ? scope : fg));
+    text(left + glyphWidth, y + (h - fonts_.body->FontSize) / 2, label, tint(primary ? scope : fg));
     return clicked;
 }
 bool tab(const char *label, float x, float y, float w, float h, bool selected)
