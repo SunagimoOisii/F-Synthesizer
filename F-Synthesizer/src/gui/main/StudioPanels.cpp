@@ -215,10 +215,10 @@ void extraControls(GUIState &s, float x, float y, float w)
     }
 }
 
-void channelStrip(GUIState &s, float width)
+void channelStrip(GUIState &s, float x, float w)
 {
-    at(24, 124);
-    ImGui::BeginChild("channels", {width - 48, 84}, false, ImGuiWindowFlags_HorizontalScrollbar);
+    at(x, 124);
+    ImGui::BeginChild("channels", {w, 84}, false, ImGuiWindowFlags_HorizontalScrollbar);
 
     static int previousChannel = -1;
     const bool scrollToSelected = previousChannel != s.pianoRoll.displayChannel;

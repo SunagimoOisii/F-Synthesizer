@@ -130,9 +130,10 @@ int RunGUIApp()
         wchar_t view[32]{}; GetEnvironmentVariableW(L"FSYNTH_CAPTURE_VIEW", view, 32);
         const std::wstring mode(view);
         state.toneExtraOpen = mode.find(L"controls") != std::wstring::npos;
-        state.toneNotesOpen = mode.find(L"notes") != std::wstring::npos || mode == L"drums";
+        state.toneNotesOpen = mode.find(L"notes") != std::wstring::npos || mode.find(L"drums") != std::wstring::npos;
         if (mode.find(L"compact") != std::wstring::npos) windowFrame->resize(1240, 720);
-        if (mode == L"drums") { gui::SelectToneChannel(state, 9); state.stepSeq.viewActive = true; studio::LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll); }
+        if (mode.find(L"wide") != std::wstring::npos) windowFrame->resize(1920, 1080);
+        if (mode.find(L"drums") != std::wstring::npos) { gui::SelectToneChannel(state, 9); state.stepSeq.viewActive = true; studio::LoadStepSeqFromPianoRoll(state.stepSeq, state.pianoRoll); }
         if (mode.find(L"compare") != std::wstring::npos && gui::TonePending(state, state.pianoRoll.displayChannel))
             state.tones[state.pianoRoll.displayChannel].compare = true;
         if (mode == L"playing") { capturePlaying = true; state.scopeWholeMix = true; gui::RequestSongPlayback(state); }

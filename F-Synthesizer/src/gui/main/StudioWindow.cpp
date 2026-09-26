@@ -10,9 +10,9 @@
 #include <cstdio>
 namespace studio
 {
-void timeline(GUIState &s, float width)
+void timeline(GUIState &s, float x, float w)
 {
-    const float x = 24, y = 99, w = width - 48;
+    const float y = 99;
     const auto bars = gui::SongBarTicks(s);
     const int end = std::max(1, bars.back());
     auto barAt = [&](int tick) {
@@ -149,12 +149,16 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
         ImGui::OpenPopup("設定");
     if (help)
         ImGui::OpenPopup("操作方法");
-    timeline(s, width);
-    channelStrip(s, width);
-    const float x = 24, w = width - 48, sideW = std::min(410.f, width * .285f), gap = 24, leftW = w - sideW - gap,
+    // 作業全体の幅を抑え、広い画面の余白は左右の外側へ均等に残す。
+    constexpr float controlsMaxW = 720, gap = 32;
+    const float w = std::min(width - 48, 1392.f), x = (width - w) / 2;
+    // 最小ウィンドウでも音色操作の幅を確保し、残りを読みやすい一覧へ配分する。
+    const float sideW = std::min(480.f, w - gap - controlsMaxW), leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
+    timeline(s, x, w);
+    channelStrip(s, x, w);
     // 関連する操作が横へ離れすぎないよう、余った幅はグループの外側に残す。
-    const float controlsW = std::min(leftW, 720.f);
+    const float controlsW = std::min(leftW, controlsMaxW);
     float actionsY = height - 66;
     const float top = 312, contentH = actionsY - 12 - top;
     const int ch = s.pianoRoll.displayChannel;

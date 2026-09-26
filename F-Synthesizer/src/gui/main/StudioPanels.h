@@ -17,7 +17,7 @@ std::string pitchName(int note);
 void waveform(GUIState &state, float x, float y, float w, float h);
 void toneControls(GUIState &state, float x, float y, float w);
 void extraControls(GUIState &state, float x, float y, float w);
-void channelStrip(GUIState &state, float width);
+void channelStrip(GUIState &state, float x, float w);
 void mixControls(GUIState &state, float x, float y, float w);
 void presetList(GUIState &state, float x, float y, float w, float h);
 } // namespace studio
