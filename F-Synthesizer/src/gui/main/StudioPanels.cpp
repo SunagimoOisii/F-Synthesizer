@@ -311,9 +311,11 @@ void presetList(GUIState &s, float x, float y, float w, float h)
     auto &part = s.tones[ch];
     int &filter = filters[ch];
     text(x, y, "プリセット", fg, GetFonts().heading);
+    const int category = filter == -2 ? categoryIndex(part.category) : filter;
+    if (category >= 0)
+        icon(categoryGlyphs[category], x + w - 192, y + 4, 24, muted);
     at(x + w - 162, y - 2);
     ImGui::SetNextItemWidth(162);
-    const int category = filter == -2 ? categoryIndex(part.category) : filter;
     if (ImGui::BeginCombo("##filter", category < 0 ? "すべて" : categoryLabels[category]))
     {
         if (ImGui::Selectable("このパート", filter == -2))
@@ -330,6 +332,8 @@ void presetList(GUIState &s, float x, float y, float w, float h)
     ImGui::InputTextWithHint("##preset_search", "音色を検索", query, sizeof(query));
     at(x, y + 94);
     ImGui::BeginChild("presets", {w, h - 94}, false);
+    const bool showRowCategory = category < 0;
+    const float textInset = showRowCategory ? 60.f : 16.f;
     int count = 0;
     for (int i = 0; i < static_cast<int>(s.presetItems.size()); ++i)
     {
@@ -352,13 +356,18 @@ void presetList(GUIState &s, float x, float y, float w, float h)
             if (!gui::SelectTonePreset(s, i, error))
                 gui::RaiseGUIError(s, error, 0, true);
         }
+        const bool hovered = ImGui::IsItemHovered();
+        if (hovered)
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-            ImGui::SetTooltip("%s\n%s", preset.displayName.c_str(), preset.description.c_str());
-        if (selected || ImGui::IsItemHovered())
+            ImGui::SetTooltip("%s / %s\n%s\nクリックでこのパートの音色を切り替え", preset.displayName.c_str(),
+                              categoryLabels[categoryIndex(preset.category)], preset.description.c_str());
+        if (selected || hovered)
             box(p.x, p.y, rw, 78, panel);
         if (selected)
             box(p.x, p.y, 3, 78, part.compare ? muted : accent);
-        icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? accent : muted);
+        if (showRowCategory)
+            icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? accent : muted);
         const char *status = selected  ? (part.compare              ? "保持中"
                                           : gui::TonePending(s, ch) ? "試聴中"
                                                                     : "採用済み")
@@ -368,9 +377,9 @@ void presetList(GUIState &s, float x, float y, float w, float h)
             if (auto it = part.cache.find(gui::ToneCacheKey(preset.name, preset.revision)); it != part.cache.end())
                 if (it->second.customizedBase || it->second.adjusted)
                     status = "調整済み";
-        clipped(p.x + 60, p.y + 9, rw - 152, preset.displayName.c_str(), fg, GetFonts().body);
+        clipped(p.x + textInset, p.y + 9, rw - textInset - 92, preset.displayName.c_str(), fg, GetFonts().body);
         text(p.x + rw - 83, p.y + 11, status, selected && !part.compare ? pendingColor : muted, GetFonts().fontSmall);
-        clipped(p.x + 60, p.y + 43, rw - 72, preset.description.c_str(), muted, GetFonts().fontSmall);
+        clipped(p.x + textInset, p.y + 43, rw - textInset - 12, preset.description.c_str(), muted, GetFonts().fontSmall);
         ImGui::PopID();
     }
     if (!count)
