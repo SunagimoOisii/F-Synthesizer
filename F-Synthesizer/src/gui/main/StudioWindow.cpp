@@ -153,7 +153,8 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     channelStrip(s, width);
     const float x = 24, w = width - 48, sideW = std::min(410.f, width * .285f), gap = 24, leftW = w - sideW - gap,
                 rightX = x + leftW + gap;
-    const float top = 312, actionsY = height - 66, contentH = actionsY - 12 - top;
+    float actionsY = height - 66;
+    const float top = 312, contentH = actionsY - 12 - top;
     const int ch = s.pianoRoll.displayChannel;
     auto &part = s.tones[ch];
     const auto &audible = gui::AudibleInstrument(s, ch);
@@ -225,11 +226,17 @@ void DrawMainWindowFrame(GUIState &s, FileActions &files, WindowFrame &frame)
     }
     else
     {
-        const float waveH = contentH - 124 - (s.toneExtraOpen ? 94 : 0);
+        // 開閉操作のフレームでも、波形・ノブ・下部操作に同じ配置を使う。
+        const bool extraOpen = s.toneExtraOpen;
+        constexpr float controlsH = 124, extraControlsH = 94;
+        const float extraH = extraOpen ? extraControlsH : 0;
+        const float waveH = std::min(240.f, contentH - controlsH - extraH);
+        const float controlsBottom = top + waveH + controlsH;
         waveform(s, x, top, leftW, waveH);
         toneControls(s, x, top + waveH + 8, leftW);
-        if (s.toneExtraOpen)
-            extraControls(s, x, top + contentH - 92, leftW);
+        if (extraOpen)
+            extraControls(s, x, controlsBottom + 2, leftW);
+        actionsY = controlsBottom + extraH + 12;
     }
     presetList(s, rightX, 220, sideW, height - 240);
     const float fy = actionsY;
