@@ -229,12 +229,14 @@ void channelStrip(GUIState &s, float width)
             gui::SelectToneChannel(s, ch);
         if (scrollToSelected && ch == s.pianoRoll.displayChannel)
             ImGui::SetScrollHereX(.5f);
-        box(p.x, p.y, 174, 63, ch == s.pianoRoll.displayChannel ? raised : panel);
-        if (ch == s.pianoRoll.displayChannel)
-            box(p.x, p.y, 174, 2, accent);
+        const bool selected = ch == s.pianoRoll.displayChannel;
+        if (ImGui::IsItemHovered())
+            box(p.x, p.y, 174, 63, panel);
+        if (selected)
+            box(p.x, p.y + 61, 174, 2, accent);
         const auto &part = s.tones[ch];
         const int cat = categoryIndex(part.category);
-        icon(categoryGlyphs[cat], p.x + 12, p.y + 17, 25);
+        icon(categoryGlyphs[cat], p.x + 12, p.y + 17, 25, selected ? accent : muted);
         const std::string label = "ch " + std::to_string(ch + 1) + " / " + categoryLabels[cat];
         text(p.x + 46, p.y + 7, label.c_str(), muted, GetFonts().fontSmall);
         clipped(p.x + 46, p.y + 31, 116, toneName(gui::AudibleInstrument(s, ch)).c_str(), fg, GetFonts().fontSmall);
@@ -347,7 +349,8 @@ void presetList(GUIState &s, float x, float y, float w, float h)
         }
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
             ImGui::SetTooltip("%s\n%s", preset.displayName.c_str(), preset.description.c_str());
-        box(p.x, p.y, rw, 78, selected || ImGui::IsItemHovered() ? raised : panel);
+        if (selected || ImGui::IsItemHovered())
+            box(p.x, p.y, rw, 78, panel);
         if (selected)
             box(p.x, p.y, 3, 78, part.compare ? muted : accent);
         icon(categoryGlyphs[categoryIndex(preset.category)], p.x + 16, p.y + 21, 30, selected ? accent : muted);
